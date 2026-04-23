@@ -1,36 +1,76 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# iFarm - Next.js Project
 
-## Getting Started
+Este é um projeto desenvolvido com Next.js, utilizando Prisma ORM para persistência de dados e Docker para orquestração do banco de dados PostgreSQL.
 
-First, run the development server:
+## 🚀 Pré-requisitos
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+Antes de começar, você precisará ter instalado em sua máquina:
+* [Node.js](https://nodejs.org/) (recomendado v22+)
+* [pnpm](https://pnpm.io/) (gerenciador de pacotes)
+* [Docker](https://www.docker.com/) e [Docker Compose](https://docs.docker.com/compose/)
+
+---
+
+## 🛠️ Configuração e Instalação
+
+Siga os passos abaixo para configurar o ambiente de desenvolvimento local:
+
+### 1. Configurar Variáveis de Ambiente
+O projeto utiliza um arquivo `.env` para gerenciar credenciais e configurações de conexão. Copie o modelo de exemplo e preencha com seus dados locais:
+
+```
+$ cp .env.example .env
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 2. Iniciar o Banco de Dados
+Suba o container do PostgreSQL utilizando o Docker:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+$ docker-compose up -d
+```
 
-## Learn More
+### 3. Instalar Dependências
+Instale os pacotes necessários do Node.js utilizando o pnpm:
 
-To learn more about Next.js, take a look at the following resources:
+```
+$ pnpm install
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### 4. Sincronizar o Prisma ORM
+Gere o cliente do Prisma e aplique as migrações para estruturar o banco de dados:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```
+$ pnpm prisma generate
+$ pnpm prisma migrate dev
+```
+---
 
-## Deploy on Vercel
+## 💻 Executando o Projeto
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Após concluir a configuração, você pode iniciar o servidor de desenvolvimento:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```
+$ pnpm dev
+```
+
+O projeto estará disponível em: http://localhost:3000
+
+---
+
+## 🔍 Comandos Úteis
+
+| Comando | Descrição |
+| :--- | :--- |
+| pnpm prisma studio | Abre uma interface gráfica para visualizar e editar os dados do banco. |
+| docker-compose logs -f | Visualiza os logs do banco de dados em tempo real. |
+| docker-compose down | Para e remove os containers do projeto. |
+
+---
+
+## 📂 Estrutura do Banco de Dados
+O projeto utiliza o PostgreSQL. O esquema de dados é definido no arquivo prisma/schema.prisma. Sempre que realizar alterações neste arquivo, lembre-se de rodar o comando abaixo para sincronizar o banco.
+
+```
+$ pnpm prisma migrate dev 
+```

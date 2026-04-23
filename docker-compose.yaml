@@ -6,11 +6,11 @@ services:
     container_name: container_postgres_ifarm
     restart: always
     ports:
-      - '5432:5432'
+      - '${DB_PORT}:5432'
     environment:
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: admin
-      POSTGRES_DB: db_ifarm
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
     volumes:
       - pg_data_ifarm:/var/lib/postgresql/data
 
