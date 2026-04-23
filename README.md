@@ -18,31 +18,31 @@ Siga os passos abaixo para configurar o ambiente de desenvolvimento local:
 ### 1. Configurar Variáveis de Ambiente
 O projeto utiliza um arquivo `.env` para gerenciar credenciais e configurações de conexão. Copie o modelo de exemplo e preencha com seus dados locais:
 
-```
-$ cp .env.example .env
+```bash
+cp .env.example .env
 ```
 
 
 ### 2. Iniciar o Banco de Dados
 Suba o container do PostgreSQL utilizando o Docker:
 
-```
-$ docker-compose up -d
+```bash
+docker-compose up -d
 ```
 
 ### 3. Instalar Dependências
 Instale os pacotes necessários do Node.js utilizando o pnpm:
 
-```
-$ pnpm install
+```bash
+pnpm install
 ```
 
 ### 4. Sincronizar o Prisma ORM
 Gere o cliente do Prisma e aplique as migrações para estruturar o banco de dados:
 
-```
-$ pnpm prisma generate
-$ pnpm prisma migrate dev
+```bash
+pnpm prisma generate
+pnpm prisma migrate dev
 ```
 ---
 
@@ -50,8 +50,8 @@ $ pnpm prisma migrate dev
 
 Após concluir a configuração, você pode iniciar o servidor de desenvolvimento:
 
-```
-$ pnpm dev
+```bash
+pnpm dev
 ```
 
 O projeto estará disponível em: http://localhost:3000
@@ -71,6 +71,6 @@ O projeto estará disponível em: http://localhost:3000
 ## 📂 Estrutura do Banco de Dados
 O projeto utiliza o PostgreSQL. O esquema de dados é definido no arquivo prisma/schema.prisma. Sempre que realizar alterações neste arquivo, lembre-se de rodar o comando abaixo para sincronizar o banco.
 
-```
-$ pnpm prisma migrate dev 
+```bash
+pnpm prisma migrate dev 
 ```
