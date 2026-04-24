@@ -1,45 +1,60 @@
 @import "tailwindcss";
 
 :root {
-  color-scheme: light dark;
-  --background: light-dark(#ffffff, #171717);
-  --foreground: light-dark(#171717, #ffffff);
+  --background: #ffffff;
+  --background-2: #d8d2d0;
+  --foreground: #171717;
+  --foreground-2: #333130;
 
-  --brand-1: #008236;
-  --brand-2: #0d542b;
-  --brand-3: #032e15;    
-  --danger-1: #a50707;
-  --danger-2: #4d0202;
+  --primary: #008236;
+  --secondary: #0d542b;
+
+  --danger-primary: #a50707;
+  --danger-secondary: #4d0202;
 }
 
+
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #262626;
+    --background-2: #0a0a0a;
+    --foreground: #ededed;
+    --foreground-2: #757372;
+
+    --primary: #22c55e; 
+    --secondary: #14532d;
+
+    --danger-primary: #ef4444;
+    --danger-secondary: #7f1d1d;
+  }
+}
+
+
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 
-  --color-brand-1: var(--brand-1);
-  --color-brand-2: var(--brand-2);
-  --color-brand-3: var(--brand-3);
+  --color-background: var(--background);
+  --color-background-2: var(--background-2);
+  --color-foreground: var(--foreground);
+  --color-foreground-2: var(--foreground-2);
 
-  --color-danger-1: var(--danger-1);
-  --color-danger-2: var(--danger-2);
+  --color-primary: var(--primary);
+  --color-secondary: var(--secondary);
 
-
+  --color-danger-primary: var(--danger-primary);
+  --color-danger-secondary: var(--danger-secondary);
 }
 
 
-/*@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}*/
+
+
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
 }
 
 
@@ -49,12 +64,12 @@ body {
     @apply px-4 py-1.5 rounded cursor-pointer border
   }
 
-  .button-primary {
-    @apply bg-brand-1 hover:bg-brand-3;
+  .button-default {
+    @apply bg-primary hover:bg-secondary;
   }
 
   .button-danger {
-    @apply bg-danger-1 hover:bg-danger-2
+    @apply bg-danger-primary hover:bg-danger-secondary
   }
 
 }
