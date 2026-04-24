@@ -6,18 +6,18 @@ import { Sidebar } from "./sidebar";
 export default function LayoutShell({ children }: { children: ReactNode }) {
 
     return (
-        <div className="h-screen flex flex-col">
+        <div className="flex flex-col h-screen">
             <Header/>
 
-            <div className="flex flex-1 overflow-hidden" >
+            <div className="flex flex-1" >
                 <Sidebar/>
 
-                <div className="flex-1 overflow-y-auto bg-zinc-400 p-6">
+                <div className="flex-1 p-6">
                     {children}
                 </div>
             </div >
 
-            <footer>
+            <footer className="bg-background-2">
                 status
             </footer>
         </div>
