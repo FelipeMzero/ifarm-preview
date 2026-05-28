@@ -2,6 +2,11 @@
 
 Módulo responsável pelo ciclo de vida completo dos animais na plataforma (Criação, Consulta, Visualização, Atualização e Remoção).
 
+| Campo | Tipo | Descrição |
+|-|-|-|
+| `nome` | Texto | ... |
+| `especie` | Seleção | ... |
+| `nascimento` | Data | ... |
 
 
 
@@ -33,20 +38,12 @@ Permitir o cadastro e atualização de animais para gerenciamento do ciclo produ
 | **Atores** | Administrador, Gerente |
 | **Plataformas**| Web |
 
-### 2.1.2 - Dicionário de dados
-
-| Campo | Tipo | Obrigatório | Observação |
-|--------|------|-------------|-------------|
-| nome | Texto | Sim | Máx 100 |
-| especie | Seleção | Sim | |
-| nascimento | Data | Não | <= hoje |
-
-### 2.1.3 - Critérios de Aceitação (Checklist de Homologação)
+### 2.1.2 - Critérios de Aceitação (Checklist de Homologação)
 * [ ] O sistema deve impedir o salvamento se os campos obrigatórios (*data_nascimento* e *fase_ciclo*) não estiverem preenchidos.
 * [ ] O sistema deve validar em tempo real se o `codigo_brinco` ou `id_rfid` informado já não existe na base de dados ativa.
 * [ ] Após o cadastro bem-sucedido, o usuário deve ser redirecionado para a tela de visualização do animal com uma mensagem de sucesso.
 
-### 2.1.4 - Cenários de Uso (Fluxo de Interação BDD)
+### 2.1.3 - Cenários de Uso (Fluxo de Interação BDD)
 
 **Cenário 1: Cadastro realizado com sucesso (Fluxo Principal)**
 * **Dado que** o Gerente está na tela de cadastro de animais e preencheu todos os dados obrigatórios corretamente;
@@ -60,7 +57,7 @@ Permitir o cadastro e atualização de animais para gerenciamento do ciclo produ
 
 
 
-### 2.1.5 - Wireframes
+### 2.1.4 - Wireframes
 
 ![Criar animal](./wireframes/mod-animal-criar.png)
 
