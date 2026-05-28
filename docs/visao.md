@@ -86,10 +86,8 @@ Web["🌐 Web"]
 Android["🤖 Android"]
 iOS["🍎 iOS"]
 
-API["⚙️ API <br/>(Auth + RBAC)"]
-
+API["⚙️ API + Auth"]
 Prisma["🛆 Prisma ORM"]
-
 DB["🛢️ PostgreSQL"]
 
 Web --> API
