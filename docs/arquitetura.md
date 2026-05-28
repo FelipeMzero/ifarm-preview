@@ -37,10 +37,8 @@ Web["🌐 Web"]
 Android["🤖 Android"]
 iOS["🍎 iOS"]
 
-API["⚙️ API <br/>(Auth + RBAC)"]
-
+API["⚙️ API + Auth"]
 Prisma["🛆 Prisma ORM"]
-
 DB["🛢️ PostgreSQL"]
 
 Web --> API
@@ -49,4 +47,43 @@ iOS --> API
 
 API --> Prisma
 Prisma --> DB
+```
+
+
+## 4 - Fluxo de Autenticação
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant Frontend
+    participant Backend
+    participant Database
+
+    User->>Frontend: Preenche email e senha
+    Frontend->>Backend: POST /login
+
+    Backend->>Database: Buscar usuário por email
+    Database-->>Backend: Dados do usuário
+
+    Backend->>Backend: Validar senha
+
+    alt Credenciais inválidas
+        Backend-->>Frontend: 401 Unauthorized
+        Frontend-->>User: Exibir erro de login
+    else Credenciais válidas
+        Backend->>Database: Criar sessão/token
+        Database-->>Backend: Sessão criada
+
+        Backend-->>Frontend: Set-Cookie / JWT
+        Frontend-->>User: Login realizado
+    end
+
+    User->>Frontend: Acessa rota protegida
+    Frontend->>Backend: GET /profile + token
+
+    Backend->>Database: Validar sessão/token
+    Database-->>Backend: Sessão válida
+
+    Backend-->>Frontend: Dados protegidos
+    Frontend-->>User: Exibir perfil
 ```
