@@ -27,7 +27,7 @@ cp .env.example .env
 Suba o container do PostgreSQL utilizando o Docker:
 
 ```bash
-docker-compose up -d
+docker compose up -d
 ```
 
 ### 3. Instalar Dependências
