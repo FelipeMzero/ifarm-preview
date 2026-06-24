@@ -2,9 +2,49 @@
 
 Este guia descreve o fluxo de trabalho para contribuir com o repositório oficial `ufopa-orixi-devs/ifarm`, usando o modelo de fork.
 
+O fluxo passa por três camadas de repositórios, sendo elas:
+
+| Camada | O que é | Uso |
+|---|---|---|
+| `upstream` | repositório oficial (`ufopa-orixi-devs/ifarm`) | de onde você puxa atualizações e para onde abre PRs |
+| `origin` | seu fork (`seu_usuario/ifarm`) | para onde você faz `push` |
+| `local` | clone local do fork | onde você edita, cria branches e faz commits |
+
+O diagrama a seguir mostra o fluxo de contribuição via fork do GitHub.
+
+```mermaid
+graph TD
+    UP["🗄️ Oficial\n(upstream)"]
+
+    UP -->|sync| F1["🗄️ fork Dev 1\n(origin)"]
+    UP -->|sync| F2["🗄️ fork Dev 2\n(origin)"]
+    UP -->|sync| F3["🗄️ fork Dev 3\n(origin)"]
+
+    F1 -->|clone| L1["💻 local Dev 1\n🌿main : 🌿feat/task-01"]
+    F2 -->|clone| L2["💻 local Dev 2\n🌿main : 🌿feat/task-02"]
+    F3 -->|clone| L3["💻 local Dev 3\n🌿main : 🌿feat/task-03"]
+
+    L1 -->|push| F1
+    L2 -->|push| F2
+    L3 -->|push| F3
+
+    F1 -.->|PR| UP
+    F2 -.->|PR| UP
+    F3 -.->|PR| UP
+
+    subgraph GitHub
+        UP
+        F1
+        F2
+        F3
+    end
+```
+
 ---
 
-## 1 - Fork e clone
+## 1 - Configurando o projeto
+
+### 1.1 - Fork e clone
 
 Entre no [github.com](https://github.com), acesse o repositório da organização e clique em `Fork` → `Create a new fork`. Coloque você como **Owner** e marque para copiar apenas a branch `main`. Agora você deve ter o fork na sua conta pessoal.
 
@@ -22,13 +62,14 @@ git remote add upstream git@github.com:ufopa-orixi-devs/ifarm.git
 
 ---
 
-## 2 - Instale o projeto
+### 1.2 - Instale o projeto
 
 Instale o projeto de acordo com o `README`.
 
----
 
-## 3 - Verifique a task
+## 2 - Fluxo de contribuição
+
+### 2.1 - Verifique a task
 
 Vá ao [app.plane.so](https://app.plane.so/) e procure a task (work item) na área **Todo** que foi atribuída a você. Mova a tarefa para a área **In Progress** para indicar que você está trabalhando nela.
 
@@ -36,7 +77,7 @@ Cada task tem um código como `FA-1`. Esse código é importante para identifica
 
 ---
 
-## 4 - Crie a branch para a task
+### 2.2 - Crie a branch para a task
 
 Antes de criar a branch, sempre faça uma sincronização:
 
@@ -55,7 +96,7 @@ git switch -c feat/FA-1/descricao-da-feat
 
 ---
 
-## 5 - Implementação da tarefa
+### 2.3 - Implementação da tarefa
 
 Implemente a tarefa. Lembre-se de fazer um commit a cada unidade lógica completa. Você vai passar a maior parte do tempo nesta etapa.
 
@@ -68,7 +109,7 @@ git commit -m "feat: descrição da tarefa implementada"
 
 ---
 
-## 6 - Sincronize novamente e resolva os conflitos
+### 2.4 - Sincronize novamente e resolva os conflitos
 
 Antes de enviar sua branch, atualize-a novamente com o que houve de novo no repositório oficial, para evitar conflitos na hora do PR:
 
@@ -90,7 +131,7 @@ git commit -m "chore: conflitos resolvidos"
 
 ---
 
-## 7 - Pull Request
+### 2.5 - Pull Request
 
 Envie sua branch para o seu fork:
 
@@ -113,7 +154,7 @@ feat/FA-1: descrição curta do que foi feito
 
 ---
 
-## 8 - Sinalize a conclusão da tarefa
+### 2.6 - Sinalize a conclusão da tarefa
 
 Por fim, mova a task no Plane de **In Progress** para **Review**.
 
@@ -121,7 +162,7 @@ O revisor vai analisar a solução, podendo mover a tarefa para **Done** (conclu
 
 ---
 
-## 9 - Implementando correções
+### 2.7 - Implementando correções
 
 Caso o revisor solicite alterações, faça os ajustes na mesma branch, tomando o cuidado de atualizar a branch e resolver eventuais conflitos antes de enviar a solução corrigida:
 
@@ -153,11 +194,11 @@ git push origin feat/FA-1/descricao-da-feat
 
 Depois de enviar, mova novamente a tarefa para **Review**.
 
-> Os passos 8 e 9 formam um ciclo de revisão-correção, que se repete até a aprovação do PR.
+> As seções 2.6 e 2.7 formam um ciclo de revisão-correção, que se repete até a aprovação do PR.
 
 ---
 
-## 10 - PR finalizado
+### 2.8 - PR finalizado
 
 Quando o PR for aprovado, ele será **mergeado** ao repositório oficial pelo admin, que também moverá a task para **Done**.
 
@@ -167,22 +208,17 @@ Depois disso, apague a branch da tarefa:
 git switch main
 git fetch upstream
 git merge upstream/main
+git push origin main
 git branch -d feat/FA-1/descricao-da-feat
 git push origin --delete feat/FA-1/descricao-da-feat
 ```
 
 Com isso, seu fork está limpo e atualizado para a próxima tarefa.
 
+
 ---
 
-## Resumo dos remotes
-
-| Remote | Aponta para | Uso |
-|---|---|---|
-| `origin` | seu fork (`seu_usuario/ifarm`) | onde você faz `push` |
-| `upstream` | repositório oficial (`ufopa-orixi-devs/ifarm`) | de onde você puxa atualizações (somente leitura) |
-
-## Padrão de nomenclatura
+## 3 - Padrão de nomenclatura
 
 - **Branch:** `feat/FA-1/descricao-da-feat`
 - **Commits:** seguem [Conventional Commits](https://www.conventionalcommits.org/) (`feat:`, `fix:`, `chore:`, `refactor:`, `docs:`)
