@@ -13,7 +13,7 @@ export default function Page() {
         
         <div className="space-y-4">
           <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight text-slate-900 dark:text-white">
-            Bem-vindo ao <span className="text-emerald-600">iFarm</span>
+            Bem-vindo ao <span className="text-emerald-600">iFarm</span>.
           </h1>
           <p className="text-lg text-slate-600 dark:text-slate-400 max-w-xl mx-auto">
             O futuro da gestão pecuária. Gerencie o seu rebanho com inteligência, dados em tempo real e precisão absoluta.
