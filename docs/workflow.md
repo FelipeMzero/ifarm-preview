@@ -1,4 +1,4 @@
-# Guia de Contribuição — iFarm
+# Guia de Contribuição - iFarm
 
 Este guia descreve o fluxo de trabalho para contribuir com o repositório oficial `ufopa-orixi-devs/ifarm`, usando o modelo de fork.
 
