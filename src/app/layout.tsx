@@ -1,16 +1,24 @@
 import type { Metadata } from "next";
-import { DM_Sans, Geist } from "next/font/google";
+import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import LayoutShell from "./_components/layout-shell";
 import { cn } from "@/lib/utils";
 import { Toaster } from "@/components/ui/sonner";
 
-const geist = Geist({subsets:['latin'],variable:'--font-sans'});
-
-const dmSans = DM_Sans({
-  variable: "--font-dm-sans",
+const geistSans = Geist({
+  variable: "--font-geist-sans", //"--font-dm-sans"
   subsets: ["latin"],
-  weight: ["400", "500", "700", "800"],
+});
+
+const geistMono = Geist_Mono({
+  variable: "--font-geist-mono",
+  subsets: ["latin"],
+});
+
+const fontHeading = Geist({
+  variable: "--font-geist-heading",
+  subsets: ["latin"],
+  weight: "600"
 });
 
 export const metadata: Metadata = {
@@ -18,10 +26,10 @@ export const metadata: Metadata = {
   description: "Sistema de Gestão Pecuária Inteligente",
 };
 
-export default function RootLayout({children}: Readonly<{children: React.ReactNode}>) {
+export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="pt-BR" className={cn("h-full", "antialiased", dmSans.variable, "font-sans", geist.variable)}>
-      <body className="min-h-full flex flex-col" style={{ fontFamily: 'var(--font-dm-sans), sans-serif' }}> 
+    <html lang="pt-BR" className={`${geistSans.variable} ${geistMono.variable} ${fontHeading.variable}`}>
+      <body className="bg-background text-foreground">
         <LayoutShell>
           {children}
         </LayoutShell>
