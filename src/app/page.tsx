@@ -3,7 +3,7 @@ import { Beef, LayoutDashboard, Settings, ArrowRight } from "lucide-react";
 
 export default function Page() {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-6 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-emerald-100 via-slate-50 to-white dark:from-emerald-950/20 dark:via-neutral-950 dark:to-black">
+    <main className="flex min-h-screen flex-col items-center justify-center p-6] from-emerald-100 via-slate-50 to-white dark:from-emerald-950/20 dark:via-neutral-950 dark:to-black">
       <div className="max-w-3xl w-full text-center space-y-8">
         <div className="flex justify-center">
           <div className="p-3 rounded-2xl bg-emerald-600 text-white shadow-xl shadow-emerald-600/20">
