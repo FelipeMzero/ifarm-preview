@@ -290,7 +290,7 @@ export default function AnimalList() {
       />
 
       <Dialog open={isCreating} onOpenChange={(open) => { if (!open) setIsCreating(false); }}>
-        <DialogContent className="bg-background sm:max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="bg-background p-8 sm:max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-2xl">Novo animal</DialogTitle>
           </DialogHeader>
