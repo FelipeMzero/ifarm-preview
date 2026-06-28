@@ -46,7 +46,7 @@
 
 :root {
     --radius: 0.625rem;
-    --background: var(--color-slate-50);
+    --background: var(--color-slate-50); /*var(--color-slate-50);*/
     --foreground: var(--color-slate-950);
     --card: var(--color-white);
     --card-foreground: var(--color-slate-950);
@@ -54,7 +54,8 @@
     --popover-foreground: var(--color-slate-950);
     --primary: var(--color-emerald-600);
     --primary-foreground: var(--color-white);
-    --secondary: var(--color-slate-100);
+    
+    --secondary: var(--color-slate-300);
     --secondary-foreground: var(--color-slate-950);
     --muted: var(--color-slate-100);
     --muted-foreground: var(--color-slate-500);

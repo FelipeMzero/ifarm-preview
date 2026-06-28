@@ -142,11 +142,11 @@ export default function AnimalForm({ id, onCancel, onSuccess }: AnimalFormProps)
   return (
     <form className="flex flex-col gap-8" onSubmit={handleSubmit(onSubmit)}>
 
-      <FieldSet>
+      <FieldSet className="bg-card">
         <FieldLegend> Identificação </FieldLegend>
 
         <FieldRow cols={2}>
-          <FormField name="rfid" label="RFID / Chip"
+          <FormField name="rfid" label="RFID / Chip" required
             control={control}
             render={({ field, id }) => <Input {...field} id={id} placeholder="Ex: 900082000169813" />}
           />
@@ -161,7 +161,7 @@ export default function AnimalForm({ id, onCancel, onSuccess }: AnimalFormProps)
             control={control}
             render={({ field, id }) => <Input {...field} id={id} placeholder="Opcional" />}
           />
-          <FormField name="sexo" label="Sexo" required
+          <FormField name="sexo" label="Sexo"
             control={control}
             render={({ field, id }) => (
               <Select onValueChange={field.onChange} value={field.value}>
@@ -272,7 +272,7 @@ export default function AnimalForm({ id, onCancel, onSuccess }: AnimalFormProps)
       <FieldSet>
         <FieldLegend>Origem</FieldLegend>
         <FieldRow cols={2}>
-          <FormField name="origem" label="Origem" required
+          <FormField name="origem" label="Origem"
             control={control}
             render={({ field, id }) => (
               <Select onValueChange={field.onChange} value={field.value}>
@@ -292,7 +292,7 @@ export default function AnimalForm({ id, onCancel, onSuccess }: AnimalFormProps)
         {isCompraTransf && (
           <>
             <FieldRow cols={2}>
-              <FormField name="data_aquisicao" label="Data de Aquisição" required
+              <FormField name="data_aquisicao" label="Data de Aquisição"
                 control={control}
                 render={({ field, id }) => <Input {...field} id={id} type="date" />}
               />

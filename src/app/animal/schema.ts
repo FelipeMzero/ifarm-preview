@@ -8,7 +8,7 @@ export const EnumAnimalOrigem = { NASCIMENTO: "NASCIMENTO", COMPRA: "COMPRA", TR
 export const EnumAnimalStatus = { ATIVO: "ATIVO", VENDIDO: "VENDIDO", MORTO: "MORTO", TRANSFERIDO: "TRANSFERIDO", DESCARTE: "DESCARTE", ABATE: "ABATE" } as const;
 
 const animalBaseSchema = z.object({
-  rfid:                z.string().optional(),
+  rfid:                z.string().min(1, "Este campo não pode ser vazio"),
   brinco:              z.string().optional(),
   nome_apelido:        z.string().optional(),
   sexo:                z.enum(enumValues(EnumSexo)),
@@ -22,7 +22,7 @@ const animalBaseSchema = z.object({
 export const animalFormSchema = animalBaseSchema.extend({
   data_nascimento:     z.string().optional(),
   peso_nascimento_kg:  z.string().optional(),
-  raca_id:             z.string().optional(),
+  raca_id:             z.string().min(1, "Selecione uma raça"),//z.string().optional(),
   lote_id:             z.string().optional(),
   fazenda_origem_id:   z.string().optional(),
   data_aquisicao:      z.string().optional(),

@@ -1,7 +1,13 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  
+  /***** Apagar este bloco para usar cache ******/
+  experimental: {
+    turbopackFileSystemCacheForDev: false,
+  },
+  /**********************************************/
+
 };
 
 export default nextConfig;
