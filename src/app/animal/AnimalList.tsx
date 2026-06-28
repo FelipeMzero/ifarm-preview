@@ -1,9 +1,9 @@
 "use client";
 
 import { ColumnDef, VisibilityState } from "@tanstack/react-table";
-import { Beef, Pencil, Plus, Search, Settings2, Trash2 } from "lucide-react";
+import { Beef, Mars, Pencil, Plus, Search, Settings2, Trash2, Venus } from "lucide-react";
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 
 import { ConfirmDialog } from "@/components/our/ConfirmDialog";
 import { DataTable } from "@/components/our/DataTable";
@@ -27,7 +27,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { AnimalRow, deleteAnimal, getAnimais } from "./services";
-import { EnumAnimalStatus, EnumSexo } from "./schema";
+import { EnumAnimalOrigem, EnumAnimalStatus, EnumSexo } from "./schema";
 import { ErrorPage } from "@/components/our/ErrorPage";
 
 const DEFAULT_PAGE_SIZE = 10;
@@ -42,6 +42,12 @@ const COLUMN_LABELS: Record<string, string> = {
   updatedAt: "Atualizado em",
 };
 
+const ORIGEM_VARIANT: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
+  [EnumAnimalOrigem.NASCIMENTO]: "default",
+  [EnumAnimalOrigem.COMPRA]: "secondary",
+  [EnumAnimalOrigem.TRANSFERENCIA]: "outline",
+};
+
 const STATUS_VARIANT: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
   [EnumAnimalStatus.ATIVO]: "default",
   [EnumAnimalStatus.VENDIDO]: "secondary",
@@ -51,9 +57,9 @@ const STATUS_VARIANT: Record<string, "default" | "secondary" | "destructive" | "
   [EnumAnimalStatus.ABATE]: "destructive",
 };
 
-const SEXO_LABEL: Record<string, string> = {
-  [EnumSexo.M]: "♂ Macho",
-  [EnumSexo.F]: "♀ Fêmea",
+const SEXO_ICON: Record<string, React.ReactNode> = {
+  [EnumSexo.M]: <span className="flex items-center gap-1 text-blue-700"><Mars className="size-3" /> Macho</span>,
+  [EnumSexo.F]: <span className="flex items-center gap-1 text-pink-700"><Venus className="size-3" /> Fêmea</span>,
 };
 
 function buildColumns(
@@ -76,7 +82,7 @@ function buildColumns(
     {
       header: "Sexo",
       accessorKey: "sexo",
-      cell: ({ row }) => SEXO_LABEL[row.original.sexo] ?? row.original.sexo,
+      cell: ({ row }) => SEXO_ICON[row.original.sexo] ?? row.original.sexo,
     },
     {
       header: "Peso Atual",
@@ -88,7 +94,7 @@ function buildColumns(
       header: "Origem",
       accessorKey: "origem",
       cell: ({ row }) => (
-        <Badge variant="outline">{row.original.origem}</Badge>
+        <Badge variant={ORIGEM_VARIANT[row.original.origem] ?? "outline"}>{row.original.origem}</Badge>
       ),
     },
     {
