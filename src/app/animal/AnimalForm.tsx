@@ -12,6 +12,21 @@ import { FieldLegend, FieldSet } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { FormField } from "@/components/our/FormField";
 import FieldRow from "@/components/our/FieldRow";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Combobox,
+  ComboboxInput,
+  ComboboxContent,
+  ComboboxList,
+  ComboboxItem,
+  ComboboxEmpty,
+} from "@/components/ui/combobox";
 import { Loader2 } from "lucide-react";
 import FormSkeleton from "@/components/our/FormSkeleton";
 import { AnimalFormData, animalFormSchema, EnumAnimalOrigem, EnumAnimalStatus, EnumSexo } from "./schema";
@@ -130,7 +145,6 @@ export default function AnimalForm({ id, onCancel, onSuccess }: AnimalFormProps)
       <FieldSet>
         <FieldLegend> Identificação </FieldLegend>
 
-
         <FieldRow cols={2}>
           <FormField name="rfid" label="RFID / Chip"
             control={control}
@@ -150,31 +164,50 @@ export default function AnimalForm({ id, onCancel, onSuccess }: AnimalFormProps)
           <FormField name="sexo" label="Sexo" required
             control={control}
             render={({ field, id }) => (
-              <select {...field} id={id}>
-                <option value={EnumSexo.M}>Macho</option>
-                <option value={EnumSexo.F}>Fêmea</option>
-              </select>
+              <Select onValueChange={field.onChange} value={field.value}>
+                <SelectTrigger id={id} ref={field.ref}>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={EnumSexo.M}>Macho</SelectItem>
+                  <SelectItem value={EnumSexo.F}>Fêmea</SelectItem>
+                </SelectContent>
+              </Select>
             )}
           />
         </FieldRow>
-        
+
         <FieldRow cols={2}>
           <FormField name="raca_id" label="Raça"
             control={control}
             render={({ field, id }) => (
-              <select {...field} id={id}>
-                <option value="">Selecionar...</option>
-                {racas.map(r => <option key={r.id} value={r.id}>{r.nome}</option>)}
-              </select>
+              <Combobox value={field.value || null} onValueChange={(val) => field.onChange(val ?? "")}>
+                <ComboboxInput id={id} ref={field.ref} placeholder="Selecionar..." showClear={!!field.value} />
+                <ComboboxContent>
+                  <ComboboxList>
+                    <ComboboxEmpty>Nenhuma raça encontrada.</ComboboxEmpty>
+                    {racas.map(r => (
+                      <ComboboxItem key={r.id} value={r.id.toString()}>{r.nome}</ComboboxItem>
+                    ))}
+                  </ComboboxList>
+                </ComboboxContent>
+              </Combobox>
             )}
           />
           <FormField name="lote_id" label="Lote"
             control={control}
             render={({ field, id }) => (
-              <select {...field} id={id}>
-                <option value="">Sem lote</option>
-                {lotes.map(l => <option key={l.id} value={l.id}>{l.nome}</option>)}
-              </select>
+              <Combobox value={field.value || null} onValueChange={(val) => field.onChange(val ?? "")}>
+                <ComboboxInput id={id} ref={field.ref} placeholder="Sem lote" showClear={!!field.value} />
+                <ComboboxContent>
+                  <ComboboxList>
+                    <ComboboxEmpty>Nenhum lote encontrado.</ComboboxEmpty>
+                    {lotes.map(l => (
+                      <ComboboxItem key={l.id} value={l.id.toString()}>{l.nome}</ComboboxItem>
+                    ))}
+                  </ComboboxList>
+                </ComboboxContent>
+              </Combobox>
             )}
           />
         </FieldRow>
@@ -199,24 +232,38 @@ export default function AnimalForm({ id, onCancel, onSuccess }: AnimalFormProps)
         <FieldRow cols={2}>
           <FormField name="mae_id" label="Mãe"
             control={control}
-            render={({ field, id }) => (
-              <select {...field} id={id} value={field.value ?? ""}>
-                <option value="">Selecionar mãe...</option>
-                {animais.filter(a => a.sexo === "F").map(a => (
-                  <option key={a.id} value={a.id}>{a.brinco ?? a.rfid ?? a.id.slice(0, 8)}</option>
-                ))}
-              </select>
+            render={({ field }) => (
+              <Combobox value={field.value || null} onValueChange={(val) => field.onChange(val ?? "")}>
+                <ComboboxInput placeholder="Selecionar mãe..." showClear={!!field.value} />
+                <ComboboxContent>
+                  <ComboboxList>
+                    <ComboboxEmpty>Nenhuma fêmea encontrada.</ComboboxEmpty>
+                    {animais.filter(a => a.sexo === "F").map(a => (
+                      <ComboboxItem key={a.id} value={a.id}>
+                        {a.brinco ?? a.rfid ?? a.id.slice(0, 8)}
+                      </ComboboxItem>
+                    ))}
+                  </ComboboxList>
+                </ComboboxContent>
+              </Combobox>
             )}
           />
           <FormField name="pai_id" label="Pai (Touro)"
             control={control}
-            render={({ field, id }) => (
-              <select {...field} id={id} value={field.value ?? ""}>
-                <option value="">Selecionar pai...</option>
-                {animais.filter(a => a.sexo === "M").map(a => (
-                  <option key={a.id} value={a.id}>{a.brinco ?? a.rfid ?? a.id.slice(0, 8)}</option>
-                ))}
-              </select>
+            render={({ field }) => (
+              <Combobox value={field.value || null} onValueChange={(val) => field.onChange(val ?? "")}>
+                <ComboboxInput placeholder="Selecionar pai..." showClear={!!field.value} />
+                <ComboboxContent>
+                  <ComboboxList>
+                    <ComboboxEmpty>Nenhum macho encontrado.</ComboboxEmpty>
+                    {animais.filter(a => a.sexo === "M").map(a => (
+                      <ComboboxItem key={a.id} value={a.id}>
+                        {a.brinco ?? a.rfid ?? a.id.slice(0, 8)}
+                      </ComboboxItem>
+                    ))}
+                  </ComboboxList>
+                </ComboboxContent>
+              </Combobox>
             )}
           />
         </FieldRow>
@@ -228,11 +275,16 @@ export default function AnimalForm({ id, onCancel, onSuccess }: AnimalFormProps)
           <FormField name="origem" label="Origem" required
             control={control}
             render={({ field, id }) => (
-              <select {...field} id={id}>
-                <option value={EnumAnimalOrigem.NASCIMENTO}>Nascimento</option>
-                <option value={EnumAnimalOrigem.COMPRA}>Compra</option>
-                <option value={EnumAnimalOrigem.TRANSFERENCIA}>Transferência</option>
-              </select>
+              <Select onValueChange={field.onChange} value={field.value}>
+                <SelectTrigger id={id} ref={field.ref}>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={EnumAnimalOrigem.NASCIMENTO}>Nascimento</SelectItem>
+                  <SelectItem value={EnumAnimalOrigem.COMPRA}>Compra</SelectItem>
+                  <SelectItem value={EnumAnimalOrigem.TRANSFERENCIA}>Transferência</SelectItem>
+                </SelectContent>
+              </Select>
             )}
           />
         </FieldRow>
@@ -252,11 +304,18 @@ export default function AnimalForm({ id, onCancel, onSuccess }: AnimalFormProps)
             <FieldRow cols={2}>
               <FormField name="fazenda_origem_id" label="Fazenda de Origem"
                 control={control}
-                render={({ field, id }) => (
-                  <select {...field} id={id}>
-                    <option value="">Selecionar fazenda...</option>
-                    {fazendas.map(f => <option key={f.id} value={f.id}>{f.nome}</option>)}
-                  </select>
+                render={({ field }) => (
+                  <Combobox value={field.value || null} onValueChange={(val) => field.onChange(val ?? "")}>
+                    <ComboboxInput placeholder="Selecionar fazenda..." showClear={!!field.value} />
+                    <ComboboxContent>
+                      <ComboboxList>
+                        <ComboboxEmpty>Nenhuma fazenda encontrada.</ComboboxEmpty>
+                        {fazendas.map(f => (
+                          <ComboboxItem key={f.id} value={f.id.toString()}>{f.nome}</ComboboxItem>
+                        ))}
+                      </ComboboxList>
+                    </ComboboxContent>
+                  </Combobox>
                 )}
               />
               <FormField name="fazenda_origem_nome" label="Nome da Fazenda (se externa)"
@@ -294,5 +353,3 @@ export default function AnimalForm({ id, onCancel, onSuccess }: AnimalFormProps)
     </form>
   );
 }
-
-

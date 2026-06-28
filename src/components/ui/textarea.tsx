@@ -3,7 +3,7 @@ import * as React from "react"
 import { cn } from "@/lib/utils"
 import { fieldStyles } from "./field-styles"
 
-function TextArea({ className, ...props }: React.ComponentProps<"textarea">) {
+function Textarea({ className, ...props }: React.ComponentProps<"textarea">) {
   return (
     <textarea
       data-slot="textarea"
@@ -17,4 +17,4 @@ function TextArea({ className, ...props }: React.ComponentProps<"textarea">) {
   )
 }
 
-export { TextArea as TextArea }
+export { Textarea as Textarea }
