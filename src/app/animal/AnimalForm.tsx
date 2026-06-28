@@ -53,27 +53,27 @@ export default function AnimalForm({ id, onCancel, onSuccess }: AnimalFormProps)
   const [animais, setAnimais] = useState<AnimalSimples[]>([]);
   const [fazendas, setFazendas] = useState<Fazenda[]>([]);
 
-  const { handleSubmit, control, reset, watch, formState: { isSubmitting } } = useForm<AnimalFormData>({
+  const { handleSubmit, control, reset, watch, setError, formState: { isSubmitting } } = useForm<AnimalFormData>({
     resolver: zodResolver(animalFormSchema),
     defaultValues: {
-      rfid:                "",
-      brinco:              "",
-      nome_apelido:        "",
-      sexo:                EnumSexo.M,
-      data_nascimento:     "",
-      peso_nascimento_kg:  "",
-      origem:              EnumAnimalOrigem.NASCIMENTO,
-      status:              EnumAnimalStatus.ATIVO,
-      raca_id:             "",
-      lote_id:             "",
-      mae_id:              "",
-      pai_id:              "",
-      fazenda_origem_id:   "",
+      rfid: "",
+      brinco: "",
+      nome_apelido: "",
+      sexo: EnumSexo.M,
+      data_nascimento: "",
+      peso_nascimento_kg: "",
+      origem: EnumAnimalOrigem.NASCIMENTO,
+      status: EnumAnimalStatus.ATIVO,
+      raca_id: "",
+      lote_id: "",
+      mae_id: "",
+      pai_id: "",
+      fazenda_origem_id: "",
       fazenda_origem_nome: "",
-      data_aquisicao:      "",
-      valor_compra:        "",
+      data_aquisicao: "",
+      valor_compra: "",
       idade_entrada_meses: "",
-      peso_atual_kg:       "",
+      peso_atual_kg: "",
     },
   });
 
@@ -101,7 +101,9 @@ export default function AnimalForm({ id, onCancel, onSuccess }: AnimalFormProps)
       }
     }
 
-    loadData();
+    loadData(); /*.then(() => {
+      setError("pai_id", { message: "Campo obrigatório" })
+    })*/
   }, [id, reset]);
 
 
@@ -138,6 +140,7 @@ export default function AnimalForm({ id, onCancel, onSuccess }: AnimalFormProps)
   if (isDataLoading) {
     return <FormSkeleton />
   }
+
 
   return (
     <form className="flex flex-col gap-8" onSubmit={handleSubmit(onSubmit)}>
@@ -250,7 +253,7 @@ export default function AnimalForm({ id, onCancel, onSuccess }: AnimalFormProps)
           />
           <FormField name="pai_id" label="Pai (Touro)"
             control={control}
-            render={({ field }) => {
+            render={({ field, fieldState }) => {
               const machos = animais.filter(a => a.sexo === "M");
               return (
                 <Combobox
@@ -258,7 +261,7 @@ export default function AnimalForm({ id, onCancel, onSuccess }: AnimalFormProps)
                   value={field.value || null}
                   onValueChange={(val) => field.onChange(val ?? "")}
                 >
-                  <ComboboxInput placeholder="Selecionar pai..." showClear={!!field.value} />
+                  <ComboboxInput placeholder="Selecionar pai..." aria-invalid={fieldState.invalid || undefined} showClear={!!field.value} />
                   <ComboboxContent>
                     <ComboboxEmpty>Nenhum macho encontrado.</ComboboxEmpty>
                     <ComboboxList>
@@ -285,7 +288,7 @@ export default function AnimalForm({ id, onCancel, onSuccess }: AnimalFormProps)
               <Combobox
                 items={[
                   { value: EnumAnimalOrigem.NASCIMENTO, label: "Nascimento" },
-                  { value: EnumAnimalOrigem.COMPRA,     label: "Compra" },
+                  { value: EnumAnimalOrigem.COMPRA, label: "Compra" },
                   { value: EnumAnimalOrigem.TRANSFERENCIA, label: "Transferência" },
                 ]}
                 value={field.value || null}
