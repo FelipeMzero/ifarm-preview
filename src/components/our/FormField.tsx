@@ -2,7 +2,7 @@
 
 import React from "react"
 import { Control, Controller, ControllerFieldState, ControllerRenderProps, FieldPath, FieldValues } from "react-hook-form"
-import { Info } from "lucide-react"
+import { CircleAlert, Info } from "lucide-react"
 import { Field, FieldError, FieldLabel } from "@/components/ui/field"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 
@@ -58,7 +58,12 @@ export function FormField<T extends FieldValues, TName extends FieldPath<T>>({
               </FieldLabel>
             )}
             {input}
-            {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+            {fieldState.invalid && (
+              <div className="-mt-2 flex items-center gap-1.5">
+                <CircleAlert className="h-4 w-4 shrink-0 text-destructive" />
+                <FieldError className="text-xs" errors={[fieldState.error]} />
+              </div>
+            )}
           </Field>
         )
       }}
