@@ -59,7 +59,7 @@ export function FormField<T extends FieldValues, TName extends FieldPath<T>>({
             )}
             {input}
             {fieldState.invalid && (
-              <div className="-mt-1.5 flex items-center gap-1.5">
+              <div className="-mt-1 flex items-center gap-1.5">
                 <CircleAlert className="h-4 w-4 shrink-0 text-destructive" />
                 <FieldError className="text-xs" errors={[fieldState.error]} />
               </div>

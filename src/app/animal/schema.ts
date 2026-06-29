@@ -15,14 +15,14 @@ const animalBaseSchema = z.object({
   origem:              z.enum(enumValues(EnumAnimalOrigem)),
   status:              z.enum(enumValues(EnumAnimalStatus)),
   mae_id:              z.string().optional(),
-  pai_id:              z.string().optional(),
+  pai_id:              z.string().min(1, "Este campo não pode ser vazio"), //z.string().optional(),
   fazenda_origem_nome: z.string().optional(),
 });
 
 export const animalFormSchema = animalBaseSchema.extend({
   data_nascimento:     z.string().optional(),
   peso_nascimento_kg:  z.string().optional(),
-  raca_id:             z.string().optional(),
+  raca_id:             z.string().min(1, "Este campo não pode ser vazio"), //z.string().optional(),
   lote_id:             z.string().optional(),
   fazenda_origem_id:   z.string().optional(),
   data_aquisicao:      z.string().optional(),
