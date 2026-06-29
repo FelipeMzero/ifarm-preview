@@ -205,9 +205,7 @@ export default function AnimalForm({ id, onCancel, onSuccess }: AnimalFormProps)
             control={control}
             render={({ id, field, fieldState }) => (
               <SearchCombobox placeholder="buscar..."
-                id={id}
-                field={field}
-                fieldState={fieldState}
+                id={id} field={field} fieldState={fieldState}
                 items={racas.map(r => ({ value: r.id.toString(), label: r.nome }))}
               />
             )}
@@ -216,9 +214,7 @@ export default function AnimalForm({ id, onCancel, onSuccess }: AnimalFormProps)
             control={control}
             render={({ id, field, fieldState }) => (
               <SearchCombobox placeholder="buscar..."
-                id={id}
-                field={field}
-                fieldState={fieldState}
+                id={id} field={field} fieldState={fieldState}
                 items={lotes.map(l => ({ value: l.id.toString(), label: l.nome }))}
               />
             )}
@@ -247,9 +243,7 @@ export default function AnimalForm({ id, onCancel, onSuccess }: AnimalFormProps)
             control={control}
             render={({ id, field, fieldState }) => (
               <SearchCombobox placeholder="buscar..."
-                id={id}
-                field={field}
-                fieldState={fieldState}
+                id={id} field={field} fieldState={fieldState}
                 items={animais.filter(a => a.sexo === "F").map(a => ({ value: a.id, label: a.brinco ?? a.rfid ?? a.id.slice(0, 8) }))}
               />
             )}
@@ -258,9 +252,7 @@ export default function AnimalForm({ id, onCancel, onSuccess }: AnimalFormProps)
             control={control}
             render={({ id, field, fieldState }) => (
               <SearchCombobox placeholder="buscar..."
-                id={id}
-                field={field}
-                fieldState={fieldState}
+                id={id} field={field} fieldState={fieldState}
                 items={paiItems}
                 onInputValueChange={(val) => searchPai(val)}
               />
@@ -312,9 +304,7 @@ export default function AnimalForm({ id, onCancel, onSuccess }: AnimalFormProps)
                 control={control}
                 render={({ id, field, fieldState }) => (
                   <SearchCombobox placeholder="buscar..."
-                    id={id}
-                    field={field}
-                    fieldState={fieldState}
+                    id={id} field={field} fieldState={fieldState}
                     items={fazendas.map(f => ({ value: f.id.toString(), label: f.nome }))}
                   />
                 )}
