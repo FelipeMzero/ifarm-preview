@@ -12,7 +12,7 @@ export default function Page() {
         <h1 className="text-3xl font-bold mb-8">Novo Animal</h1>
         <AnimalForm
           onCancel={() => router.back()}
-          onSuccess={(newId) => router.replace(`/author/${newId}`)}
+          onSuccess={(newId) => router.replace(`/animal/${newId}`)}
         />
       </div>
     </div>

@@ -13,13 +13,6 @@ import { Input } from "@/components/ui/input";
 import { FormField } from "@/components/our/FormField";
 import FieldRow from "@/components/our/FieldRow";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
   Combobox,
   ComboboxInput,
   ComboboxContent,
@@ -46,6 +39,16 @@ type AnimalSimples = { id: string; brinco: string | null; rfid: string | null; s
 type Fazenda = { id: number; nome: string };
 
 export default function AnimalForm({ id, onCancel, onSuccess }: AnimalFormProps) {
+  const ORIGEM_ITEMS = [
+    { value: EnumAnimalOrigem.NASCIMENTO, label: "Nascimento" },
+    { value: EnumAnimalOrigem.COMPRA, label: "Compra" },
+    { value: EnumAnimalOrigem.TRANSFERENCIA, label: "Transferência" },
+  ]
+  const SEXO_ITEMS = [
+    { value: EnumSexo.M, label: "Macho" },
+    { value: EnumSexo.F, label: "Fêmea" },
+  ]
+
   const [isDataLoading, setIsDataLoading] = useState(true);
   const [loadFailed, setLoadFailed] = useState(false);
   const [racas, setRacas] = useState<Raca[]>([]);
@@ -101,9 +104,7 @@ export default function AnimalForm({ id, onCancel, onSuccess }: AnimalFormProps)
       }
     }
 
-    loadData(); /*.then(() => {
-      setError("pai_id", { message: "Campo obrigatório" })
-    })*/
+    loadData();
   }, [id, reset]);
 
 
@@ -167,15 +168,16 @@ export default function AnimalForm({ id, onCancel, onSuccess }: AnimalFormProps)
           <FormField name="sexo" label="Sexo"
             control={control}
             render={({ field, id }) => (
-              <Select onValueChange={field.onChange} value={field.value}>
-                <SelectTrigger id={id} ref={field.ref}>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={EnumSexo.M}>Macho</SelectItem>
-                  <SelectItem value={EnumSexo.F}>Fêmea</SelectItem>
-                </SelectContent>
-              </Select>
+              <Combobox items={SEXO_ITEMS} value={field.value || null} onValueChange={(val) => field.onChange(val ?? "")}>
+                <ComboboxInput id={id} ref={field.ref} readOnly value={SEXO_ITEMS.find(i => i.value === field.value)?.label ?? ""}/>
+                <ComboboxContent>
+                  <ComboboxList>
+                    {(item) => (
+                      <ComboboxItem key={item.value} value={item.value}>{item.label}</ComboboxItem>
+                    )}
+                  </ComboboxList>
+                </ComboboxContent>
+              </Combobox>
             )}
           />
         </FieldRow>
@@ -184,14 +186,18 @@ export default function AnimalForm({ id, onCancel, onSuccess }: AnimalFormProps)
           <FormField name="raca_id" label="Raça"
             control={control}
             render={({ field, id }) => (
-              <Combobox value={field.value || null} onValueChange={(val) => field.onChange(val ?? "")}>
+              <Combobox
+                items={racas.map(r => ({ value: r.id.toString(), label: r.nome }))}
+                value={field.value || null}
+                onValueChange={(val) => field.onChange(val ?? "")}
+              >
                 <ComboboxInput id={id} ref={field.ref} placeholder="Selecionar..." showClear={!!field.value} />
                 <ComboboxContent>
+                  <ComboboxEmpty>Nenhuma raça encontrada.</ComboboxEmpty>
                   <ComboboxList>
-                    <ComboboxEmpty>Nenhuma raça encontrada.</ComboboxEmpty>
-                    {racas.map(r => (
-                      <ComboboxItem key={r.id} value={r.id.toString()}>{r.nome}</ComboboxItem>
-                    ))}
+                    {(item) => (
+                      <ComboboxItem key={item.value} value={item.value}>{item.label}</ComboboxItem>
+                    )}
                   </ComboboxList>
                 </ComboboxContent>
               </Combobox>
@@ -200,14 +206,18 @@ export default function AnimalForm({ id, onCancel, onSuccess }: AnimalFormProps)
           <FormField name="lote_id" label="Lote"
             control={control}
             render={({ field, id }) => (
-              <Combobox value={field.value || null} onValueChange={(val) => field.onChange(val ?? "")}>
+              <Combobox
+                items={lotes.map(l => ({ value: l.id.toString(), label: l.nome }))}
+                value={field.value || null}
+                onValueChange={(val) => field.onChange(val ?? "")}
+              >
                 <ComboboxInput id={id} ref={field.ref} placeholder="Sem lote" showClear={!!field.value} />
                 <ComboboxContent>
+                  <ComboboxEmpty>Nenhum lote encontrado.</ComboboxEmpty>
                   <ComboboxList>
-                    <ComboboxEmpty>Nenhum lote encontrado.</ComboboxEmpty>
-                    {lotes.map(l => (
-                      <ComboboxItem key={l.id} value={l.id.toString()}>{l.nome}</ComboboxItem>
-                    ))}
+                    {(item) => (
+                      <ComboboxItem key={item.value} value={item.value}>{item.label}</ComboboxItem>
+                    )}
                   </ComboboxList>
                 </ComboboxContent>
               </Combobox>
@@ -236,16 +246,18 @@ export default function AnimalForm({ id, onCancel, onSuccess }: AnimalFormProps)
           <FormField name="mae_id" label="Mãe"
             control={control}
             render={({ field }) => (
-              <Combobox value={field.value || null} onValueChange={(val) => field.onChange(val ?? "")}>
+              <Combobox
+                items={animais.filter(a => a.sexo === "F").map(a => ({ value: a.id, label: a.brinco ?? a.rfid ?? a.id.slice(0, 8) }))}
+                value={field.value || null}
+                onValueChange={(val) => field.onChange(val ?? "")}
+              >
                 <ComboboxInput placeholder="Selecionar mãe..." showClear={!!field.value} />
                 <ComboboxContent>
+                  <ComboboxEmpty>Nenhum item encontrado.</ComboboxEmpty>
                   <ComboboxList>
-                    <ComboboxEmpty>Nenhuma fêmea encontrada.</ComboboxEmpty>
-                    {animais.filter(a => a.sexo === "F").map(a => (
-                      <ComboboxItem key={a.id} value={a.id}>
-                        {a.brinco ?? a.rfid ?? a.id.slice(0, 8)}
-                      </ComboboxItem>
-                    ))}
+                    {(item) => (
+                      <ComboboxItem key={item.value} value={item.value}>{item.label}</ComboboxItem>
+                    )}
                   </ComboboxList>
                 </ComboboxContent>
               </Combobox>
@@ -286,15 +298,11 @@ export default function AnimalForm({ id, onCancel, onSuccess }: AnimalFormProps)
             control={control}
             render={({ field, id }) => (
               <Combobox
-                items={[
-                  { value: EnumAnimalOrigem.NASCIMENTO, label: "Nascimento" },
-                  { value: EnumAnimalOrigem.COMPRA, label: "Compra" },
-                  { value: EnumAnimalOrigem.TRANSFERENCIA, label: "Transferência" },
-                ]}
+                items={ORIGEM_ITEMS}
                 value={field.value || null}
                 onValueChange={(val) => field.onChange(val ?? "")}
               >
-                <ComboboxInput id={id} ref={field.ref} readOnly />
+                <ComboboxInput id={id} ref={field.ref} readOnly value={ORIGEM_ITEMS.find(i => i.value === field.value)?.label ?? ""} />
                 <ComboboxContent>
                   <ComboboxList>
                     {(item) => (
@@ -325,14 +333,18 @@ export default function AnimalForm({ id, onCancel, onSuccess }: AnimalFormProps)
               <FormField name="fazenda_origem_id" label="Fazenda de Origem"
                 control={control}
                 render={({ field }) => (
-                  <Combobox value={field.value || null} onValueChange={(val) => field.onChange(val ?? "")}>
+                  <Combobox
+                    items={fazendas.map(f => ({ value: f.id.toString(), label: f.nome }))}
+                    value={field.value || null}
+                    onValueChange={(val) => field.onChange(val ?? "")}
+                  >
                     <ComboboxInput placeholder="Selecionar fazenda..." showClear={!!field.value} />
                     <ComboboxContent>
+                      <ComboboxEmpty>Nenhuma fazenda encontrada.</ComboboxEmpty>
                       <ComboboxList>
-                        <ComboboxEmpty>Nenhuma fazenda encontrada.</ComboboxEmpty>
-                        {fazendas.map(f => (
-                          <ComboboxItem key={f.id} value={f.id.toString()}>{f.nome}</ComboboxItem>
-                        ))}
+                        {(item) => (
+                          <ComboboxItem key={item.value} value={item.value}>{item.label}</ComboboxItem>
+                        )}
                       </ComboboxList>
                     </ComboboxContent>
                   </Combobox>
