@@ -94,11 +94,13 @@ export async function getAnimais(params: {
   pageSize?: number;
   search?: string;
   status?: string;
+  sexo?: string;
 } = {}): Promise<AnimalListResult> {
-  const { page = 0, pageSize = 10, search = "", status = "" } = params;
+  const { page = 0, pageSize = 10, search = "", status = "", sexo = "" } = params;
   const query = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
   if (search) query.set("search", search);
   if (status) query.set("status", status);
+  if (sexo) query.set("sexo", sexo);
 
   const response = await fetch(`${API_ENDPOINTS.ANIMAIS}?${query}`);
   const result = await response.json();

@@ -11,6 +11,7 @@ export async function GET(request: NextRequest) {
     const pageSize = Math.max(1, Number(searchParams.get("pageSize") ?? 10));
     const search   = searchParams.get("search")?.trim() ?? "";
     const status   = searchParams.get("status")?.trim() ?? "";
+    const sexo     = searchParams.get("sexo")?.trim() ?? "";
 
     const where = {
       ...(search ? {
@@ -21,6 +22,7 @@ export async function GET(request: NextRequest) {
         ],
       } : {}),
       ...(status ? { status: status as any } : {}),
+      ...(sexo ? { sexo: sexo as any } : {}),
     };
 
     const [animais, total] = await Promise.all([
