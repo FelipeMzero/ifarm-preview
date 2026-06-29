@@ -215,9 +215,6 @@ export default function AnimalList() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-xl font-semibold">Animais</h1>
-          <p className="text-sm text-muted-foreground">
-            {total} registro{total !== 1 ? "s" : ""} encontrado{total !== 1 ? "s" : ""}
-          </p>
         </div>
         <Button onClick={() => setIsCreating(true)}>
           <Plus className="size-4" /> Novo Animal
