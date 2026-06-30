@@ -30,6 +30,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 
 type AnimalFormProps = {
   id?: string;
+  title?: string;
   onCancel?: () => void;
   onSuccess?: (newId?: string) => void;
 };
@@ -39,7 +40,7 @@ type Lote = { id: number; nome: string };
 type AnimalSimples = { id: string; brinco: string | null; rfid: string | null; sexo: string };
 type Fazenda = { id: number; nome: string };
 
-export default function AnimalForm({ id, onCancel, onSuccess }: AnimalFormProps) {
+export default function AnimalForm({ id, title, onCancel, onSuccess }: AnimalFormProps) {
   const ORIGEM_ITEMS = [
     { value: EnumAnimalOrigem.NASCIMENTO, label: "Nascimento" },
     { value: EnumAnimalOrigem.COMPRA, label: "Compra" },
@@ -163,6 +164,8 @@ export default function AnimalForm({ id, onCancel, onSuccess }: AnimalFormProps)
   return (
     <form className="flex flex-col gap-8" onSubmit={handleSubmit(onSubmit)}>
 
+      {title && <h1 className="text-xl font-semibold">{title}</h1>}
+
       <FieldSet className="bg-card">
         <FieldLegend> Identificação </FieldLegend>
 
@@ -272,7 +275,7 @@ export default function AnimalForm({ id, onCancel, onSuccess }: AnimalFormProps)
                 value={field.value || null}
                 onValueChange={(val) => field.onChange(val ?? "")}
               >
-                <ComboboxInput id={id} ref={field.ref}  />
+                <ComboboxInput id={id} ref={field.ref} />
                 <ComboboxContent>
                   <ComboboxList>
                     {(item) => (

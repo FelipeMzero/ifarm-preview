@@ -294,10 +294,8 @@ export default function AnimalList() {
 
       <Dialog open={isCreating} onOpenChange={(open) => { if (!open) setIsCreating(false); }}>
         <DialogContent className="p-8 sm:max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="text-2xl">Novo animal</DialogTitle>
-          </DialogHeader>
           <AnimalForm
+            title="Novo Animal"
             onCancel={() => setIsCreating(false)}
             onSuccess={() => { setIsCreating(false); setRefreshKey((k) => k + 1); }}
           />
@@ -306,11 +304,9 @@ export default function AnimalList() {
 
       <Dialog open={editingId !== null} onOpenChange={(open) => { if (!open) setEditingId(null); }}>
         <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="text-2xl">Editar animal</DialogTitle>
-          </DialogHeader>
           <AnimalForm
             id={editingId ?? undefined}
+            title="Editar Animal"
             onCancel={() => setEditingId(null)}
             onSuccess={() => { setEditingId(null); setRefreshKey((k) => k + 1); }}
           />
