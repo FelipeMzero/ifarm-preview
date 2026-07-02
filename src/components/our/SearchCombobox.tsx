@@ -20,6 +20,8 @@ type SearchComboboxProps<T extends FieldValues, TName extends FieldPath<T>> = {
   placeholder?: string
   emptyMessage?: string
   id?: string
+  /** Se o campo ficar vazio ao perder o foco, volta a selecionar items[0]. Use em campos sem opção "vazio" válida (ex: enums). */
+  keepSelection?: boolean
 }
 
 export function SearchCombobox<T extends FieldValues, TName extends FieldPath<T>>({
@@ -30,6 +32,7 @@ export function SearchCombobox<T extends FieldValues, TName extends FieldPath<T>
   placeholder,
   emptyMessage = "Não há itens",
   id,
+  keepSelection = false,
 }: SearchComboboxProps<T, TName>) {
   return (
     <Combobox
@@ -38,12 +41,17 @@ export function SearchCombobox<T extends FieldValues, TName extends FieldPath<T>
       value={field.value || null}
       onValueChange={(val) => field.onChange(val ?? "")}
       onInputValueChange={onInputValueChange}
+      itemToStringLabel={(val: string) => items.find((item) => item.value === val)?.label ?? val}
     >
       <ComboboxInput
         id={id}
         placeholder={placeholder}
         aria-invalid={fieldState.invalid || undefined}
         showClear={!!field.value}
+        onBlur={() => {
+          field.onBlur()
+          if (keepSelection && !field.value && items[0]) field.onChange(items[0].value)
+        }}
       />
       <ComboboxContent>
         <ComboboxEmpty>{emptyMessage}</ComboboxEmpty>

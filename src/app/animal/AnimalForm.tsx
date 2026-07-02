@@ -185,19 +185,15 @@ export default function AnimalForm({ id, title, onCancel, onSuccess }: AnimalFor
             control={control}
             render={({ field, id }) => <Input {...field} id={id} placeholder="Opcional" />}
           />
+
           <FormField name="sexo" label="Sexo"
             control={control}
-            render={({ field, id }) => (
-              <Combobox items={SEXO_ITEMS} value={field.value || null} onValueChange={(val) => field.onChange(val ?? "")}>
-                <ComboboxInput id={id} ref={field.ref} readOnly value={SEXO_ITEMS.find(i => i.value === field.value)?.label ?? ""} />
-                <ComboboxContent>
-                  <ComboboxList>
-                    {(item) => (
-                      <ComboboxItem key={item.value} value={item.value}>{item.label}</ComboboxItem>
-                    )}
-                  </ComboboxList>
-                </ComboboxContent>
-              </Combobox>
+            render={({ id, field, fieldState }) => (
+              <SearchCombobox
+                id={id} field={field} fieldState={fieldState}
+                items={SEXO_ITEMS}
+                keepSelection
+              />
             )}
           />
         </FieldRow>
@@ -269,23 +265,12 @@ export default function AnimalForm({ id, title, onCancel, onSuccess }: AnimalFor
         <FieldRow cols={2}>
           <FormField name="origem" label="Origem"
             control={control}
-            render={({ field, id }) => (
-              <Combobox
+            render={({ id, field, fieldState }) => (
+              <SearchCombobox
+                id={id} field={field} fieldState={fieldState}
                 items={ORIGEM_ITEMS}
-                value={field.value || null}
-                onValueChange={(val) => field.onChange(val ?? "")}
-              >
-                <ComboboxInput id={id} ref={field.ref} />
-                <ComboboxContent>
-                  <ComboboxList>
-                    {(item) => (
-                      <ComboboxItem key={item.value} value={item.value}>
-                        {item.label}
-                      </ComboboxItem>
-                    )}
-                  </ComboboxList>
-                </ComboboxContent>
-              </Combobox>
+                keepSelection
+              />
             )}
           />
         </FieldRow>
