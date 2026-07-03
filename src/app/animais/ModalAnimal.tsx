@@ -4,7 +4,7 @@ import { useState } from 'react';
 
 export default function ModalAnimal({ onClose, onSaved, lotes = [], racas = [], animaisFazenda = [], fazendas = [] }: any) {
   const [form, setForm] = useState({
-    rfid: '', brinco: '', sexo: 'M', raca_id: '', lote_id: '',
+    brinco: '', rfid: '', sexo: 'M', raca_id: '', lote_id: '',
     data_nascimento: '', origem: 'NASCIMENTO',
     peso_nascimento_kg: '', nome_apelido: '',
     mae_id: '', pai_id: '',
