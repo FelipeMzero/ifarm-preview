@@ -73,8 +73,8 @@ model Fazenda {
 
 model Animal {
   id                 String       @id @default(uuid())
+  brinco             String       @unique
   rfid               String?      @unique
-  brinco             String?      @unique
   nome_apelido       String?
   sexo               Sexo
   data_nascimento    DateTime?

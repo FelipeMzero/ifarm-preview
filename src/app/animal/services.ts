@@ -3,7 +3,7 @@ import { AnimalFormData } from "./schema";
 export type AnimalRow = {
   id: string;
   rfid: string | null;
-  brinco: string | null;
+  brinco: string;
   nome_apelido: string | null;
   sexo: string;
   data_nascimento: string | null;

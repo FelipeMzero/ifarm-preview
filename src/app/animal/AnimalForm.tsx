@@ -12,18 +12,11 @@ import { FieldLegend, FieldSet } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { FormField } from "@/components/our/FormField";
 import FieldRow from "@/components/our/FieldRow";
-import {
-  Combobox,
-  ComboboxInput,
-  ComboboxContent,
-  ComboboxList,
-  ComboboxItem,
-} from "@/components/ui/combobox";
+
 import { SearchCombobox } from "@/components/our/SearchCombobox";
 import { Loader2 } from "lucide-react";
 import FormSkeleton from "@/components/our/FormSkeleton";
 import { AnimalFormData, animalFormSchema, EnumAnimalOrigem, EnumAnimalStatus, EnumSexo } from "./schema";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 
 
@@ -37,7 +30,7 @@ type AnimalFormProps = {
 
 type Raca = { id: number; nome: string };
 type Lote = { id: number; nome: string };
-type AnimalSimples = { id: string; brinco: string | null; rfid: string | null; sexo: string };
+type AnimalSimples = { id: string; brinco: string; rfid: string | null; sexo: string };
 type Fazenda = { id: number; nome: string };
 
 export default function AnimalForm({ id, title, onCancel, onSuccess }: AnimalFormProps) {
@@ -66,7 +59,7 @@ export default function AnimalForm({ id, title, onCancel, onSuccess }: AnimalFor
     if (paiDebounce.current) clearTimeout(paiDebounce.current);
     paiDebounce.current = setTimeout(async () => {
       const result = await getAnimais({ search: query, sexo: "M", pageSize: query ? 20 : 2 });
-      setPaiItems(result.data.map(a => ({ value: a.id, label: a.brinco ?? a.rfid ?? a.id.slice(0, 8) })));
+      setPaiItems(result.data.map(a => ({ value: a.id, label: a.brinco })));
     }, 300);
   }, []);
 
@@ -108,7 +101,7 @@ export default function AnimalForm({ id, title, onCancel, onSuccess }: AnimalFor
         setLotes(meta.lotes);
         setAnimais(meta.animaisFazenda);
         setFazendas(meta.fazendas);
-        setPaiItems(paiResult.data.map(a => ({ value: a.id, label: a.brinco ?? a.rfid ?? a.id.slice(0, 8) })));
+        setPaiItems(paiResult.data.map(a => ({ value: a.id, label: a.brinco })));
 
         if (id) {
           const data = await getAnimal(id);
@@ -143,8 +136,8 @@ export default function AnimalForm({ id, title, onCancel, onSuccess }: AnimalFor
         toast.success("Salvo com sucesso!")
         onSuccess?.(response.data.id)
       }
-    } catch {
-      toast.error("A requisição falhou! Tente novamente.")
+    } catch (error) {
+      toast.error("A requisição falhou! Tente novamente." + error)
     }
   }
 
@@ -170,13 +163,14 @@ export default function AnimalForm({ id, title, onCancel, onSuccess }: AnimalFor
         <FieldLegend> Identificação </FieldLegend>
 
         <FieldRow cols={2}>
-          <FormField name="rfid" label="RFID / Chip" required
-            control={control}
-            render={({ field, id }) => <Input {...field} id={id} placeholder="Ex: 900082000169813" />}
-          />
-          <FormField name="brinco" label="Brinco"
+          <FormField name="brinco" label="Brinco" required
             control={control}
             render={({ field, id }) => <Input {...field} id={id} placeholder="Ex: MS-001234" />}
+          />
+
+          <FormField name="rfid" label="RFID / Chip"
+            control={control}
+            render={({ field, id }) => <Input {...field} id={id} placeholder="Ex: 900082000169813" />}
           />
         </FieldRow>
 
@@ -238,12 +232,12 @@ export default function AnimalForm({ id, title, onCancel, onSuccess }: AnimalFor
       <FieldSet>
         <FieldLegend>Filiação</FieldLegend>
         <FieldRow cols={2}>
-          <FormField name="mae_id" label="Mãe"
+          <FormField name="mae_id" label="Mãe" required
             control={control}
             render={({ id, field, fieldState }) => (
               <SearchCombobox placeholder="buscar..."
                 id={id} field={field} fieldState={fieldState}
-                items={animais.filter(a => a.sexo === "F").map(a => ({ value: a.id, label: a.brinco ?? a.rfid ?? a.id.slice(0, 8) }))}
+                items={animais.filter(a => a.sexo === "F").map(a => ({ value: a.id, label: a.brinco }))}
               />
             )}
           />

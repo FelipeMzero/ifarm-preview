@@ -8,14 +8,14 @@ export const EnumAnimalOrigem = { NASCIMENTO: "NASCIMENTO", COMPRA: "COMPRA", TR
 export const EnumAnimalStatus = { ATIVO: "ATIVO", VENDIDO: "VENDIDO", MORTO: "MORTO", TRANSFERIDO: "TRANSFERIDO", DESCARTE: "DESCARTE", ABATE: "ABATE" } as const;
 
 const animalBaseSchema = z.object({
-  rfid:                z.string().min(1, "Este campo não pode ser vazio"),
-  brinco:              z.string().optional(),
+  brinco:              z.string().min(1, "Este campo não pode ser vazio"),
+  rfid:                z.string().optional(),
   nome_apelido:        z.string().optional(),
   sexo:                z.enum(enumValues(EnumSexo)),
   origem:              z.enum(enumValues(EnumAnimalOrigem)),
   status:              z.enum(enumValues(EnumAnimalStatus)),
-  mae_id:              z.string().optional(),
-  pai_id:              z.string().min(1, "Este campo não pode ser vazio"), //z.string().optional(),
+  mae_id:              z.string().min(1, "Este campo não pode ser vazio"), //z.string().optional(),
+  pai_id:              z.string().optional(),
   fazenda_origem_nome: z.string().optional(),
 });
 
