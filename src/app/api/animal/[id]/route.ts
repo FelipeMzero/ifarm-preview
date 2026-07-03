@@ -16,8 +16,8 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
     }
 
     return NextResponse.json({
-      rfid:                animal.rfid                ?? "",
       brinco:              animal.brinco              ?? "",
+      rfid:                animal.rfid                ?? "",
       nome_apelido:        animal.nome_apelido        ?? "",
       sexo:                animal.sexo,
       origem:              animal.origem,
