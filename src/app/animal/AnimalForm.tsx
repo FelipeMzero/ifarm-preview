@@ -66,8 +66,8 @@ export default function AnimalForm({ id, title, onCancel, onSuccess }: AnimalFor
   const { handleSubmit, control, reset, watch, setError, formState: { isSubmitting } } = useForm<AnimalFormData>({
     resolver: zodResolver(animalFormSchema),
     defaultValues: {
-      rfid: "",
       brinco: "",
+      rfid: "",
       nome_apelido: "",
       sexo: EnumSexo.M,
       data_nascimento: "",

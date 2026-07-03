@@ -62,8 +62,8 @@ export async function POST(request: NextRequest) {
 
     const result = await prisma.animal.create({
       data: {
-        rfid: body.rfid || null,
         brinco: body.brinco || null,
+        rfid: body.rfid || null,
         nome_apelido: body.nome_apelido || null,
         sexo: body.sexo,
         origem: body.origem,
