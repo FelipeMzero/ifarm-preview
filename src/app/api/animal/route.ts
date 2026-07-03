@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { animalApiSchema } from "@/app/animal/schema";
+import { uniqueConstraintErrors } from "./apiErrors";
 
 
 
@@ -38,8 +39,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       data: animais.map((a) => ({
         id:                 a.id,
-        rfid:               a.rfid,
         brinco:             a.brinco,
+        rfid:               a.rfid,
         nome_apelido:       a.nome_apelido,
         sexo:               a.sexo,
         data_nascimento:    a.data_nascimento?.toISOString().slice(0, 10) ?? null,
@@ -80,6 +81,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: true, data: animal }, { status: 201 });
 
   } catch (error) {
+    const errors = uniqueConstraintErrors(error);
+    if (errors) {
+      return NextResponse.json({ success: false, errors }, { status: 409 });
+    }
+
     console.error(error);
     return NextResponse.json({ success: false, message: "Ocorreu um erro interno no servidor." }, { status: 500 });
   }

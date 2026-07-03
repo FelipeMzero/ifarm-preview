@@ -1,5 +1,15 @@
 import { AnimalFormData } from "./schema";
 
+export class ApiError extends Error {
+  errors?: Record<string, string>;
+
+  constructor(message: string, errors?: Record<string, string>) {
+    super(message);
+    this.name = "ApiError";
+    this.errors = errors;
+  }
+}
+
 export type AnimalRow = {
   id: string;
   rfid: string | null;
@@ -31,7 +41,7 @@ export async function createAnimal(data: AnimalFormData) {
   const result = await response.json();
 
   if (!response.ok) {
-    throw new Error(result.message);
+    throw new ApiError(result.message ?? "Não foi possível salvar o animal.", result.errors);
   }
 
   return result;
@@ -49,7 +59,7 @@ export async function updateAnimal(id: string, data: AnimalFormData) {
   const result = await response.json();
 
   if (!response.ok) {
-    throw new Error(result.message);
+    throw new ApiError(result.message ?? "Não foi possível atualizar o animal.", result.errors);
   }
 
   return result;

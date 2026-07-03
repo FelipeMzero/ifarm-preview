@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
-import { getAnimal, updateAnimal, createAnimal, getAnimais } from "./services";
+import { getAnimal, updateAnimal, createAnimal, getAnimais, ApiError } from "./services";
 import { ErrorPage } from "@/components/our/ErrorPage";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -137,7 +137,14 @@ export default function AnimalForm({ id, title, onCancel, onSuccess }: AnimalFor
         onSuccess?.(response.data.id)
       }
     } catch (error) {
-      toast.error("A requisição falhou! Tente novamente." + error)
+      if (error instanceof ApiError && error.errors) {
+        Object.entries(error.errors).forEach(([field, message]) => {
+          setError(field as keyof AnimalFormData, { type: "server", message });
+        });
+        toast.error("Verifique os campos destacados.");
+      } else {
+        toast.error("A requisição falhou! Tente novamente.");
+      }
     }
   }
 

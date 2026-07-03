@@ -32,8 +32,8 @@ export const animalFormSchema = animalBaseSchema.extend({
 });
 
 export const animalApiSchema = animalBaseSchema.extend({
-  rfid:                z.string().optional().transform(v => v || null),
   brinco:              z.string().optional().transform(v => v || null),
+  rfid:                z.string().optional().transform(v => v || null),
   nome_apelido:        z.string().optional().transform(v => v || null),
   mae_id:              z.string().optional().transform(v => v || null),
   pai_id:              z.string().optional().transform(v => v || null),

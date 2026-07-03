@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { animalApiSchema } from "@/app/animal/schema";
+import { uniqueConstraintErrors } from "../apiErrors";
 
 
 
@@ -67,6 +68,11 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     return NextResponse.json({ success: true, data: animal });
 
   } catch (error) {
+    const errors = uniqueConstraintErrors(error);
+    if (errors) {
+      return NextResponse.json({ success: false, errors }, { status: 409 });
+    }
+
     console.error(error);
     return NextResponse.json({ success: false, message: "Ocorreu um erro interno no servidor." }, { status: 500 });
   }
