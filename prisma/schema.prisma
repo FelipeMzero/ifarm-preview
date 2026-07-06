@@ -76,9 +76,9 @@ model Animal {
   brinco             String       @unique
   rfid               String?      @unique
   nome_apelido       String?
-  sexo               Sexo
   data_nascimento    DateTime?
   peso_nascimento_kg Float?
+  sexo               Sexo @default(M)
   origem             AnimalOrigem @default(NASCIMENTO)
   status             AnimalStatus @default(ATIVO)
   

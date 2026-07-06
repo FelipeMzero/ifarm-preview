@@ -1,9 +1,9 @@
 import { Prisma } from "@/lib/prisma";
 
-const UNIQUE_FIELD_MESSAGES: Record<string, string> = {
-  brinco: "Este brinco já está em uso.",
-  rfid: "Este RFID já está em uso.",
-};
+// const UNIQUE_FIELD_MESSAGES: Record<string, string> = {
+//   brinco: "Este brinco já está em uso.",
+//   rfid: "Este RFID já está em uso.",
+// };
 
 export function uniqueConstraintErrors(error: unknown): Record<string, string> | null {
   if (!(error instanceof Prisma.PrismaClientKnownRequestError) || error.code !== "P2002") {
@@ -16,7 +16,7 @@ export function uniqueConstraintErrors(error: unknown): Record<string, string> |
   const target = (error.meta?.target as string[] | undefined) ?? driverFields ?? [];
   const errors: Record<string, string> = {};
   target.forEach((field) => {
-    errors[field] = UNIQUE_FIELD_MESSAGES[field] ?? "Este valor já está em uso.";
+    errors[field] = "Este valor já está em uso."; //errors[field] = UNIQUE_FIELD_MESSAGES[field] ?? "Este valor já está em uso.";
   });
 
   return Object.keys(errors).length ? errors : null;

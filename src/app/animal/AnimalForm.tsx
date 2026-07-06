@@ -239,7 +239,7 @@ export default function AnimalForm({ id, title, onCancel, onSuccess }: AnimalFor
       <FieldSet>
         <FieldLegend>Filiação</FieldLegend>
         <FieldRow cols={2}>
-          <FormField name="mae_id" label="Mãe" required
+          <FormField name="mae_id" label="Mãe"
             control={control}
             render={({ id, field, fieldState }) => (
               <SearchCombobox placeholder="buscar..."

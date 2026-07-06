@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { animalApiSchema } from "@/app/animal/schema";
-import { uniqueConstraintErrors } from "../apiErrors";
+import { uniqueConstraintErrors } from "../../dbErrors";
+import { animalApiSchema } from "../../schemas";
 
 
 

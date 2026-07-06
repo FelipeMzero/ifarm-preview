@@ -1,18 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { animalApiSchema } from "@/app/animal/schema";
-import { uniqueConstraintErrors } from "./apiErrors";
+import { uniqueConstraintErrors } from "../dbErrors";
+import { animalApiSchema, animalQuerySchema } from "../schemas";
 
 
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const page     = Math.max(0, Number(searchParams.get("page")     ?? 0));
-    const pageSize = Math.max(1, Number(searchParams.get("pageSize") ?? 10));
-    const search   = searchParams.get("search")?.trim() ?? "";
-    const status   = searchParams.get("status")?.trim() ?? "";
-    const sexo     = searchParams.get("sexo")?.trim() ?? "";
+    const validation = animalQuerySchema.safeParse(Object.fromEntries(searchParams));
+
+    if (!validation.success) {
+      return NextResponse.json({ message: "Parâmetros inválidos." }, { status: 400 });
+    }
+
+    const { page, pageSize, search, status, sexo } = validation.data;
 
     const where = {
       ...(search ? {
@@ -22,8 +24,8 @@ export async function GET(request: NextRequest) {
           { nome_apelido: { contains: search, mode: "insensitive" as const } },
         ],
       } : {}),
-      ...(status ? { status: status as any } : {}),
-      ...(sexo ? { sexo: sexo as any } : {}),
+      ...(status ? { status } : {}),
+      ...(sexo ? { sexo } : {}),
     };
 
     const [animais, total] = await Promise.all([
