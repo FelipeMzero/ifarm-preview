@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
-import { getAnimal, updateAnimal, createAnimal, getAnimais, ApiError } from "./services";
+import { getAnimal, updateAnimal, createAnimal, getAnimais, getMetadados, ApiError, Raca, Lote, AnimalSimples, Fazenda } from "./services";
 import { ErrorPage } from "@/components/our/ErrorPage";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -27,11 +27,6 @@ type AnimalFormProps = {
   onCancel?: () => void;
   onSuccess?: (newId?: string) => void;
 };
-
-type Raca = { id: number; nome: string };
-type Lote = { id: number; nome: string };
-type AnimalSimples = { id: string; brinco: string; rfid: string | null; sexo: string };
-type Fazenda = { id: number; nome: string };
 
 export default function AnimalForm({ id, title, onCancel, onSuccess }: AnimalFormProps) {
   const ORIGEM_ITEMS = [
@@ -94,7 +89,7 @@ export default function AnimalForm({ id, title, onCancel, onSuccess }: AnimalFor
     async function loadData() {
       try {
         const [meta, paiResult] = await Promise.all([
-          fetch("/api/metadados").then(r => r.json()),
+          getMetadados(),
           getAnimais({ sexo: "MACHO", pageSize: 2 }),
         ]);
         setRacas(meta.racas);

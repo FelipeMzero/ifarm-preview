@@ -11,7 +11,7 @@ export default function Page() {
       <AnimalForm
         title="Novo Animal"
         onCancel={() => router.back()}
-        onSuccess={(newId) => router.replace(`/animal/${newId}`)}
+        onSuccess={(newId) => router.replace(`/animais/${newId}`)}
       />
     </div>
   );

@@ -22,7 +22,7 @@ export default function Page() {
 
         <div className="flex flex-col sm:flex-row gap-4 items-center justify-center pt-4">
           <Link 
-            href="/animais" 
+            href="/animais"
             className="group relative flex items-center gap-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-8 py-4 rounded-xl transition-all duration-200 hover:scale-105 hover:shadow-xl hover:shadow-emerald-600/30"
           >
             <Beef size={20} />

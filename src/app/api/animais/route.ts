@@ -1,91 +1,94 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { uniqueConstraintErrors } from "../dbErrors";
+import { animalApiSchema, animalQuerySchema } from "../schemas";
+
+
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const search = searchParams.get("search") || "";
-    const status = searchParams.get("status") || "";
+    const validation = animalQuerySchema.safeParse(Object.fromEntries(searchParams));
 
-    const filters: any = {};
-
-    if (status) {
-      filters.status = status;
+    if (!validation.success) {
+      return NextResponse.json({ message: "Parâmetros inválidos." }, { status: 400 });
     }
 
-    if (search) {
-      filters.OR = [
-        { brinco: { contains: search, mode: "insensitive" } },
-        { rfid: { contains: search, mode: "insensitive" } },
-        { nome: { contains: search, mode: "insensitive" } },
-      ];
-    }
+    const { page, pageSize, search, status, sexo } = validation.data;
 
-    const animais = await prisma.animal.findMany({
-      where: filters,
-      include: {
-        raca: true,
-        lote: true,
-      },
-      orderBy: { createdAt: "desc" },
-    });
+    const where = {
+      ...(search ? {
+        OR: [
+          { brinco: { contains: search, mode: "insensitive" as const } },
+          { rfid:   { contains: search, mode: "insensitive" as const } },
+          { nome:   { contains: search, mode: "insensitive" as const } },
+        ],
+      } : {}),
+      ...(status ? { status } : {}),
+      ...(sexo ? { sexo } : {}),
+    };
 
-    // Adaptando para o formato esperado pelo frontend que usava mock
-    const data = animais.map((a: any) => ({
-      id: a.id,
-      brinco: a.brinco,
-      rfid: a.rfid,
-      raca: a.raca?.nome,
-      sexo: a.sexo,
-      idadeMeses: a.dataNascimento ?
-        Math.floor((new Date().getTime() - new Date(a.dataNascimento).getTime()) / (1000 * 60 * 60 * 24 * 30.44))
-        : null,
-      pesoAtualKg: a.pesoAtualKg || a.pesoNascimentoKg,
-      origem: a.origem,
-      loteNome: a.lote?.nome,
-      status: a.status,
-    }));
+    const [animais, total] = await Promise.all([
+      prisma.animal.findMany({
+        where,
+        orderBy: { updatedAt: "desc" },
+        skip: page * pageSize,
+        take: pageSize,
+      }),
+      prisma.animal.count({ where }),
+    ]);
 
     return NextResponse.json({
-      total: data.length,
-      data: data,
+      data: animais.map((a) => ({
+        id:               a.id,
+        brinco:           a.brinco,
+        rfid:             a.rfid,
+        nome:             a.nome,
+        sexo:             a.sexo,
+        dataNascimento:   a.dataNascimento?.toISOString().slice(0, 10) ?? null,
+        pesoNascimentoKg: a.pesoNascimentoKg,
+        origem:           a.origem,
+        status:           a.status,
+        pesoAtualKg:      a.pesoAtualKg,
+        updatedAt:        a.updatedAt.toISOString(),
+      })),
+      total,
+      pageCount: Math.ceil(total / pageSize),
     });
-  } catch (error: any) {
-    console.error("Erro ao listar animais:", error);
-    return NextResponse.json({ error: "Erro interno" }, { status: 500 });
+  } catch (error) {
+    console.error(error);
+    return NextResponse.json({ message: "Ocorreu um erro interno no servidor." }, { status: 500 });
   }
 }
+
+
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
 
-    const result = await prisma.animal.create({
-      data: {
-        brinco: body.brinco || null,
-        rfid: body.rfid || null,
-        nome: body.nome || null,
-        sexo: body.sexo,
-        origem: body.origem,
-        dataNascimento: body.dataNascimento ? new Date(body.dataNascimento) : null,
-        pesoNascimentoKg: body.pesoNascimentoKg ? parseFloat(body.pesoNascimentoKg) : null,
-        racaId: body.racaId ? parseInt(body.racaId) : null,
-        loteId: body.loteId ? parseInt(body.loteId) : null,
-        maeId: body.maeId || null,
-        paiId: body.paiId || null,
-        fazendaOrigemId: body.fazendaOrigemId ? parseInt(body.fazendaOrigemId) : null,
-        fazendaOrigemNome: body.fazendaOrigem || null,
-        dataAquisicao: body.dataAquisicao ? new Date(body.dataAquisicao) : null,
-        valorCompra: body.valorCompra ? parseFloat(body.valorCompra) : null,
-        idadeEntradaMeses: body.idadeEntradaMeses ? parseInt(body.idadeEntradaMeses) : null,
-        status: "ATIVO", // default na criação
-        pesoAtualKg: body.pesoNascimentoKg ? parseFloat(body.pesoNascimentoKg) : null,
-      },
-    });
+    const validation = animalApiSchema.safeParse(body);
 
-    return NextResponse.json(result);
-  } catch (error: any) {
-    console.error("Erro ao criar animal:", error);
-    return NextResponse.json({ error: error.message || "Erro interno ao criar" }, { status: 500 });
+    if (!validation.success) {
+      const errors: Record<string, string> = {};
+      validation.error.issues.forEach((issue) => {
+        const field = issue.path[0] as string;
+        if (field && !errors[field]) errors[field] = issue.message;
+      });
+      return NextResponse.json({ success: false, errors }, { status: 400 });
+    }
+
+    const animal = await prisma.animal.create({ data: validation.data });
+
+    return NextResponse.json({ success: true, data: animal }, { status: 201 });
+
+  } catch (error) {
+    const errors = uniqueConstraintErrors(error);
+    if (errors) {
+      return NextResponse.json({ success: false, errors }, { status: 409 });
+    }
+
+    console.error(error);
+    return NextResponse.json({ success: false, message: "Ocorreu um erro interno no servidor." }, { status: 500 });
   }
 }

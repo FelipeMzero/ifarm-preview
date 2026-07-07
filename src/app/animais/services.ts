@@ -25,9 +25,33 @@ export type AnimalRow = {
 };
 
 const API_ENDPOINTS = {
-  ANIMAIS: "/api/animal",
-  ANIMAL_BY_ID: (id: string) => `/api/animal/${id}`,
+  ANIMAIS: "/api/animais",
+  ANIMAL_BY_ID: (id: string) => `/api/animais/${id}`,
+  METADADOS: "/api/metadados",
 } as const;
+
+export type Raca = { id: number; nome: string };
+export type Lote = { id: number; nome: string };
+export type Fazenda = { id: number; nome: string };
+export type AnimalSimples = { id: string; brinco: string; rfid: string | null; sexo: string };
+
+export type Metadados = {
+  racas: Raca[];
+  lotes: Lote[];
+  fazendas: Fazenda[];
+  animaisFazenda: AnimalSimples[];
+};
+
+export async function getMetadados(): Promise<Metadados> {
+  const response = await fetch(API_ENDPOINTS.METADADOS);
+  const result = await response.json();
+
+  if (!response.ok) {
+    throw new Error(result.message);
+  }
+
+  return result;
+}
 
 
 

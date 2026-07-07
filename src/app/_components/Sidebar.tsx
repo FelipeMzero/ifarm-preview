@@ -25,8 +25,8 @@ const NAV = [
     label: 'Animais',
     icon: Beef,
     items: [
-      { href: '/animal/novo', label: 'Novo Animal' },
-      { href: '/animal', label: 'Gestão de Animais' },
+      { href: '/animais/novo', label: 'Novo Animal' },
+      { href: '/animais', label: 'Gestão de Animais' },
     ],
   },
 ];
