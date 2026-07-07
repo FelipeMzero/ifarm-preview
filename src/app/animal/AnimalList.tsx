@@ -58,8 +58,8 @@ const STATUS_VARIANT: Record<string, "default" | "secondary" | "destructive" | "
 };
 
 const SEXO_ICON: Record<string, React.ReactNode> = {
-  [EnumSexo.MACHO]: <span className="flex items-center gap-1 text-blue-700"><Mars className="size-3" /> Macho</span>,
-  [EnumSexo.FEMEA]: <span className="flex items-center gap-1 text-pink-700"><Venus className="size-3" /> Fêmea</span>,
+  [EnumSexo.MACHO]: <Mars className="size-5 text-blue-700" />,
+  [EnumSexo.FEMEA]: <Venus className="size-5 text-pink-700" />,
 };
 
 function buildColumns(
