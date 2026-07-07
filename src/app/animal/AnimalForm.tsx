@@ -166,7 +166,7 @@ export default function AnimalForm({ id, title, onCancel, onSuccess }: AnimalFor
 
       {title && <h1 className="text-xl font-semibold">{title}</h1>}
 
-      <FieldSet className="bg-card">
+      <FieldSet>
         <FieldLegend> Identificação </FieldLegend>
 
         <FieldRow cols={2}>
