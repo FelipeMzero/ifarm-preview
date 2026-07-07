@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import LayoutShell from "./_components/layout-shell";
+import LayoutShell from "./_components/LayoutShell";
 import { cn } from "@/lib/utils";
 import { Toaster } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 const geistSans = Geist({
   variable: "--font-geist-sans", //"--font-dm-sans"
@@ -30,10 +31,12 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="pt-BR" className={`${geistSans.variable} ${geistMono.variable} ${fontHeading.variable}`}>
       <body className="bg-background text-foreground">
-        <LayoutShell>
-          {children}
-        </LayoutShell>
-        <Toaster />
+        <TooltipProvider>
+          <LayoutShell>
+            {children}
+          </LayoutShell>
+          <Toaster />
+        </TooltipProvider>
       </body>
     </html>
   );
