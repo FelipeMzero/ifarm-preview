@@ -76,7 +76,7 @@ export default function AnimalDetalhePage({ params }: { params: Promise<{ id: st
             <p className="page-sub" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               {animal.raca?.nome || 'Sem Raça'} 
               <span>•</span> 
-              {animal.sexo === 'M' ? <span style={{ color: '#3b82f6', fontWeight: 700 }}>♂ Macho</span> : <span style={{ color: '#ec4899', fontWeight: 700 }}>♀ Fêmea</span>}
+              {animal.sexo === 'MACHO' ? <span style={{ color: '#3b82f6', fontWeight: 700 }}>♂ Macho</span> : <span style={{ color: '#ec4899', fontWeight: 700 }}>♀ Fêmea</span>}
               <span>•</span>
               <span className={`badge ${animal.status === 'ATIVO' ? 'badge-green' : 'badge-gray'}`}>{animal.status}</span>
             </p>
@@ -98,7 +98,7 @@ export default function AnimalDetalhePage({ params }: { params: Promise<{ id: st
         <div className="stat-card">
           <div className="stat-label">Peso Atual</div>
           <div className="stat-value" style={{ color: 'var(--col-primary)' }}>
-            {animal.peso_atual_kg ? `${animal.peso_atual_kg} kg` : '—'}
+            {animal.pesoAtualKg ? `${animal.pesoAtualKg} kg` : '—'}
           </div>
           <div className="stat-sub">Registrado no sistema</div>
         </div>
@@ -106,7 +106,7 @@ export default function AnimalDetalhePage({ params }: { params: Promise<{ id: st
         <div className="stat-card">
           <div className="stat-label">Nascimento</div>
           <div className="stat-value" style={{ fontSize: 22 }}>
-            {formatData(animal.data_nascimento)}
+            {formatData(animal.dataNascimento)}
           </div>
           <div className="stat-sub">Data de nascimento</div>
         </div>
@@ -145,7 +145,7 @@ export default function AnimalDetalhePage({ params }: { params: Promise<{ id: st
           </div>
           <div className="detail-row">
             <span className="detail-label">Apelido</span>
-            <span className="detail-value">{animal.nome_apelido || '—'}</span>
+            <span className="detail-value">{animal.nome || '—'}</span>
           </div>
           <div className="detail-row">
             <span className="detail-label">Raça</span>
@@ -153,7 +153,7 @@ export default function AnimalDetalhePage({ params }: { params: Promise<{ id: st
           </div>
           <div className="detail-row">
             <span className="detail-label">Sexo</span>
-            <span className="detail-value">{animal.sexo === 'M' ? 'Macho' : 'Fêmea'}</span>
+            <span className="detail-value">{animal.sexo === 'MACHO' ? 'Macho' : 'Fêmea'}</span>
           </div>
         </div>
 
@@ -165,21 +165,21 @@ export default function AnimalDetalhePage({ params }: { params: Promise<{ id: st
 
           <div className="detail-row">
             <span className="detail-label">Fazenda Origem</span>
-            <span className="detail-value">{animal.fazenda_origem?.nome || animal.fazenda_origem_nome || '—'}</span>
+            <span className="detail-value">{animal.fazendaOrigem?.nome || animal.fazendaOrigemNome || '—'}</span>
           </div>
           <div className="detail-row">
             <span className="detail-label">Data de Aquisição</span>
-            <span className="detail-value">{formatData(animal.data_aquisicao)}</span>
+            <span className="detail-value">{formatData(animal.dataAquisicao)}</span>
           </div>
           <div className="detail-row">
             <span className="detail-label">Valor da Compra</span>
             <span className="detail-value">
-              {animal.valor_compra ? `R$ ${parseFloat(animal.valor_compra).toLocaleString('pt-BR', {minimumFractionDigits: 2})}` : '—'}
+              {animal.valorCompra ? `R$ ${parseFloat(animal.valorCompra).toLocaleString('pt-BR', {minimumFractionDigits: 2})}` : '—'}
             </span>
           </div>
           <div className="detail-row">
             <span className="detail-label">Idade na Entrada</span>
-            <span className="detail-value">{animal.idade_entrada_meses != null ? `${animal.idade_entrada_meses} meses` : '—'}</span>
+            <span className="detail-value">{animal.idadeEntradaMeses != null ? `${animal.idadeEntradaMeses} meses` : '—'}</span>
           </div>
           <div className="detail-row">
             <span className="detail-label">Data Cadastro</span>

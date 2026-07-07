@@ -14,7 +14,7 @@ export async function GET(
         lote: true,
         mae: true,
         pai: true,
-        fazenda_origem: true,
+        fazendaOrigem: true,
       },
     });
 

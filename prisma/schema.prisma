@@ -11,31 +11,10 @@ datasource db {
   provider = "postgresql"
 }
 
-model User { 
-  id    Int     @id @default(autoincrement())
-  email String  @unique
-  name  String?
-  posts Post[]
-} 
-
-model Post { 
-  id        Int     @id @default(autoincrement()) 
-  title     String
-  content   String?
-  published Boolean @default(false) 
-  author    User    @relation(fields: [authorId], references: [id]) 
-  authorId  Int
-} 
-
-model PerformanceTest {
-  id            Int       @id
-  description   String
-  date          DateTime
-}
 
 enum Sexo {
-  M
-  F
+  MACHO
+  FEMEA
 }
 
 enum AnimalOrigem {
@@ -57,56 +36,66 @@ model Raca {
   id      Int      @id @default(autoincrement())
   nome    String   @unique
   animais Animal[]
+
+  @@map("racas")
 }
 
 model Lote {
   id      Int      @id @default(autoincrement())
   nome    String   @unique
   animais Animal[]
+
+  @@map("lotes")
 }
 
 model Fazenda {
   id            Int      @id @default(autoincrement())
   nome          String   @unique
   animaisOrigem Animal[] @relation("FazendaOrigem")
+
+  @@map("fazendas")
 }
 
 model Animal {
-  id                 String       @id @default(uuid())
-  brinco             String       @unique
-  rfid               String?      @unique
-  nome_apelido       String?
-  data_nascimento    DateTime?
-  peso_nascimento_kg Float?
-  sexo               Sexo @default(M)
-  origem             AnimalOrigem @default(NASCIMENTO)
-  status             AnimalStatus @default(ATIVO)
-  
-  raca_id Int?
-  raca    Raca? @relation(fields: [raca_id], references: [id])
-  
-  lote_id Int?
-  lote    Lote? @relation(fields: [lote_id], references: [id])
-  
-  mae_id String?
-  mae    Animal? @relation("AnimalMae", fields: [mae_id], references: [id])
+  id               String       @id @default(uuid())
+  brinco           String       @unique
+  rfid             String?      @unique
+  nome             String?
+  dataNascimento   DateTime?    @db.Date @map("data_nascimento")
+  pesoNascimentoKg Float?       @map("peso_nascimento_kg")
+  sexo             Sexo         @default(MACHO)
+  origem           AnimalOrigem @default(NASCIMENTO)
+  status           AnimalStatus @default(ATIVO)
+
+  racaId Int?  @map("raca_id")
+  raca   Raca? @relation(fields: [racaId], references: [id])
+
+  loteId Int?  @map("lote_id")
+  lote   Lote? @relation(fields: [loteId], references: [id])
+
+  maeId     String?  @map("mae_id")
+  mae       Animal?  @relation("AnimalMae", fields: [maeId], references: [id])
   filhosMae Animal[] @relation("AnimalMae")
 
-  pai_id String?
-  pai    Animal? @relation("AnimalPai", fields: [pai_id], references: [id])
+  paiId     String?  @map("pai_id")
+  pai       Animal?  @relation("AnimalPai", fields: [paiId], references: [id])
   filhosPai Animal[] @relation("AnimalPai")
 
-  fazenda_origem_id Int?
-  fazenda_origem    Fazenda? @relation("FazendaOrigem", fields: [fazenda_origem_id], references: [id])
-  
-  fazenda_origem_nome String? // Nome quando não está cadastrado como entidade local
-  
-  data_aquisicao      DateTime?
-  valor_compra        Float?
-  idade_entrada_meses Int?
-  
-  peso_atual_kg Float? // Guardando para simplificar consulta conforme frontend
-  
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  fazendaOrigemId   Int?     @map("fazenda_origem_id")
+  fazendaOrigem     Fazenda? @relation("FazendaOrigem", fields: [fazendaOrigemId], references: [id])
+  fazendaOrigemNome String?  @map("fazenda_origem_nome") // usado quando a fazenda não está cadastrada localmente
+
+  dataAquisicao     DateTime? @db.Date @map("data_aquisicao")
+  valorCompra       Decimal?  @db.Decimal(10, 2) @map("valor_compra")
+  idadeEntradaMeses Int?      @map("idade_entrada_meses")
+
+  pesoAtualKg Float? @map("peso_atual_kg") // denormalizado para simplificar consulta no frontend
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([loteId])
+  @@index([racaId])
+  @@index([status])
+  @@map("animais")
 }

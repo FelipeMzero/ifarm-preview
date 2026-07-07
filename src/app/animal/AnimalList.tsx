@@ -38,7 +38,7 @@ const COLUMN_LABELS: Record<string, string> = {
   sexo: "Sexo",
   origem: "Origem",
   status: "Status",
-  peso_atual_kg: "Peso Atual",
+  pesoAtualKg: "Peso Atual",
   updatedAt: "Atualizado em",
 };
 
@@ -58,8 +58,8 @@ const STATUS_VARIANT: Record<string, "default" | "secondary" | "destructive" | "
 };
 
 const SEXO_ICON: Record<string, React.ReactNode> = {
-  [EnumSexo.M]: <span className="flex items-center gap-1 text-blue-700"><Mars className="size-3" /> Macho</span>,
-  [EnumSexo.F]: <span className="flex items-center gap-1 text-pink-700"><Venus className="size-3" /> Fêmea</span>,
+  [EnumSexo.MACHO]: <span className="flex items-center gap-1 text-blue-700"><Mars className="size-3" /> Macho</span>,
+  [EnumSexo.FEMEA]: <span className="flex items-center gap-1 text-pink-700"><Venus className="size-3" /> Fêmea</span>,
 };
 
 function buildColumns(
@@ -86,9 +86,9 @@ function buildColumns(
     },
     {
       header: "Peso Atual",
-      accessorKey: "peso_atual_kg",
+      accessorKey: "pesoAtualKg",
       cell: ({ row }) =>
-        row.original.peso_atual_kg != null ? `${row.original.peso_atual_kg} kg` : "—",
+        row.original.pesoAtualKg != null ? `${row.original.pesoAtualKg} kg` : "—",
     },
     {
       header: "Origem",

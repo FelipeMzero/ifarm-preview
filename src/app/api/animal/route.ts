@@ -19,9 +19,9 @@ export async function GET(request: NextRequest) {
     const where = {
       ...(search ? {
         OR: [
-          { brinco:       { contains: search, mode: "insensitive" as const } },
-          { rfid:         { contains: search, mode: "insensitive" as const } },
-          { nome_apelido: { contains: search, mode: "insensitive" as const } },
+          { brinco: { contains: search, mode: "insensitive" as const } },
+          { rfid:   { contains: search, mode: "insensitive" as const } },
+          { nome:   { contains: search, mode: "insensitive" as const } },
         ],
       } : {}),
       ...(status ? { status } : {}),
@@ -40,17 +40,17 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       data: animais.map((a) => ({
-        id:                 a.id,
-        brinco:             a.brinco,
-        rfid:               a.rfid,
-        nome_apelido:       a.nome_apelido,
-        sexo:               a.sexo,
-        data_nascimento:    a.data_nascimento?.toISOString().slice(0, 10) ?? null,
-        peso_nascimento_kg: a.peso_nascimento_kg,
-        origem:             a.origem,
-        status:             a.status,
-        peso_atual_kg:      a.peso_atual_kg,
-        updatedAt:          a.updatedAt.toISOString(),
+        id:               a.id,
+        brinco:           a.brinco,
+        rfid:             a.rfid,
+        nome:             a.nome,
+        sexo:             a.sexo,
+        dataNascimento:   a.dataNascimento?.toISOString().slice(0, 10) ?? null,
+        pesoNascimentoKg: a.pesoNascimentoKg,
+        origem:           a.origem,
+        status:           a.status,
+        pesoAtualKg:      a.pesoAtualKg,
+        updatedAt:        a.updatedAt.toISOString(),
       })),
       total,
       pageCount: Math.ceil(total / pageSize),

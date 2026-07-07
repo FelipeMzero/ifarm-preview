@@ -45,7 +45,7 @@ export function FormField<T extends FieldValues, TName extends FieldPath<T>>({
           <Field className="min-w-0">
             {label && (
               <FieldLabel htmlFor={id}>
-                {label}
+                <span className="text-foreground" > {label.toUpperCase()} </span>
                 {required && <span className="text-destructive">*</span>}
                 {helperText && (
                   <Tooltip>

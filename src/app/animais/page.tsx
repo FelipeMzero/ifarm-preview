@@ -16,8 +16,8 @@ const STATUS_BADGE: any = {
 };
 
 const SEXO_LABEL: any = {
-  M: <span style={{ color: '#3b82f6', fontWeight: 800, fontSize: '1.1em' }}>♂ <span style={{ fontSize: '0.85em', fontWeight: 600 }}>Macho</span></span>,
-  F: <span style={{ color: '#ec4899', fontWeight: 800, fontSize: '1.1em' }}>♀ <span style={{ fontSize: '0.85em', fontWeight: 600 }}>Fêmea</span></span>
+  MACHO: <span style={{ color: '#3b82f6', fontWeight: 800, fontSize: '1.1em' }}>♂ <span style={{ fontSize: '0.85em', fontWeight: 600 }}>Macho</span></span>,
+  FEMEA: <span style={{ color: '#ec4899', fontWeight: 800, fontSize: '1.1em' }}>♀ <span style={{ fontSize: '0.85em', fontWeight: 600 }}>Fêmea</span></span>
 };
 
 export default function AnimaisPage() {
@@ -88,10 +88,10 @@ export default function AnimaisPage() {
       a.rfid || '—',
       a.raca || '—',
       a.sexo || '—',
-      a.idade_meses || '—',
-      a.peso_atual_kg || '—',
+      a.idadeMeses || '—',
+      a.pesoAtualKg || '—',
       a.origem || '—',
-      a.lote_nome || '—',
+      a.loteNome || '—',
       a.status || '—'
     ]);
 
@@ -176,10 +176,10 @@ export default function AnimaisPage() {
                     <td style={{ fontFamily: 'monospace', fontSize: 12 }}>{a.rfid || '—'}</td>
                     <td>{a.raca || '—'}</td>
                     <td>{SEXO_LABEL[a.sexo] || a.sexo}</td>
-                    <td>{a.idade_meses != null ? `${a.idade_meses} meses` : '—'}</td>
-                    <td style={{ fontWeight: 600 }}>{a.peso_atual_kg ? `${a.peso_atual_kg} kg` : '—'}</td>
+                    <td>{a.idadeMeses != null ? `${a.idadeMeses} meses` : '—'}</td>
+                    <td style={{ fontWeight: 600 }}>{a.pesoAtualKg ? `${a.pesoAtualKg} kg` : '—'}</td>
                     <td><span className="badge badge-gray">{a.origem}</span></td>
-                    <td>{a.lote_nome ? <span className="badge badge-gray">{a.lote_nome}</span> : '—'}</td>
+                    <td>{a.loteNome ? <span className="badge badge-gray">{a.loteNome}</span> : '—'}</td>
                     <td><span className={`badge ${STATUS_BADGE[a.status] || 'badge-gray'}`}>{a.status}</span></td>
                     <td>
                       <button className="btn btn-secondary btn-sm" onClick={() => router.push(`/animais/${a.id}`)}>

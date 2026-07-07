@@ -14,13 +14,13 @@ export type AnimalRow = {
   id: string;
   rfid: string | null;
   brinco: string;
-  nome_apelido: string | null;
+  nome: string | null;
   sexo: string;
-  data_nascimento: string | null;
-  peso_nascimento_kg: number | null;
+  dataNascimento: string | null;
+  pesoNascimentoKg: number | null;
   origem: string;
   status: string;
-  peso_atual_kg: number | null;
+  pesoAtualKg: number | null;
   updatedAt: string;
 };
 

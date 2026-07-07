@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
       filters.OR = [
         { brinco: { contains: search, mode: "insensitive" } },
         { rfid: { contains: search, mode: "insensitive" } },
-        { nome_apelido: { contains: search, mode: "insensitive" } },
+        { nome: { contains: search, mode: "insensitive" } },
       ];
     }
 
@@ -37,12 +37,12 @@ export async function GET(request: NextRequest) {
       rfid: a.rfid,
       raca: a.raca?.nome,
       sexo: a.sexo,
-      idade_meses: a.data_nascimento ? 
-        Math.floor((new Date().getTime() - new Date(a.data_nascimento).getTime()) / (1000 * 60 * 60 * 24 * 30.44)) 
+      idadeMeses: a.dataNascimento ?
+        Math.floor((new Date().getTime() - new Date(a.dataNascimento).getTime()) / (1000 * 60 * 60 * 24 * 30.44))
         : null,
-      peso_atual_kg: a.peso_atual_kg || a.peso_nascimento_kg,
+      pesoAtualKg: a.pesoAtualKg || a.pesoNascimentoKg,
       origem: a.origem,
-      lote_nome: a.lote?.nome,
+      loteNome: a.lote?.nome,
       status: a.status,
     }));
 
@@ -64,22 +64,22 @@ export async function POST(request: NextRequest) {
       data: {
         brinco: body.brinco || null,
         rfid: body.rfid || null,
-        nome_apelido: body.nome_apelido || null,
+        nome: body.nome || null,
         sexo: body.sexo,
         origem: body.origem,
-        data_nascimento: body.data_nascimento ? new Date(body.data_nascimento) : null,
-        peso_nascimento_kg: body.peso_nascimento_kg ? parseFloat(body.peso_nascimento_kg) : null,
-        raca_id: body.raca_id ? parseInt(body.raca_id) : null,
-        lote_id: body.lote_id ? parseInt(body.lote_id) : null,
-        mae_id: body.mae_id || null,
-        pai_id: body.pai_id || null,
-        fazenda_origem_id: body.fazenda_origem_id ? parseInt(body.fazenda_origem_id) : null,
-        fazenda_origem_nome: body.fazenda_origem || null,
-        data_aquisicao: body.data_aquisicao ? new Date(body.data_aquisicao) : null,
-        valor_compra: body.valor_compra ? parseFloat(body.valor_compra) : null,
-        idade_entrada_meses: body.idade_entrada_meses ? parseInt(body.idade_entrada_meses) : null,
+        dataNascimento: body.dataNascimento ? new Date(body.dataNascimento) : null,
+        pesoNascimentoKg: body.pesoNascimentoKg ? parseFloat(body.pesoNascimentoKg) : null,
+        racaId: body.racaId ? parseInt(body.racaId) : null,
+        loteId: body.loteId ? parseInt(body.loteId) : null,
+        maeId: body.maeId || null,
+        paiId: body.paiId || null,
+        fazendaOrigemId: body.fazendaOrigemId ? parseInt(body.fazendaOrigemId) : null,
+        fazendaOrigemNome: body.fazendaOrigem || null,
+        dataAquisicao: body.dataAquisicao ? new Date(body.dataAquisicao) : null,
+        valorCompra: body.valorCompra ? parseFloat(body.valorCompra) : null,
+        idadeEntradaMeses: body.idadeEntradaMeses ? parseInt(body.idadeEntradaMeses) : null,
         status: "ATIVO", // default na criação
-        peso_atual_kg: body.peso_nascimento_kg ? parseFloat(body.peso_nascimento_kg) : null,
+        pesoAtualKg: body.pesoNascimentoKg ? parseFloat(body.pesoNascimentoKg) : null,
       },
     });
 
