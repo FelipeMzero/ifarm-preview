@@ -206,7 +206,7 @@ export default function AnimalList() {
     );
   }
 
-  if (loading && animais.length === 0) {
+  if (loading) {
     return (
       <ListSkeleton columns={6} />
     );
@@ -273,26 +273,26 @@ export default function AnimalList() {
         </DropdownMenu>
       </div>
 
-      {!loading && animais.length === 0 && (
+      {animais.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 gap-2 text-muted-foreground">
-          <Beef size={40} className="opacity-30" />
-          <p className="text-sm">Nenhum animal encontrado.</p>
+          <Beef size={50} className="opacity-30" />
+          <p className="text-2xl">Nenhum animal encontrado.</p>
         </div>
+      ) : (
+        <DataTable
+          columns={columns}
+          data={animais}
+          pageCount={pageCount}
+          pageIndex={pageIndex}
+          pageSize={pageSize}
+          total={total}
+          initialSorting={[{ id: "updatedAt", desc: true }]}
+          onPageChange={setPageIndex}
+          onPageSizeChange={(size) => { setPageSize(size); setPageIndex(0); }}
+          columnVisibility={columnVisibility}
+          onColumnVisibilityChange={setColumnVisibility}
+        />
       )}
-
-      <DataTable
-        columns={columns}
-        data={loading ? [] : animais}
-        pageCount={pageCount}
-        pageIndex={pageIndex}
-        pageSize={pageSize}
-        total={total}
-        initialSorting={[{ id: "updatedAt", desc: true }]}
-        onPageChange={setPageIndex}
-        onPageSizeChange={(size) => { setPageSize(size); setPageIndex(0); }}
-        columnVisibility={columnVisibility}
-        onColumnVisibilityChange={setColumnVisibility}
-      />
 
       <Dialog open={isCreating} onOpenChange={(open) => { if (!open) setIsCreating(false); }}>
         <DialogContent className="p-8 sm:max-w-4xl max-h-[90vh] overflow-y-auto">
