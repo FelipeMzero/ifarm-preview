@@ -26,6 +26,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
+import { SelectField } from "@/components/our/SelectField";
 import { AnimalRow, deleteAnimal, getAnimais } from "./services";
 import { EnumAnimalOrigem, EnumAnimalStatus, EnumSexo } from "./schema";
 import { ErrorPage } from "@/components/our/ErrorPage";
@@ -234,23 +235,23 @@ export default function AnimalList() {
           />
         </div>
 
-        <select
+        <SelectField
           value={status}
-          onChange={(e) => { setStatus(e.target.value); setPageIndex(0); }}
-          className="h-9 rounded-md border border-input bg-background px-3 text-sm"
-        >
-          <option value="">Todos os status</option>
-          <option value={EnumAnimalStatus.ATIVO}>Ativos</option>
-          <option value={EnumAnimalStatus.VENDIDO}>Vendidos</option>
-          <option value={EnumAnimalStatus.MORTO}>Mortos</option>
-          <option value={EnumAnimalStatus.TRANSFERIDO}>Transferidos</option>
-          <option value={EnumAnimalStatus.ABATE}>Abatidos</option>
-          <option value={EnumAnimalStatus.DESCARTE}>Descarte</option>
-        </select>
+          onValueChange={(val) => { setStatus(val); setPageIndex(0); }}
+          items={[
+            { value: "", label: "Todos" },
+            { value: EnumAnimalStatus.ATIVO, label: "Ativos" },
+            { value: EnumAnimalStatus.VENDIDO, label: "Vendidos" },
+            { value: EnumAnimalStatus.MORTO, label: "Mortos" },
+            { value: EnumAnimalStatus.TRANSFERIDO, label: "Transferidos" },
+            { value: EnumAnimalStatus.ABATE, label: "Abatidos" },
+            { value: EnumAnimalStatus.DESCARTE, label: "Descarte" },
+          ]}
+        />
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="sm">
+            <Button variant="outline">
               <Settings2 className="size-4" />
               Colunas
             </Button>
