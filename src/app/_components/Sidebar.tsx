@@ -18,7 +18,7 @@ export function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <SidebarPrimitive>
+    <SidebarPrimitive className='border-sidebar-border'>
       <SidebarHeader>
         <span className="px-2 py-1 text-sm font-semibold">iFarm</span>
       </SidebarHeader>
