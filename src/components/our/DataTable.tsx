@@ -129,17 +129,17 @@ export function DataTable<TData, TValue>({
 
   return (
     <div className="space-y-4">
-      <div className="rounded-md border border-border overflow-hidden">
+      <div className="rounded-md bg-card border border-border overflow-hidden">
         <Table className="[&_tr]:border-border">
-          <TableHeader className="bg-muted/60">
+          <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
+              <TableRow key={headerGroup.id} className="bg-muted">
                 {headerGroup.headers.map((header) => (
                   <TableHead key={header.id}>
                     {header.isPlaceholder ? null : header.column.getCanSort() ? (
                       <button
                         onClick={header.column.getToggleSortingHandler()}
-                        className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors"
+                        className="flex items-center gap-1 text-muted-foreground hover:text-accent-foreground transition-colors"
                       >
                         {flexRender(header.column.columnDef.header, header.getContext())}
                         {header.column.getIsSorted() === "asc" ? (
@@ -163,7 +163,7 @@ export function DataTable<TData, TValue>({
           <TableBody>
             {table.getRowModel().rows.length ? (
               table.getRowModel().rows.map((row) => (
-                <TableRow key={row.id} data-state={row.getIsSelected() && "selected"}>
+                <TableRow key={row.id} data-state={row.getIsSelected() && "selected"} className="hover:bg-accent/40">
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}

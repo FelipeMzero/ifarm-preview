@@ -75,9 +75,7 @@ function buildColumns(
     {
       header: "RFID",
       accessorKey: "rfid",
-      cell: ({ row }) => (
-        <span className="font-mono text-xs">{row.original.rfid ?? "—"}</span>
-      ),
+      cell: ({ row }) => row.original.rfid ?? "—",
     },
     {
       header: "Sexo",
@@ -208,7 +206,11 @@ export default function AnimalList() {
     );
   }
 
-  if (loading && animais.length === 0) return <ListSkeleton columns={6} />;
+  if (loading && animais.length === 0) {
+    return (
+      <ListSkeleton columns={6} />
+    );
+  }
 
   return (
     <div className="w-full max-w-5xl space-y-4">
