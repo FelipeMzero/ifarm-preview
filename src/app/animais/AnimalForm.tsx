@@ -17,6 +17,7 @@ import { SearchCombobox } from "@/components/our/SearchCombobox";
 import { Loader2 } from "lucide-react";
 import FormSkeleton from "@/components/our/FormSkeleton";
 import { AnimalFormData, animalFormSchema, EnumAnimalOrigem, EnumAnimalStatus, EnumSexo } from "./schema";
+import { Separator } from "@/components/ui/separator";
 
 
 
@@ -159,9 +160,10 @@ export default function AnimalForm({ id, title, onCancel, onSuccess }: AnimalFor
   return (
     <form className="flex flex-col gap-8" onSubmit={handleSubmit(onSubmit)}>
 
-      {title && <h1 className="text-xl font-semibold">{title}</h1>}
+      {title && <h1 className="text-2xl font-semibold">{title}</h1>}
+      <Separator />
 
-      <FieldSet>
+      <FieldSet className="border-0">
         <FieldLegend> Identificação </FieldLegend>
 
         <FieldRow cols={2}>
@@ -230,8 +232,9 @@ export default function AnimalForm({ id, title, onCancel, onSuccess }: AnimalFor
         </FieldRow>
 
       </FieldSet>
+      <Separator />
 
-      <FieldSet>
+      <FieldSet className="border-0">
         <FieldLegend>Filiação</FieldLegend>
         <FieldRow cols={2}>
           <FormField name="maeId" label="Mãe"
@@ -255,8 +258,9 @@ export default function AnimalForm({ id, title, onCancel, onSuccess }: AnimalFor
           />
         </FieldRow>
       </FieldSet>
+      <Separator/>
 
-      <FieldSet>
+      <FieldSet className="border-0">
         <FieldLegend>Origem</FieldLegend>
         <FieldRow cols={2}>
           <FormField name="origem" label="Origem"
