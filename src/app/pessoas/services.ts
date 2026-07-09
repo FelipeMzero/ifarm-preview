@@ -17,8 +17,8 @@ export type PessoaRow = {
   nome: string;
   telefone: string | null;
   email: string | null;
-  deletedAt: string | null;
-  updatedAt: string;
+  excluidoEm: string | null;
+  atualizadoEm: string;
 };
 
 const API_ENDPOINTS = {

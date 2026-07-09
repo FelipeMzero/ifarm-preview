@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
     const [pessoas, total] = await Promise.all([
       prisma.pessoa.findMany({
         where,
-        orderBy: { updatedAt: "desc" },
+        orderBy: { atualizadoEm: "desc" },
         skip: page * pageSize,
         take: pageSize,
       }),
@@ -38,14 +38,14 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       data: pessoas.map((p) => ({
-        id:        p.id,
-        tipo:      p.tipo,
-        documento: p.documento,
-        nome:      p.nome,
-        telefone:  p.telefone,
-        email:     p.email,
-        deletedAt: p.deletedAt?.toISOString() ?? null,
-        updatedAt: p.updatedAt.toISOString(),
+        id:           p.id,
+        tipo:         p.tipo,
+        documento:    p.documento,
+        nome:         p.nome,
+        telefone:     p.telefone,
+        email:        p.email,
+        excluidoEm:   p.excluidoEm?.toISOString() ?? null,
+        atualizadoEm: p.atualizadoEm.toISOString(),
       })),
       total,
       pageCount: Math.ceil(total / pageSize),

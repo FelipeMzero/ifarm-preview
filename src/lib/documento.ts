@@ -44,3 +44,17 @@ export function isValidCNPJ(value: string): boolean {
 export function isValidDocumento(tipo: string, value: string): boolean {
   return tipo === "FISICA" ? isValidCPF(value) : isValidCNPJ(value);
 }
+
+export function formatCPF(value: string): string {
+  const digits = value.replace(/\D/g, "");
+  return digits.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
+}
+
+export function formatCNPJ(value: string): string {
+  const digits = value.replace(/\D/g, "");
+  return digits.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, "$1.$2.$3/$4-$5");
+}
+
+export function formatDocumento(tipo: string, value: string): string {
+  return tipo === "FISICA" ? formatCPF(value) : formatCNPJ(value);
+}

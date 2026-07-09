@@ -40,7 +40,7 @@ const COLUMN_LABELS: Record<string, string> = {
   origem: "Origem",
   status: "Status",
   pesoAtualKg: "Peso Atual",
-  updatedAt: "Atualizado em",
+  atualizadoEm: "Atualizado em",
 };
 
 const ORIGEM_VARIANT: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
@@ -107,9 +107,9 @@ function buildColumns(
     },
     {
       header: "Atualizado em",
-      accessorKey: "updatedAt",
+      accessorKey: "atualizadoEm",
       cell: ({ row }) => {
-        const iso = row.original.updatedAt;
+        const iso = row.original.atualizadoEm;
         if (!iso) return "—";
         return new Date(iso).toLocaleString("pt-BR", {
           day: "2-digit", month: "2-digit", year: "numeric",
@@ -287,7 +287,7 @@ export default function AnimalList() {
           pageIndex={pageIndex}
           pageSize={pageSize}
           total={total}
-          initialSorting={[{ id: "updatedAt", desc: true }]}
+          initialSorting={[{ id: "atualizadoEm", desc: true }]}
           onPageChange={setPageIndex}
           onPageSizeChange={(size) => { setPageSize(size); setPageIndex(0); }}
           columnVisibility={columnVisibility}

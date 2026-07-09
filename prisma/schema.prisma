@@ -69,7 +69,6 @@ model Pessoa {
   inscricaoEstadual String?      @unique @map("inscricao_estadual")
   telefone          String?
   email             String?      @unique
-  deletedAt         DateTime?    @map("deleted_at")
 
   enderecoId Int?      @unique @map("endereco_id")
   endereco   Endereco? @relation(fields: [enderecoId], references: [id])
@@ -82,12 +81,13 @@ model Pessoa {
   dataNascimento DateTime?    @db.Date @map("data_nascimento")
   estadoCivil    EstadoCivil? @map("estado_civil")
 
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  criadoEm DateTime @default(now()) @map("criado_em")
+  atualizadoEm DateTime @updatedAt @map("atualizado_em")
+  excluidoEm DateTime? @map("excluido_em")
+  desativadoEm DateTime? @map("desativado_em")
 
   @@index([tipo])
   @@index([nome])
-  @@index([deletedAt])
   @@map("pessoa")
 }
 
@@ -162,8 +162,9 @@ model Animal {
 
   pesoAtualKg Float? @map("peso_atual_kg") // denormalizado para simplificar consulta no frontend
 
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  criadoEm DateTime @default(now()) @map("criado_em")
+  atualizadoEm DateTime @updatedAt @map("atualizado_em")
+  excluidoEm DateTime? @map("excluido_em")
 
   @@index([loteId])
   @@index([racaId])

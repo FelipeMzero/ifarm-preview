@@ -100,7 +100,7 @@ export async function DELETE(_request: NextRequest, { params }: { params: Promis
 
   try {
     // Soft-delete (RN-PESSOA-03): preserva o registro em vez de apagá-lo.
-    await prisma.pessoa.update({ where: { id }, data: { deletedAt: new Date() } });
+    await prisma.pessoa.update({ where: { id }, data: { excluidoEm: new Date() } });
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error(error);

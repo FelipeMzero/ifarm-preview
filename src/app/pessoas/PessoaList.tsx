@@ -28,8 +28,16 @@ import { SelectField } from "@/components/our/SelectField";
 import { PessoaRow, deletePessoa, getPessoas } from "./services";
 import { EnumPessoaTipo } from "./schema";
 import { ErrorPage } from "@/components/our/ErrorPage";
+import { formatDocumento } from "@/lib/documento";
 
 const DEFAULT_PAGE_SIZE = 10;
+
+function formatTelefone(value: string): string {
+  const digits = value.replace(/\D/g, "");
+  if (digits.length === 11) return digits.replace(/(\d{2})(\d{5})(\d{4})/, "($1) $2-$3");
+  if (digits.length === 10) return digits.replace(/(\d{2})(\d{4})(\d{4})/, "($1) $2-$3");
+  return value;
+}
 
 const COLUMN_LABELS: Record<string, string> = {
   tipo: "Tipo",
@@ -38,7 +46,7 @@ const COLUMN_LABELS: Record<string, string> = {
   telefone: "Telefone",
   email: "E-mail",
   status: "Status",
-  updatedAt: "Atualizado em",
+  atualizadoEm: "Atualizado em",
 };
 
 const TIPO_VARIANT: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
@@ -68,7 +76,7 @@ function buildColumns(
     {
       header: "Documento",
       accessorKey: "documento",
-      cell: ({ row }) => row.original.documento ?? "—",
+      cell: ({ row }) => row.original.documento ? formatDocumento(row.original.tipo, row.original.documento) : "—",
     },
     {
       header: "Nome",
@@ -78,7 +86,7 @@ function buildColumns(
     {
       header: "Telefone",
       accessorKey: "telefone",
-      cell: ({ row }) => row.original.telefone ?? "—",
+      cell: ({ row }) => row.original.telefone ? formatTelefone(row.original.telefone) : "—",
     },
     {
       header: "E-mail",
@@ -89,16 +97,16 @@ function buildColumns(
       header: "Status",
       accessorKey: "status",
       cell: ({ row }) => (
-        <Badge variant={row.original.deletedAt ? "outline" : "default"}>
-          {row.original.deletedAt ? "Inativo" : "Ativo"}
+        <Badge variant={row.original.excluidoEm ? "outline" : "default"}>
+          {row.original.excluidoEm ? "Inativo" : "Ativo"}
         </Badge>
       ),
     },
     {
       header: "Atualizado em",
-      accessorKey: "updatedAt",
+      accessorKey: "atualizadoEm",
       cell: ({ row }) => {
-        const iso = row.original.updatedAt;
+        const iso = row.original.atualizadoEm;
         if (!iso) return "—";
         return new Date(iso).toLocaleString("pt-BR", {
           day: "2-digit", month: "2-digit", year: "numeric",
@@ -138,6 +146,7 @@ export default function PessoaList() {
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [tipo, setTipo] = useState<string>("");
   const [loading, setLoading] = useState(true);
+  const [isFirstLoad, setIsFirstLoad] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
   const [refreshKey, setRefreshKey] = useState(0);
@@ -168,7 +177,10 @@ export default function PessoaList() {
       } catch (e) {
         if (!cancelled) setError((e as Error).message);
       } finally {
-        if (!cancelled) setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+          setIsFirstLoad(false);
+        }
       }
     }
 
@@ -196,7 +208,7 @@ export default function PessoaList() {
     );
   }
 
-  if (loading) {
+  if (isFirstLoad) {
     return (
       <ListSkeleton columns={7} />
     );
@@ -259,26 +271,28 @@ export default function PessoaList() {
         </DropdownMenu>
       </div>
 
-      {pessoas.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-16 gap-2 text-muted-foreground">
-          <Users size={50} className="opacity-30" />
-          <p className="text-2xl">Nenhum registro encontrado.</p>
-        </div>
-      ) : (
-        <DataTable
-          columns={columns}
-          data={pessoas}
-          pageCount={pageCount}
-          pageIndex={pageIndex}
-          pageSize={pageSize}
-          total={total}
-          initialSorting={[{ id: "updatedAt", desc: true }]}
-          onPageChange={setPageIndex}
-          onPageSizeChange={(size) => { setPageSize(size); setPageIndex(0); }}
-          columnVisibility={columnVisibility}
-          onColumnVisibilityChange={setColumnVisibility}
-        />
-      )}
+      <div className={loading ? "opacity-60 transition-opacity" : "transition-opacity"}>
+        {pessoas.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-16 gap-2 text-muted-foreground">
+            <Users size={50} className="opacity-30" />
+            <p className="text-2xl">Nenhum registro encontrado.</p>
+          </div>
+        ) : (
+          <DataTable
+            columns={columns}
+            data={pessoas}
+            pageCount={pageCount}
+            pageIndex={pageIndex}
+            pageSize={pageSize}
+            total={total}
+            initialSorting={[{ id: "atualizadoEm", desc: true }]}
+            onPageChange={setPageIndex}
+            onPageSizeChange={(size) => { setPageSize(size); setPageIndex(0); }}
+            columnVisibility={columnVisibility}
+            onColumnVisibilityChange={setColumnVisibility}
+          />
+        )}
+      </div>
 
       <Dialog open={isCreating} onOpenChange={(open) => { if (!open) setIsCreating(false); }}>
         <DialogContent className="p-8 sm:max-w-4xl max-h-[90vh] overflow-y-auto">

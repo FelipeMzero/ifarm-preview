@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { IMaskInput } from "react-imask";
 
 import { getPessoa, updatePessoa, createPessoa, ApiError } from "./services";
 import { ErrorPage } from "@/components/our/ErrorPage";
@@ -21,6 +22,13 @@ import { Separator } from "@/components/ui/separator";
 
 
 
+
+const MASKED_INPUT_CLASSNAME = "h-10 w-full min-w-0 rounded-lg border border-input bg-input/40 px-2.5 py-1 text-base transition-colors outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 aria-invalid:border-destructive aria-invalid:focus:ring-3 aria-invalid:ring-destructive/20 md:text-sm dark:bg-input/30 dark:disabled:bg-input/80 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40";
+
+const TELEFONE_MASK = [
+  { mask: "(00) 0000-0000" },
+  { mask: "(00) 00000-0000" },
+];
 
 type PessoaFormProps = {
   id?: string;
@@ -212,9 +220,21 @@ export default function PessoaForm({ id, title, onCancel, onSuccess }: PessoaFor
 
           <FormField name="documento" label={isJuridica ? "CNPJ" : "CPF"} required
             control={control}
-            render={({ field, id: fieldId }) => (
-              <Input {...field} id={fieldId} disabled={!!id} placeholder={isJuridica ? "Ex: 12.345.678/0001-90" : "Ex: 123.456.789-00"} />
-            )}
+            render={({ field, id: fieldId }) =>
+              <IMaskInput
+                mask={isJuridica ? "00.000.000/0000-00" : "000.000.000-00"}
+                unmask
+                id={fieldId}
+                name={field.name}
+                value={field.value}
+                disabled={!!id}
+                placeholder={isJuridica ? "Ex: 12.345.678/0001-90" : "Ex: 123.456.789-00"}
+                onAccept={(value) => field.onChange(value)}
+                onBlur={field.onBlur}
+                inputRef={field.ref}
+                className={MASKED_INPUT_CLASSNAME}
+              />
+            }
           />
         </FieldRow>
 
@@ -270,7 +290,20 @@ export default function PessoaForm({ id, title, onCancel, onSuccess }: PessoaFor
         <FieldRow cols={2}>
           <FormField name="telefone" label="Telefone"
             control={control}
-            render={({ field, id: fieldId }) => <Input {...field} id={fieldId} placeholder="Ex: (11) 91234-5678" />}
+            render={({ field, id: fieldId }) => (
+              <IMaskInput
+                mask={TELEFONE_MASK}
+                unmask
+                id={fieldId}
+                name={field.name}
+                value={field.value}
+                placeholder="Ex: (11) 91234-5678"
+                onAccept={(value) => field.onChange(value)}
+                onBlur={field.onBlur}
+                inputRef={field.ref}
+                className={MASKED_INPUT_CLASSNAME}
+              />
+            )}
           />
           <FormField name="email" label="E-mail"
             control={control}
@@ -286,12 +319,18 @@ export default function PessoaForm({ id, title, onCancel, onSuccess }: PessoaFor
           <FormField name="cep" label="CEP"
             control={control}
             render={({ field, id: fieldId }) => (
-              <Input
-                {...field}
+              <IMaskInput
+                mask="00000-000"
+                unmask
                 id={fieldId}
-                placeholder="Ex: 78000-000"
+                name={field.name}
+                value={field.value}
                 disabled={isCepLoading}
+                placeholder="Ex: 78000-000"
+                onAccept={(value) => field.onChange(value)}
                 onBlur={(e) => { field.onBlur(); handleCepBlur(e.target.value); }}
+                inputRef={field.ref}
+                className={MASKED_INPUT_CLASSNAME}
               />
             )}
           />

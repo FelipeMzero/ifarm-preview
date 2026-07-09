@@ -21,7 +21,7 @@ export type AnimalRow = {
   origem: string;
   status: string;
   pesoAtualKg: number | null;
-  updatedAt: string;
+  atualizadoEm: string;
 };
 
 const API_ENDPOINTS = {

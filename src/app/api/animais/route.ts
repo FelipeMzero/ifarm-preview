@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
     const [animais, total] = await Promise.all([
       prisma.animal.findMany({
         where,
-        orderBy: { updatedAt: "desc" },
+        orderBy: { atualizadoEm: "desc" },
         skip: page * pageSize,
         take: pageSize,
       }),
@@ -50,7 +50,7 @@ export async function GET(request: NextRequest) {
         origem:           a.origem,
         status:           a.status,
         pesoAtualKg:      a.pesoAtualKg,
-        updatedAt:        a.updatedAt.toISOString(),
+        atualizadoEm:     a.atualizadoEm.toISOString(),
       })),
       total,
       pageCount: Math.ceil(total / pageSize),
