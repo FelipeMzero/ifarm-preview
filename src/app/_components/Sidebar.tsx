@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Beef, ChevronRight } from 'lucide-react';
+import { Beef, ChevronRight, Users } from 'lucide-react';
 import {
   Collapsible,
   CollapsibleContent,
@@ -27,6 +27,14 @@ const NAV = [
     items: [
       { href: '/animais/novo', label: 'Novo Animal' },
       { href: '/animais', label: 'Gestão de Animais' },
+    ],
+  },
+  {
+    label: 'Pessoas',
+    icon: Users,
+    items: [
+      { href: '/pessoas/novo', label: 'Nova Pessoa' },
+      { href: '/pessoas', label: 'Gestão de Pessoas' },
     ],
   },
 ];

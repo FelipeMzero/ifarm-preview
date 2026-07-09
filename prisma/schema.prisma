@@ -32,12 +32,83 @@ enum AnimalStatus {
   ABATE
 }
 
+enum PessoaTipo {
+  FISICA
+  JURIDICA
+}
+
+enum EstadoCivil {
+  SOLTEIRO
+  CASADO
+  UNIAO_ESTAVEL
+  DIVORCIADO
+  VIUVO
+}
+
+model Endereco {
+  id          Int     @id @default(autoincrement())
+  cep         String
+  logradouro  String
+  numero      String?
+  complemento String?
+  bairro      String?
+  municipio   String
+  uf          String
+  pais        String  @default("Brasil")
+
+  pessoa Pessoa?
+
+  @@map("endereco")
+}
+
+model Pessoa {
+  id                String       @id @default(uuid())
+  tipo              PessoaTipo
+  documento         String       @unique
+  nome              String
+  inscricaoEstadual String?      @unique @map("inscricao_estadual")
+  telefone          String?
+  email             String?      @unique
+  deletedAt         DateTime?    @map("deleted_at")
+
+  enderecoId Int?      @unique @map("endereco_id")
+  endereco   Endereco? @relation(fields: [enderecoId], references: [id])
+
+  // Exclusivo de Pessoa Jurídica
+  nomeFantasia String? @map("nome_fantasia")
+
+  // Exclusivos de Pessoa Física
+  rg             String?      @unique
+  dataNascimento DateTime?    @db.Date @map("data_nascimento")
+  estadoCivil    EstadoCivil? @map("estado_civil")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([tipo])
+  @@index([nome])
+  @@index([deletedAt])
+  @@map("pessoa")
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
 model Raca {
   id      Int      @id @default(autoincrement())
   nome    String   @unique
   animais Animal[]
 
-  @@map("racas")
+  @@map("raca")
 }
 
 model Lote {
@@ -45,7 +116,7 @@ model Lote {
   nome    String   @unique
   animais Animal[]
 
-  @@map("lotes")
+  @@map("lote")
 }
 
 model Fazenda {
@@ -53,7 +124,7 @@ model Fazenda {
   nome          String   @unique
   animaisOrigem Animal[] @relation("FazendaOrigem")
 
-  @@map("fazendas")
+  @@map("fazenda")
 }
 
 model Animal {
@@ -97,5 +168,6 @@ model Animal {
   @@index([loteId])
   @@index([racaId])
   @@index([status])
-  @@map("animais")
+  @@map("animal")
 }
+
