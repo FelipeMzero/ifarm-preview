@@ -252,7 +252,7 @@ export default function PessoaForm({ id, title, onCancel, onSuccess }: PessoaFor
           ) : (
             <FormField name="rg" label="RG"
               control={control}
-              render={({ field, id: fieldId }) => <Input {...field} id={fieldId} placeholder="Opcional" />}
+              render={({ field, id: fieldId }) => <Input {...field} id={fieldId} placeholder="Ex: 12345678" />}
             />
           )}
         </FieldRow>
@@ -273,7 +273,7 @@ export default function PessoaForm({ id, title, onCancel, onSuccess }: PessoaFor
             <FormField name="estadoCivil" label="Estado Civil"
               control={control}
               render={({ id: fieldId, field, fieldState }) => (
-                <SearchCombobox placeholder="buscar..."
+                <SearchCombobox placeholder="Selecionar..."
                   id={fieldId} field={field} fieldState={fieldState}
                   items={ESTADO_CIVIL_ITEMS}
                 />
@@ -361,7 +361,7 @@ export default function PessoaForm({ id, title, onCancel, onSuccess }: PessoaFor
           <FormField name="uf" label="UF"
             control={control}
             render={({ id: fieldId, field, fieldState }) => (
-              <SearchCombobox placeholder="buscar..."
+              <SearchCombobox placeholder="Selecionar..."
                 id={fieldId} field={field} fieldState={fieldState}
                 items={UF_ITEMS}
               />

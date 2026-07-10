@@ -1,13 +1,13 @@
 "use client";
 
 import { ColumnDef, VisibilityState } from "@tanstack/react-table";
-import { Building2, Pencil, Plus, Power, Search, Settings2, Trash2, User, Users } from "lucide-react";
+import { Building2, IdCard, Pencil, Plus, Power, Search, Settings2, User, Users } from "lucide-react";
 
 import React, { useEffect, useState } from "react";
 
-import { ConfirmDialog } from "@/components/our/ConfirmDialog";
 import { DataTable } from "@/components/our/DataTable";
 import ListSkeleton from "@/components/our/ListSkeleton";
+import PessoaFicha from "./PessoaFicha";
 import PessoaForm from "./PessoaForm";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -25,7 +25,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { SelectField } from "@/components/our/SelectField";
-import { PessoaRow, deletePessoa, getPessoas, togglePessoaStatus } from "./services";
+import { PessoaRow, getPessoas, togglePessoaStatus } from "./services";
 import { EnumPessoaTipo } from "./schema";
 import { ErrorPage } from "@/components/our/ErrorPage";
 import { formatDocumento } from "@/lib/documento";
@@ -61,7 +61,7 @@ const TIPO_ICON: Record<string, React.ReactNode> = {
 function buildColumns(
   onRequestToggleStatus: (id: string) => void,
   onRequestEdit: (id: string) => void,
-  onRequestDelete: (id: string) => void,
+  onRequestViewFicha: (id: string) => void,
 ): ColumnDef<PessoaRow>[] {
   return [
     {
@@ -126,14 +126,8 @@ function buildColumns(
           <Button variant="ghost" size="icon-sm" title="Editar" onClick={() => onRequestEdit(row.original.id)}>
             <Pencil className="size-4" />
           </Button>
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            title="Excluir"
-            className="text-destructive hover:text-destructive"
-            onClick={() => onRequestDelete(row.original.id)}
-          >
-            <Trash2 className="size-4" />
+          <Button variant="ghost" size="icon-sm" title="Ficha" onClick={() => onRequestViewFicha(row.original.id)}>
+            <IdCard className="size-4" />
           </Button>
         </div>
       ),
@@ -141,7 +135,7 @@ function buildColumns(
   ];
 }
 
-export default function PessoaList() {
+export default function PessoaLista() {
   const [pessoas, setPessoas] = useState<PessoaRow[]>([]);
   const [pageIndex, setPageIndex] = useState(0);
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
@@ -155,8 +149,8 @@ export default function PessoaList() {
   const [error, setError] = useState<string | null>(null);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({ telefone: false, email: false });
   const [refreshKey, setRefreshKey] = useState(0);
-  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [viewingFichaId, setViewingFichaId] = useState<string | null>(null);
   const [isCreating, setIsCreating] = useState(false);
 
   useEffect(() => {
@@ -193,18 +187,6 @@ export default function PessoaList() {
     return () => { cancelled = true; };
   }, [pageIndex, pageSize, debouncedSearch, tipo, refreshKey]);
 
-  async function confirmDelete() {
-    if (pendingDeleteId === null) return;
-    try {
-      await deletePessoa(pendingDeleteId);
-      setRefreshKey((k) => k + 1);
-    } catch {
-      // erro silencioso
-    } finally {
-      setPendingDeleteId(null);
-    }
-  }
-
   async function toggleStatus(id: string) {
     try {
       await togglePessoaStatus(id);
@@ -214,7 +196,11 @@ export default function PessoaList() {
     }
   }
 
-  const columns = buildColumns(toggleStatus, setEditingId, setPendingDeleteId);
+  const columns = buildColumns(
+    toggleStatus,
+    setEditingId,
+    setViewingFichaId,
+  );
 
   if (error) {
     return (
@@ -329,12 +315,16 @@ export default function PessoaList() {
         </DialogContent>
       </Dialog>
 
-      <ConfirmDialog
-        open={pendingDeleteId !== null}
-        onOpenChange={(open) => { if (!open) setPendingDeleteId(null); }}
-        onConfirm={confirmDelete}
-        description="Tem certeza que deseja excluir este registro?"
-      />
+      <Dialog open={viewingFichaId !== null} onOpenChange={(open) => { if (!open) setViewingFichaId(null); }}>
+        <DialogContent className="p-8 sm:max-w-4xl max-h-[90vh] overflow-y-auto">
+          {viewingFichaId && (
+            <PessoaFicha
+              id={viewingFichaId}
+              onClose={() => { setViewingFichaId(null); setRefreshKey((k) => k + 1); }}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
