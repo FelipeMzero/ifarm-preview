@@ -1,7 +1,7 @@
 "use client";
 
 import { ColumnDef, VisibilityState } from "@tanstack/react-table";
-import { Pencil, Plus, Power, Search, Settings2, Trash2, Users } from "lucide-react";
+import { Building2, Pencil, Plus, Power, Search, Settings2, Trash2, User, Users } from "lucide-react";
 
 import React, { useEffect, useState } from "react";
 
@@ -40,7 +40,6 @@ function formatTelefone(value: string): string {
 }
 
 const COLUMN_LABELS: Record<string, string> = {
-  tipo: "Tipo",
   documento: "Documento",
   nome: "Nome",
   telefone: "Telefone",
@@ -49,14 +48,14 @@ const COLUMN_LABELS: Record<string, string> = {
   atualizadoEm: "Atualizado em",
 };
 
-const TIPO_VARIANT: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
-  [EnumPessoaTipo.FISICA]: "default",
-  [EnumPessoaTipo.JURIDICA]: "secondary",
-};
-
 const TIPO_LABEL: Record<string, string> = {
   [EnumPessoaTipo.FISICA]: "Física",
   [EnumPessoaTipo.JURIDICA]: "Jurídica",
+};
+
+const TIPO_ICON: Record<string, React.ReactNode> = {
+  [EnumPessoaTipo.FISICA]: <User className="size-4 text-muted-foreground" />,
+  [EnumPessoaTipo.JURIDICA]: <Building2 className="size-4 text-muted-foreground" />,
 };
 
 function buildColumns(
@@ -66,18 +65,14 @@ function buildColumns(
 ): ColumnDef<PessoaRow>[] {
   return [
     {
-      header: "Tipo",
-      accessorKey: "tipo",
-      cell: ({ row }) => (
-        <Badge variant={TIPO_VARIANT[row.original.tipo] ?? "outline"}>
-          {TIPO_LABEL[row.original.tipo] ?? row.original.tipo}
-        </Badge>
-      ),
-    },
-    {
       header: "Documento",
       accessorKey: "documento",
-      cell: ({ row }) => row.original.documento ? formatDocumento(row.original.tipo, row.original.documento) : "—",
+      cell: ({ row }) => (
+        <div className="flex items-center gap-2" title={TIPO_LABEL[row.original.tipo] ?? row.original.tipo}>
+          {TIPO_ICON[row.original.tipo]}
+          <span>{row.original.documento ? formatDocumento(row.original.tipo, row.original.documento) : "—"}</span>
+        </div>
+      ),
     },
     {
       header: "Nome",
@@ -157,7 +152,7 @@ export default function PessoaList() {
   const [loading, setLoading] = useState(true);
   const [isFirstLoad, setIsFirstLoad] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({ telefone: false, email: false });
   const [refreshKey, setRefreshKey] = useState(0);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
