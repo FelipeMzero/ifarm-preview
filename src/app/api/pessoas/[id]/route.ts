@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { uniqueConstraintErrors } from "../../dbErrors";
 import { pessoaApiSchema } from "../../schemas";
+import { buildEnderecoWrite } from "../helpers";
 
 
 
@@ -11,7 +12,7 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
   try {
     const pessoa = await prisma.pessoa.findUnique({ where: { id }, include: { endereco: true } });
 
-    if (!pessoa) {
+    if (!pessoa || pessoa.excluidoEm) {
       return NextResponse.json({ message: "Pessoa não encontrada." }, { status: 404 });
     }
 
@@ -65,18 +66,21 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       cep, logradouro, numero, complemento, bairro, municipio, uf,
     } = validation.data;
 
+    const enderecoData = cep && logradouro && municipio && uf
+      ? { cep, logradouro, numero, complemento, bairro, municipio, uf, pais: "Brasil" }
+      : null;
+
+    const atual = await prisma.pessoa.findUnique({ where: { id }, select: { enderecoId: true } });
+
+    if (!atual) {
+      return NextResponse.json({ success: false, message: "Pessoa não encontrada." }, { status: 404 });
+    }
+
     const pessoa = await prisma.pessoa.update({
       where: { id },
       data: {
         nome, inscricaoEstadual, telefone, email, nomeFantasia, rg, dataNascimento, estadoCivil,
-        ...(cep && logradouro && municipio && uf ? {
-          endereco: {
-            upsert: {
-              create: { cep, logradouro, numero, complemento, bairro, municipio, uf, pais: "Brasil" },
-              update: { cep, logradouro, numero, complemento, bairro, municipio, uf },
-            },
-          },
-        } : {}),
+        ...buildEnderecoWrite(enderecoData, atual.enderecoId),
       },
     });
 
@@ -102,6 +106,30 @@ export async function DELETE(_request: NextRequest, { params }: { params: Promis
     // Soft-delete (RN-PESSOA-03): preserva o registro em vez de apagá-lo.
     await prisma.pessoa.update({ where: { id }, data: { excluidoEm: new Date() } });
     return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error(error);
+    return NextResponse.json({ success: false, message: "Ocorreu um erro interno no servidor." }, { status: 500 });
+  }
+}
+
+
+
+export async function PATCH(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+
+  try {
+    const pessoa = await prisma.pessoa.findUnique({ where: { id }, select: { desativadoEm: true } });
+
+    if (!pessoa) {
+      return NextResponse.json({ message: "Pessoa não encontrada." }, { status: 404 });
+    }
+
+    const atualizada = await prisma.pessoa.update({
+      where: { id },
+      data: { desativadoEm: pessoa.desativadoEm ? null : new Date() },
+    });
+
+    return NextResponse.json({ success: true, data: atualizada });
   } catch (error) {
     console.error(error);
     return NextResponse.json({ success: false, message: "Ocorreu um erro interno no servidor." }, { status: 500 });

@@ -1,7 +1,7 @@
 "use client";
 
 import { ColumnDef, VisibilityState } from "@tanstack/react-table";
-import { Pencil, Plus, Search, Settings2, Trash2, Users } from "lucide-react";
+import { Pencil, Plus, Power, Search, Settings2, Trash2, Users } from "lucide-react";
 
 import React, { useEffect, useState } from "react";
 
@@ -25,7 +25,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { SelectField } from "@/components/our/SelectField";
-import { PessoaRow, deletePessoa, getPessoas } from "./services";
+import { PessoaRow, deletePessoa, getPessoas, togglePessoaStatus } from "./services";
 import { EnumPessoaTipo } from "./schema";
 import { ErrorPage } from "@/components/our/ErrorPage";
 import { formatDocumento } from "@/lib/documento";
@@ -60,6 +60,7 @@ const TIPO_LABEL: Record<string, string> = {
 };
 
 function buildColumns(
+  onRequestToggleStatus: (id: string) => void,
   onRequestEdit: (id: string) => void,
   onRequestDelete: (id: string) => void,
 ): ColumnDef<PessoaRow>[] {
@@ -97,8 +98,8 @@ function buildColumns(
       header: "Status",
       accessorKey: "status",
       cell: ({ row }) => (
-        <Badge variant={row.original.excluidoEm ? "outline" : "default"}>
-          {row.original.excluidoEm ? "Inativo" : "Ativo"}
+        <Badge variant={row.original.desativadoEm ? "outline" : "default"}>
+          {row.original.desativadoEm ? "Inativo" : "Ativo"}
         </Badge>
       ),
     },
@@ -119,6 +120,14 @@ function buildColumns(
       enableSorting: false,
       cell: ({ row }) => (
         <div className="flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            title={row.original.desativadoEm ? "Ativar" : "Desativar"}
+            onClick={() => onRequestToggleStatus(row.original.id)}
+          >
+            <Power className="size-4" />
+          </Button>
           <Button variant="ghost" size="icon-sm" onClick={() => onRequestEdit(row.original.id)}>
             <Pencil className="size-4" />
           </Button>
@@ -200,7 +209,16 @@ export default function PessoaList() {
     }
   }
 
-  const columns = buildColumns(setEditingId, setPendingDeleteId);
+  async function toggleStatus(id: string) {
+    try {
+      await togglePessoaStatus(id);
+      setRefreshKey((k) => k + 1);
+    } catch {
+      // erro silencioso
+    }
+  }
+
+  const columns = buildColumns(toggleStatus, setEditingId, setPendingDeleteId);
 
   if (error) {
     return (
@@ -319,7 +337,7 @@ export default function PessoaList() {
         open={pendingDeleteId !== null}
         onOpenChange={(open) => { if (!open) setPendingDeleteId(null); }}
         onConfirm={confirmDelete}
-        description="A pessoa será inativada. Caso não possua histórico vinculado, poderá ser removida definitivamente."
+        description="Tem certeza que deseja excluir este registro?"
       />
     </div>
   );

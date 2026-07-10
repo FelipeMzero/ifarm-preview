@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { uniqueConstraintErrors } from "../dbErrors";
 import { pessoaApiSchema, pessoaQuerySchema } from "../schemas";
+import { buildEnderecoWrite } from "./helpers";
 
 
 
@@ -17,6 +18,7 @@ export async function GET(request: NextRequest) {
     const { page, pageSize, search, tipo } = validation.data;
 
     const where = {
+      excluidoEm: null,
       ...(search ? {
         OR: [
           { nome:      { contains: search, mode: "insensitive" as const } },
@@ -44,7 +46,7 @@ export async function GET(request: NextRequest) {
         nome:         p.nome,
         telefone:     p.telefone,
         email:        p.email,
-        excluidoEm:   p.excluidoEm?.toISOString() ?? null,
+        desativadoEm: p.desativadoEm?.toISOString() ?? null,
         atualizadoEm: p.atualizadoEm.toISOString(),
       })),
       total,
@@ -74,17 +76,33 @@ export async function POST(request: NextRequest) {
     }
 
     const { cep, logradouro, numero, complemento, bairro, municipio, uf, ...pessoaData } = validation.data;
+    const enderecoData = cep && logradouro && municipio && uf
+      ? { cep, logradouro, numero, complemento, bairro, municipio, uf, pais: "Brasil" }
+      : null;
 
-    const pessoa = await prisma.pessoa.create({
-      data: {
-        ...pessoaData,
-        ...(cep && logradouro && municipio && uf ? {
-          endereco: { create: { cep, logradouro, numero, complemento, bairro, municipio, uf, pais: "Brasil" } },
-        } : {}),
-      },
+    // Documento de um registro excluído pode ser reaproveitado: restaura em vez de bloquear por unicidade.
+    const excluida = await prisma.pessoa.findFirst({
+      where: { documento: pessoaData.documento, excluidoEm: { not: null } },
     });
 
-    return NextResponse.json({ success: true, data: pessoa }, { status: 201 });
+    const pessoa = excluida
+      ? await prisma.pessoa.update({
+          where: { id: excluida.id },
+          data: {
+            ...pessoaData,
+            excluidoEm: null,
+            desativadoEm: null,
+            ...buildEnderecoWrite(enderecoData, excluida.enderecoId),
+          },
+        })
+      : await prisma.pessoa.create({
+          data: {
+            ...pessoaData,
+            ...(enderecoData ? { endereco: { create: enderecoData } } : {}),
+          },
+        });
+
+    return NextResponse.json({ success: true, data: pessoa }, { status: excluida ? 200 : 201 });
 
   } catch (error) {
     const errors = uniqueConstraintErrors(error);

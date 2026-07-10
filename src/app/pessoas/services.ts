@@ -17,7 +17,7 @@ export type PessoaRow = {
   nome: string;
   telefone: string | null;
   email: string | null;
-  excluidoEm: string | null;
+  desativadoEm: string | null;
   atualizadoEm: string;
 };
 
@@ -64,6 +64,19 @@ export async function updatePessoa(id: string, data: PessoaFormData) {
 
 export async function deletePessoa(id: string) {
   const response = await fetch(API_ENDPOINTS.PESSOA_BY_ID(id), { method: "DELETE" });
+  const result = await response.json();
+
+  if (!response.ok) {
+    throw new Error(result.message);
+  }
+
+  return result;
+}
+
+
+
+export async function togglePessoaStatus(id: string) {
+  const response = await fetch(API_ENDPOINTS.PESSOA_BY_ID(id), { method: "PATCH" });
   const result = await response.json();
 
   if (!response.ok) {
