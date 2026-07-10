@@ -123,12 +123,13 @@ function buildColumns(
           >
             <Power className="size-4" />
           </Button>
-          <Button variant="ghost" size="icon-sm" onClick={() => onRequestEdit(row.original.id)}>
+          <Button variant="ghost" size="icon-sm" title="Editar" onClick={() => onRequestEdit(row.original.id)}>
             <Pencil className="size-4" />
           </Button>
           <Button
             variant="ghost"
             size="icon-sm"
+            title="Excluir"
             className="text-destructive hover:text-destructive"
             onClick={() => onRequestDelete(row.original.id)}
           >
