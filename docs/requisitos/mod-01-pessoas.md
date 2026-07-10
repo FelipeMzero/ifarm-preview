@@ -47,7 +47,7 @@ Toda Pessoa é do tipo Física ou Jurídica. A maioria dos campos é comum aos d
 # 2 - Requisitos Funcionais (RF)
 
 
-## 2.1 - `RF-PESSOA-01`: Listagem de Pessoas
+## ✅ 2.1 - `RF-PESSOA-01`: Listagem de Pessoas
 <div style="border:1px solid #ccc; padding:16px; border-radius:8px;">
 
 ### 2.1.1 - Descrição
@@ -57,24 +57,25 @@ Tela de entrada do módulo, responsável por exibir todas as pessoas físicas e 
 | :--- | :--- |
 | **User Story** | Como **Gerente**, quero **visualizar a lista de pessoas cadastradas** para localizar rapidamente um registro e acessar as ações que podem ser executadas para ela. |
 | **Dependências** | — |
-| **Regras Vinculadas**| `RN-PESSOA-03` |
+| **Regras Vinculadas**| — |
 | **Atores** | Administrador, Gerente |
 | **Plataformas**| Web |
 
 ### 2.1.2 - Critérios de Aceitação
-* [ ] A listagem pode exibir os `Tipo`, `Documento`, `Nome/Razão Social`, `Email` e `Telefone`, sendo que por padrão os dois últimos ficam ocultos
-* [ ] Deve ser possível escolher quais colunas exibir/ocultar, sendo que `Tipo` e `Documento` são sempre visíveis
-* [ ] Deve ser possível ordenar por qualquer coluna
-* [ ] Deve haver um campo de busca que filtra por equivalência em `Documento`, `Nome/Razão Social`
-* [ ] Deve haver um select para filtrar por pessoa física ou jurídica
-* [ ] Cada linha deve prover acesso às ações "Editar" (`RF-PESSOA-03`) e "Excluir" (`RF-PESSOA-04`).
+* [ ] A listagem pode exibir os campos `Tipo`, `Documento`, `Nome/Razão Social`, `Email`, `Telefone`, `Status` (Ativo ou Inativo), sendo que por padrão `Email` e `Telefone` ficam ocultos.
+* [ ] Deve ser possível escolher quais colunas exibir/ocultar, sendo que `Tipo` e `Documento` são sempre visíveis.
+* [ ] Deve ser possível ordenar por qualquer coluna, sendo que inicialmente a ordem deve ser do registro mais recente para o mais antigo.
+* [ ] Deve ser possível pesquisar por `Documento` e `Nome/Razão Social`.
+* [ ] Deve ser possível filtrar por pessoa física ou jurídica
+* [ ] Cada linha deve prover acesso às ações "Ativar/Desativar", "Editar" e "Ficha".
+* [ ] Deve existir um botão para adicionar um novo registro
 
 ### 2.1.3 - Cenários de Uso
 
 **Cenário 1: Listagem carregada com sucesso**
 * **Dado que** existem pessoas cadastradas no sistema;
 * **Quando** o Gerente acessar a tela de listagem de pessoas;
-* **Então** o sistema deve exibir a lista com `Tipo`, `Documento`, `Nome/Razão Social` de cada pessoa.
+* **Então** o sistema deve exibir a lista com `Tipo`, `Documento`, `Nome/Razão Social` e `Status` de cada pessoa.
 
 **Cenário 2: Busca sem resultados**
 * **Dado que** o Gerente está na tela de listagem de pessoas;
@@ -83,19 +84,19 @@ Tela de entrada do módulo, responsável por exibir todas as pessoas físicas e 
 
 **Cenário 3: Acesso a uma ação a partir da listagem**
 * **Dado que** o Gerente está na tela de listagem de pessoas;
-* **Quando** ele acionar a ação "Ver", "Editar" ou "Excluir" em uma linha da lista;
-* **Então** o sistema deve direcioná-lo para a tela correspondente à ação escolhida.
+* **Quando** ele acionar uma ação em uma linha da lista;
+* **Então** o sistema deve executar a ação escolhida.
 
 </div>
 
 
 
 
-## 2.2 - `RF-PESSOA-02`: Criar Pessoa
+## ✅ 2.2 - `RF-PESSOA-02`: Criar Pessoa
 <div style="border:1px solid #ccc; padding:16px; border-radius:8px;">
 
 ### 2.2.1 - Descrição
-Funcionalidade destinada ao cadastro de pessoas físicas ou jurídicas, viabilizando o registro de novos agentes que interagem com as atividades do negócio.
+Tela com um formulário destinada ao cadastro de pessoas físicas ou jurídicas, viabilizando o registro de novos agentes que interagem com as atividades do negócio.
 
 | Tipo | Valor |
 | :--- | :--- |
@@ -143,11 +144,11 @@ Funcionalidade destinada ao cadastro de pessoas físicas ou jurídicas, viabiliz
 
 
 
-## 2.3 - `RF-PESSOA-03`: Atualizar Pessoa
+## ✅ 2.3 - `RF-PESSOA-03`: Atualizar Pessoa
 <div style="border:1px solid #ccc; padding:16px; border-radius:8px;">
 
 ### 2.3.1 - Descrição
-Funcionalidade destinada à edição dos dados cadastrais de uma pessoa física ou jurídica já registrada no sistema.
+Tela com formulário destinado à edição dos dados cadastrais de uma pessoa física ou jurídica já registrada no sistema.
 
 | Tipo | Valor |
 | :--- | :--- |
@@ -192,10 +193,46 @@ Funcionalidade destinada à edição dos dados cadastrais de uma pessoa física 
 
 
 
-## 2.4 - `RF-PESSOA-04`: Excluir Pessoa
+## 🚧 2.4 - `RF-PESSOA-04`: Ver Ficha
 <div style="border:1px solid #ccc; padding:16px; border-radius:8px;">
 
 ### 2.4.1 - Descrição
+Tela destinada à exibição de informações mais detalhadas da pessoa, como: ...
+
+| Tipo | Valor |
+| :--- | :--- |
+| **User Story** | Como **Gerente**, quero **consultar a ficha completa de uma pessoa cadastrada** para visualizar seus dados detalhados e o histórico de papéis e transações vinculados a ela. |
+| **Dependências** | `RF-PESSOA-02` |
+| **Regras Vinculadas**| `RN-PESSOA-03` |
+| **Atores** | Administrador, Gerente |
+| **Plataformas**| Web |
+
+### 2.4.2 - Critérios de Aceitação
+* [ ] Exibir um botão para excluir a pessoa caso ela não tenha movimentação no sistema
+* [ ] Não permitir exclusão caso a pessoa tenha movimentação no sistema
+* [ ] Exibir a ficha ...
+
+### 2.4.3 - Cenários de Uso
+
+**Cenário 1: Exibição da ficha com histórico vinculado**
+* **Dado que** existe uma pessoa cadastrada com papéis e transações vinculados a ela;
+* **Quando** o Gerente acionar a ação "Ficha" a partir da listagem;
+* **Então** o sistema deve exibir os dados cadastrais da pessoa e o histórico de papéis e transações vinculados a ela.
+
+**Cenário 2: Exibição da ficha sem histórico vinculado**
+* **Dado que** existe uma pessoa cadastrada sem nenhum papel ou transação vinculado a ela;
+* **Quando** o Gerente acionar a ação "Ficha" a partir da listagem;
+* **Então** o sistema deve exibir os dados cadastrais da pessoa e indicar que não há histórico vinculado.
+
+</div>
+
+
+
+
+## ✅ 2.5 - `RF-PESSOA-05`: Excluir Pessoa
+<div style="border:1px solid #ccc; padding:16px; border-radius:8px;">
+
+### 2.5.1 - Descrição
 Funcionalidade destinada à exclusão de uma pessoa física ou jurídica cadastrada no sistema, respeitando a preservação de histórico quando aplicável.
 
 | Tipo | Valor |
@@ -206,19 +243,54 @@ Funcionalidade destinada à exclusão de uma pessoa física ou jurídica cadastr
 | **Atores** | Administrador, Gerente |
 | **Plataformas**| Web |
 
-### 2.4.2 - Critérios de Aceitação
-* [ ] A pessoa não pode ter histórico de qualquer tipo vinculado a ela.
+### 2.5.2 - Critérios de Aceitação
+* [ ] A pessoa só pode ser excluída se não tiver histórico vinculado a ela.
 
-### 2.4.3 - Cenários de Uso
+### 2.5.3 - Cenários de Uso
 
 **Cenário 1: Exclusão de pessoa sem histórico vinculado**
-* **Dado que** o Gerente está na tela de visualização de uma pessoa sem nenhum histórico de transações vinculado;
+* **Dado que** o Gerente está na tela de ficha de uma pessoa sem nenhum histórico de transações vinculado;
 * **Quando** ele confirmar a ação de "Excluir";
 * **Então** o sistema deve excluir o registro e exibir a mensagem: *"Registro excluído com sucesso!"*.
 
 **Cenário 2: Tentativa de excluir de pessoa com histórico vinculado**
-* **Dado que** o Gerente está na tela de visualização de uma pessoa que possui histórico de transações vinculado;
+* **Dado que** o Gerente está na tela de ficha de uma pessoa que possui histórico de transações vinculado;
 * **Quando** ele confirmar a ação de "Excluir";
 * **Então** o sistema deve impedir a exclusão e exibir a mensagem: *"Este registro já possui histórico e não pode ser excluído."* (Aplica `RN-PESSOA-03`).
+
+</div>
+
+
+
+## ✅ 2.6 - `RF-PESSOA-06`: Ativar/Desativar Pessoa
+<div style="border:1px solid #ccc; padding:16px; border-radius:8px;">
+
+### 2.6.1 - Descrição
+Funcionalidade destinada à ativação/desativação de uma pessoa física ou jurídica, permitindo marcar como inativos os registros que não têm mais relacionamento ativo com o negócio (ex: clientes ou fornecedores antigos), sem excluí-los nem perder seu histórico. Pessoas inativas ficam ocultas por padrão nas listagens, mas continuam disponíveis para consulta.
+
+| Tipo | Valor |
+| :--- | :--- |
+| **User Story** | Como **Gerente**, quero **ativar ou desativar uma pessoa cadastrada** para ocultá-la das listagens quando ela não tiver mais relacionamento ativo com o negócio, sem perder seus dados e histórico. |
+| **Dependências** | `RF-PESSOA-02` |
+| **Regras Vinculadas**| — |
+| **Atores** | Administrador, Gerente |
+| **Plataformas**| Web |
+
+### 2.6.2 - Critérios de Aceitação
+* [ ] A ação deve alternar o status da pessoa entre `Ativo` e `Inativo`.
+* [ ] Pessoas inativas ficam ocultas por padrão na listagem, mas continuam disponíveis para consulta.
+* [ ] A ativação/desativação não exige confirmação adicional nem altera os dados ou o histórico da pessoa.
+
+### 2.6.3 - Cenários de Uso
+
+**Cenário 1: Desativação de pessoa ativa**
+* **Dado que** existe uma pessoa cadastrada com status `Ativo`;
+* **Quando** o Gerente acionar a ação "Desativar";
+* **Então** o sistema deve alterar seu status para `Inativo` e ocultá-la da listagem padrão.
+
+**Cenário 2: Ativação de pessoa inativa**
+* **Dado que** existe uma pessoa cadastrada com status `Inativo`;
+* **Quando** o Gerente acionar a ação "Ativar";
+* **Então** o sistema deve alterar seu status para `Ativo` e voltar a exibi-la na listagem padrão.
 
 </div>
