@@ -38,6 +38,7 @@ export function SelectField({
       value={value}
       onValueChange={(val) => onValueChange((val as string) ?? "")}
       itemToStringLabel={(val: string) => items.find((item) => item.value === val)?.label ?? val}
+      filter={null}
     >
       <ComboboxTrigger
         id={id}
