@@ -12,162 +12,162 @@ datasource db {
 }
 
 
-enum Sexo {
-  MACHO
-  FEMEA
+enum Sex {
+  MALE   // Macho
+  FEMALE // Fêmea
+
+  @@map("sex")
 }
 
-enum AnimalOrigem {
-  NASCIMENTO
-  COMPRA
-  TRANSFERENCIA
+enum AnimalOrigin {
+  BIRTH    // Nascimento
+  PURCHASE // Compra
+  TRANSFER // Transferência
+
+  @@map("animal_origin")
 }
 
 enum AnimalStatus {
-  ATIVO
-  VENDIDO
-  MORTO
-  TRANSFERIDO
-  DESCARTE
-  ABATE
+  ACTIVE      // Ativo
+  SOLD        // Vendido
+  DEAD        // Morto
+  TRANSFERRED // Transferido
+  DISCARDED   // Descarte
+  SLAUGHTERED // Abate
+
+  @@map("animal_status")
 }
 
-enum PessoaTipo {
-  FISICA
-  JURIDICA
+enum PersonType {
+  INDIVIDUAL // Pessoa Física
+  COMPANY    // Pessoa Jurídica
+
+  @@map("person_type")
 }
 
-enum EstadoCivil {
-  SOLTEIRO
-  CASADO
-  UNIAO_ESTAVEL
-  DIVORCIADO
-  VIUVO
+enum MaritalStatus {
+  SINGLE       // Solteiro
+  MARRIED      // Casado
+  STABLE_UNION // União Estável
+  DIVORCED     // Divorciado
+  WIDOWED      // Viúvo
+
+  @@map("marital_status")
 }
 
-model Endereco {
+model Address {
   id          Int     @id @default(autoincrement())
-  cep         String
-  logradouro  String
-  numero      String?
-  complemento String?
-  bairro      String?
-  municipio   String
-  uf          String
-  pais        String  @default("Brasil")
+  zipCode     String  @map("zip_code")     // CEP
+  street      String                        // Logradouro
+  number      String?
+  complement  String?                       // Complemento
+  neighborhood String?                      // Bairro
+  city        String                        // Município
+  state       String                        // UF (unidade federativa)
+  country     String  @default("Brasil")    // País
 
-  pessoa Pessoa?
+  person Person?
 
-  @@map("endereco")
+  @@map("address")
 }
 
-model Pessoa {
-  id                String       @id @default(uuid())
-  tipo              PessoaTipo
-  documento         String       @unique
-  nome              String
-  inscricaoEstadual String?      @unique @map("inscricao_estadual")
-  telefone          String?
-  email             String?      @unique
+model Person {
+  id             String     @id @default(uuid())
+  type           PersonType
+  taxId          String     @unique @map("tax_id") // CPF/CNPJ
+  name           String
+  stateRegistration String? @unique @map("state_registration") // Inscrição Estadual
+  phone          String?
+  email          String?    @unique
 
-  enderecoId Int?      @unique @map("endereco_id")
-  endereco   Endereco? @relation(fields: [enderecoId], references: [id])
+  addressId Int?     @unique @map("address_id")
+  address   Address? @relation(fields: [addressId], references: [id])
 
   // Exclusivo de Pessoa Jurídica
-  nomeFantasia String? @map("nome_fantasia")
+  tradeName String? @map("trade_name") // Nome Fantasia
 
   // Exclusivos de Pessoa Física
-  rg             String?      @unique
-  dataNascimento DateTime?    @db.Date @map("data_nascimento")
-  estadoCivil    EstadoCivil? @map("estado_civil")
+  rg            String?        @unique          // RG (Registro Geral)
+  birthDate     DateTime?      @db.Date @map("birth_date")
+  maritalStatus MaritalStatus? @map("marital_status")
 
-  criadoEm DateTime @default(now()) @map("criado_em")
-  atualizadoEm DateTime @updatedAt @map("atualizado_em")
-  excluidoEm DateTime? @map("excluido_em")
-  desativadoEm DateTime? @map("desativado_em")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  deletedAt   DateTime? @map("deleted_at")
+  deactivatedAt DateTime? @map("deactivated_at")
 
-  @@index([tipo])
-  @@index([nome])
-  @@map("pessoa")
+  @@index([type])
+  @@index([name])
+  @@map("person")
 }
 
 
 
-
-
-
-
-
-
-
-
-
-
-model Raca {
+model Breed {
   id      Int      @id @default(autoincrement())
-  nome    String   @unique
-  animais Animal[]
+  name    String   @unique
+  animals Animal[]
 
-  @@map("raca")
+  @@map("breed")
 }
 
-model Lote {
+model Batch {
   id      Int      @id @default(autoincrement())
-  nome    String   @unique
-  animais Animal[]
+  name    String   @unique
+  animals Animal[]
 
-  @@map("lote")
+  @@map("batch")
 }
 
-model Fazenda {
+model Farm {
   id            Int      @id @default(autoincrement())
-  nome          String   @unique
-  animaisOrigem Animal[] @relation("FazendaOrigem")
+  name          String   @unique
+  originAnimals Animal[] @relation("FarmOrigin")
 
-  @@map("fazenda")
+  @@map("farm")
 }
 
 model Animal {
-  id               String       @id @default(uuid())
-  brinco           String       @unique
-  rfid             String?      @unique
-  nome             String?
-  dataNascimento   DateTime?    @db.Date @map("data_nascimento")
-  pesoNascimentoKg Float?       @map("peso_nascimento_kg")
-  sexo             Sexo         @default(MACHO)
-  origem           AnimalOrigem @default(NASCIMENTO)
-  status           AnimalStatus @default(ATIVO)
+  id             String       @id @default(uuid())
+  earTag         String       @unique @map("ear_tag") // Brinco (identificação do animal)
+  rfid           String?      @unique
+  name           String?
+  birthDate      DateTime?    @db.Date @map("birth_date")
+  birthWeightKg  Float?       @map("birth_weight_kg")
+  sex            Sex          @default(MALE)
+  origin         AnimalOrigin @default(BIRTH)
+  status         AnimalStatus @default(ACTIVE)
 
-  racaId Int?  @map("raca_id")
-  raca   Raca? @relation(fields: [racaId], references: [id])
+  breedId Int?   @map("breed_id")
+  breed   Breed? @relation(fields: [breedId], references: [id])
 
-  loteId Int?  @map("lote_id")
-  lote   Lote? @relation(fields: [loteId], references: [id])
+  batchId Int?   @map("batch_id")
+  batch   Batch? @relation(fields: [batchId], references: [id])
 
-  maeId     String?  @map("mae_id")
-  mae       Animal?  @relation("AnimalMae", fields: [maeId], references: [id])
-  filhosMae Animal[] @relation("AnimalMae")
+  motherId       String?  @map("mother_id")
+  mother         Animal?  @relation("AnimalMother", fields: [motherId], references: [id])
+  motherChildren Animal[] @relation("AnimalMother")
 
-  paiId     String?  @map("pai_id")
-  pai       Animal?  @relation("AnimalPai", fields: [paiId], references: [id])
-  filhosPai Animal[] @relation("AnimalPai")
+  fatherId       String?  @map("father_id")
+  father         Animal?  @relation("AnimalFather", fields: [fatherId], references: [id])
+  fatherChildren Animal[] @relation("AnimalFather")
 
-  fazendaOrigemId   Int?     @map("fazenda_origem_id")
-  fazendaOrigem     Fazenda? @relation("FazendaOrigem", fields: [fazendaOrigemId], references: [id])
-  fazendaOrigemNome String?  @map("fazenda_origem_nome") // usado quando a fazenda não está cadastrada localmente
+  originFarmId   Int?     @map("origin_farm_id")
+  originFarm     Farm?    @relation("FarmOrigin", fields: [originFarmId], references: [id])
+  originFarmName String?  @map("origin_farm_name") // usado quando a fazenda não está cadastrada localmente
 
-  dataAquisicao     DateTime? @db.Date @map("data_aquisicao")
-  valorCompra       Decimal?  @db.Decimal(10, 2) @map("valor_compra")
-  idadeEntradaMeses Int?      @map("idade_entrada_meses")
+  acquisitionDate   DateTime? @db.Date @map("acquisition_date")
+  purchasePrice     Decimal?  @db.Decimal(10, 2) @map("purchase_price")
+  entryAgeMonths    Int?      @map("entry_age_months")
 
-  pesoAtualKg Float? @map("peso_atual_kg") // denormalizado para simplificar consulta no frontend
+  currentWeightKg Float? @map("current_weight_kg") // denormalizado para simplificar consulta no frontend
 
-  criadoEm DateTime @default(now()) @map("criado_em")
-  atualizadoEm DateTime @updatedAt @map("atualizado_em")
-  excluidoEm DateTime? @map("excluido_em")
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
 
-  @@index([loteId])
-  @@index([racaId])
+  @@index([batchId])
+  @@index([breedId])
   @@index([status])
   @@map("animal")
 }
@@ -194,7 +194,7 @@ model User {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  @@map("usuario")
+  @@map("user")
 }
 
 model Session {
@@ -213,7 +213,7 @@ model Session {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  @@map("usuario_sessao")
+  @@map("session")
 }
 
 model Account {
@@ -235,7 +235,7 @@ model Account {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  @@map("usuario_conta")
+  @@map("account")
 }
 
 model Verification {
@@ -247,6 +247,5 @@ model Verification {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  @@map("usuario_verificacao")
+  @@map("verification")
 }
-

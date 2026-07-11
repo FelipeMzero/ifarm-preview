@@ -3,8 +3,8 @@ import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/api-auth";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
 import { uniqueConstraintErrors } from "../../dbErrors";
-import { pessoaApiSchema } from "../../schemas";
-import { buildEnderecoWrite } from "../helpers";
+import { personApiSchema } from "../../schemas";
+import { buildAddressWrite } from "../helpers";
 
 
 
@@ -15,30 +15,30 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
   const { id } = await params;
 
   try {
-    const pessoa = await prisma.pessoa.findUnique({ where: { id }, include: { endereco: true } });
+    const person = await prisma.person.findUnique({ where: { id }, include: { address: true } });
 
-    if (!pessoa || pessoa.excluidoEm) {
+    if (!person || person.deletedAt) {
       return NextResponse.json({ message: "Pessoa não encontrada." }, { status: 404 });
     }
 
     return NextResponse.json({
-      tipo:              pessoa.tipo,
-      documento:         pessoa.documento,
-      nome:              pessoa.nome,
-      inscricaoEstadual: pessoa.inscricaoEstadual ?? "",
-      telefone:          pessoa.telefone ?? "",
-      email:             pessoa.email ?? "",
-      nomeFantasia:      pessoa.nomeFantasia ?? "",
-      rg:                pessoa.rg ?? "",
-      dataNascimento:    pessoa.dataNascimento?.toISOString().slice(0, 10) ?? "",
-      estadoCivil:       pessoa.estadoCivil ?? "",
-      cep:               pessoa.endereco?.cep ?? "",
-      logradouro:        pessoa.endereco?.logradouro ?? "",
-      numero:            pessoa.endereco?.numero ?? "",
-      complemento:       pessoa.endereco?.complemento ?? "",
-      bairro:            pessoa.endereco?.bairro ?? "",
-      municipio:         pessoa.endereco?.municipio ?? "",
-      uf:                pessoa.endereco?.uf ?? "",
+      type:              person.type,
+      taxId:             person.taxId,
+      name:              person.name,
+      stateRegistration: person.stateRegistration ?? "",
+      phone:             person.phone ?? "",
+      email:             person.email ?? "",
+      tradeName:         person.tradeName ?? "",
+      rg:                person.rg ?? "",
+      birthDate:         person.birthDate?.toISOString().slice(0, 10) ?? "",
+      maritalStatus:     person.maritalStatus ?? "",
+      zipCode:           person.address?.zipCode ?? "",
+      street:            person.address?.street ?? "",
+      number:            person.address?.number ?? "",
+      complement:        person.address?.complement ?? "",
+      neighborhood:      person.address?.neighborhood ?? "",
+      city:              person.address?.city ?? "",
+      state:             person.address?.state ?? "",
     });
 
   } catch (error) {
@@ -57,7 +57,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 
   try {
     const body = await request.json();
-    const validation = pessoaApiSchema.safeParse(body);
+    const validation = personApiSchema.safeParse(body);
 
     if (!validation.success) {
       const errors: Record<string, string> = {};
@@ -68,31 +68,31 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       return NextResponse.json({ success: false, errors }, { status: 400 });
     }
 
-    // `tipo` e `documento` são imutáveis após o cadastro (RF-PESSOA-02): omitidos do update.
+    // `type` e `taxId` são imutáveis após o cadastro (RF-PESSOA-02): omitidos do update.
     const {
-      nome, inscricaoEstadual, telefone, email, nomeFantasia, rg, dataNascimento, estadoCivil,
-      cep, logradouro, numero, complemento, bairro, municipio, uf,
+      name, stateRegistration, phone, email, tradeName, rg, birthDate, maritalStatus,
+      zipCode, street, number, complement, neighborhood, city, state,
     } = validation.data;
 
-    const enderecoData = cep && logradouro && municipio && uf
-      ? { cep, logradouro, numero, complemento, bairro, municipio, uf, pais: "Brasil" }
+    const addressData = zipCode && street && city && state
+      ? { zipCode, street, number, complement, neighborhood, city, state, country: "Brasil" }
       : null;
 
-    const atual = await prisma.pessoa.findUnique({ where: { id }, select: { enderecoId: true } });
+    const current = await prisma.person.findUnique({ where: { id }, select: { addressId: true } });
 
-    if (!atual) {
+    if (!current) {
       return NextResponse.json({ success: false, message: "Pessoa não encontrada." }, { status: 404 });
     }
 
-    const pessoa = await prisma.pessoa.update({
+    const person = await prisma.person.update({
       where: { id },
       data: {
-        nome, inscricaoEstadual, telefone, email, nomeFantasia, rg, dataNascimento, estadoCivil,
-        ...buildEnderecoWrite(enderecoData, atual.enderecoId),
+        name, stateRegistration, phone, email, tradeName, rg, birthDate, maritalStatus,
+        ...buildAddressWrite(addressData, current.addressId),
       },
     });
 
-    return NextResponse.json({ success: true, data: pessoa });
+    return NextResponse.json({ success: true, data: person });
 
   } catch (error) {
     const errors = uniqueConstraintErrors(error);
@@ -115,7 +115,7 @@ export async function DELETE(_request: NextRequest, { params }: { params: Promis
 
   try {
     // Soft-delete (RN-PESSOA-03): preserva o registro em vez de apagá-lo.
-    await prisma.pessoa.update({ where: { id }, data: { excluidoEm: new Date() } });
+    await prisma.person.update({ where: { id }, data: { deletedAt: new Date() } });
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error(error);
@@ -132,18 +132,18 @@ export async function PATCH(_request: NextRequest, { params }: { params: Promise
   const { id } = await params;
 
   try {
-    const pessoa = await prisma.pessoa.findUnique({ where: { id }, select: { desativadoEm: true } });
+    const person = await prisma.person.findUnique({ where: { id }, select: { deactivatedAt: true } });
 
-    if (!pessoa) {
+    if (!person) {
       return NextResponse.json({ message: "Pessoa não encontrada." }, { status: 404 });
     }
 
-    const atualizada = await prisma.pessoa.update({
+    const updated = await prisma.person.update({
       where: { id },
-      data: { desativadoEm: pessoa.desativadoEm ? null : new Date() },
+      data: { deactivatedAt: person.deactivatedAt ? null : new Date() },
     });
 
-    return NextResponse.json({ success: true, data: atualizada });
+    return NextResponse.json({ success: true, data: updated });
   } catch (error) {
     console.error(error);
     return NextResponse.json({ success: false, message: "Ocorreu um erro interno no servidor." }, { status: 500 });

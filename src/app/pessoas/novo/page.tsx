@@ -1,14 +1,14 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import PessoaForm from "../PessoaForm";
+import PersonForm from "../PersonForm";
 
 export default function Page() {
   const router = useRouter();
 
   return (
     <div className="w-full justify-center p-8">
-      <PessoaForm
+      <PersonForm
         title="Nova Pessoa"
         onCancel={() => router.back()}
         onSuccess={(newId) => router.replace(`/pessoas/${newId}`)}

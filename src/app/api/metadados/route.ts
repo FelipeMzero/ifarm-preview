@@ -7,21 +7,21 @@ export async function GET(_request: NextRequest) {
   if (response) return response;
 
   try {
-    const [racas, lotes, fazendas, animaisDisponiveis] = await Promise.all([
-      prisma.raca.findMany({ orderBy: { nome: "asc" } }),
-      prisma.lote.findMany({ orderBy: { nome: "asc" } }),
-      prisma.fazenda.findMany({ orderBy: { nome: "asc" } }),
+    const [breeds, batches, farms, availableFarmAnimals] = await Promise.all([
+      prisma.breed.findMany({ orderBy: { name: "asc" } }),
+      prisma.batch.findMany({ orderBy: { name: "asc" } }),
+      prisma.farm.findMany({ orderBy: { name: "asc" } }),
       prisma.animal.findMany({
-        select: { id: true, brinco: true, rfid: true, sexo: true },
-        orderBy: { brinco: "asc" }
+        select: { id: true, earTag: true, rfid: true, sex: true },
+        orderBy: { earTag: "asc" }
       }),
     ]);
 
     return NextResponse.json({
-      racas,
-      lotes,
-      fazendas,
-      animaisFazenda: animaisDisponiveis,
+      breeds,
+      batches,
+      farms,
+      farmAnimals: availableFarmAnimals,
     });
   } catch (error: any) {
     console.error("Erro ao carregar metadados:", error);

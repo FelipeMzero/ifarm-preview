@@ -3,8 +3,8 @@ import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/api-auth";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
 import { uniqueConstraintErrors } from "../dbErrors";
-import { pessoaApiSchema, pessoaQuerySchema } from "../schemas";
-import { buildEnderecoWrite } from "./helpers";
+import { personApiSchema, personQuerySchema } from "../schemas";
+import { buildAddressWrite } from "./helpers";
 
 
 
@@ -14,45 +14,45 @@ export async function GET(request: NextRequest) {
 
   try {
     const { searchParams } = new URL(request.url);
-    const validation = pessoaQuerySchema.safeParse(Object.fromEntries(searchParams));
+    const validation = personQuerySchema.safeParse(Object.fromEntries(searchParams));
 
     if (!validation.success) {
       return NextResponse.json({ message: "Parâmetros inválidos." }, { status: 400 });
     }
 
-    const { page, pageSize, search, tipo } = validation.data;
+    const { page, pageSize, search, type } = validation.data;
 
     const where = {
-      excluidoEm: null,
+      deletedAt: null,
       ...(search ? {
         OR: [
-          { nome:      { contains: search, mode: "insensitive" as const } },
-          { documento: { contains: search, mode: "insensitive" as const } },
+          { name:  { contains: search, mode: "insensitive" as const } },
+          { taxId: { contains: search, mode: "insensitive" as const } },
         ],
       } : {}),
-      ...(tipo ? { tipo } : {}),
+      ...(type ? { type } : {}),
     };
 
-    const [pessoas, total] = await Promise.all([
-      prisma.pessoa.findMany({
+    const [people, total] = await Promise.all([
+      prisma.person.findMany({
         where,
-        orderBy: { atualizadoEm: "desc" },
+        orderBy: { updatedAt: "desc" },
         skip: page * pageSize,
         take: pageSize,
       }),
-      prisma.pessoa.count({ where }),
+      prisma.person.count({ where }),
     ]);
 
     return NextResponse.json({
-      data: pessoas.map((p) => ({
-        id:           p.id,
-        tipo:         p.tipo,
-        documento:    p.documento,
-        nome:         p.nome,
-        telefone:     p.telefone,
-        email:        p.email,
-        desativadoEm: p.desativadoEm?.toISOString() ?? null,
-        atualizadoEm: p.atualizadoEm.toISOString(),
+      data: people.map((p) => ({
+        id:            p.id,
+        type:          p.type,
+        taxId:         p.taxId,
+        name:          p.name,
+        phone:         p.phone,
+        email:         p.email,
+        deactivatedAt: p.deactivatedAt?.toISOString() ?? null,
+        updatedAt:     p.updatedAt.toISOString(),
       })),
       total,
       pageCount: Math.ceil(total / pageSize),
@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
 
-    const validation = pessoaApiSchema.safeParse(body);
+    const validation = personApiSchema.safeParse(body);
 
     if (!validation.success) {
       const errors: Record<string, string> = {};
@@ -83,34 +83,34 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, errors }, { status: 400 });
     }
 
-    const { cep, logradouro, numero, complemento, bairro, municipio, uf, ...pessoaData } = validation.data;
-    const enderecoData = cep && logradouro && municipio && uf
-      ? { cep, logradouro, numero, complemento, bairro, municipio, uf, pais: "Brasil" }
+    const { zipCode, street, number, complement, neighborhood, city, state, ...personData } = validation.data;
+    const addressData = zipCode && street && city && state
+      ? { zipCode, street, number, complement, neighborhood, city, state, country: "Brasil" }
       : null;
 
     // Documento de um registro excluído pode ser reaproveitado: restaura em vez de bloquear por unicidade.
-    const excluida = await prisma.pessoa.findFirst({
-      where: { documento: pessoaData.documento, excluidoEm: { not: null } },
+    const deletedPerson = await prisma.person.findFirst({
+      where: { taxId: personData.taxId, deletedAt: { not: null } },
     });
 
-    const pessoa = excluida
-      ? await prisma.pessoa.update({
-          where: { id: excluida.id },
+    const person = deletedPerson
+      ? await prisma.person.update({
+          where: { id: deletedPerson.id },
           data: {
-            ...pessoaData,
-            excluidoEm: null,
-            desativadoEm: null,
-            ...buildEnderecoWrite(enderecoData, excluida.enderecoId),
+            ...personData,
+            deletedAt: null,
+            deactivatedAt: null,
+            ...buildAddressWrite(addressData, deletedPerson.addressId),
           },
         })
-      : await prisma.pessoa.create({
+      : await prisma.person.create({
           data: {
-            ...pessoaData,
-            ...(enderecoData ? { endereco: { create: enderecoData } } : {}),
+            ...personData,
+            ...(addressData ? { address: { create: addressData } } : {}),
           },
         });
 
-    return NextResponse.json({ success: true, data: pessoa }, { status: excluida ? 200 : 201 });
+    return NextResponse.json({ success: true, data: person }, { status: deletedPerson ? 200 : 201 });
 
   } catch (error) {
     const errors = uniqueConstraintErrors(error);

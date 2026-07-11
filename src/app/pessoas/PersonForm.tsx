@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { IMaskInput } from "react-imask";
 
-import { getPessoa, updatePessoa, createPessoa, ApiError } from "./services";
+import { getPerson, updatePerson, createPerson, ApiError } from "./services";
 import { ErrorPage } from "@/components/our/ErrorPage";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -17,7 +17,7 @@ import FieldRow from "@/components/our/FieldRow";
 import { SearchCombobox } from "@/components/our/SearchCombobox";
 import { Loader2 } from "lucide-react";
 import FormSkeleton from "@/components/our/FormSkeleton";
-import { PessoaFormData, pessoaFormSchema, EnumPessoaTipo, EnumEstadoCivil } from "./schema";
+import { PersonFormData, personFormSchema, EnumPersonType, EnumMaritalStatus } from "./schema";
 import { Separator } from "@/components/ui/separator";
 
 
@@ -25,31 +25,31 @@ import { Separator } from "@/components/ui/separator";
 
 const MASKED_INPUT_CLASSNAME = "h-10 w-full min-w-0 rounded-lg border border-input bg-input/40 px-2.5 py-1 text-base transition-colors outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 aria-invalid:border-destructive aria-invalid:focus:ring-3 aria-invalid:ring-destructive/20 md:text-sm dark:bg-input/30 dark:disabled:bg-input/80 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40";
 
-const TELEFONE_MASK = [
+const PHONE_MASK = [
   { mask: "(00) 0000-0000" },
   { mask: "(00) 00000-0000" },
 ];
 
-type PessoaFormProps = {
+type PersonFormProps = {
   id?: string;
   title?: string;
   onCancel?: () => void;
   onSuccess?: (newId?: string) => void;
 };
 
-export default function PessoaForm({ id, title, onCancel, onSuccess }: PessoaFormProps) {
-  const TIPO_ITEMS = [
-    { value: EnumPessoaTipo.FISICA, label: "Física" },
-    { value: EnumPessoaTipo.JURIDICA, label: "Jurídica" },
+export default function PersonForm({ id, title, onCancel, onSuccess }: PersonFormProps) {
+  const TYPE_ITEMS = [
+    { value: EnumPersonType.INDIVIDUAL, label: "Física" },
+    { value: EnumPersonType.COMPANY, label: "Jurídica" },
   ];
-  const ESTADO_CIVIL_ITEMS = [
-    { value: EnumEstadoCivil.SOLTEIRO, label: "Solteiro(a)" },
-    { value: EnumEstadoCivil.CASADO, label: "Casado(a)" },
-    { value: EnumEstadoCivil.UNIAO_ESTAVEL, label: "União Estável" },
-    { value: EnumEstadoCivil.DIVORCIADO, label: "Divorciado(a)" },
-    { value: EnumEstadoCivil.VIUVO, label: "Viúvo(a)" },
+  const MARITAL_STATUS_ITEMS = [
+    { value: EnumMaritalStatus.SINGLE, label: "Solteiro(a)" },
+    { value: EnumMaritalStatus.MARRIED, label: "Casado(a)" },
+    { value: EnumMaritalStatus.STABLE_UNION, label: "União Estável" },
+    { value: EnumMaritalStatus.DIVORCED, label: "Divorciado(a)" },
+    { value: EnumMaritalStatus.WIDOWED, label: "Viúvo(a)" },
   ];
-  const UF_ITEMS = [
+  const STATE_ITEMS = [
     { value: "AC", label: "Acre" },
     { value: "AL", label: "Alagoas" },
     { value: "AP", label: "Amapá" },
@@ -81,40 +81,40 @@ export default function PessoaForm({ id, title, onCancel, onSuccess }: PessoaFor
 
   const [isDataLoading, setIsDataLoading] = useState(!!id);
   const [loadFailed, setLoadFailed] = useState(false);
-  const [isCepLoading, setIsCepLoading] = useState(false);
+  const [isZipLoading, setIsZipLoading] = useState(false);
 
-  const { handleSubmit, control, reset, watch, setValue, setError, formState: { isSubmitting } } = useForm<PessoaFormData>({
-    resolver: zodResolver(pessoaFormSchema),
+  const { handleSubmit, control, reset, watch, setValue, setError, formState: { isSubmitting } } = useForm<PersonFormData>({
+    resolver: zodResolver(personFormSchema),
     defaultValues: {
-      tipo: EnumPessoaTipo.FISICA,
-      documento: "",
-      nome: "",
-      inscricaoEstadual: "",
-      telefone: "",
+      type: EnumPersonType.INDIVIDUAL,
+      taxId: "",
+      name: "",
+      stateRegistration: "",
+      phone: "",
       email: "",
-      nomeFantasia: "",
+      tradeName: "",
       rg: "",
-      dataNascimento: "",
-      estadoCivil: "",
-      cep: "",
-      logradouro: "",
-      numero: "",
-      complemento: "",
-      bairro: "",
-      municipio: "",
-      uf: "",
+      birthDate: "",
+      maritalStatus: "",
+      zipCode: "",
+      street: "",
+      number: "",
+      complement: "",
+      neighborhood: "",
+      city: "",
+      state: "",
     },
   });
 
-  const tipo = watch("tipo");
-  const isJuridica = tipo === EnumPessoaTipo.JURIDICA;
+  const type = watch("type");
+  const isCompany = type === EnumPersonType.COMPANY;
 
   useEffect(() => {
     if (!id) return;
 
     async function loadData() {
       try {
-        const data = await getPessoa(id!);
+        const data = await getPerson(id!);
         reset(data);
       } catch {
         setLoadFailed(true);
@@ -128,11 +128,11 @@ export default function PessoaForm({ id, title, onCancel, onSuccess }: PessoaFor
 
 
 
-  async function handleCepBlur(cep: string) {
-    const digits = cep.replace(/\D/g, "");
+  async function handleZipBlur(zipCode: string) {
+    const digits = zipCode.replace(/\D/g, "");
     if (digits.length !== 8) return;
 
-    setIsCepLoading(true);
+    setIsZipLoading(true);
     try {
       const response = await fetch(`https://viacep.com.br/ws/${digits}/json/`);
       const data = await response.json();
@@ -142,36 +142,36 @@ export default function PessoaForm({ id, title, onCancel, onSuccess }: PessoaFor
         return;
       }
 
-      setValue("logradouro", data.logradouro || "", { shouldValidate: true });
-      setValue("bairro", data.bairro || "", { shouldValidate: true });
-      setValue("municipio", data.localidade || "", { shouldValidate: true });
-      setValue("uf", data.uf || "", { shouldValidate: true });
+      setValue("street", data.logradouro || "", { shouldValidate: true });
+      setValue("neighborhood", data.bairro || "", { shouldValidate: true });
+      setValue("city", data.localidade || "", { shouldValidate: true });
+      setValue("state", data.uf || "", { shouldValidate: true });
     } catch {
       toast.error("Não foi possível buscar o endereço pelo CEP.");
     } finally {
-      setIsCepLoading(false);
+      setIsZipLoading(false);
     }
   }
 
 
-  async function onSubmit(data: PessoaFormData) {
+  async function onSubmit(data: PersonFormData) {
     try {
       if (id) {
-        await updatePessoa(id, data);
-        const fresh = await getPessoa(id);
+        await updatePerson(id, data);
+        const fresh = await getPerson(id);
         reset(fresh);
         toast.success("Atualizado com sucesso!");
         onSuccess?.();
 
       } else {
-        const response = await createPessoa(data);
+        const response = await createPerson(data);
         toast.success("Salvo com sucesso!");
         onSuccess?.(response.data.id);
       }
     } catch (error) {
       if (error instanceof ApiError && error.errors) {
         Object.entries(error.errors).forEach(([field, message]) => {
-          setError(field as keyof PessoaFormData, { type: "server", message });
+          setError(field as keyof PersonFormData, { type: "server", message });
         });
         toast.error("Verifique os campos destacados.");
       } else {
@@ -203,32 +203,32 @@ export default function PessoaForm({ id, title, onCancel, onSuccess }: PessoaFor
         <FieldLegend> Identificação </FieldLegend>
 
         <FieldRow cols={2}>
-          <FormField name="tipo" label="Tipo" required
+          <FormField name="type" label="Tipo" required
             control={control}
             render={({ id: fieldId, field, fieldState }) =>
               id ? (
-                <Input id={fieldId} disabled value={TIPO_ITEMS.find(t => t.value === field.value)?.label ?? field.value} />
+                <Input id={fieldId} disabled value={TYPE_ITEMS.find(t => t.value === field.value)?.label ?? field.value} />
               ) : (
                 <SearchCombobox
                   id={fieldId} field={field} fieldState={fieldState}
-                  items={TIPO_ITEMS}
+                  items={TYPE_ITEMS}
                   keepSelection
                 />
               )
             }
           />
 
-          <FormField name="documento" label={isJuridica ? "CNPJ" : "CPF"} required
+          <FormField name="taxId" label={isCompany ? "CNPJ" : "CPF"} required
             control={control}
             render={({ field, id: fieldId }) =>
               <IMaskInput
-                mask={isJuridica ? "00.000.000/0000-00" : "000.000.000-00"}
+                mask={isCompany ? "00.000.000/0000-00" : "000.000.000-00"}
                 unmask
                 id={fieldId}
                 name={field.name}
                 value={field.value}
                 disabled={!!id}
-                placeholder={isJuridica ? "Ex: 12.345.678/0001-90" : "Ex: 123.456.789-00"}
+                placeholder={isCompany ? "Ex: 12.345.678/0001-90" : "Ex: 123.456.789-00"}
                 onAccept={(value) => field.onChange(value)}
                 onBlur={field.onBlur}
                 inputRef={field.ref}
@@ -239,13 +239,13 @@ export default function PessoaForm({ id, title, onCancel, onSuccess }: PessoaFor
         </FieldRow>
 
         <FieldRow cols={2}>
-          <FormField name="nome" label={isJuridica ? "Razão Social" : "Nome"} required
+          <FormField name="name" label={isCompany ? "Razão Social" : "Nome"} required
             control={control}
             render={({ field, id: fieldId }) => <Input {...field} id={fieldId} placeholder="Ex: João da Silva" />}
           />
 
-          {isJuridica ? (
-            <FormField name="nomeFantasia" label="Nome Fantasia"
+          {isCompany ? (
+            <FormField name="tradeName" label="Nome Fantasia"
               control={control}
               render={({ field, id: fieldId }) => <Input {...field} id={fieldId} placeholder="Opcional" />}
             />
@@ -257,25 +257,25 @@ export default function PessoaForm({ id, title, onCancel, onSuccess }: PessoaFor
           )}
         </FieldRow>
 
-        {isJuridica ? (
+        {isCompany ? (
           <FieldRow cols={2}>
-            <FormField name="inscricaoEstadual" label="Inscrição Estadual"
+            <FormField name="stateRegistration" label="Inscrição Estadual"
               control={control}
               render={({ field, id: fieldId }) => <Input {...field} id={fieldId} placeholder="Opcional" />}
             />
           </FieldRow>
         ) : (
           <FieldRow cols={2}>
-            <FormField name="dataNascimento" label="Data de Nascimento"
+            <FormField name="birthDate" label="Data de Nascimento"
               control={control}
               render={({ field, id: fieldId }) => <Input {...field} id={fieldId} type="date" />}
             />
-            <FormField name="estadoCivil" label="Estado Civil"
+            <FormField name="maritalStatus" label="Estado Civil"
               control={control}
               render={({ id: fieldId, field, fieldState }) => (
                 <SearchCombobox placeholder="Selecionar..."
                   id={fieldId} field={field} fieldState={fieldState}
-                  items={ESTADO_CIVIL_ITEMS}
+                  items={MARITAL_STATUS_ITEMS}
                 />
               )}
             />
@@ -288,11 +288,11 @@ export default function PessoaForm({ id, title, onCancel, onSuccess }: PessoaFor
       <FieldSet className="border-0">
         <FieldLegend>Contato</FieldLegend>
         <FieldRow cols={2}>
-          <FormField name="telefone" label="Telefone"
+          <FormField name="phone" label="Telefone"
             control={control}
             render={({ field, id: fieldId }) => (
               <IMaskInput
-                mask={TELEFONE_MASK}
+                mask={PHONE_MASK}
                 unmask
                 id={fieldId}
                 name={field.name}
@@ -316,7 +316,7 @@ export default function PessoaForm({ id, title, onCancel, onSuccess }: PessoaFor
       <FieldSet className="border-0">
         <FieldLegend>Endereço</FieldLegend>
         <FieldRow cols={3}>
-          <FormField name="cep" label="CEP"
+          <FormField name="zipCode" label="CEP"
             control={control}
             render={({ field, id: fieldId }) => (
               <IMaskInput
@@ -325,45 +325,45 @@ export default function PessoaForm({ id, title, onCancel, onSuccess }: PessoaFor
                 id={fieldId}
                 name={field.name}
                 value={field.value}
-                disabled={isCepLoading}
+                disabled={isZipLoading}
                 placeholder="Ex: 78000-000"
                 onAccept={(value) => field.onChange(value)}
-                onBlur={(e) => { field.onBlur(); handleCepBlur(e.target.value); }}
+                onBlur={(e) => { field.onBlur(); handleZipBlur(e.target.value); }}
                 inputRef={field.ref}
                 className={MASKED_INPUT_CLASSNAME}
               />
             )}
           />
-          <FormField name="logradouro" label="Logradouro"
+          <FormField name="street" label="Logradouro"
             control={control}
             render={({ field, id: fieldId }) => <Input {...field} id={fieldId} placeholder="Ex: Av. Brasil" />}
           />
-          <FormField name="numero" label="Número"
+          <FormField name="number" label="Número"
             control={control}
             render={({ field, id: fieldId }) => <Input {...field} id={fieldId} placeholder="Ex: 1200" />}
           />
         </FieldRow>
         <FieldRow cols={3}>
-          <FormField name="complemento" label="Complemento"
+          <FormField name="complement" label="Complemento"
             control={control}
             render={({ field, id: fieldId }) => <Input {...field} id={fieldId} placeholder="Opcional" />}
           />
-          <FormField name="bairro" label="Bairro"
+          <FormField name="neighborhood" label="Bairro"
             control={control}
             render={({ field, id: fieldId }) => <Input {...field} id={fieldId} placeholder="Opcional" />}
           />
-          <FormField name="municipio" label="Município"
+          <FormField name="city" label="Município"
             control={control}
             render={({ field, id: fieldId }) => <Input {...field} id={fieldId} placeholder="Ex: Cuiabá" />}
           />
         </FieldRow>
         <FieldRow cols={2}>
-          <FormField name="uf" label="UF"
+          <FormField name="state" label="UF"
             control={control}
             render={({ id: fieldId, field, fieldState }) => (
               <SearchCombobox placeholder="Selecionar..."
                 id={fieldId} field={field} fieldState={fieldState}
-                items={UF_ITEMS}
+                items={STATE_ITEMS}
               />
             )}
           />

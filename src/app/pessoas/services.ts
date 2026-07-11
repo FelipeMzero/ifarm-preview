@@ -1,4 +1,4 @@
-import { PessoaFormData } from "./schema";
+import { PersonFormData } from "./schema";
 
 export class ApiError extends Error {
   errors?: Record<string, string>;
@@ -10,24 +10,24 @@ export class ApiError extends Error {
   }
 }
 
-export type PessoaRow = {
+export type PersonRow = {
   id: string;
-  tipo: string;
-  documento: string;
-  nome: string;
-  telefone: string | null;
+  type: string;
+  taxId: string;
+  name: string;
+  phone: string | null;
   email: string | null;
-  desativadoEm: string | null;
-  atualizadoEm: string;
+  deactivatedAt: string | null;
+  updatedAt: string;
 };
 
 const API_ENDPOINTS = {
-  PESSOAS: "/api/pessoas",
-  PESSOA_BY_ID: (id: string) => `/api/pessoas/${id}`,
+  PEOPLE: "/api/pessoas",
+  PERSON_BY_ID: (id: string) => `/api/pessoas/${id}`,
 } as const;
 
-export async function createPessoa(data: PessoaFormData) {
-  const response = await fetch(API_ENDPOINTS.PESSOAS, {
+export async function createPerson(data: PersonFormData) {
+  const response = await fetch(API_ENDPOINTS.PEOPLE, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
@@ -44,8 +44,8 @@ export async function createPessoa(data: PessoaFormData) {
 
 
 
-export async function updatePessoa(id: string, data: PessoaFormData) {
-  const response = await fetch(API_ENDPOINTS.PESSOA_BY_ID(id), {
+export async function updatePerson(id: string, data: PersonFormData) {
+  const response = await fetch(API_ENDPOINTS.PERSON_BY_ID(id), {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
@@ -62,8 +62,8 @@ export async function updatePessoa(id: string, data: PessoaFormData) {
 
 
 
-export async function deletePessoa(id: string) {
-  const response = await fetch(API_ENDPOINTS.PESSOA_BY_ID(id), { method: "DELETE" });
+export async function deletePerson(id: string) {
+  const response = await fetch(API_ENDPOINTS.PERSON_BY_ID(id), { method: "DELETE" });
   const result = await response.json();
 
   if (!response.ok) {
@@ -75,8 +75,8 @@ export async function deletePessoa(id: string) {
 
 
 
-export async function togglePessoaStatus(id: string) {
-  const response = await fetch(API_ENDPOINTS.PESSOA_BY_ID(id), { method: "PATCH" });
+export async function togglePersonStatus(id: string) {
+  const response = await fetch(API_ENDPOINTS.PERSON_BY_ID(id), { method: "PATCH" });
   const result = await response.json();
 
   if (!response.ok) {
@@ -88,8 +88,8 @@ export async function togglePessoaStatus(id: string) {
 
 
 
-export async function getPessoa(id: string): Promise<PessoaFormData> {
-  const response = await fetch(API_ENDPOINTS.PESSOA_BY_ID(id));
+export async function getPerson(id: string): Promise<PersonFormData> {
+  const response = await fetch(API_ENDPOINTS.PERSON_BY_ID(id));
   const result = await response.json();
 
   if (!response.ok) {
@@ -101,24 +101,24 @@ export async function getPessoa(id: string): Promise<PessoaFormData> {
 
 
 
-export type PessoaListResult = {
-  data: PessoaRow[];
+export type PersonListResult = {
+  data: PersonRow[];
   total: number;
   pageCount: number;
 };
 
-export async function getPessoas(params: {
+export async function getPeople(params: {
   page?: number;
   pageSize?: number;
   search?: string;
-  tipo?: string;
-} = {}): Promise<PessoaListResult> {
-  const { page = 0, pageSize = 10, search = "", tipo = "" } = params;
+  type?: string;
+} = {}): Promise<PersonListResult> {
+  const { page = 0, pageSize = 10, search = "", type = "" } = params;
   const query = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
   if (search) query.set("search", search);
-  if (tipo) query.set("tipo", tipo);
+  if (type) query.set("type", type);
 
-  const response = await fetch(`${API_ENDPOINTS.PESSOAS}?${query}`);
+  const response = await fetch(`${API_ENDPOINTS.PEOPLE}?${query}`);
   const result = await response.json();
 
   if (!response.ok) {

@@ -27,40 +27,40 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { SelectField } from "@/components/our/SelectField";
-import { AnimalRow, deleteAnimal, getAnimais } from "./services";
-import { EnumAnimalOrigem, EnumAnimalStatus, EnumSexo } from "./schema";
+import { AnimalRow, deleteAnimal, getAnimals } from "./services";
+import { EnumAnimalOrigin, EnumAnimalStatus, EnumSex } from "./schema";
 import { ErrorPage } from "@/components/our/ErrorPage";
 
 const DEFAULT_PAGE_SIZE = 10;
 
 const COLUMN_LABELS: Record<string, string> = {
-  brinco: "Brinco",
+  earTag: "Brinco",
   rfid: "RFID",
-  sexo: "Sexo",
-  origem: "Origem",
+  sex: "Sexo",
+  origin: "Origem",
   status: "Status",
-  pesoAtualKg: "Peso Atual",
-  atualizadoEm: "Atualizado em",
+  currentWeightKg: "Peso Atual",
+  updatedAt: "Atualizado em",
 };
 
-const ORIGEM_VARIANT: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
-  [EnumAnimalOrigem.NASCIMENTO]: "default",
-  [EnumAnimalOrigem.COMPRA]: "secondary",
-  [EnumAnimalOrigem.TRANSFERENCIA]: "outline",
+const ORIGIN_VARIANT: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
+  [EnumAnimalOrigin.BIRTH]: "default",
+  [EnumAnimalOrigin.PURCHASE]: "secondary",
+  [EnumAnimalOrigin.TRANSFER]: "outline",
 };
 
 const STATUS_VARIANT: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
-  [EnumAnimalStatus.ATIVO]: "default",
-  [EnumAnimalStatus.VENDIDO]: "secondary",
-  [EnumAnimalStatus.MORTO]: "destructive",
-  [EnumAnimalStatus.TRANSFERIDO]: "outline",
-  [EnumAnimalStatus.DESCARTE]: "outline",
-  [EnumAnimalStatus.ABATE]: "destructive",
+  [EnumAnimalStatus.ACTIVE]: "default",
+  [EnumAnimalStatus.SOLD]: "secondary",
+  [EnumAnimalStatus.DEAD]: "destructive",
+  [EnumAnimalStatus.TRANSFERRED]: "outline",
+  [EnumAnimalStatus.DISCARDED]: "outline",
+  [EnumAnimalStatus.SLAUGHTERED]: "destructive",
 };
 
-const SEXO_ICON: Record<string, React.ReactNode> = {
-  [EnumSexo.MACHO]: <Mars className="size-5 text-blue-700" />,
-  [EnumSexo.FEMEA]: <Venus className="size-5 text-pink-700" />,
+const SEX_ICON: Record<string, React.ReactNode> = {
+  [EnumSex.MALE]: <Mars className="size-5 text-blue-700" />,
+  [EnumSex.FEMALE]: <Venus className="size-5 text-pink-700" />,
 };
 
 function buildColumns(
@@ -70,8 +70,8 @@ function buildColumns(
   return [
     {
       header: "Brinco",
-      accessorKey: "brinco",
-      cell: ({ row }) => row.original.brinco ?? "—",
+      accessorKey: "earTag",
+      cell: ({ row }) => row.original.earTag ?? "—",
     },
     {
       header: "RFID",
@@ -80,20 +80,20 @@ function buildColumns(
     },
     {
       header: "Sexo",
-      accessorKey: "sexo",
-      cell: ({ row }) => SEXO_ICON[row.original.sexo] ?? row.original.sexo,
+      accessorKey: "sex",
+      cell: ({ row }) => SEX_ICON[row.original.sex] ?? row.original.sex,
     },
     {
       header: "Peso Atual",
-      accessorKey: "pesoAtualKg",
+      accessorKey: "currentWeightKg",
       cell: ({ row }) =>
-        row.original.pesoAtualKg != null ? `${row.original.pesoAtualKg} kg` : "—",
+        row.original.currentWeightKg != null ? `${row.original.currentWeightKg} kg` : "—",
     },
     {
       header: "Origem",
-      accessorKey: "origem",
+      accessorKey: "origin",
       cell: ({ row }) => (
-        <Badge variant={ORIGEM_VARIANT[row.original.origem] ?? "outline"}>{row.original.origem}</Badge>
+        <Badge variant={ORIGIN_VARIANT[row.original.origin] ?? "outline"}>{row.original.origin}</Badge>
       ),
     },
     {
@@ -107,9 +107,9 @@ function buildColumns(
     },
     {
       header: "Atualizado em",
-      accessorKey: "atualizadoEm",
+      accessorKey: "updatedAt",
       cell: ({ row }) => {
-        const iso = row.original.atualizadoEm;
+        const iso = row.original.updatedAt;
         if (!iso) return "—";
         return new Date(iso).toLocaleString("pt-BR", {
           day: "2-digit", month: "2-digit", year: "numeric",
@@ -140,14 +140,14 @@ function buildColumns(
 }
 
 export default function AnimalList() {
-  const [animais, setAnimais] = useState<AnimalRow[]>([]);
+  const [animals, setAnimals] = useState<AnimalRow[]>([]);
   const [pageIndex, setPageIndex] = useState(0);
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const [pageCount, setPageCount] = useState(0);
   const [total, setTotal] = useState(0);
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [status, setStatus] = useState<string>(EnumAnimalStatus.ATIVO);
+  const [status, setStatus] = useState<string>(EnumAnimalStatus.ACTIVE);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
@@ -170,9 +170,9 @@ export default function AnimalList() {
     async function load() {
       setLoading(true);
       try {
-        const result = await getAnimais({ page: pageIndex, pageSize, search: debouncedSearch, status });
+        const result = await getAnimals({ page: pageIndex, pageSize, search: debouncedSearch, status });
         if (!cancelled) {
-          setAnimais(result.data);
+          setAnimals(result.data);
           setPageCount(result.pageCount);
           setTotal(result.total);
         }
@@ -240,12 +240,12 @@ export default function AnimalList() {
           onValueChange={(val) => { setStatus(val); setPageIndex(0); }}
           items={[
             { value: "", label: "Todos" },
-            { value: EnumAnimalStatus.ATIVO, label: "Ativos" },
-            { value: EnumAnimalStatus.VENDIDO, label: "Vendidos" },
-            { value: EnumAnimalStatus.MORTO, label: "Mortos" },
-            { value: EnumAnimalStatus.TRANSFERIDO, label: "Transferidos" },
-            { value: EnumAnimalStatus.ABATE, label: "Abatidos" },
-            { value: EnumAnimalStatus.DESCARTE, label: "Descarte" },
+            { value: EnumAnimalStatus.ACTIVE, label: "Ativos" },
+            { value: EnumAnimalStatus.SOLD, label: "Vendidos" },
+            { value: EnumAnimalStatus.DEAD, label: "Mortos" },
+            { value: EnumAnimalStatus.TRANSFERRED, label: "Transferidos" },
+            { value: EnumAnimalStatus.SLAUGHTERED, label: "Abatidos" },
+            { value: EnumAnimalStatus.DISCARDED, label: "Descarte" },
           ]}
         />
 
@@ -274,7 +274,7 @@ export default function AnimalList() {
         </DropdownMenu>
       </div>
 
-      {animais.length === 0 ? (
+      {animals.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 gap-2 text-muted-foreground">
           <Beef size={50} className="opacity-30" />
           <p className="text-2xl">Nenhum animal encontrado.</p>
@@ -282,12 +282,12 @@ export default function AnimalList() {
       ) : (
         <DataTable
           columns={columns}
-          data={animais}
+          data={animals}
           pageCount={pageCount}
           pageIndex={pageIndex}
           pageSize={pageSize}
           total={total}
-          initialSorting={[{ id: "atualizadoEm", desc: true }]}
+          initialSorting={[{ id: "updatedAt", desc: true }]}
           onPageChange={setPageIndex}
           onPageSizeChange={(size) => { setPageSize(size); setPageIndex(0); }}
           columnVisibility={columnVisibility}

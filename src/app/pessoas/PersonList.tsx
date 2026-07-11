@@ -7,8 +7,8 @@ import React, { useEffect, useState } from "react";
 
 import { DataTable } from "@/components/our/DataTable";
 import ListSkeleton from "@/components/our/ListSkeleton";
-import PessoaFicha from "./PessoaFicha";
-import PessoaForm from "./PessoaForm";
+import PersonDetails from "./PersonDetails";
+import PersonForm from "./PersonForm";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -25,14 +25,14 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { SelectField } from "@/components/our/SelectField";
-import { PessoaRow, getPessoas, togglePessoaStatus } from "./services";
-import { EnumPessoaTipo } from "./schema";
+import { PersonRow, getPeople, togglePersonStatus } from "./services";
+import { EnumPersonType } from "./schema";
 import { ErrorPage } from "@/components/our/ErrorPage";
-import { formatDocumento } from "@/lib/documento";
+import { formatTaxId } from "@/lib/tax-id";
 
 const DEFAULT_PAGE_SIZE = 10;
 
-function formatTelefone(value: string): string {
+function formatPhone(value: string): string {
   const digits = value.replace(/\D/g, "");
   if (digits.length === 11) return digits.replace(/(\d{2})(\d{5})(\d{4})/, "($1) $2-$3");
   if (digits.length === 10) return digits.replace(/(\d{2})(\d{4})(\d{4})/, "($1) $2-$3");
@@ -40,49 +40,49 @@ function formatTelefone(value: string): string {
 }
 
 const COLUMN_LABELS: Record<string, string> = {
-  documento: "Documento",
-  nome: "Nome",
-  telefone: "Telefone",
+  taxId: "Documento",
+  name: "Nome",
+  phone: "Telefone",
   email: "E-mail",
   status: "Status",
-  atualizadoEm: "Atualizado em",
+  updatedAt: "Atualizado em",
 };
 
-const TIPO_LABEL: Record<string, string> = {
-  [EnumPessoaTipo.FISICA]: "Física",
-  [EnumPessoaTipo.JURIDICA]: "Jurídica",
+const TYPE_LABEL: Record<string, string> = {
+  [EnumPersonType.INDIVIDUAL]: "Física",
+  [EnumPersonType.COMPANY]: "Jurídica",
 };
 
-const TIPO_ICON: Record<string, React.ReactNode> = {
-  [EnumPessoaTipo.FISICA]: <User className="size-4 text-muted-foreground" />,
-  [EnumPessoaTipo.JURIDICA]: <Building2 className="size-4 text-muted-foreground" />,
+const TYPE_ICON: Record<string, React.ReactNode> = {
+  [EnumPersonType.INDIVIDUAL]: <User className="size-4 text-muted-foreground" />,
+  [EnumPersonType.COMPANY]: <Building2 className="size-4 text-muted-foreground" />,
 };
 
 function buildColumns(
   onRequestToggleStatus: (id: string) => void,
   onRequestEdit: (id: string) => void,
-  onRequestViewFicha: (id: string) => void,
-): ColumnDef<PessoaRow>[] {
+  onRequestViewDetails: (id: string) => void,
+): ColumnDef<PersonRow>[] {
   return [
     {
       header: "Documento",
-      accessorKey: "documento",
+      accessorKey: "taxId",
       cell: ({ row }) => (
-        <div className="flex items-center gap-2" title={TIPO_LABEL[row.original.tipo] ?? row.original.tipo}>
-          {TIPO_ICON[row.original.tipo]}
-          <span>{row.original.documento ? formatDocumento(row.original.tipo, row.original.documento) : "—"}</span>
+        <div className="flex items-center gap-2" title={TYPE_LABEL[row.original.type] ?? row.original.type}>
+          {TYPE_ICON[row.original.type]}
+          <span>{row.original.taxId ? formatTaxId(row.original.type, row.original.taxId) : "—"}</span>
         </div>
       ),
     },
     {
       header: "Nome",
-      accessorKey: "nome",
-      cell: ({ row }) => row.original.nome ?? "—",
+      accessorKey: "name",
+      cell: ({ row }) => row.original.name ?? "—",
     },
     {
       header: "Telefone",
-      accessorKey: "telefone",
-      cell: ({ row }) => row.original.telefone ? formatTelefone(row.original.telefone) : "—",
+      accessorKey: "phone",
+      cell: ({ row }) => row.original.phone ? formatPhone(row.original.phone) : "—",
     },
     {
       header: "E-mail",
@@ -93,16 +93,16 @@ function buildColumns(
       header: "Status",
       accessorKey: "status",
       cell: ({ row }) => (
-        <Badge variant={row.original.desativadoEm ? "outline" : "default"}>
-          {row.original.desativadoEm ? "Inativo" : "Ativo"}
+        <Badge variant={row.original.deactivatedAt ? "outline" : "default"}>
+          {row.original.deactivatedAt ? "Inativo" : "Ativo"}
         </Badge>
       ),
     },
     {
       header: "Atualizado em",
-      accessorKey: "atualizadoEm",
+      accessorKey: "updatedAt",
       cell: ({ row }) => {
-        const iso = row.original.atualizadoEm;
+        const iso = row.original.updatedAt;
         if (!iso) return "—";
         return new Date(iso).toLocaleString("pt-BR", {
           day: "2-digit", month: "2-digit", year: "numeric",
@@ -118,7 +118,7 @@ function buildColumns(
           <Button
             variant="ghost"
             size="icon-sm"
-            title={row.original.desativadoEm ? "Ativar" : "Desativar"}
+            title={row.original.deactivatedAt ? "Ativar" : "Desativar"}
             onClick={() => onRequestToggleStatus(row.original.id)}
           >
             <Power className="size-4" />
@@ -126,7 +126,7 @@ function buildColumns(
           <Button variant="ghost" size="icon-sm" title="Editar" onClick={() => onRequestEdit(row.original.id)}>
             <Pencil className="size-4" />
           </Button>
-          <Button variant="ghost" size="icon-sm" title="Ficha" onClick={() => onRequestViewFicha(row.original.id)}>
+          <Button variant="ghost" size="icon-sm" title="Ficha" onClick={() => onRequestViewDetails(row.original.id)}>
             <IdCard className="size-4" />
           </Button>
         </div>
@@ -135,22 +135,22 @@ function buildColumns(
   ];
 }
 
-export default function PessoaLista() {
-  const [pessoas, setPessoas] = useState<PessoaRow[]>([]);
+export default function PersonList() {
+  const [people, setPeople] = useState<PersonRow[]>([]);
   const [pageIndex, setPageIndex] = useState(0);
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const [pageCount, setPageCount] = useState(0);
   const [total, setTotal] = useState(0);
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [tipo, setTipo] = useState<string>("");
+  const [type, setType] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [isFirstLoad, setIsFirstLoad] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({ telefone: false, email: false });
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({ phone: false, email: false });
   const [refreshKey, setRefreshKey] = useState(0);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [viewingFichaId, setViewingFichaId] = useState<string | null>(null);
+  const [viewingDetailsId, setViewingProfileId] = useState<string | null>(null);
   const [isCreating, setIsCreating] = useState(false);
 
   useEffect(() => {
@@ -167,9 +167,9 @@ export default function PessoaLista() {
     async function load() {
       setLoading(true);
       try {
-        const result = await getPessoas({ page: pageIndex, pageSize, search: debouncedSearch, tipo });
+        const result = await getPeople({ page: pageIndex, pageSize, search: debouncedSearch, type });
         if (!cancelled) {
-          setPessoas(result.data);
+          setPeople(result.data);
           setPageCount(result.pageCount);
           setTotal(result.total);
         }
@@ -185,11 +185,11 @@ export default function PessoaLista() {
 
     load();
     return () => { cancelled = true; };
-  }, [pageIndex, pageSize, debouncedSearch, tipo, refreshKey]);
+  }, [pageIndex, pageSize, debouncedSearch, type, refreshKey]);
 
   async function toggleStatus(id: string) {
     try {
-      await togglePessoaStatus(id);
+      await togglePersonStatus(id);
       setRefreshKey((k) => k + 1);
     } catch {
       // erro silencioso
@@ -199,7 +199,7 @@ export default function PessoaLista() {
   const columns = buildColumns(
     toggleStatus,
     setEditingId,
-    setViewingFichaId,
+    setViewingProfileId,
   );
 
   if (error) {
@@ -237,12 +237,12 @@ export default function PessoaLista() {
         </div>
 
         <SelectField
-          value={tipo}
-          onValueChange={(val) => { setTipo(val); setPageIndex(0); }}
+          value={type}
+          onValueChange={(val) => { setType(val); setPageIndex(0); }}
           items={[
             { value: "", label: "Todos" },
-            { value: EnumPessoaTipo.FISICA, label: "Física" },
-            { value: EnumPessoaTipo.JURIDICA, label: "Jurídica" },
+            { value: EnumPersonType.INDIVIDUAL, label: "Física" },
+            { value: EnumPersonType.COMPANY, label: "Jurídica" },
           ]}
         />
 
@@ -272,7 +272,7 @@ export default function PessoaLista() {
       </div>
 
       <div className={loading ? "opacity-60 transition-opacity" : "transition-opacity"}>
-        {pessoas.length === 0 ? (
+        {people.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 gap-2 text-muted-foreground">
             <Users size={50} className="opacity-30" />
             <p className="text-2xl">Nenhum registro encontrado.</p>
@@ -280,12 +280,12 @@ export default function PessoaLista() {
         ) : (
           <DataTable
             columns={columns}
-            data={pessoas}
+            data={people}
             pageCount={pageCount}
             pageIndex={pageIndex}
             pageSize={pageSize}
             total={total}
-            initialSorting={[{ id: "atualizadoEm", desc: true }]}
+            initialSorting={[{ id: "updatedAt", desc: true }]}
             onPageChange={setPageIndex}
             onPageSizeChange={(size) => { setPageSize(size); setPageIndex(0); }}
             columnVisibility={columnVisibility}
@@ -296,7 +296,7 @@ export default function PessoaLista() {
 
       <Dialog open={isCreating} onOpenChange={(open) => { if (!open) setIsCreating(false); }}>
         <DialogContent className="p-8 sm:max-w-4xl max-h-[90vh] overflow-y-auto">
-          <PessoaForm
+          <PersonForm
             title="Nova Pessoa"
             onCancel={() => setIsCreating(false)}
             onSuccess={() => { setIsCreating(false); setRefreshKey((k) => k + 1); }}
@@ -306,7 +306,7 @@ export default function PessoaLista() {
 
       <Dialog open={editingId !== null} onOpenChange={(open) => { if (!open) setEditingId(null); }}>
         <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
-          <PessoaForm
+          <PersonForm
             id={editingId ?? undefined}
             title="Editar Pessoa"
             onCancel={() => setEditingId(null)}
@@ -315,12 +315,12 @@ export default function PessoaLista() {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={viewingFichaId !== null} onOpenChange={(open) => { if (!open) setViewingFichaId(null); }}>
+      <Dialog open={viewingDetailsId !== null} onOpenChange={(open) => { if (!open) setViewingProfileId(null); }}>
         <DialogContent className="p-8 sm:max-w-4xl max-h-[90vh] overflow-y-auto">
-          {viewingFichaId && (
-            <PessoaFicha
-              id={viewingFichaId}
-              onClose={() => { setViewingFichaId(null); setRefreshKey((k) => k + 1); }}
+          {viewingDetailsId && (
+            <PersonDetails
+              id={viewingDetailsId}
+              onClose={() => { setViewingProfileId(null); setRefreshKey((k) => k + 1); }}
             />
           )}
         </DialogContent>

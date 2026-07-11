@@ -1,30 +1,30 @@
 import { z } from "zod";
-import { Sexo, AnimalOrigem, AnimalStatus, PessoaTipo, EstadoCivil } from "@/generated/prisma/enums";
-import { isValidDocumento } from "@/lib/documento";
+import { Sex, AnimalOrigin, AnimalStatus, PersonType, MaritalStatus } from "@/generated/prisma/enums";
+import { isValidTaxId } from "@/lib/tax-id";
 
 
 export const animalApiSchema = z.object({
-  brinco:            z.string().min(1, "Este campo não pode ser vazio"),
+  earTag:            z.string().min(1, "Este campo não pode ser vazio"),
 
   rfid:              z.string().optional().transform(v => v || null),
-  nome:              z.string().optional().transform(v => v || null),
-  maeId:             z.string().optional().transform(v => v || null),
-  paiId:             z.string().optional().transform(v => v || null),
-  fazendaOrigemNome: z.string().optional().transform(v => v || null),
+  name:              z.string().optional().transform(v => v || null),
+  motherId:          z.string().optional().transform(v => v || null),
+  fatherId:          z.string().optional().transform(v => v || null),
+  originFarmName:    z.string().optional().transform(v => v || null),
 
-  sexo:              z.preprocess( v => v === "" ? undefined : v, z.enum(Sexo).optional()),
-  origem:            z.preprocess( v => v === "" ? undefined : v, z.enum(AnimalOrigem).optional()),
+  sex:               z.preprocess( v => v === "" ? undefined : v, z.enum(Sex).optional()),
+  origin:            z.preprocess( v => v === "" ? undefined : v, z.enum(AnimalOrigin).optional()),
   status:            z.preprocess( v => v === "" ? undefined : v, z.enum(AnimalStatus).optional()),
 
-  dataNascimento:    z.string().optional().transform(v => v ? new Date(`${v}T00:00:00`) : null),
-  pesoNascimentoKg:  z.string().optional().transform(v => v ? parseFloat(v) : null),
-  racaId:            z.string().optional().transform(v => v ? parseInt(v) : null),
-  loteId:            z.string().optional().transform(v => v ? parseInt(v) : null),
-  fazendaOrigemId:   z.string().optional().transform(v => v ? parseInt(v) : null),
-  dataAquisicao:     z.string().optional().transform(v => v ? new Date(`${v}T00:00:00`) : null),
-  valorCompra:       z.string().optional().transform(v => v ? parseFloat(v) : null),
-  idadeEntradaMeses: z.string().optional().transform(v => v ? parseInt(v) : null),
-  pesoAtualKg:       z.string().optional().transform(v => v ? parseFloat(v) : null),
+  birthDate:         z.string().optional().transform(v => v ? new Date(`${v}T00:00:00`) : null),
+  birthWeightKg:     z.string().optional().transform(v => v ? parseFloat(v) : null),
+  breedId:           z.string().optional().transform(v => v ? parseInt(v) : null),
+  batchId:           z.string().optional().transform(v => v ? parseInt(v) : null),
+  originFarmId:      z.string().optional().transform(v => v ? parseInt(v) : null),
+  acquisitionDate:   z.string().optional().transform(v => v ? new Date(`${v}T00:00:00`) : null),
+  purchasePrice:     z.string().optional().transform(v => v ? parseFloat(v) : null),
+  entryAgeMonths:    z.string().optional().transform(v => v ? parseInt(v) : null),
+  currentWeightKg:   z.string().optional().transform(v => v ? parseFloat(v) : null),
 });
 
 export const animalQuerySchema = z.object({
@@ -32,68 +32,68 @@ export const animalQuerySchema = z.object({
   pageSize: z.coerce.number().int().min(1).optional().default(10),
   search:   z.string().trim().optional().default(""),
   status:   z.preprocess( v => v === "" ? undefined : v, z.enum(AnimalStatus).optional()),
-  sexo:     z.preprocess( v => v === "" ? undefined : v, z.enum(Sexo).optional()),
+  sex:      z.preprocess( v => v === "" ? undefined : v, z.enum(Sex).optional()),
 });
 
 export type AnimalQueryData = z.infer<typeof animalQuerySchema>;
 
 
 
-export const pessoaApiSchema = z
+export const personApiSchema = z
   .object({
-    tipo:              z.enum(PessoaTipo),
-    documento:         z.string().min(1, "Este campo não pode ser vazio"),
-    nome:              z.string().min(1, "Este campo não pode ser vazio"),
+    type:              z.enum(PersonType),
+    taxId:             z.string().min(1, "Este campo não pode ser vazio"),
+    name:              z.string().min(1, "Este campo não pode ser vazio"),
 
-    inscricaoEstadual: z.string().optional().transform(v => v || null),
-    telefone:          z.string().optional().transform(v => v || null),
+    stateRegistration: z.string().optional().transform(v => v || null),
+    phone:             z.string().optional().transform(v => v || null),
     email:             z.string().optional().transform(v => v || null),
 
     // Exclusivo de Pessoa Jurídica
-    nomeFantasia:      z.string().optional().transform(v => v || null),
+    tradeName:         z.string().optional().transform(v => v || null),
 
     // Exclusivos de Pessoa Física
     rg:                z.string().optional().transform(v => v || null),
-    dataNascimento:    z.string().optional().transform(v => v ? new Date(`${v}T00:00:00`) : null),
-    estadoCivil:       z.preprocess( v => v === "" ? undefined : v, z.enum(EstadoCivil).optional()),
+    birthDate:         z.string().optional().transform(v => v ? new Date(`${v}T00:00:00`) : null),
+    maritalStatus:     z.preprocess( v => v === "" ? undefined : v, z.enum(MaritalStatus).optional()),
 
     // Endereço
-    cep:               z.string().optional().transform(v => v || null),
-    logradouro:        z.string().optional().transform(v => v || null),
-    numero:            z.string().optional().transform(v => v || null),
-    complemento:       z.string().optional().transform(v => v || null),
-    bairro:            z.string().optional().transform(v => v || null),
-    municipio:         z.string().optional().transform(v => v || null),
-    uf:                z.string().optional().transform(v => v || null),
+    zipCode:           z.string().optional().transform(v => v || null),
+    street:            z.string().optional().transform(v => v || null),
+    number:            z.string().optional().transform(v => v || null),
+    complement:        z.string().optional().transform(v => v || null),
+    neighborhood:      z.string().optional().transform(v => v || null),
+    city:              z.string().optional().transform(v => v || null),
+    state:             z.string().optional().transform(v => v || null),
   })
   .check((ctx) => {
-    const { tipo, documento, cep, logradouro, municipio, uf } = ctx.value;
+    const { type, taxId, zipCode, street, city, state } = ctx.value;
 
-    if (documento && !isValidDocumento(tipo, documento)) {
+    if (taxId && !isValidTaxId(type, taxId)) {
       ctx.issues.push({
         code: "custom",
-        input: documento,
-        path: ["documento"],
-        message: tipo === PessoaTipo.FISICA ? "CPF inválido" : "CNPJ inválido",
+        input: taxId,
+        path: ["taxId"],
+        message: type === PersonType.INDIVIDUAL ? "CPF inválido" : "CNPJ inválido",
       });
     }
 
-    const enderecoIniciado = cep || logradouro || municipio || uf;
-    if (enderecoIniciado) {
-      if (!cep) ctx.issues.push({ code: "custom", input: cep, path: ["cep"], message: "Este campo não pode ser vazio" });
-      if (!logradouro) ctx.issues.push({ code: "custom", input: logradouro, path: ["logradouro"], message: "Este campo não pode ser vazio" });
-      if (!municipio) ctx.issues.push({ code: "custom", input: municipio, path: ["municipio"], message: "Este campo não pode ser vazio" });
-      if (!uf) ctx.issues.push({ code: "custom", input: uf, path: ["uf"], message: "Este campo não pode ser vazio" });
+    const addressStarted = zipCode || street || city || state;
+    if (addressStarted) {
+      if (!zipCode) ctx.issues.push({ code: "custom", input: zipCode, path: ["zipCode"], message: "Este campo não pode ser vazio" });
+      if (!street) ctx.issues.push({ code: "custom", input: street, path: ["street"], message: "Este campo não pode ser vazio" });
+      if (!city) ctx.issues.push({ code: "custom", input: city, path: ["city"], message: "Este campo não pode ser vazio" });
+      if (!state) ctx.issues.push({ code: "custom", input: state, path: ["state"], message: "Este campo não pode ser vazio" });
     }
   });
 
-export type PessoaApiData = z.infer<typeof pessoaApiSchema>;
+export type PersonApiData = z.infer<typeof personApiSchema>;
 
-export const pessoaQuerySchema = z.object({
+export const personQuerySchema = z.object({
   page:     z.coerce.number().int().min(0).optional().default(0),
   pageSize: z.coerce.number().int().min(1).optional().default(10),
   search:   z.string().trim().optional().default(""),
-  tipo:     z.preprocess( v => v === "" ? undefined : v, z.enum(PessoaTipo).optional()),
+  type:     z.preprocess( v => v === "" ? undefined : v, z.enum(PersonType).optional()),
 });
 
-export type PessoaQueryData = z.infer<typeof pessoaQuerySchema>;
+export type PersonQueryData = z.infer<typeof personQuerySchema>;

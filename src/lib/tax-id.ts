@@ -41,8 +41,8 @@ export function isValidCNPJ(value: string): boolean {
   return true;
 }
 
-export function isValidDocumento(tipo: string, value: string): boolean {
-  return tipo === "FISICA" ? isValidCPF(value) : isValidCNPJ(value);
+export function isValidTaxId(type: string, value: string): boolean {
+  return type === "INDIVIDUAL" ? isValidCPF(value) : isValidCNPJ(value);
 }
 
 export function formatCPF(value: string): string {
@@ -55,6 +55,6 @@ export function formatCNPJ(value: string): string {
   return digits.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, "$1.$2.$3/$4-$5");
 }
 
-export function formatDocumento(tipo: string, value: string): string {
-  return tipo === "FISICA" ? formatCPF(value) : formatCNPJ(value);
+export function formatTaxId(type: string, value: string): string {
+  return type === "INDIVIDUAL" ? formatCPF(value) : formatCNPJ(value);
 }

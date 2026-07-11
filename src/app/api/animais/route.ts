@@ -18,24 +18,24 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ message: "Parâmetros inválidos." }, { status: 400 });
     }
 
-    const { page, pageSize, search, status, sexo } = validation.data;
+    const { page, pageSize, search, status, sex } = validation.data;
 
     const where = {
       ...(search ? {
         OR: [
-          { brinco: { contains: search, mode: "insensitive" as const } },
+          { earTag: { contains: search, mode: "insensitive" as const } },
           { rfid:   { contains: search, mode: "insensitive" as const } },
-          { nome:   { contains: search, mode: "insensitive" as const } },
+          { name:   { contains: search, mode: "insensitive" as const } },
         ],
       } : {}),
       ...(status ? { status } : {}),
-      ...(sexo ? { sexo } : {}),
+      ...(sex ? { sex } : {}),
     };
 
-    const [animais, total] = await Promise.all([
+    const [animals, total] = await Promise.all([
       prisma.animal.findMany({
         where,
-        orderBy: { atualizadoEm: "desc" },
+        orderBy: { updatedAt: "desc" },
         skip: page * pageSize,
         take: pageSize,
       }),
@@ -43,18 +43,18 @@ export async function GET(request: NextRequest) {
     ]);
 
     return NextResponse.json({
-      data: animais.map((a) => ({
-        id:               a.id,
-        brinco:           a.brinco,
-        rfid:             a.rfid,
-        nome:             a.nome,
-        sexo:             a.sexo,
-        dataNascimento:   a.dataNascimento?.toISOString().slice(0, 10) ?? null,
-        pesoNascimentoKg: a.pesoNascimentoKg,
-        origem:           a.origem,
-        status:           a.status,
-        pesoAtualKg:      a.pesoAtualKg,
-        atualizadoEm:     a.atualizadoEm.toISOString(),
+      data: animals.map((a) => ({
+        id:              a.id,
+        earTag:          a.earTag,
+        rfid:            a.rfid,
+        name:            a.name,
+        sex:             a.sex,
+        birthDate:       a.birthDate?.toISOString().slice(0, 10) ?? null,
+        birthWeightKg:   a.birthWeightKg,
+        origin:          a.origin,
+        status:          a.status,
+        currentWeightKg: a.currentWeightKg,
+        updatedAt:       a.updatedAt.toISOString(),
       })),
       total,
       pageCount: Math.ceil(total / pageSize),

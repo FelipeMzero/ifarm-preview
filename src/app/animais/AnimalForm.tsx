@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
-import { getAnimal, updateAnimal, createAnimal, getAnimais, getMetadados, ApiError, Raca, Lote, AnimalSimples, Fazenda } from "./services";
+import { getAnimal, updateAnimal, createAnimal, getAnimals, getMetadata, ApiError, Breed, Batch, AnimalSummary, Farm } from "./services";
 import { ErrorPage } from "@/components/our/ErrorPage";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -16,7 +16,7 @@ import FieldRow from "@/components/our/FieldRow";
 import { SearchCombobox } from "@/components/our/SearchCombobox";
 import { Loader2 } from "lucide-react";
 import FormSkeleton from "@/components/our/FormSkeleton";
-import { AnimalFormData, animalFormSchema, EnumAnimalOrigem, EnumAnimalStatus, EnumSexo } from "./schema";
+import { AnimalFormData, animalFormSchema, EnumAnimalOrigin, EnumAnimalStatus, EnumSex } from "./schema";
 import { Separator } from "@/components/ui/separator";
 
 
@@ -30,74 +30,74 @@ type AnimalFormProps = {
 };
 
 export default function AnimalForm({ id, title, onCancel, onSuccess }: AnimalFormProps) {
-  const ORIGEM_ITEMS = [
-    { value: EnumAnimalOrigem.NASCIMENTO, label: "Nascimento" },
-    { value: EnumAnimalOrigem.COMPRA, label: "Compra" },
-    { value: EnumAnimalOrigem.TRANSFERENCIA, label: "Transferência" },
+  const ORIGIN_ITEMS = [
+    { value: EnumAnimalOrigin.BIRTH, label: "Nascimento" },
+    { value: EnumAnimalOrigin.PURCHASE, label: "Compra" },
+    { value: EnumAnimalOrigin.TRANSFER, label: "Transferência" },
   ]
-  const SEXO_ITEMS = [
-    { value: EnumSexo.MACHO, label: "Macho" },
-    { value: EnumSexo.FEMEA, label: "Fêmea" },
+  const SEX_ITEMS = [
+    { value: EnumSex.MALE, label: "Macho" },
+    { value: EnumSex.FEMALE, label: "Fêmea" },
   ]
 
   const [isDataLoading, setIsDataLoading] = useState(true);
   const [loadFailed, setLoadFailed] = useState(false);
-  const [racas, setRacas] = useState<Raca[]>([]);
-  const [lotes, setLotes] = useState<Lote[]>([]);
-  const [animais, setAnimais] = useState<AnimalSimples[]>([]);
-  const [fazendas, setFazendas] = useState<Fazenda[]>([]);
+  const [breeds, setBreeds] = useState<Breed[]>([]);
+  const [batches, setBatches] = useState<Batch[]>([]);
+  const [animals, setAnimals] = useState<AnimalSummary[]>([]);
+  const [farms, setFarms] = useState<Farm[]>([]);
 
-  type PaiItem = { value: string; label: string };
-  const [paiItems, setPaiItems] = useState<PaiItem[]>([]);
-  const paiDebounce = useRef<ReturnType<typeof setTimeout> | null>(null);
+  type FatherItem = { value: string; label: string };
+  const [fatherItems, setFatherItems] = useState<FatherItem[]>([]);
+  const fatherDebounce = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const searchPai = useCallback((query: string) => {
-    if (paiDebounce.current) clearTimeout(paiDebounce.current);
-    paiDebounce.current = setTimeout(async () => {
-      const result = await getAnimais({ search: query, sexo: "MACHO", pageSize: query ? 20 : 2 });
-      setPaiItems(result.data.map(a => ({ value: a.id, label: a.brinco })));
+  const searchFather = useCallback((query: string) => {
+    if (fatherDebounce.current) clearTimeout(fatherDebounce.current);
+    fatherDebounce.current = setTimeout(async () => {
+      const result = await getAnimals({ search: query, sex: EnumSex.MALE, pageSize: query ? 20 : 2 });
+      setFatherItems(result.data.map(a => ({ value: a.id, label: a.earTag })));
     }, 300);
   }, []);
 
   const { handleSubmit, control, reset, watch, setError, formState: { isSubmitting } } = useForm<AnimalFormData>({
     resolver: zodResolver(animalFormSchema),
     defaultValues: {
-      brinco: "",
+      earTag: "",
       rfid: "",
-      nome: "",
-      sexo: EnumSexo.MACHO,
-      dataNascimento: "",
-      pesoNascimentoKg: "",
-      origem: EnumAnimalOrigem.NASCIMENTO,
-      status: EnumAnimalStatus.ATIVO,
-      racaId: "",
-      loteId: "",
-      maeId: "",
-      paiId: "",
-      fazendaOrigemId: "",
-      fazendaOrigemNome: "",
-      dataAquisicao: "",
-      valorCompra: "",
-      idadeEntradaMeses: "",
-      pesoAtualKg: "",
+      name: "",
+      sex: EnumSex.MALE,
+      birthDate: "",
+      birthWeightKg: "",
+      origin: EnumAnimalOrigin.BIRTH,
+      status: EnumAnimalStatus.ACTIVE,
+      breedId: "",
+      batchId: "",
+      motherId: "",
+      fatherId: "",
+      originFarmId: "",
+      originFarmName: "",
+      acquisitionDate: "",
+      purchasePrice: "",
+      entryAgeMonths: "",
+      currentWeightKg: "",
     },
   });
 
-  const origem = watch("origem");
-  const isCompraTransf = origem === EnumAnimalOrigem.COMPRA || origem === EnumAnimalOrigem.TRANSFERENCIA;
+  const origin = watch("origin");
+  const isPurchaseOrTransfer = origin === EnumAnimalOrigin.PURCHASE || origin === EnumAnimalOrigin.TRANSFER;
 
   useEffect(() => {
     async function loadData() {
       try {
-        const [meta, paiResult] = await Promise.all([
-          getMetadados(),
-          getAnimais({ sexo: "MACHO", pageSize: 2 }),
+        const [meta, fatherResult] = await Promise.all([
+          getMetadata(),
+          getAnimals({ sex: EnumSex.MALE, pageSize: 2 }),
         ]);
-        setRacas(meta.racas);
-        setLotes(meta.lotes);
-        setAnimais(meta.animaisFazenda);
-        setFazendas(meta.fazendas);
-        setPaiItems(paiResult.data.map(a => ({ value: a.id, label: a.brinco })));
+        setBreeds(meta.breeds);
+        setBatches(meta.batches);
+        setAnimals(meta.farmAnimals);
+        setFarms(meta.farms);
+        setFatherItems(fatherResult.data.map(a => ({ value: a.id, label: a.earTag })));
 
         if (id) {
           const data = await getAnimal(id);
@@ -167,7 +167,7 @@ export default function AnimalForm({ id, title, onCancel, onSuccess }: AnimalFor
         <FieldLegend> Identificação </FieldLegend>
 
         <FieldRow cols={2}>
-          <FormField name="brinco" label="Brinco" required
+          <FormField name="earTag" label="Brinco" required
             control={control}
             render={({ field, id }) => <Input {...field} id={id} placeholder="Ex: MS-001234" />}
           />
@@ -179,17 +179,17 @@ export default function AnimalForm({ id, title, onCancel, onSuccess }: AnimalFor
         </FieldRow>
 
         <FieldRow cols={2}>
-          <FormField name="nome" label="Apelido"
+          <FormField name="name" label="Apelido"
             control={control}
             render={({ field, id }) => <Input {...field} id={id} placeholder="Opcional" />}
           />
 
-          <FormField name="sexo" label="Sexo"
+          <FormField name="sex" label="Sexo"
             control={control}
             render={({ id, field, fieldState }) => (
               <SearchCombobox
                 id={id} field={field} fieldState={fieldState}
-                items={SEXO_ITEMS}
+                items={SEX_ITEMS}
                 keepSelection
               />
             )}
@@ -198,32 +198,32 @@ export default function AnimalForm({ id, title, onCancel, onSuccess }: AnimalFor
 
 
         <FieldRow cols={2}>
-          <FormField name="racaId" label="Raça"
+          <FormField name="breedId" label="Raça"
             control={control}
             render={({ id, field, fieldState }) => (
               <SearchCombobox placeholder="buscar..."
                 id={id} field={field} fieldState={fieldState}
-                items={racas.map(r => ({ value: r.id.toString(), label: r.nome }))}
+                items={breeds.map(r => ({ value: r.id.toString(), label: r.name }))}
               />
             )}
           />
-          <FormField name="loteId" label="Lote"
+          <FormField name="batchId" label="Lote"
             control={control}
             render={({ id, field, fieldState }) => (
               <SearchCombobox placeholder="buscar..."
                 id={id} field={field} fieldState={fieldState}
-                items={lotes.map(l => ({ value: l.id.toString(), label: l.nome }))}
+                items={batches.map(l => ({ value: l.id.toString(), label: l.name }))}
               />
             )}
           />
         </FieldRow>
 
         <FieldRow cols={2}>
-          <FormField name="dataNascimento" label="Data de Nascimento"
+          <FormField name="birthDate" label="Data de Nascimento"
             control={control}
             render={({ field, id }) => <Input {...field} id={id} type="date" />}
           />
-          <FormField name="pesoNascimentoKg" label="Peso Nascimento (kg)"
+          <FormField name="birthWeightKg" label="Peso Nascimento (kg)"
             control={control}
             render={({ field, id }) => (
               <Input {...field} id={id} type="number" step="0.1" min="0" placeholder="Ex: 32.5" />
@@ -237,22 +237,22 @@ export default function AnimalForm({ id, title, onCancel, onSuccess }: AnimalFor
       <FieldSet className="border-0">
         <FieldLegend>Filiação</FieldLegend>
         <FieldRow cols={2}>
-          <FormField name="maeId" label="Mãe"
+          <FormField name="motherId" label="Mãe"
             control={control}
             render={({ id, field, fieldState }) => (
               <SearchCombobox placeholder="buscar..."
                 id={id} field={field} fieldState={fieldState}
-                items={animais.filter(a => a.sexo === "FEMEA").map(a => ({ value: a.id, label: a.brinco }))}
+                items={animals.filter(a => a.sex === EnumSex.FEMALE).map(a => ({ value: a.id, label: a.earTag }))}
               />
             )}
           />
-          <FormField name="paiId" label="Pai (Touro)"
+          <FormField name="fatherId" label="Pai (Touro)"
             control={control}
             render={({ id, field, fieldState }) => (
               <SearchCombobox placeholder="buscar..."
                 id={id} field={field} fieldState={fieldState}
-                items={paiItems}
-                onInputValueChange={(val) => searchPai(val)}
+                items={fatherItems}
+                onInputValueChange={(val) => searchFather(val)}
               />
             )}
           />
@@ -263,41 +263,41 @@ export default function AnimalForm({ id, title, onCancel, onSuccess }: AnimalFor
       <FieldSet className="border-0">
         <FieldLegend>Origem</FieldLegend>
         <FieldRow cols={2}>
-          <FormField name="origem" label="Origem"
+          <FormField name="origin" label="Origem"
             control={control}
             render={({ id, field, fieldState }) => (
               <SearchCombobox
                 id={id} field={field} fieldState={fieldState}
-                items={ORIGEM_ITEMS}
+                items={ORIGIN_ITEMS}
                 keepSelection
               />
             )}
           />
         </FieldRow>
 
-        {isCompraTransf && (
+        {isPurchaseOrTransfer && (
           <>
             <FieldRow cols={2}>
-              <FormField name="dataAquisicao" label="Data de Aquisição"
+              <FormField name="acquisitionDate" label="Data de Aquisição"
                 control={control}
                 render={({ field, id }) => <Input {...field} id={id} type="date" />}
               />
-              <FormField name="idadeEntradaMeses" label="Idade na Entrada (meses)"
+              <FormField name="entryAgeMonths" label="Idade na Entrada (meses)"
                 control={control}
                 render={({ field, id }) => <Input {...field} id={id} type="number" min="0" placeholder="Ex: 8" />}
               />
             </FieldRow>
             <FieldRow cols={2}>
-              <FormField name="fazendaOrigemId" label="Fazenda de Origem"
+              <FormField name="originFarmId" label="Fazenda de Origem"
                 control={control}
                 render={({ id, field, fieldState }) => (
                   <SearchCombobox placeholder="buscar..."
                     id={id} field={field} fieldState={fieldState}
-                    items={fazendas.map(f => ({ value: f.id.toString(), label: f.nome }))}
+                    items={farms.map(f => ({ value: f.id.toString(), label: f.name }))}
                   />
                 )}
               />
-              <FormField name="fazendaOrigemNome" label="Nome da Fazenda (se externa)"
+              <FormField name="originFarmName" label="Nome da Fazenda (se externa)"
                 control={control}
                 render={({ field, id }) => <Input {...field} id={id} placeholder="Ex: Fazenda Santa Fé" />}
               />
@@ -305,9 +305,9 @@ export default function AnimalForm({ id, title, onCancel, onSuccess }: AnimalFor
           </>
         )}
 
-        {origem === EnumAnimalOrigem.COMPRA && (
+        {origin === EnumAnimalOrigin.PURCHASE && (
           <FieldRow cols={2}>
-            <FormField name="valorCompra" label="Valor da Compra (R$)" required
+            <FormField name="purchasePrice" label="Valor da Compra (R$)" required
               control={control}
               render={({ field, id }) => (
                 <Input {...field} id={id} type="number" step="0.01" min="0" placeholder="Ex: 3500.00" />

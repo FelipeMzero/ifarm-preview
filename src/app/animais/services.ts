@@ -13,37 +13,37 @@ export class ApiError extends Error {
 export type AnimalRow = {
   id: string;
   rfid: string | null;
-  brinco: string;
-  nome: string | null;
-  sexo: string;
-  dataNascimento: string | null;
-  pesoNascimentoKg: number | null;
-  origem: string;
+  earTag: string;
+  name: string | null;
+  sex: string;
+  birthDate: string | null;
+  birthWeightKg: number | null;
+  origin: string;
   status: string;
-  pesoAtualKg: number | null;
-  atualizadoEm: string;
+  currentWeightKg: number | null;
+  updatedAt: string;
 };
 
 const API_ENDPOINTS = {
-  ANIMAIS: "/api/animais",
+  ANIMALS: "/api/animais",
   ANIMAL_BY_ID: (id: string) => `/api/animais/${id}`,
-  METADADOS: "/api/metadados",
+  METADATA: "/api/metadados",
 } as const;
 
-export type Raca = { id: number; nome: string };
-export type Lote = { id: number; nome: string };
-export type Fazenda = { id: number; nome: string };
-export type AnimalSimples = { id: string; brinco: string; rfid: string | null; sexo: string };
+export type Breed = { id: number; name: string };
+export type Batch = { id: number; name: string };
+export type Farm = { id: number; name: string };
+export type AnimalSummary = { id: string; earTag: string; rfid: string | null; sex: string };
 
-export type Metadados = {
-  racas: Raca[];
-  lotes: Lote[];
-  fazendas: Fazenda[];
-  animaisFazenda: AnimalSimples[];
+export type Metadata = {
+  breeds: Breed[];
+  batches: Batch[];
+  farms: Farm[];
+  farmAnimals: AnimalSummary[];
 };
 
-export async function getMetadados(): Promise<Metadados> {
-  const response = await fetch(API_ENDPOINTS.METADADOS);
+export async function getMetadata(): Promise<Metadata> {
+  const response = await fetch(API_ENDPOINTS.METADATA);
   const result = await response.json();
 
   if (!response.ok) {
@@ -56,7 +56,7 @@ export async function getMetadados(): Promise<Metadados> {
 
 
 export async function createAnimal(data: AnimalFormData) {
-  const response = await fetch(API_ENDPOINTS.ANIMAIS, {
+  const response = await fetch(API_ENDPOINTS.ANIMALS, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
@@ -123,20 +123,20 @@ export type AnimalListResult = {
   pageCount: number;
 };
 
-export async function getAnimais(params: {
+export async function getAnimals(params: {
   page?: number;
   pageSize?: number;
   search?: string;
   status?: string;
-  sexo?: string;
+  sex?: string;
 } = {}): Promise<AnimalListResult> {
-  const { page = 0, pageSize = 10, search = "", status = "", sexo = "" } = params;
+  const { page = 0, pageSize = 10, search = "", status = "", sex = "" } = params;
   const query = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
   if (search) query.set("search", search);
   if (status) query.set("status", status);
-  if (sexo) query.set("sexo", sexo);
+  if (sex) query.set("sex", sex);
 
-  const response = await fetch(`${API_ENDPOINTS.ANIMAIS}?${query}`);
+  const response = await fetch(`${API_ENDPOINTS.ANIMALS}?${query}`);
   const result = await response.json();
 
   if (!response.ok) {
