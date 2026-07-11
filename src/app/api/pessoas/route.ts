@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/api-auth";
+import { RESOURCE_ACCESS } from "@/lib/permissions";
 import { uniqueConstraintErrors } from "../dbErrors";
 import { pessoaApiSchema, pessoaQuerySchema } from "../schemas";
 import { buildEnderecoWrite } from "./helpers";
@@ -8,7 +9,7 @@ import { buildEnderecoWrite } from "./helpers";
 
 
 export async function GET(request: NextRequest) {
-  const { response } = await requireSession({ forbiddenRoles: ["tecnico"] });
+  const { response } = await requireSession(RESOURCE_ACCESS.pessoas);
   if (response) return response;
 
   try {
@@ -65,7 +66,7 @@ export async function GET(request: NextRequest) {
 
 
 export async function POST(request: NextRequest) {
-  const { response } = await requireSession({ forbiddenRoles: ["tecnico"] });
+  const { response } = await requireSession(RESOURCE_ACCESS.pessoas);
   if (response) return response;
 
   try {

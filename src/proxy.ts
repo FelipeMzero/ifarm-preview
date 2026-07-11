@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCookieCache, getSessionCookie } from "better-auth/cookies";
+import { RESOURCE_ACCESS } from "@/lib/permissions";
 
 const PUBLIC_ROUTES = ["/login"];
 
@@ -20,14 +21,12 @@ export async function proxy(request: NextRequest) {
   // de verdade é reforçada nas rotas de API — isso aqui só evita expor a UI errada.
   if (sessionCookie && !isPublicRoute) {
     const cache = await getCookieCache(request);
-    const role = cache?.user?.role;
+    const role = cache?.user?.role ?? "";
 
-    if (pathname.startsWith("/usuarios") && role !== "admin") {
-      return NextResponse.redirect(new URL("/animais", request.url));
-    }
-
-    if (pathname.startsWith("/pessoas") && role === "tecnico") {
-      return NextResponse.redirect(new URL("/animais", request.url));
+    for (const [resource, { forbiddenRoles }] of Object.entries(RESOURCE_ACCESS)) {
+      if (pathname.startsWith(`/${resource}`) && (forbiddenRoles as readonly string[]).includes(role)) {
+        return NextResponse.redirect(new URL("/animais", request.url));
+      }
     }
   }
 

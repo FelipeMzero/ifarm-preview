@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { auth } from "./auth";
 
 type RequireSessionOptions = {
-  forbiddenRoles?: string[];
+  forbiddenRoles?: readonly string[];
 };
 
 export async function requireSession(options?: RequireSessionOptions) {
