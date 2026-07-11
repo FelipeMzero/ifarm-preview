@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Beef, LayoutDashboard, Settings, ArrowRight } from "lucide-react";
+import { Beef, LogIn, ArrowRight } from "lucide-react";
 
 export default function Page() {
   return (
@@ -20,22 +20,15 @@ export default function Page() {
           </p>
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-4 items-center justify-center pt-4">
-          <Link 
-            href="/animais"
+        <div className="flex items-center justify-center pt-4">
+          <Link
+            href="/login"
             className="group relative flex items-center gap-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-8 py-4 rounded-xl transition-all duration-200 hover:scale-105 hover:shadow-xl hover:shadow-emerald-600/30"
           >
-            <Beef size={20} />
-            <span>Gestão de Animais</span>
+            <LogIn size={20} />
+            <span>Entrar</span>
             <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
           </Link>
-
-          <button 
-            className="flex items-center gap-2 bg-white dark:bg-neutral-900 text-slate-700 dark:text-slate-300 font-semibold px-8 py-4 rounded-xl border border-slate-200 dark:border-neutral-800 transition-all hover:bg-slate-50 dark:hover:bg-neutral-800 shadow-sm"
-          >
-            <LayoutDashboard size={20} />
-            Dashboard
-          </button>
         </div>
 
         <div className="pt-12 grid grid-cols-1 sm:grid-cols-3 gap-4 text-left">

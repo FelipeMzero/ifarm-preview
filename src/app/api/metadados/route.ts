@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { requireSession } from "@/lib/api-auth";
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
+  const { response } = await requireSession();
+  if (response) return response;
+
   try {
     const [racas, lotes, fazendas, animaisDisponiveis] = await Promise.all([
       prisma.raca.findMany({ orderBy: { nome: "asc" } }),

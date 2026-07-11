@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { requireSession } from "@/lib/api-auth";
 import { uniqueConstraintErrors } from "../dbErrors";
 import { pessoaApiSchema, pessoaQuerySchema } from "../schemas";
 import { buildEnderecoWrite } from "./helpers";
@@ -7,6 +8,9 @@ import { buildEnderecoWrite } from "./helpers";
 
 
 export async function GET(request: NextRequest) {
+  const { response } = await requireSession({ forbiddenRoles: ["tecnico"] });
+  if (response) return response;
+
   try {
     const { searchParams } = new URL(request.url);
     const validation = pessoaQuerySchema.safeParse(Object.fromEntries(searchParams));
@@ -61,6 +65,9 @@ export async function GET(request: NextRequest) {
 
 
 export async function POST(request: NextRequest) {
+  const { response } = await requireSession({ forbiddenRoles: ["tecnico"] });
+  if (response) return response;
+
   try {
     const body = await request.json();
 

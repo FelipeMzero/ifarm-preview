@@ -1,12 +1,14 @@
+import { useState } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { Beef, ChevronRight, Users } from 'lucide-react';
+import { usePathname, useRouter } from 'next/navigation';
+import { Beef, ChevronRight, KeyRound, LogOut, UserCog, Users } from 'lucide-react';
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
 import {
   Sidebar as SidebarPrimitive,
   SidebarContent,
@@ -19,6 +21,8 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
 } from '@/components/ui/sidebar';
+import { signOut, useSession } from '@/lib/auth-client';
+import { ChangePasswordDialog } from './ChangePasswordDialog';
 
 const NAV = [
   {
@@ -39,8 +43,32 @@ const NAV = [
   },
 ];
 
+function getInitials(name?: string | null): string {
+  if (!name) return '?';
+  return name
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join('');
+}
+
 export function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
+  const { data: session } = useSession();
+  const user = session?.user;
+  const isAdmin = user?.role === 'admin';
+  const isTecnico = user?.role === 'tecnico';
+  const [changingPassword, setChangingPassword] = useState(false);
+
+  const visibleNav = NAV.filter((item) => !(item.label === 'Pessoas' && isTecnico));
+
+  async function handleLogout() {
+    await signOut();
+    router.push('/login');
+    router.refresh();
+  }
 
   return (
     <SidebarPrimitive className='border-sidebar-border' collapsible="icon">
@@ -58,7 +86,7 @@ export function Sidebar() {
       </SidebarHeader>
       <SidebarContent>
         <SidebarMenu>
-          {NAV.map(({ label, icon: Icon, items }) => {
+          {visibleNav.map(({ label, icon: Icon, items }) => {
             const isGroupActive = items.some((item) => pathname.startsWith(item.href));
 
             return (
@@ -88,23 +116,43 @@ export function Sidebar() {
               </Collapsible>
             );
           })}
+
+          {isAdmin && (
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild isActive={pathname.startsWith('/usuarios')}>
+                <Link href="/usuarios">
+                  <UserCog />
+                  <span>Usuários</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          )}
         </SidebarMenu>
       </SidebarContent>
       <SidebarFooter>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton size="lg">
+            <div className="flex items-center gap-2 rounded-lg p-2">
               <Avatar className="size-8 rounded-lg">
-                <AvatarFallback className="bg-primary text-primary-foreground">US</AvatarFallback>
+                <AvatarFallback className="bg-primary text-primary-foreground">
+                  {getInitials(user?.name)}
+                </AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-medium">Usuário</span>
-                <span className="truncate text-xs text-muted-foreground">usuario@email.com</span>
+                <span className="truncate font-medium">{user?.name ?? '—'}</span>
+                <span className="truncate text-xs text-muted-foreground">{user?.email ?? ''}</span>
               </div>
-            </SidebarMenuButton>
+              <Button variant="ghost" size="icon-sm" title="Alterar senha" onClick={() => setChangingPassword(true)}>
+                <KeyRound className="size-4" />
+              </Button>
+              <Button variant="ghost" size="icon-sm" title="Sair" onClick={handleLogout}>
+                <LogOut className="size-4" />
+              </Button>
+            </div>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>
+      <ChangePasswordDialog open={changingPassword} onOpenChange={setChangingPassword} />
     </SidebarPrimitive>
   );
 }

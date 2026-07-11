@@ -1,11 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { requireSession } from "@/lib/api-auth";
 import { uniqueConstraintErrors } from "../../dbErrors";
 import { animalApiSchema } from "../../schemas";
 
 
 
 export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { response } = await requireSession();
+  if (response) return response;
+
   const { id } = await params;
 
   try {
@@ -45,6 +49,9 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
 
 
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { response } = await requireSession();
+  if (response) return response;
+
   const { id } = await params;
 
   try {
@@ -81,6 +88,9 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 
 
 export async function DELETE(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { response } = await requireSession();
+  if (response) return response;
+
   const { id } = await params;
 
   try {

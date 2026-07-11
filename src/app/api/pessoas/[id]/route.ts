@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { requireSession } from "@/lib/api-auth";
 import { uniqueConstraintErrors } from "../../dbErrors";
 import { pessoaApiSchema } from "../../schemas";
 import { buildEnderecoWrite } from "../helpers";
@@ -7,6 +8,9 @@ import { buildEnderecoWrite } from "../helpers";
 
 
 export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { response } = await requireSession({ forbiddenRoles: ["tecnico"] });
+  if (response) return response;
+
   const { id } = await params;
 
   try {
@@ -45,6 +49,9 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
 
 
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { response } = await requireSession({ forbiddenRoles: ["tecnico"] });
+  if (response) return response;
+
   const { id } = await params;
 
   try {
@@ -100,6 +107,9 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 
 
 export async function DELETE(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { response } = await requireSession({ forbiddenRoles: ["tecnico"] });
+  if (response) return response;
+
   const { id } = await params;
 
   try {
@@ -115,6 +125,9 @@ export async function DELETE(_request: NextRequest, { params }: { params: Promis
 
 
 export async function PATCH(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { response } = await requireSession({ forbiddenRoles: ["tecnico"] });
+  if (response) return response;
+
   const { id } = await params;
 
   try {
