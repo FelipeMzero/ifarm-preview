@@ -7,7 +7,7 @@ Este é um projeto desenvolvido com Next.js, utilizando Prisma ORM para persist�
 Antes de começar, você precisará ter instalado em sua máquina:
 * [Node.js](https://nodejs.org/) (recomendado v22+)
 * [pnpm](https://pnpm.io/) (gerenciador de pacotes)
-* [Docker](https://www.docker.com/) e [Docker Compose](https://docs.docker.com/compose/)
+* [Docker](https://www.docker.com/) com suporte ao Docker Compose V2
 
 ---
 
@@ -20,6 +20,12 @@ O projeto utiliza um arquivo `.env` para gerenciar credenciais e configurações
 
 ```bash
 cp .env.example .env
+```
+
+Depois, gere um valor para `BETTER_AUTH_SECRET` (usado para assinar sessões/cookies) e preencha no `.env`:
+
+```bash
+openssl rand -base64 32
 ```
 
 
@@ -38,7 +44,7 @@ pnpm install
 ```
 
 ### 4. Sincronizar o Prisma ORM
-Gere o cliente do Prisma e aplique as migrações para estruturar o banco de dados:
+Gere o cliente do Prisma e aplique as migrações para estruturar o banco de dados — o usuário admin (credenciais definidas em `SEED_ADMIN_EMAIL`/`SEED_ADMIN_PASSWORD` no `.env`) e alguns dados fictícios serão criados automaticamente:
 
 ```bash
 pnpm prisma generate
@@ -63,8 +69,9 @@ O projeto estará disponível em: http://localhost:3000
 | Comando | Descrição |
 | :--- | :--- |
 | pnpm prisma studio | Abre uma interface gráfica para visualizar e editar os dados do banco. |
-| docker-compose logs -f | Visualiza os logs do banco de dados em tempo real. |
-| docker-compose down | Para e remove os containers do projeto. |
+| pnpm exec prisma db seed | Roda novamente o seed (cria admin e dados de exemplo). |
+| docker compose logs -f | Visualiza os logs do banco de dados em tempo real. |
+| docker compose down | Para e remove os containers do projeto. |
 
 ---
 
