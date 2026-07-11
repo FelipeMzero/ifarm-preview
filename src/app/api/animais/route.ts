@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/api-auth";
+import { RESOURCE_ACCESS } from "@/lib/permissions";
 import { uniqueConstraintErrors } from "../dbErrors";
 import { animalApiSchema, animalQuerySchema } from "../schemas";
 
 
 
 export async function GET(request: NextRequest) {
-  const { response } = await requireSession();
+  const { response } = await requireSession(RESOURCE_ACCESS.animais);
   if (response) return response;
 
   try {
@@ -68,7 +69,7 @@ export async function GET(request: NextRequest) {
 
 
 export async function POST(request: NextRequest) {
-  const { response } = await requireSession();
+  const { response } = await requireSession(RESOURCE_ACCESS.animais);
   if (response) return response;
 
   try {

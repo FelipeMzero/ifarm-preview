@@ -1,11 +1,11 @@
 "use client";
 
-import UsuarioList from "./UsuarioList";
+import UserList from "./UserList";
 
 export default function Page() {
   return (
     <div className="flex justify-center p-8">
-      <UsuarioList />
+      <UserList />
     </div>
   );
 }

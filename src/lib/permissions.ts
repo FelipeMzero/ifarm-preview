@@ -1,20 +1,20 @@
-import { adminAc, defaultAc, userAc } from "better-auth/plugins/admin/access";
+import { adminAc, userAc } from "better-auth/plugins/admin/access";
 
-// "tecnico" tem as mesmas permissões (nenhuma) do papel padrão "user" do plugin admin.
-const tecnicoAc = defaultAc.newRole({
-  user: [],
-  session: [],
-});
-
+// Só "admin" tem permissões reais no plugin admin do better-auth (gerenciar
+// usuários). Os demais papéis reaproveitam "userAc" (nenhuma permissão).
 export const roles = {
   admin: adminAc,
-  user: userAc,
-  tecnico: tecnicoAc,
+  manager: userAc,
+  technician: userAc,
+  worker: userAc,
 };
 
 // Fonte única de quais roles NÃO podem acessar cada recurso. Consumido tanto pelo
 // proxy (checagem otimista de UI) quanto pelas API routes (autorização real, via withAuth).
+// As chaves (pessoas/usuarios) ficam em pt-br de propósito: são comparadas
+// diretamente contra o segmento da rota (/pessoas, /usuarios) em src/proxy.ts.
 export const RESOURCE_ACCESS = {
-  pessoas: { forbiddenRoles: ["tecnico"] },
-  usuarios: { forbiddenRoles: ["user", "tecnico"] },
+  animais: { forbiddenRoles: [] },
+  pessoas: { forbiddenRoles: ["technician", "worker"] },
+  usuarios: { forbiddenRoles: ["manager", "technician", "worker"] },
 } as const;

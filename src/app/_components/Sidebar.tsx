@@ -59,10 +59,11 @@ export function Sidebar() {
   const { data: session } = useSession();
   const user = session?.user;
   const isAdmin = user?.role === 'admin';
-  const isTecnico = user?.role === 'tecnico';
+  const isTechnician = user?.role === 'technician';
+  const isWorker = user?.role === 'worker';
   const [changingPassword, setChangingPassword] = useState(false);
 
-  const visibleNav = NAV.filter((item) => !(item.label === 'Pessoas' && isTecnico));
+  const visibleNav = NAV.filter((item) => !(item.label === 'Pessoas' && (isTechnician || isWorker)));
 
   async function handleLogout() {
     await signOut();

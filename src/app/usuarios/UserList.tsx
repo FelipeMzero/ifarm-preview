@@ -23,7 +23,7 @@ import { ResetPasswordDialog } from "./ResetPasswordDialog";
 
 const DEFAULT_PAGE_SIZE = 10;
 
-type UsuarioRow = {
+type UserRow = {
   id: string;
   name: string;
   email: string;
@@ -34,24 +34,25 @@ type UsuarioRow = {
 
 const ROLE_LABEL: Record<string, string> = {
   admin: "Administrador",
-  user: "Gerente",
-  tecnico: "Técnico",
+  manager: "Gerente",
+  technician: "Técnico",
+  worker: "Funcionário",
 };
 
-const novoUsuarioSchema = z.object({
+const newUserSchema = z.object({
   name: z.string().min(1, "Este campo não pode ser vazio"),
   email: z.email("E-mail inválido"),
   password: z.string().min(8, "A senha deve ter ao menos 8 caracteres"),
-  role: z.enum(["admin", "user", "tecnico"], "Este campo não pode ser vazio"),
+  role: z.enum(["admin", "manager", "technician", "worker"], "Este campo não pode ser vazio"),
 });
 
-type NovoUsuarioData = z.infer<typeof novoUsuarioSchema>;
+type NewUserData = z.infer<typeof newUserSchema>;
 
 function buildColumns(
   currentUserId: string | undefined,
   onResetPassword: (id: string) => void,
-  onToggleAccess: (row: UsuarioRow) => void,
-): ColumnDef<UsuarioRow>[] {
+  onToggleAccess: (row: UserRow) => void,
+): ColumnDef<UserRow>[] {
   return [
     { header: "Nome", accessorKey: "name" },
     { header: "E-mail", accessorKey: "email" },
@@ -60,7 +61,7 @@ function buildColumns(
       accessorKey: "role",
       cell: ({ row }) => (
         <Badge variant={row.original.role === "admin" ? "default" : "outline"}>
-          {ROLE_LABEL[row.original.role ?? "user"] ?? row.original.role}
+          {ROLE_LABEL[row.original.role ?? "worker"] ?? row.original.role}
         </Badge>
       ),
     },
@@ -114,9 +115,9 @@ function buildColumns(
   ];
 }
 
-export default function UsuarioList() {
+export default function UserList() {
   const { data: session, isPending: isSessionPending } = useSession();
-  const [usuarios, setUsuarios] = useState<UsuarioRow[]>([]);
+  const [users, setUsers] = useState<UserRow[]>([]);
   const [total, setTotal] = useState(0);
   const [pageIndex, setPageIndex] = useState(0);
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
@@ -126,13 +127,13 @@ export default function UsuarioList() {
   const [refreshKey, setRefreshKey] = useState(0);
   const [isCreating, setIsCreating] = useState(false);
   const [resetPasswordUserId, setResetPasswordUserId] = useState<string | null>(null);
-  const [togglingAccessFor, setTogglingAccessFor] = useState<UsuarioRow | null>(null);
+  const [togglingAccessFor, setTogglingAccessFor] = useState<UserRow | null>(null);
 
   const isAdmin = session?.user.role === "admin";
 
-  const { handleSubmit, control, reset, formState: { isSubmitting } } = useForm<NovoUsuarioData>({
-    resolver: zodResolver(novoUsuarioSchema),
-    defaultValues: { name: "", email: "", password: "", role: "user" },
+  const { handleSubmit, control, reset, formState: { isSubmitting } } = useForm<NewUserData>({
+    resolver: zodResolver(newUserSchema),
+    defaultValues: { name: "", email: "", password: "", role: "worker" },
   });
 
   useEffect(() => {
@@ -154,7 +155,7 @@ export default function UsuarioList() {
         if (error) {
           setError(error.message ?? "Não foi possível obter os dados do servidor.");
         } else {
-          setUsuarios(data.users as UsuarioRow[]);
+          setUsers(data.users as UserRow[]);
           setTotal(data.total);
         }
       } finally {
@@ -169,7 +170,7 @@ export default function UsuarioList() {
     return () => { cancelled = true; };
   }, [isAdmin, pageIndex, pageSize, refreshKey]);
 
-  async function onSubmit(formData: NovoUsuarioData) {
+  async function onSubmit(formData: NewUserData) {
     const { error } = await authClient.admin.createUser({
       name: formData.name,
       email: formData.email,
@@ -240,7 +241,7 @@ export default function UsuarioList() {
       </div>
 
       <div className={loading ? "opacity-60 transition-opacity" : "transition-opacity"}>
-        {usuarios.length === 0 ? (
+        {users.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 gap-2 text-muted-foreground">
             <Users size={50} className="opacity-30" />
             <p className="text-2xl">Nenhum registro encontrado.</p>
@@ -248,7 +249,7 @@ export default function UsuarioList() {
         ) : (
           <DataTable
             columns={columns}
-            data={usuarios}
+            data={users}
             pageCount={Math.ceil(total / pageSize)}
             pageIndex={pageIndex}
             pageSize={pageSize}
@@ -279,8 +280,9 @@ export default function UsuarioList() {
                   value={field.value}
                   onValueChange={field.onChange}
                   items={[
-                    { value: "user", label: "Gerente" },
-                    { value: "tecnico", label: "Técnico" },
+                    { value: "worker", label: "Funcionário" },
+                    { value: "technician", label: "Técnico" },
+                    { value: "manager", label: "Gerente" },
                     { value: "admin", label: "Administrador" },
                   ]}
                 />
