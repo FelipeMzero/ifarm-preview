@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import PersonForm from "../PersonForm";
+import PersonForm from "@/features/person/PersonForm";
 
 export default function Page() {
   const router = useRouter();

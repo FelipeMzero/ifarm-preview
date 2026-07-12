@@ -1,6 +1,6 @@
 "use client";
 
-import PropertyList from "./PropertyList";
+import PropertyList from "@/features/property/PropertyList";
 
 export default function Page() {
 

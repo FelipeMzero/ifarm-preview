@@ -1,6 +1,6 @@
 "use client";
 
-import AnimalList from "./AnimalList";
+import AnimalList from "@/features/animal/AnimalList";
 
 export default function Page() {
 

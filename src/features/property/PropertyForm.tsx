@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { IMaskInput } from "react-imask";
 
 import { getProperty, updateProperty, createProperty, ApiError } from "./services";
-import { getPeople } from "../pessoas/services";
+import { getPeople } from "@/features/person/services";
 import { ErrorPage } from "@/components/our/ErrorPage";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";

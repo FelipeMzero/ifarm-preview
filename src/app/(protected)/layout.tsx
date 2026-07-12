@@ -1,4 +1,4 @@
-import { Sidebar } from './_components/Sidebar';
+import { Sidebar } from '@/features/shell/Sidebar';
 import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 
 export default function ProtectedLayout({ children }: { children: React.ReactNode }) {

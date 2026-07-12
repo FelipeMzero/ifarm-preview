@@ -2,7 +2,7 @@
 
 import { use } from "react";
 import { useRouter } from "next/navigation";
-import AnimalForm from "../AnimalForm";
+import AnimalForm from "@/features/animal/AnimalForm";
 
 export default function Page({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);

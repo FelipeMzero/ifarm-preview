@@ -1,7 +1,7 @@
 "use client";
 
 import { use } from "react";
-import PersonDetails from "../../PersonDetails";
+import PersonDetails from "@/features/person/PersonDetails";
 
 export default function Page({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);

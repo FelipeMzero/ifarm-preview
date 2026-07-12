@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import AnimalForm from "../AnimalForm";
+import AnimalForm from "@/features/animal/AnimalForm";
 
 export default function Page() {
   const router = useRouter();

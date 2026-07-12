@@ -1,6 +1,6 @@
 "use client";
 
-import UserList from "./UserList";
+import UserList from "@/features/user/UserList";
 
 export default function Page() {
   return (

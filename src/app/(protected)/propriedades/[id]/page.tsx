@@ -2,7 +2,7 @@
 
 import { use } from "react";
 import { useRouter } from "next/navigation";
-import PropertyForm from "../PropertyForm";
+import PropertyForm from "@/features/property/PropertyForm";
 
 export default function Page({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);

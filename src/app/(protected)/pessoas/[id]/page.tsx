@@ -2,7 +2,7 @@
 
 import { use } from "react";
 import { useRouter } from "next/navigation";
-import PersonForm from "../PersonForm";
+import PersonForm from "@/features/person/PersonForm";
 
 export default function Page({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
