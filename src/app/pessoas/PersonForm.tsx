@@ -15,11 +15,12 @@ import { FormField } from "@/components/our/FormField";
 import FieldRow from "@/components/our/FieldRow";
 
 import { SearchCombobox } from "@/components/our/SearchCombobox";
-import { Loader2 } from "lucide-react";
+import { ArrowLeft, Loader2 } from "lucide-react";
 import FormSkeleton from "@/components/our/FormSkeleton";
 import { PersonFormData, personFormSchema, EnumPersonType, EnumMaritalStatus } from "./schema";
 import { Separator } from "@/components/ui/separator";
 import { BR_STATE_ITEMS } from "@/lib/br-states";
+import { FormActionBar } from "@/components/our/FormActionBar";
 
 
 
@@ -165,7 +166,11 @@ export default function PersonForm({ id, title, onCancel, onSuccess }: PersonFor
 
 
   return (
-    <form className="flex flex-col gap-4" onSubmit={handleSubmit(onSubmit)}>
+    <form className="mx-auto flex w-full max-w-300 flex-col gap-4" onSubmit={handleSubmit(onSubmit)}>
+
+      <Button type="button" variant="ghost" size="sm" className="w-fit" onClick={() => onCancel?.()}>
+        <ArrowLeft className="size-4" /> Voltar
+      </Button>
 
       {title && <h1 className="text-2xl font-semibold">{title}</h1>}
       <Separator />
@@ -341,18 +346,12 @@ export default function PersonForm({ id, title, onCancel, onSuccess }: PersonFor
         </FieldRow>
       </FieldSet>
 
-      <Separator/>
-      <div className="flex justify-end gap-2">
-        <Button type="button" variant="secondary" onClick={() => onCancel?.()}>
-          Voltar
-        </Button>
-
+      <FormActionBar>
         <Button type="submit" disabled={isSubmitting}>
           {isSubmitting && <Loader2 className="animate-spin" />}
           Salvar
         </Button>
-
-      </div>
+      </FormActionBar>
 
     </form>
   );

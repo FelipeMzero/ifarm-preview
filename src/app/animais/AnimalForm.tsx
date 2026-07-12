@@ -14,10 +14,11 @@ import { FormField } from "@/components/our/FormField";
 import FieldRow from "@/components/our/FieldRow";
 
 import { SearchCombobox } from "@/components/our/SearchCombobox";
-import { Loader2 } from "lucide-react";
+import { ArrowLeft, Loader2 } from "lucide-react";
 import FormSkeleton from "@/components/our/FormSkeleton";
 import { AnimalFormData, animalFormSchema, EnumAnimalOrigin, EnumAnimalStatus, EnumSex } from "./schema";
 import { Separator } from "@/components/ui/separator";
+import { FormActionBar } from "@/components/our/FormActionBar";
 
 
 
@@ -158,7 +159,11 @@ export default function AnimalForm({ id, title, onCancel, onSuccess }: AnimalFor
 
 
   return (
-    <form className="flex flex-col gap-8" onSubmit={handleSubmit(onSubmit)}>
+    <form className="mx-auto flex w-full max-w-300 flex-col gap-8" onSubmit={handleSubmit(onSubmit)}>
+
+      <Button type="button" variant="ghost" size="sm" className="w-fit" onClick={() => onCancel?.()}>
+        <ArrowLeft className="size-4" /> Voltar
+      </Button>
 
       {title && <h1 className="text-2xl font-semibold">{title}</h1>}
       <Separator />
@@ -317,17 +322,12 @@ export default function AnimalForm({ id, title, onCancel, onSuccess }: AnimalFor
         )}
       </FieldSet>
 
-      <div className="flex justify-end gap-2">
-        <Button type="button" variant="secondary" onClick={() => onCancel?.()}>
-          Voltar
-        </Button>
-
+      <FormActionBar>
         <Button type="submit" disabled={isSubmitting}>
           {isSubmitting && <Loader2 className="animate-spin" />}
           Salvar
         </Button>
-
-      </div>
+      </FormActionBar>
 
     </form>
   );

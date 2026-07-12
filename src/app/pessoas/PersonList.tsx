@@ -2,13 +2,13 @@
 
 import { ColumnDef, VisibilityState } from "@tanstack/react-table";
 import { Building2, IdCard, Pencil, Plus, Power, Search, Settings2, User, Users } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 import React, { useEffect, useState } from "react";
 
 import { DataTable } from "@/components/our/DataTable";
 import ListSkeleton from "@/components/our/ListSkeleton";
 import PersonDetails from "./PersonDetails";
-import PersonForm from "./PersonForm";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -136,6 +136,7 @@ function buildColumns(
 }
 
 export default function PersonList() {
+  const router = useRouter();
   const [people, setPeople] = useState<PersonRow[]>([]);
   const [pageIndex, setPageIndex] = useState(0);
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
@@ -149,9 +150,7 @@ export default function PersonList() {
   const [error, setError] = useState<string | null>(null);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({ phone: false, email: false });
   const [refreshKey, setRefreshKey] = useState(0);
-  const [editingId, setEditingId] = useState<string | null>(null);
   const [viewingDetailsId, setViewingProfileId] = useState<string | null>(null);
-  const [isCreating, setIsCreating] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -198,7 +197,7 @@ export default function PersonList() {
 
   const columns = buildColumns(
     toggleStatus,
-    setEditingId,
+    (id) => router.push(`/pessoas/${id}`),
     setViewingProfileId,
   );
 
@@ -220,7 +219,7 @@ export default function PersonList() {
         <div>
           <h1 className="text-xl font-semibold">Pessoas</h1>
         </div>
-        <Button onClick={() => setIsCreating(true)}>
+        <Button onClick={() => router.push("/pessoas/novo")}>
           <Plus className="size-4" /> Nova Pessoa
         </Button>
       </div>
@@ -294,26 +293,6 @@ export default function PersonList() {
         )}
       </div>
 
-      <Dialog open={isCreating} onOpenChange={(open) => { if (!open) setIsCreating(false); }}>
-        <DialogContent className="p-8 sm:max-w-4xl max-h-[90vh] overflow-y-auto">
-          <PersonForm
-            title="Nova Pessoa"
-            onCancel={() => setIsCreating(false)}
-            onSuccess={() => { setIsCreating(false); setRefreshKey((k) => k + 1); }}
-          />
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={editingId !== null} onOpenChange={(open) => { if (!open) setEditingId(null); }}>
-        <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
-          <PersonForm
-            id={editingId ?? undefined}
-            title="Editar Pessoa"
-            onCancel={() => setEditingId(null)}
-            onSuccess={() => { setEditingId(null); setRefreshKey((k) => k + 1); }}
-          />
-        </DialogContent>
-      </Dialog>
 
       <Dialog open={viewingDetailsId !== null} onOpenChange={(open) => { if (!open) setViewingProfileId(null); }}>
         <DialogContent className="p-8 sm:max-w-4xl max-h-[90vh] overflow-y-auto">

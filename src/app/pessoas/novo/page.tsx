@@ -7,7 +7,7 @@ export default function Page() {
   const router = useRouter();
 
   return (
-    <div className="w-full justify-center p-8">
+    <div className="flex justify-center p-8">
       <PersonForm
         title="Nova Pessoa"
         onCancel={() => router.back()}

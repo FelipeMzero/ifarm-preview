@@ -10,14 +10,12 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
 
   return (
     <div className="flex justify-center p-8">
-      <div className="w-full max-w-200">
-        <h1 className="text-3xl font-bold mb-8">Pessoa</h1>
-        <PersonForm
-          id={id}
-          onCancel={() => router.back()}
-          onSuccess={() => {}}
-        />
-      </div>
+      <PersonForm
+        id={id}
+        title="Pessoa"
+        onCancel={() => router.back()}
+        onSuccess={() => {}}
+      />
     </div>
   );
 }

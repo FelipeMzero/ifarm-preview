@@ -2,21 +2,15 @@
 
 import { ColumnDef, VisibilityState } from "@tanstack/react-table";
 import { Beef, Mars, Pencil, Plus, Search, Settings2, Trash2, Venus } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 import React, { useEffect, useState } from "react";
 
 import { ConfirmDialog } from "@/components/our/ConfirmDialog";
 import { DataTable } from "@/components/our/DataTable";
 import ListSkeleton from "@/components/our/ListSkeleton";
-import AnimalForm from "./AnimalForm";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -140,6 +134,7 @@ function buildColumns(
 }
 
 export default function AnimalList() {
+  const router = useRouter();
   const [animals, setAnimals] = useState<AnimalRow[]>([]);
   const [pageIndex, setPageIndex] = useState(0);
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
@@ -153,8 +148,6 @@ export default function AnimalList() {
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
   const [refreshKey, setRefreshKey] = useState(0);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [isCreating, setIsCreating] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -199,7 +192,7 @@ export default function AnimalList() {
     }
   }
 
-  const columns = buildColumns(setEditingId, setPendingDeleteId);
+  const columns = buildColumns((id) => router.push(`/animais/${id}`), setPendingDeleteId);
 
   if (error) {
     return (
@@ -219,7 +212,7 @@ export default function AnimalList() {
         <div>
           <h1 className="text-xl font-semibold">Animais</h1>
         </div>
-        <Button onClick={() => setIsCreating(true)}>
+        <Button onClick={() => router.push("/animais/novo")}>
           <Plus className="size-4" /> Novo Animal
         </Button>
       </div>
@@ -294,27 +287,6 @@ export default function AnimalList() {
           onColumnVisibilityChange={setColumnVisibility}
         />
       )}
-
-      <Dialog open={isCreating} onOpenChange={(open) => { if (!open) setIsCreating(false); }}>
-        <DialogContent className="p-8 sm:max-w-4xl max-h-[90vh] overflow-y-auto">
-          <AnimalForm
-            title="Novo Animal"
-            onCancel={() => setIsCreating(false)}
-            onSuccess={() => { setIsCreating(false); setRefreshKey((k) => k + 1); }}
-          />
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={editingId !== null} onOpenChange={(open) => { if (!open) setEditingId(null); }}>
-        <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
-          <AnimalForm
-            id={editingId ?? undefined}
-            title="Editar Animal"
-            onCancel={() => setEditingId(null)}
-            onSuccess={() => { setEditingId(null); setRefreshKey((k) => k + 1); }}
-          />
-        </DialogContent>
-      </Dialog>
 
       <ConfirmDialog
         open={pendingDeleteId !== null}
