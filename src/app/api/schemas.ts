@@ -97,3 +97,59 @@ export const personQuerySchema = z.object({
 });
 
 export type PersonQueryData = z.infer<typeof personQuerySchema>;
+
+
+
+export const propertyApiSchema = z
+  .object({
+    name:           z.string().min(1, "Este campo não pode ser vazio"),
+    ownerId:        z.string().min(1, "Este campo não pode ser vazio"),
+
+    totalArea:      z.string().optional().transform(v => v ? parseFloat(v) : null),
+    productiveArea: z.string().optional().transform(v => v ? parseFloat(v) : null),
+    cib:            z.string().optional().transform(v => v || null),
+    ccir:           z.string().optional().transform(v => v || null),
+    car:            z.string().optional().transform(v => v || null),
+    latitude:       z.string().optional().transform(v => v ? parseFloat(v) : null),
+    longitude:      z.string().optional().transform(v => v ? parseFloat(v) : null),
+
+    // Endereço
+    zipCode:        z.string().optional().transform(v => v || null),
+    street:         z.string().optional().transform(v => v || null),
+    number:         z.string().optional().transform(v => v || null),
+    complement:     z.string().optional().transform(v => v || null),
+    neighborhood:   z.string().optional().transform(v => v || null),
+    city:           z.string().optional().transform(v => v || null),
+    state:          z.string().optional().transform(v => v || null),
+  })
+  .check((ctx) => {
+    const { totalArea, productiveArea, zipCode, street, city, state } = ctx.value;
+
+    // RN-PROPRIEDADE-03: a área produtiva não pode ser maior que a área total.
+    if (productiveArea != null && totalArea != null && productiveArea > totalArea) {
+      ctx.issues.push({
+        code: "custom",
+        input: productiveArea,
+        path: ["productiveArea"],
+        message: "A área produtiva não pode ser maior que a área total.",
+      });
+    }
+
+    const addressStarted = zipCode || street || city || state;
+    if (addressStarted) {
+      if (!zipCode) ctx.issues.push({ code: "custom", input: zipCode, path: ["zipCode"], message: "Este campo não pode ser vazio" });
+      if (!street) ctx.issues.push({ code: "custom", input: street, path: ["street"], message: "Este campo não pode ser vazio" });
+      if (!city) ctx.issues.push({ code: "custom", input: city, path: ["city"], message: "Este campo não pode ser vazio" });
+      if (!state) ctx.issues.push({ code: "custom", input: state, path: ["state"], message: "Este campo não pode ser vazio" });
+    }
+  });
+
+export type PropertyApiData = z.infer<typeof propertyApiSchema>;
+
+export const propertyQuerySchema = z.object({
+  page:     z.coerce.number().int().min(0).optional().default(0),
+  pageSize: z.coerce.number().int().min(1).optional().default(10),
+  search:   z.string().trim().optional().default(""),
+});
+
+export type PropertyQueryData = z.infer<typeof propertyQuerySchema>;

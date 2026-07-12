@@ -16,5 +16,6 @@ export const roles = {
 export const RESOURCE_ACCESS = {
   animais: { forbiddenRoles: [] },
   pessoas: { forbiddenRoles: ["technician", "worker"] },
+  propriedades: { forbiddenRoles: ["technician", "worker"] },
   usuarios: { forbiddenRoles: ["manager", "technician", "worker"] },
 } as const;

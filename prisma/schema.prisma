@@ -66,7 +66,8 @@ model Address {
   state       String                        // UF (unidade federativa)
   country     String  @default("Brasil")    // País
 
-  person Person?
+  person   Person?
+  property Property?
 
   @@map("address")
 }
@@ -96,9 +97,37 @@ model Person {
   deletedAt   DateTime? @map("deleted_at")
   deactivatedAt DateTime? @map("deactivated_at")
 
+  properties Property[]
+
   @@index([type])
   @@index([name])
   @@map("person")
+}
+
+model Property {
+  id             String  @id @default(uuid())
+  name           String
+  totalArea      Float?  @map("total_area")      // Área Total (ha)
+  productiveArea Float?  @map("productive_area")  // Área Produtiva (ha)
+  cib            String? @unique                  // Cadastro Imobiliário Brasileiro
+  ccir           String? @unique                  // Certificado de Cadastro de Imóvel Rural (INCRA)
+  car            String? @unique                  // Cadastro Ambiental Rural
+  latitude       Float?
+  longitude      Float?
+
+  addressId Int?     @unique @map("address_id")
+  address   Address? @relation(fields: [addressId], references: [id])
+
+  ownerId String @map("owner_id") // Titular
+  owner   Person @relation(fields: [ownerId], references: [id])
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  @@index([name])
+  @@index([ownerId])
+  @@map("property")
 }
 
 

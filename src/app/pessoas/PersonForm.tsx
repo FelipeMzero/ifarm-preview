@@ -19,6 +19,7 @@ import { Loader2 } from "lucide-react";
 import FormSkeleton from "@/components/our/FormSkeleton";
 import { PersonFormData, personFormSchema, EnumPersonType, EnumMaritalStatus } from "./schema";
 import { Separator } from "@/components/ui/separator";
+import { BR_STATE_ITEMS } from "@/lib/br-states";
 
 
 
@@ -43,42 +44,12 @@ export default function PersonForm({ id, title, onCancel, onSuccess }: PersonFor
     { value: EnumPersonType.COMPANY, label: "Jurídica" },
   ];
   const MARITAL_STATUS_ITEMS = [
-    { value: EnumMaritalStatus.SINGLE, label: "Solteiro(a)" },
-    { value: EnumMaritalStatus.MARRIED, label: "Casado(a)" },
+    { value: EnumMaritalStatus.SINGLE, label: "Solteiro" },
+    { value: EnumMaritalStatus.MARRIED, label: "Casado" },
     { value: EnumMaritalStatus.STABLE_UNION, label: "União Estável" },
-    { value: EnumMaritalStatus.DIVORCED, label: "Divorciado(a)" },
-    { value: EnumMaritalStatus.WIDOWED, label: "Viúvo(a)" },
+    { value: EnumMaritalStatus.DIVORCED, label: "Divorciado" },
+    { value: EnumMaritalStatus.WIDOWED, label: "Viúvo" },
   ];
-  const STATE_ITEMS = [
-    { value: "AC", label: "Acre" },
-    { value: "AL", label: "Alagoas" },
-    { value: "AP", label: "Amapá" },
-    { value: "AM", label: "Amazonas" },
-    { value: "BA", label: "Bahia" },
-    { value: "CE", label: "Ceará" },
-    { value: "DF", label: "Distrito Federal" },
-    { value: "ES", label: "Espírito Santo" },
-    { value: "GO", label: "Goiás" },
-    { value: "MA", label: "Maranhão" },
-    { value: "MT", label: "Mato Grosso" },
-    { value: "MS", label: "Mato Grosso do Sul" },
-    { value: "MG", label: "Minas Gerais" },
-    { value: "PA", label: "Pará" },
-    { value: "PB", label: "Paraíba" },
-    { value: "PR", label: "Paraná" },
-    { value: "PE", label: "Pernambuco" },
-    { value: "PI", label: "Piauí" },
-    { value: "RJ", label: "Rio de Janeiro" },
-    { value: "RN", label: "Rio Grande do Norte" },
-    { value: "RS", label: "Rio Grande do Sul" },
-    { value: "RO", label: "Rondônia" },
-    { value: "RR", label: "Roraima" },
-    { value: "SC", label: "Santa Catarina" },
-    { value: "SP", label: "São Paulo" },
-    { value: "SE", label: "Sergipe" },
-    { value: "TO", label: "Tocantins" },
-  ];
-
   const [isDataLoading, setIsDataLoading] = useState(!!id);
   const [loadFailed, setLoadFailed] = useState(false);
   const [isZipLoading, setIsZipLoading] = useState(false);
@@ -363,7 +334,7 @@ export default function PersonForm({ id, title, onCancel, onSuccess }: PersonFor
             render={({ id: fieldId, field, fieldState }) => (
               <SearchCombobox placeholder="Selecionar..."
                 id={fieldId} field={field} fieldState={fieldState}
-                items={STATE_ITEMS}
+                items={BR_STATE_ITEMS}
               />
             )}
           />

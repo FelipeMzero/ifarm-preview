@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Beef, ChevronRight, KeyRound, LogOut, UserCog, Users } from 'lucide-react';
+import { Beef, ChevronRight, KeyRound, LogOut, Tractor, UserCog, Users } from 'lucide-react';
 import {
   Collapsible,
   CollapsibleContent,
@@ -41,6 +41,14 @@ const NAV = [
       { href: '/pessoas', label: 'Gestão de Pessoas' },
     ],
   },
+  {
+    label: 'Propriedades',
+    icon: Tractor,
+    items: [
+      { href: '/propriedades/novo', label: 'Nova Propriedade' },
+      { href: '/propriedades', label: 'Gestão de Propriedades' },
+    ],
+  },
 ];
 
 function getInitials(name?: string | null): string {
@@ -63,7 +71,9 @@ export function Sidebar() {
   const isWorker = user?.role === 'worker';
   const [changingPassword, setChangingPassword] = useState(false);
 
-  const visibleNav = NAV.filter((item) => !(item.label === 'Pessoas' && (isTechnician || isWorker)));
+  const visibleNav = NAV.filter((item) =>
+    !(['Pessoas', 'Propriedades'].includes(item.label) && (isTechnician || isWorker))
+  );
 
   async function handleLogout() {
     await signOut();

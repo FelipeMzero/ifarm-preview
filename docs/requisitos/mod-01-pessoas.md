@@ -193,7 +193,7 @@ Tela com formulário destinado à edição dos dados cadastrais de uma pessoa f�
 
 
 
-## 🚧 2.4 - `RF-PESSOA-04`: Ver Ficha
+## 🚧 2.4 - `RF-PESSOA-04`: Detalhes da Pessoa
 <div style="border:1px solid #ccc; padding:16px; border-radius:8px;">
 
 ### 2.4.1 - Descrição
@@ -210,18 +210,18 @@ Tela destinada à exibição de informações mais detalhadas da pessoa, como: .
 ### 2.4.2 - Critérios de Aceitação
 * [ ] Exibir um botão para excluir a pessoa caso ela não tenha movimentação no sistema
 * [ ] Não permitir exclusão caso a pessoa tenha movimentação no sistema
-* [ ] Exibir a ficha ...
+* [ ] Exibir os detalhes ...
 
 ### 2.4.3 - Cenários de Uso
 
-**Cenário 1: Exibição da ficha com histórico vinculado**
+**Cenário 1: Exibição os detalhes com histórico vinculado**
 * **Dado que** existe uma pessoa cadastrada com papéis e transações vinculados a ela;
-* **Quando** o Gerente acionar a ação "Ficha" a partir da listagem;
+* **Quando** o Gerente acionar a ação "Detalhes" a partir da listagem;
 * **Então** o sistema deve exibir os dados cadastrais da pessoa e o histórico de papéis e transações vinculados a ela.
 
 **Cenário 2: Exibição da ficha sem histórico vinculado**
 * **Dado que** existe uma pessoa cadastrada sem nenhum papel ou transação vinculado a ela;
-* **Quando** o Gerente acionar a ação "Ficha" a partir da listagem;
+* **Quando** o Gerente acionar a ação "Detalhes" a partir da listagem;
 * **Então** o sistema deve exibir os dados cadastrais da pessoa e indicar que não há histórico vinculado.
 
 </div>

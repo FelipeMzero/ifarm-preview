@@ -4,7 +4,7 @@ import { requireSession } from "@/lib/api-auth";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
 import { uniqueConstraintErrors } from "../dbErrors";
 import { personApiSchema, personQuerySchema } from "../schemas";
-import { buildAddressWrite } from "./helpers";
+import { buildAddressWrite } from "../addressHelpers";
 
 
 
