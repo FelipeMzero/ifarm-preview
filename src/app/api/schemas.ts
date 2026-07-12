@@ -110,8 +110,8 @@ export const propertyApiSchema = z
     cib:            z.string().optional().transform(v => v || null),
     ccir:           z.string().optional().transform(v => v || null),
     car:            z.string().optional().transform(v => v || null),
-    latitude:       z.string().optional().transform(v => v ? parseFloat(v) : null),
-    longitude:      z.string().optional().transform(v => v ? parseFloat(v) : null),
+    latitude:       z.preprocess(v => v === "" ? undefined : v, z.coerce.number().min(-90, "Latitude deve estar entre -90 e 90.").max(90, "Latitude deve estar entre -90 e 90.").optional()).transform(v => v ?? null),
+    longitude:      z.preprocess(v => v === "" ? undefined : v, z.coerce.number().min(-180, "Longitude deve estar entre -180 e 180.").max(180, "Longitude deve estar entre -180 e 180.").optional()).transform(v => v ?? null),
 
     // Endereço
     zipCode:        z.string().optional().transform(v => v || null),

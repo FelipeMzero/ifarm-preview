@@ -11,8 +11,10 @@ export const propertyFormSchema = z
     cib:            z.string().optional(),
     ccir:           z.string().optional(),
     car:            z.string().optional(),
-    latitude:       z.string().optional(),
-    longitude:      z.string().optional(),
+    latitude:       z.string().optional()
+      .refine(v => !v || z.coerce.number().min(-90).max(90).safeParse(v).success, "Latitude deve estar entre -90 e 90."),
+    longitude:      z.string().optional()
+      .refine(v => !v || z.coerce.number().min(-180).max(180).safeParse(v).success, "Longitude deve estar entre -180 e 180."),
 
     // Endereço
     zipCode:        z.string().optional(),
