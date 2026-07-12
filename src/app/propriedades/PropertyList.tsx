@@ -2,13 +2,13 @@
 
 import { ColumnDef, VisibilityState } from "@tanstack/react-table";
 import { IdCard, MapPin, Pencil, Plus, Search, Settings2, Tractor, User } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 import { useEffect, useState } from "react";
 
 import { DataTable } from "@/components/our/DataTable";
 import ListSkeleton from "@/components/our/ListSkeleton";
 import PropertyDetails from "./PropertyDetails";
-import PropertyForm from "./PropertyForm";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -101,6 +101,7 @@ function buildColumns(
 }
 
 export default function PropertyList() {
+  const router = useRouter();
   const [properties, setProperties] = useState<PropertyRow[]>([]);
   const [pageIndex, setPageIndex] = useState(0);
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
@@ -113,9 +114,7 @@ export default function PropertyList() {
   const [error, setError] = useState<string | null>(null);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({ totalArea: false, updatedAt: false });
   const [refreshKey, setRefreshKey] = useState(0);
-  const [editingId, setEditingId] = useState<string | null>(null);
   const [viewingDetailsId, setViewingDetailsId] = useState<string | null>(null);
-  const [isCreating, setIsCreating] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -152,7 +151,7 @@ export default function PropertyList() {
   }, [pageIndex, pageSize, debouncedSearch, refreshKey]);
 
   const columns = buildColumns(
-    setEditingId,
+    (id) => router.push(`/propriedades/${id}`),
     setViewingDetailsId,
   );
 
@@ -174,7 +173,7 @@ export default function PropertyList() {
         <div>
           <h1 className="text-xl font-semibold">Propriedades</h1>
         </div>
-        <Button onClick={() => setIsCreating(true)}>
+        <Button onClick={() => router.push("/propriedades/novo")}>
           <Plus className="size-4" /> Adicionar
         </Button>
       </div>
@@ -237,27 +236,6 @@ export default function PropertyList() {
           />
         )}
       </div>
-
-      <Dialog open={isCreating} onOpenChange={(open) => { if (!open) setIsCreating(false); }}>
-        <DialogContent className="p-8 sm:max-w-4xl max-h-[90vh] overflow-y-auto">
-          <PropertyForm
-            title="Nova Propriedade"
-            onCancel={() => setIsCreating(false)}
-            onSuccess={() => { setIsCreating(false); setRefreshKey((k) => k + 1); }}
-          />
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={editingId !== null} onOpenChange={(open) => { if (!open) setEditingId(null); }}>
-        <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
-          <PropertyForm
-            id={editingId ?? undefined}
-            title="Editar Propriedade"
-            onCancel={() => setEditingId(null)}
-            onSuccess={() => { setEditingId(null); setRefreshKey((k) => k + 1); }}
-          />
-        </DialogContent>
-      </Dialog>
 
       <Dialog open={viewingDetailsId !== null} onOpenChange={(open) => { if (!open) setViewingDetailsId(null); }}>
         <DialogContent className="p-8 sm:max-w-4xl max-h-[90vh] overflow-y-auto">

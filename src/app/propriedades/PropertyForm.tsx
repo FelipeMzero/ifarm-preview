@@ -13,10 +13,11 @@ import { Button } from "@/components/ui/button";
 import { FieldLegend, FieldSet } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { FormField } from "@/components/our/FormField";
+import { FormActionBar } from "@/components/our/FormActionBar";
 import FieldRow from "@/components/our/FieldRow";
 
 import { SearchCombobox, SearchComboboxItem } from "@/components/our/SearchCombobox";
-import { Loader2, MapPin, MapPinOff } from "lucide-react";
+import { ArrowLeft, Loader2, MapPin, MapPinOff } from "lucide-react";
 import FormSkeleton from "@/components/our/FormSkeleton";
 import { PropertyFormData, propertyFormSchema } from "./schema";
 import { Separator } from "@/components/ui/separator";
@@ -268,7 +269,11 @@ export default function PropertyForm({ id, title, onCancel, onSuccess }: Propert
 
 
   return (
-    <form className="flex flex-col gap-4" onSubmit={handleSubmit(onSubmit)}>
+    <form className="mx-auto flex w-full max-w-300 flex-col gap-4" onSubmit={handleSubmit(onSubmit)}>
+
+      <Button type="button" variant="ghost" size="sm" className="w-fit" onClick={() => onCancel?.()}>
+        <ArrowLeft className="size-4" /> Voltar
+      </Button>
 
       {title && <h1 className="text-2xl font-semibold">{title}</h1>}
       <Separator />
@@ -411,18 +416,12 @@ export default function PropertyForm({ id, title, onCancel, onSuccess }: Propert
         </FieldRow>
       </div >
 
-      <Separator />
-      <div className="flex justify-end gap-2">
-        <Button type="button" variant="secondary" onClick={() => onCancel?.()}>
-          Voltar
-        </Button>
-
+      <FormActionBar>
         <Button type="submit" disabled={isSubmitting}>
           {isSubmitting && <Loader2 className="animate-spin" />}
           Salvar
         </Button>
-
-      </div>
+      </FormActionBar>
 
     </form >
   );

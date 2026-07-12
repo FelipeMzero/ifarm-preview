@@ -8,13 +8,13 @@ export default function LayoutShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
 
   if (pathname === '/' || pathname === '/login') {
-    return <main className="flex-1 overflow-y-auto">{children}</main>;
+    return <main className="h-svh overflow-y-auto">{children}</main>;
   }
 
   return (
-    <SidebarProvider>
+    <SidebarProvider className="h-svh overflow-hidden">
       <Sidebar />
-      <SidebarInset>
+      <SidebarInset className="min-h-0">
         <SidebarTrigger className="m-2" />
         <main className="flex-1 overflow-y-auto">
           {children}
