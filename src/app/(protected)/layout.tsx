@@ -1,16 +1,7 @@
-'use client';
-import { ReactNode } from 'react';
-import { usePathname } from 'next/navigation';
-import { Sidebar } from './Sidebar';
+import { Sidebar } from './_components/Sidebar';
 import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 
-export default function LayoutShell({ children }: { children: ReactNode }) {
-  const pathname = usePathname();
-
-  if (pathname === '/' || pathname === '/login') {
-    return <main className="h-svh overflow-y-auto">{children}</main>;
-  }
-
+export default function ProtectedLayout({ children }: { children: React.ReactNode }) {
   return (
     <SidebarProvider className="h-svh overflow-hidden">
       <Sidebar />

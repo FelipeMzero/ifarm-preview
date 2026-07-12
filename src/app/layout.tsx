@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import LayoutShell from "./_components/LayoutShell";
 import { cn } from "@/lib/utils";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -32,9 +31,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     <html lang="pt-BR" className={`${geistSans.variable} ${geistMono.variable} ${fontHeading.variable}`}>
       <body className="bg-background text-foreground">
         <TooltipProvider>
-          <LayoutShell>
-            {children}
-          </LayoutShell>
+          {children}
           <Toaster />
         </TooltipProvider>
       </body>
