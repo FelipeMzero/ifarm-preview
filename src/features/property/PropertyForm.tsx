@@ -23,6 +23,7 @@ import { PropertyFormData, propertyFormSchema } from "./schema";
 import { Separator } from "@/components/ui/separator";
 import { BR_STATE_ITEMS } from "@/lib/br-states";
 import { cn } from "@/lib/utils";
+import { LocationPickerDialog } from "./LocationPickerDialog";
 
 
 
@@ -57,14 +58,18 @@ function getTilePosition(lat: number, lon: number, zoom: number) {
   };
 }
 
-function MapPreview({ latitude, longitude, className }: { latitude: string; longitude: string; className?: string }) {
+function MapPreview({ latitude, longitude, className, onDoubleClick }: { latitude: string; longitude: string; className?: string; onDoubleClick?: () => void }) {
   const hasInput = !!latitude || !!longitude;
   const isValid = !!latitude && !!longitude && isValidCoordinate(latitude, longitude);
 
   return (
     <div className={cn("flex min-w-0 flex-col gap-2", className)}>
-      <span className="text-muted-foreground text-xs">LOCALIZAÇÃO NO MAPA</span>
-      <div className="relative w-full flex-1 overflow-hidden rounded-lg border border-input bg-input/40">
+      {/* <span className="text-muted-foreground text-xs">LOCALIZAÇÃO NO MAPA</span> */}
+      <div
+        className="relative w-full flex-1 cursor-pointer overflow-hidden rounded-lg border border-input bg-input/40"
+        onDoubleClick={onDoubleClick}
+        title="Clique duas vezes para escolher no mapa"
+      >
         {isValid ? (
           (() => {
             const { tileX, tileY, markerLeftPct, markerTopPct } = getTilePosition(Number(latitude), Number(longitude), MAP_TILE_ZOOM);
@@ -158,6 +163,7 @@ export default function PropertyForm({ id, title, onCancel, onSuccess }: Propert
 
   const latitude = watch("latitude");
   const longitude = watch("longitude");
+  const [isPickerOpen, setIsPickerOpen] = useState(false);
 
   useEffect(() => {
     async function loadData() {
@@ -412,7 +418,11 @@ export default function PropertyForm({ id, title, onCancel, onSuccess }: Propert
               <Input {...field} id={fieldId} type="number" step="any" placeholder="Ex: -56.0979" />
             )}
           />
-          <MapPreview latitude={latitude ?? ""} longitude={longitude ?? ""} />
+          <MapPreview
+            latitude={latitude ?? ""}
+            longitude={longitude ?? ""}
+            onDoubleClick={() => setIsPickerOpen(true)}
+          />
         </FieldRow>
       </div >
 
@@ -422,6 +432,17 @@ export default function PropertyForm({ id, title, onCancel, onSuccess }: Propert
           Salvar
         </Button>
       </FormActionBar>
+
+      <LocationPickerDialog
+        open={isPickerOpen}
+        onOpenChange={setIsPickerOpen}
+        latitude={latitude ? Number(latitude) : null}
+        longitude={longitude ? Number(longitude) : null}
+        onConfirm={(lat, lon) => {
+          setValue("latitude", lat.toFixed(6), { shouldValidate: true });
+          setValue("longitude", lon.toFixed(6), { shouldValidate: true });
+        }}
+      />
 
     </form >
   );
