@@ -70,9 +70,62 @@ async function seedPeople() {
   }
 }
 
+async function seedProperties() {
+  const properties = [
+    {
+      name: "Fazenda Santa Rita",
+      ownerTaxId: "11122233477", // Carlos Eduardo Silva
+      totalArea: 120,
+      productiveArea: 95,
+      cib: "SR12345-6",
+      address: {
+        zipCode: "38400000",
+        street: "Rodovia BR-050, km 12",
+        city: "Uberlândia",
+        state: "MG",
+        country: "Brasil",
+      },
+    },
+    {
+      name: "Fazenda Boa Vista",
+      ownerTaxId: "11122233000183", // Agropecuária Boa Vista Ltda
+      totalArea: 340,
+      productiveArea: 300,
+      ccir: "123.456.789.012-3",
+      address: {
+        zipCode: "78000000",
+        street: "Rodovia MT-040, km 25",
+        city: "Cuiabá",
+        state: "MT",
+        country: "Brasil",
+      },
+    },
+  ];
+
+  for (const { ownerTaxId, address, ...property } of properties) {
+    const existing = await prisma.property.findFirst({ where: { name: property.name } });
+    if (existing) {
+      console.log(`- propriedade ${property.name} já existe, pulando`);
+      continue;
+    }
+
+    const owner = await prisma.person.findUnique({ where: { taxId: ownerTaxId } });
+    if (!owner) {
+      console.log(`- titular (taxId ${ownerTaxId}) não encontrado, pulando propriedade ${property.name}`);
+      continue;
+    }
+
+    await prisma.property.create({
+      data: { ...property, owner: { connect: { id: owner.id } }, address: { create: address } },
+    });
+    console.log(`- propriedade ${property.name} criada`);
+  }
+}
+
 async function main() {
   await seedAdmin();
   await seedPeople();
+  await seedProperties();
 }
 
 main()
