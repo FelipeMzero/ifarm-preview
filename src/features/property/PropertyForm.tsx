@@ -64,7 +64,7 @@ function MapPreview({ latitude, longitude, className, onDoubleClick }: { latitud
 
   return (
     <div className={cn("flex min-w-0 flex-col gap-2", className)}>
-      {/* <span className="text-muted-foreground text-xs">LOCALIZAÇÃO NO MAPA</span> */}
+      <span className="text-muted-foreground text-xs">LOCALIZAÇÃO NO MAPA</span>
       <div
         className="relative w-full flex-1 cursor-pointer overflow-hidden rounded-lg border border-input bg-input/40"
         onDoubleClick={onDoubleClick}
