@@ -3,6 +3,7 @@ allowBuilds:
   core-js-pure: false
   esbuild: false
   prisma: false
+  puppeteer: true
   sharp: false
   unrs-resolver: false
 ignoredBuiltDependencies:
