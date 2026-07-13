@@ -12,6 +12,12 @@ import {
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
   Sidebar as SidebarPrimitive,
   SidebarContent,
   SidebarFooter,
@@ -26,6 +32,7 @@ import {
 import { signOut, useSession } from '@/lib/auth-client';
 import { ChangePasswordDialog } from './ChangePasswordDialog';
 import { PropertySwitcher } from './PropertySwitcher';
+import { ThemeToggle } from './ThemeToggle';
 import { PropertyOption } from '@/features/property/services';
 
 const NAV = [
@@ -156,18 +163,31 @@ export function Sidebar({ initialProperty, initialPropertyOptions }: SidebarProp
         <SidebarMenu>
           <SidebarMenuItem>
             <div className="flex items-center gap-2 rounded-lg p-2">
-              <Avatar className="size-8 rounded-lg">
-                <AvatarFallback className="bg-primary text-primary-foreground">
-                  {getInitials(user?.name)}
-                </AvatarFallback>
-              </Avatar>
-              <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-medium">{user?.name ?? '—'}</span>
-                <span className="truncate text-xs text-muted-foreground">{user?.email ?? ''}</span>
-              </div>
-              <Button variant="ghost" size="icon-sm" title="Alterar senha" onClick={() => setChangingPassword(true)}>
-                <KeyRound className="size-4" />
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    type="button"
+                    className="flex min-w-0 flex-1 items-center gap-2 rounded-lg text-left outline-hidden focus-visible:ring-2 focus-visible:ring-sidebar-ring"
+                  >
+                    <Avatar className="size-8 rounded-lg">
+                      <AvatarFallback className="bg-primary text-primary-foreground">
+                        {getInitials(user?.name)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="grid min-w-0 flex-1 text-left text-sm leading-tight">
+                      <span className="truncate font-medium">{user?.name ?? '—'}</span>
+                      <span className="truncate text-xs text-muted-foreground">{user?.email ?? ''}</span>
+                    </div>
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-48">
+                  <DropdownMenuItem onSelect={() => setChangingPassword(true)}>
+                    <KeyRound className="size-4" />
+                    <span>Alterar senha</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+              <ThemeToggle />
               <Button variant="ghost" size="icon-sm" title="Sair" onClick={handleLogout}>
                 <LogOut className="size-4" />
               </Button>
