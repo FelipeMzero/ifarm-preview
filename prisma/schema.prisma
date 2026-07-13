@@ -109,9 +109,9 @@ model Property {
   name           String
   totalArea      Float?  @map("total_area")      // Área Total (ha)
   productiveArea Float?  @map("productive_area")  // Área Produtiva (ha)
+  car            String? @unique                  // Cadastro Ambiental Rural
   cib            String? @unique                  // Cadastro Imobiliário Brasileiro
   ccir           String? @unique                  // Certificado de Cadastro de Imóvel Rural (INCRA)
-  car            String? @unique                  // Cadastro Ambiental Rural
   latitude       Float?
   longitude      Float?
 

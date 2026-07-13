@@ -321,6 +321,10 @@ export default function PropertyForm({ id, title, onCancel, onSuccess }: Propert
         </FieldRow>
 
         <FieldRow cols={3}>
+          <FormField name="car" label="CAR"
+            control={control}
+            render={({ field, id: fieldId }) => <Input {...field} id={fieldId} placeholder="Ex: MT-5107909-E8C2..." />}
+          />
           <FormField name="cib" label="CIB"
             control={control}
             render={({ field, id: fieldId }) => <Input {...field} id={fieldId} placeholder="Ex: ABC1234-5" />}
@@ -328,10 +332,6 @@ export default function PropertyForm({ id, title, onCancel, onSuccess }: Propert
           <FormField name="ccir" label="CCIR"
             control={control}
             render={({ field, id: fieldId }) => <Input {...field} id={fieldId} placeholder="Ex: 999.999.999.999-9" />}
-          />
-          <FormField name="car" label="CAR"
-            control={control}
-            render={({ field, id: fieldId }) => <Input {...field} id={fieldId} placeholder="Ex: MT-5107909-E8C2..." />}
           />
         </FieldRow>
       </FieldSet>
