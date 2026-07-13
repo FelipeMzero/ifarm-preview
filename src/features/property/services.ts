@@ -21,8 +21,9 @@ export type PropertyRow = {
 };
 
 const API_ENDPOINTS = {
-  PROPERTIES: "/api/propriedades",
-  PROPERTY_BY_ID: (id: string) => `/api/propriedades/${id}`,
+  PROPERTIES: "/api/property",
+  PROPERTY_BY_ID: (id: string) => `/api/property/${id}`,
+  PROPERTY_OPTIONS: "/api/property/options",
 } as const;
 
 export async function createProperty(data: PropertyFormData) {
@@ -120,7 +121,7 @@ export type PropertyOption = {
 };
 
 export async function getPropertyOptions(): Promise<PropertyOption[]> {
-  const response = await fetch(`${API_ENDPOINTS.PROPERTIES}/opcoes`);
+  const response = await fetch(API_ENDPOINTS.PROPERTY_OPTIONS);
   const result = await response.json();
 
   if (!response.ok) {

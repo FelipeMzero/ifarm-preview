@@ -9,7 +9,7 @@ export type CurrentPropertyDetails = {
 };
 
 export async function getCurrentPropertyDetails(): Promise<CurrentPropertyDetails | null> {
-  const response = await fetch("/api/usuarios/propriedade-atual/detalhes");
+  const response = await fetch("/api/user/current-property/details");
   const result = await response.json();
 
   if (!response.ok) {

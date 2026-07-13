@@ -22,8 +22,8 @@ export type PersonRow = {
 };
 
 const API_ENDPOINTS = {
-  PEOPLE: "/api/pessoas",
-  PERSON_BY_ID: (id: string) => `/api/pessoas/${id}`,
+  PEOPLE: "/api/person",
+  PERSON_BY_ID: (id: string) => `/api/person/${id}`,
 } as const;
 
 export async function createPerson(data: PersonFormData) {

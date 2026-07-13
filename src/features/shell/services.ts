@@ -1,6 +1,6 @@
 import { PropertyOption } from "@/features/property/services";
 
-const CURRENT_PROPERTY_ENDPOINT = "/api/usuarios/propriedade-atual";
+const CURRENT_PROPERTY_ENDPOINT = "/api/user/current-property";
 
 export async function getCurrentProperty(): Promise<PropertyOption | null> {
   const response = await fetch(CURRENT_PROPERTY_ENDPOINT);

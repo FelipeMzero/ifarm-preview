@@ -25,9 +25,9 @@ export type AnimalRow = {
 };
 
 const API_ENDPOINTS = {
-  ANIMALS: "/api/animais",
-  ANIMAL_BY_ID: (id: string) => `/api/animais/${id}`,
-  METADATA: "/api/metadados",
+  ANIMALS: "/api/animal",
+  ANIMAL_BY_ID: (id: string) => `/api/animal/${id}`,
+  METADATA: "/api/metadata",
 } as const;
 
 export type Breed = { id: number; name: string };
