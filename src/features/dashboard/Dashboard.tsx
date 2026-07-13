@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorPage } from "@/components/our/ErrorPage";
+import { useCurrentProperty } from "@/features/shell/CurrentPropertyProvider";
 import { getCurrentPropertyDetails, CurrentPropertyDetails } from "./services";
 
 function DashboardSkeleton() {
@@ -22,11 +23,14 @@ function DashboardSkeleton() {
 }
 
 export default function Dashboard() {
+  const { property: currentProperty, isLoading: isCurrentPropertyLoading } = useCurrentProperty();
   const [property, setProperty] = useState<CurrentPropertyDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (isCurrentPropertyLoading) return;
+
     let cancelled = false;
 
     async function load() {
@@ -43,7 +47,8 @@ export default function Dashboard() {
 
     load();
     return () => { cancelled = true; };
-  }, []);
+    // Refaz a busca sempre que a propriedade selecionada mudar (trocada no seletor da sidebar).
+  }, [currentProperty?.id, isCurrentPropertyLoading]);
 
   if (error) {
     return <ErrorPage message="Não foi possível obter os dados da propriedade." onRetry={() => window.location.reload()} />;

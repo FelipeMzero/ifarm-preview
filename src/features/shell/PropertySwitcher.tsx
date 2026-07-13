@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { CheckIcon, ChevronsUpDown, Tractor } from "lucide-react";
 import { toast } from "sonner";
 
@@ -13,46 +12,18 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { getPropertyOptions, PropertyOption } from "@/features/property/services";
-import { getCurrentProperty, setCurrentProperty } from "./services";
+import { useCurrentProperty } from "./CurrentPropertyProvider";
 
 export function PropertySwitcher() {
-  const router = useRouter();
-  const [property, setProperty] = useState<PropertyOption | null>(null);
-  const [options, setOptions] = useState<PropertyOption[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { property, options, isLoading, select, refresh } = useCurrentProperty();
   const [isSelecting, setIsSelecting] = useState(false);
-
-  async function refreshOptions() {
-    try {
-      const [freshOptions, freshProperty] = await Promise.all([getPropertyOptions(), getCurrentProperty()]);
-      setOptions(freshOptions);
-      setProperty(freshProperty);
-    } catch {
-      // mantém os dados já carregados em caso de falha na atualização
-    }
-  }
-
-  useEffect(() => {
-    let cancelled = false;
-
-    async function load() {
-      await refreshOptions();
-      if (!cancelled) setIsLoading(false);
-    }
-
-    load();
-    return () => { cancelled = true; };
-  }, []);
 
   async function handleSelect(propertyId: string) {
     if (propertyId === property?.id || isSelecting) return;
 
     setIsSelecting(true);
     try {
-      const updated = await setCurrentProperty(propertyId);
-      setProperty(updated);
-      router.refresh();
+      await select(propertyId);
     } catch {
       toast.error("Não foi possível trocar de propriedade.");
     } finally {
@@ -79,7 +50,7 @@ export function PropertySwitcher() {
   }
 
   return (
-    <DropdownMenu onOpenChange={(open) => open && refreshOptions()}>
+    <DropdownMenu onOpenChange={(open) => open && refresh()}>
       <DropdownMenuTrigger asChild>
         <SidebarMenuButton
           size="sm"
