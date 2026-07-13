@@ -111,3 +111,21 @@ export async function getProperties(params: {
 
   return result;
 }
+
+
+
+export type PropertyOption = {
+  id: string;
+  name: string;
+};
+
+export async function getPropertyOptions(): Promise<PropertyOption[]> {
+  const response = await fetch(`${API_ENDPOINTS.PROPERTIES}/opcoes`);
+  const result = await response.json();
+
+  if (!response.ok) {
+    throw new Error(result.message);
+  }
+
+  return result.data;
+}

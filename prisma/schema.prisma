@@ -125,9 +125,27 @@ model Property {
   updatedAt DateTime  @updatedAt @map("updated_at")
   deletedAt DateTime? @map("deleted_at")
 
+  selectedByUserSettings UserSettings[]
+
   @@index([name])
   @@index([ownerId])
   @@map("property")
+}
+
+// Preferências do usuário que devem persistir entre logins/dispositivos (ex: propriedade
+// atual, e futuramente outras como tema).
+model UserSettings {
+  id     String @id @default(uuid())
+  userId String @unique @map("user_id")
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  currentPropertyId String?   @map("current_property_id")
+  currentProperty   Property? @relation(fields: [currentPropertyId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("user_settings")
 }
 
 
@@ -219,6 +237,7 @@ model User {
 
   sessions Session[]
   accounts Account[]
+  settings UserSettings?
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")

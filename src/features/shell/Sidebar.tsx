@@ -25,6 +25,8 @@ import {
 } from '@/components/ui/sidebar';
 import { signOut, useSession } from '@/lib/auth-client';
 import { ChangePasswordDialog } from './ChangePasswordDialog';
+import { PropertySwitcher } from './PropertySwitcher';
+import { PropertyOption } from '@/features/property/services';
 
 const NAV = [
   {
@@ -63,7 +65,12 @@ function getInitials(name?: string | null): string {
     .join('');
 }
 
-export function Sidebar() {
+type SidebarProps = {
+  initialProperty: PropertyOption | null;
+  initialPropertyOptions: PropertyOption[];
+};
+
+export function Sidebar({ initialProperty, initialPropertyOptions }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const { data: session } = useSession();
@@ -94,6 +101,9 @@ export function Sidebar() {
               </div>
               <span className="text-sm font-semibold">iFarm</span>
             </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <PropertySwitcher initialProperty={initialProperty} initialOptions={initialPropertyOptions} />
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
