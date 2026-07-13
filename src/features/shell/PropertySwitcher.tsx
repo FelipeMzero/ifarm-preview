@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { CheckIcon, ChevronsUpDown, Tractor } from "lucide-react";
 import { toast } from "sonner";
@@ -14,17 +14,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { getPropertyOptions, PropertyOption } from "@/features/property/services";
-import { getCurrentProperty, setCurrentProperty } from "./current-property-services";
+import { getCurrentProperty, setCurrentProperty } from "./services";
 
-type PropertySwitcherProps = {
-  initialProperty: PropertyOption | null;
-  initialOptions: PropertyOption[];
-};
-
-export function PropertySwitcher({ initialProperty, initialOptions }: PropertySwitcherProps) {
+export function PropertySwitcher() {
   const router = useRouter();
-  const [property, setProperty] = useState(initialProperty);
-  const [options, setOptions] = useState(initialOptions);
+  const [property, setProperty] = useState<PropertyOption | null>(null);
+  const [options, setOptions] = useState<PropertyOption[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [isSelecting, setIsSelecting] = useState(false);
 
   async function refreshOptions() {
@@ -36,6 +32,18 @@ export function PropertySwitcher({ initialProperty, initialOptions }: PropertySw
       // mantém os dados já carregados em caso de falha na atualização
     }
   }
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function load() {
+      await refreshOptions();
+      if (!cancelled) setIsLoading(false);
+    }
+
+    load();
+    return () => { cancelled = true; };
+  }, []);
 
   async function handleSelect(propertyId: string) {
     if (propertyId === property?.id || isSelecting) return;
@@ -50,6 +58,15 @@ export function PropertySwitcher({ initialProperty, initialOptions }: PropertySw
     } finally {
       setIsSelecting(false);
     }
+  }
+
+  if (isLoading) {
+    return (
+      <SidebarMenuButton size="sm" disabled className="text-muted-foreground">
+        <Tractor className="size-3.5" />
+        <span className="truncate text-xs">Carregando...</span>
+      </SidebarMenuButton>
+    );
   }
 
   if (options.length === 0) {

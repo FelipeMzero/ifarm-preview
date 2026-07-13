@@ -40,7 +40,7 @@ export default function LoginPage() {
       return;
     }
 
-    router.replace("/animais");
+    router.replace("/painel");
     router.refresh();
   }
 

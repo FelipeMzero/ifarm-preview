@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Beef, ChevronRight, KeyRound, LogOut, Tractor, UserCog, Users } from 'lucide-react';
+import { Beef, ChevronRight, KeyRound, LayoutDashboard, LogOut, Tractor, UserCog, Users } from 'lucide-react';
 import {
   Collapsible,
   CollapsibleContent,
@@ -33,7 +33,6 @@ import { signOut, useSession } from '@/lib/auth-client';
 import { ChangePasswordDialog } from './ChangePasswordDialog';
 import { PropertySwitcher } from './PropertySwitcher';
 import { ThemeToggle } from './ThemeToggle';
-import { PropertyOption } from '@/features/property/services';
 
 const NAV = [
   {
@@ -72,12 +71,7 @@ function getInitials(name?: string | null): string {
     .join('');
 }
 
-type SidebarProps = {
-  initialProperty: PropertyOption | null;
-  initialPropertyOptions: PropertyOption[];
-};
-
-export function Sidebar({ initialProperty, initialPropertyOptions }: SidebarProps) {
+export function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const { data: session } = useSession();
@@ -110,12 +104,21 @@ export function Sidebar({ initialProperty, initialPropertyOptions }: SidebarProp
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
-            <PropertySwitcher initialProperty={initialProperty} initialOptions={initialPropertyOptions} />
+            <PropertySwitcher />
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
         <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild isActive={pathname === '/painel'}>
+              <Link href="/painel">
+                <LayoutDashboard />
+                <span>Painel</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+
           {visibleNav.map(({ label, icon: Icon, items }) => {
             const isGroupActive = items.some((item) => pathname.startsWith(item.href));
 

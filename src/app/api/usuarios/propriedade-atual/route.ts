@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/api-auth";
-import { getOrAssignCurrentProperty } from "@/lib/current-property";
+import { getOrAssignCurrentProperty } from "./currentProperty";
 
 const bodySchema = z.object({
   propertyId: z.string().min(1, "Este campo não pode ser vazio"),

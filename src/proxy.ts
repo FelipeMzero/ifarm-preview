@@ -14,7 +14,7 @@ export async function proxy(request: NextRequest) {
   }
 
   if (sessionCookie && pathname === "/login") {
-    return NextResponse.redirect(new URL("/animais", request.url));
+    return NextResponse.redirect(new URL("/painel", request.url));
   }
 
   // Checagem otimista de papel (via cookie cache, sem consulta ao banco). A autorização
@@ -25,7 +25,7 @@ export async function proxy(request: NextRequest) {
 
     for (const [resource, { forbiddenRoles }] of Object.entries(RESOURCE_ACCESS)) {
       if (pathname.startsWith(`/${resource}`) && (forbiddenRoles as readonly string[]).includes(role)) {
-        return NextResponse.redirect(new URL("/animais", request.url));
+        return NextResponse.redirect(new URL("/painel", request.url));
       }
     }
   }
