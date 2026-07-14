@@ -122,10 +122,26 @@ async function seedProperties() {
   }
 }
 
+async function seedBreeds() {
+  const breeds = ["Nelore", "Brahman", "Gir", "Guzerá", "Tabapuã"];
+
+  for (const name of breeds) {
+    const existing = await prisma.breed.findUnique({ where: { name } });
+    if (existing) {
+      console.log(`- raça ${name} já existe, pulando`);
+      continue;
+    }
+
+    await prisma.breed.create({ data: { name } });
+    console.log(`- raça ${name} criada`);
+  }
+}
+
 async function main() {
   await seedAdmin();
   await seedPeople();
   await seedProperties();
+  await seedBreeds();
 }
 
 main()

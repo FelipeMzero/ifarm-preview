@@ -10,6 +10,7 @@ export const animalApiSchema = z.object({
   name:              z.string().optional().transform(v => v || null),
   motherId:          z.string().optional().transform(v => v || null),
   fatherId:          z.string().optional().transform(v => v || null),
+  breedId:           z.string().optional().transform(v => v || null),
   originFarmName:    z.string().optional().transform(v => v || null),
 
   sex:               z.preprocess( v => v === "" ? undefined : v, z.enum(Sex).optional()),
@@ -18,7 +19,6 @@ export const animalApiSchema = z.object({
 
   birthDate:         z.string().optional().transform(v => v ? new Date(`${v}T00:00:00`) : null),
   birthWeightKg:     z.string().optional().transform(v => v ? parseFloat(v) : null),
-  breedId:           z.string().optional().transform(v => v ? parseInt(v) : null),
   batchId:           z.string().optional().transform(v => v ? parseInt(v) : null),
   originFarmId:      z.string().optional().transform(v => v ? parseInt(v) : null),
   acquisitionDate:   z.string().optional().transform(v => v ? new Date(`${v}T00:00:00`) : null),
@@ -153,3 +153,11 @@ export const propertyQuerySchema = z.object({
 });
 
 export type PropertyQueryData = z.infer<typeof propertyQuerySchema>;
+
+
+
+export const breedApiSchema = z.object({
+  name: z.string().min(1, "Este campo não pode ser vazio"),
+});
+
+export type BreedApiData = z.infer<typeof breedApiSchema>;

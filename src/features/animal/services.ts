@@ -30,7 +30,7 @@ const API_ENDPOINTS = {
   METADATA: "/api/metadata",
 } as const;
 
-export type Breed = { id: number; name: string };
+export type Breed = { id: string; name: string };
 export type Batch = { id: number; name: string };
 export type Farm = { id: number; name: string };
 export type AnimalSummary = { id: string; earTag: string; rfid: string | null; sex: string };

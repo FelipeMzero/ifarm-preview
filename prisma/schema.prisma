@@ -109,6 +109,19 @@ model UserSettings {
   @@map("user_settings")
 }
 
+model Breed {
+  id      String   @id @default(uuid()) @db.Uuid
+  name    String   @unique
+  animals Animal[]
+
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+  deletedAt     DateTime? @map("deleted_at")
+  deactivatedAt DateTime? @map("deactivated_at")
+
+  @@map("breed")
+}
+
 
 
 // Enums
@@ -169,13 +182,6 @@ enum MaritalStatus {
 
 
 // Não validados
-model Breed {
-  id      Int      @id @default(autoincrement())
-  name    String   @unique
-  animals Animal[]
-
-  @@map("breed")
-}
 
 model Batch {
   id      Int      @id @default(autoincrement())
@@ -204,8 +210,8 @@ model Animal {
   origin         AnimalOrigin @default(BIRTH)
   status         AnimalStatus @default(ACTIVE)
 
-  breedId Int?   @map("breed_id")
-  breed   Breed? @relation(fields: [breedId], references: [id])
+  breedId String? @map("breed_id") @db.Uuid
+  breed   Breed?  @relation(fields: [breedId], references: [id])
 
   batchId Int?   @map("batch_id")
   batch   Batch? @relation(fields: [batchId], references: [id])

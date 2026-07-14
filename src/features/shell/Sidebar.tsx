@@ -41,6 +41,7 @@ const NAV = [
     items: [
       { href: '/animais/novo', label: 'Novo Animal' },
       { href: '/animais', label: 'Gestão de Animais' },
+      { href: '/racas', label: 'Raças' },
     ],
   },
   {

@@ -8,7 +8,7 @@ export async function GET(_request: NextRequest) {
 
   try {
     const [breeds, batches, farms, availableFarmAnimals] = await Promise.all([
-      prisma.breed.findMany({ orderBy: { name: "asc" } }),
+      prisma.breed.findMany({ where: { deletedAt: null, deactivatedAt: null }, orderBy: { name: "asc" } }),
       prisma.batch.findMany({ orderBy: { name: "asc" } }),
       prisma.farm.findMany({ orderBy: { name: "asc" } }),
       prisma.animal.findMany({
