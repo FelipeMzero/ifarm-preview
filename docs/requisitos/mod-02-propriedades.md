@@ -2,7 +2,7 @@
 
 Módulo responsável pelo gerenciamento dos dados das propriedades (fazendas). O módulo deve possibilitar consulta, criação e alteração dos dados das propriedades que serão gerenciadas.
 
-O sistema deve tratar as propriedades de forma independente, ou seja, cada propriedade terá suas próprias áreas, lotes e animais. Por outro lado, pode haver transações entre entre propriedades, como a transferência de animais de uma fazenda para outra, por exemplo. Por isso, é importante que a propriedade esteja bem definida.
+O sistema deve tratar as propriedades de forma independente, ou seja, cada propriedade terá suas próprias áreas, lotes e animais. Por outro lado, pode haver transações entre propriedades, como a transferência de animais de uma fazenda para outra, por exemplo. Por isso, é importante que a propriedade esteja bem definida.
 
 Os dados identificados para propriedades são:
 
@@ -110,18 +110,18 @@ Tela com um formulário destinada ao cadastro de propriedades (fazendas), viabil
 **Cenário 2: Tentativa de cadastro com área produtiva maior que a área total**
 * **Dado que** o Gerente informou uma `Área Produtiva` maior que a `Área Total`;
 * **Quando** ele acionar a ação de "Salvar";
-* **Então** o sistema deve impedir a gravação e destacar o campo `Área Produtiva` exibindo o alerta: *"A área produtiva não pode ser maior que a área total."* (Aplica `RN-PROPRIEDADE-03`).
+* **Então** o sistema deve impedir a gravação e destacar o campo `Área Produtiva` exibindo o erro: *"A área produtiva não pode ser maior que a área total."* (Aplica `RN-PROPRIEDADE-03`).
 
 **Cenário 3: Tentativa de cadastro com documento fundiário duplicado**
 * **Dado que** o Gerente informou um `CIB`, `CCIR` ou `CAR` que já pertence a outra propriedade registrada;
 * **Quando** ele acionar a ação de "Salvar";
-* **Então** o sistema deve impedir a gravação e destacar o campo duplicado exibindo o alerta: *"Este valor já está em uso."* (Aplica `RN-PROPRIEDADE-01`).
+* **Então** o sistema deve impedir a gravação e destacar o campo duplicado exibindo o erro: *"Este valor já está em uso."* (Aplica `RN-PROPRIEDADE-01`).
 
 **Cenário 4: Tentativa de cadastro com campos obrigatórios ausentes**
 * **Dado que** o Gerente está na interface de cadastro de propriedades;
 * **E** deixou de preencher um ou mais campos obrigatórios (como `Nome` ou `Titular`);
 * **Quando** ele acionar a ação de "Salvar";
-* **Então** o sistema deve impedir a gravação, manter os dados já digitados no formulário e destacar visualmente os campos ausentes com uma mensagem de alerta (ex: *"Este campo é obrigatório"*).
+* **Então** o sistema deve impedir a gravação, manter os dados já digitados no formulário e destacar visualmente os campos ausentes com uma mensagem de erro (ex: *"Este campo é obrigatório"*).
 
 </div>
 
@@ -158,25 +158,25 @@ Tela com formulário destinado à edição dos dados cadastrais de uma proprieda
 **Cenário 2: Tentativa de atualização com área produtiva maior que a área total**
 * **Dado que** o Gerente alterou a `Área Produtiva` para um valor maior que a `Área Total`;
 * **Quando** ele acionar a ação de "Salvar";
-* **Então** o sistema deve impedir a gravação e destacar o campo `Área Produtiva` exibindo o alerta: *"A área produtiva não pode ser maior que a área total."* (Aplica `RN-PROPRIEDADE-03`).
+* **Então** o sistema deve impedir a gravação e destacar o campo `Área Produtiva` exibindo o erro: *"A área produtiva não pode ser maior que a área total."* (Aplica `RN-PROPRIEDADE-03`).
 
 **Cenário 3: Tentativa de atualização com documento fundiário duplicado**
 * **Dado que** o Gerente alterou o `CIB`, `CCIR` ou `CAR` para um valor que já pertence a outra propriedade registrada;
 * **Quando** ele acionar a ação de "Salvar";
-* **Então** o sistema deve impedir a gravação e destacar o campo duplicado exibindo o alerta: *"Este valor já está em uso."* (Aplica `RN-PROPRIEDADE-01`).
+* **Então** o sistema deve impedir a gravação e destacar o campo duplicado exibindo o erro: *"Este valor já está em uso."* (Aplica `RN-PROPRIEDADE-01`).
 
 **Cenário 4: Tentativa de atualização com campos obrigatórios ausentes**
 * **Dado que** o Gerente está na tela de edição de uma propriedade já cadastrada;
 * **E** removeu o preenchimento de um ou mais campos obrigatórios (como `Nome` ou `Titular`);
 * **Quando** ele acionar a ação de "Salvar";
-* **Então** o sistema deve impedir a gravação, manter os dados já digitados no formulário e destacar visualmente os campos ausentes com uma mensagem de alerta (ex: *"Este campo é obrigatório"*).
+* **Então** o sistema deve impedir a gravação, manter os dados já digitados no formulário e destacar visualmente os campos ausentes com uma mensagem de erro (ex: *"Este campo é obrigatório"*).
 
 </div>
 
 
 
 
-## 🚧 2.4 - `RF-PROPRIEDADE-04`: Detalhes da Propriedade
+## 🚧 2.4 - `RF-PROPRIEDADE-04`: Detalhes da Propriedade (INCOMPLETO)
 <div style="border:1px solid #ccc; padding:16px; border-radius:8px;">
 
 ### 2.4.1 - Descrição

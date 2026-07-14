@@ -124,18 +124,18 @@ Tela com um formulário destinada ao cadastro de pessoas físicas ou jurídicas,
 **Cenário 2: Tentativa de cadastro com documento inválido**
 * **Dado que** o Gerente informou um CPF ou CNPJ com numeração matematicamente inválida;
 * **Quando** ele acionar a ação de "Salvar";
-* **Então** o sistema deve impedir a gravação e destarcar o campo documento exibindo o alerta: *"Valor inválido."* (Aplica `RN-PESSOA-01`).
+* **Então** o sistema deve impedir a gravação e destarcar o campo documento exibindo o erro: *"Valor inválido."* (Aplica `RN-PESSOA-01`).
 
 **Cenário 3: Tentativa de cadastro com campo duplicado**
 * **Dado que** o Gerente informou um CPF ou CNPJ que já pertence a outra pessoa registrada;
 * **Quando** ele acionar a ação de "Salvar";
-* **Então** o sistema deve impedir a gravação e destacar o campo duplicado exibindo o alerta: *"Este valor já está em uso."* (Aplica `RN-PESSOA-02`).
+* **Então** o sistema deve impedir a gravação e destacar o campo duplicado exibindo o erro: *"Este valor já está em uso."* (Aplica `RN-PESSOA-02`).
 
 **Cenário 4: Tentativa de cadastro com campos obrigatórios ausentes**
 * **Dado que** o Gerente está na interface de cadastro de pessoas;
 * **E** deixou de preencher um ou mais campos obrigatórios (como `Tipo`, `Documento` ou `Nome/Razão Social`);
 * **Quando** ele acionar a ação de "Salvar";
-* **Então** o sistema deve impedir a gravação, manter os dados já digitados no formulário e destacar visualmente os campos ausentes com uma mensagem de alerta (ex: *"Este campo é obrigatório"*).
+* **Então** o sistema deve impedir a gravação, manter os dados já digitados no formulário e destacar visualmente os campos ausentes com uma mensagem de erro (ex: *"Este campo é obrigatório"*).
 
 </div>
 
@@ -180,20 +180,20 @@ Tela com formulário destinado à edição dos dados cadastrais de uma pessoa f�
 **Cenário 3: Tentativa de cadastro com campo duplicado**
 * **Dado que** o Gerente informou um CPF ou CNPJ que já pertence a outra pessoa registrada;
 * **Quando** ele acionar a ação de "Salvar";
-* **Então** o sistema deve impedir a gravação e destacar o campo duplicado exibindo o alerta: *"Este valor já está em uso."* (Aplica `RN-PESSOA-02`).
+* **Então** o sistema deve impedir a gravação e destacar o campo duplicado exibindo o erro: *"Este valor já está em uso."* (Aplica `RN-PESSOA-02`).
 
 **Cenário 4: Tentativa de cadastro com campos obrigatórios ausentes**
 * **Dado que** o Gerente está na interface de cadastro de pessoas;
 * **E** deixou de preencher um ou mais campos obrigatórios (como `Tipo`, `Documento` ou `Nome/Razão Social`);
 * **Quando** ele acionar a ação de "Salvar";
-* **Então** o sistema deve impedir a gravação, manter os dados já digitados no formulário e destacar visualmente os campos ausentes com uma mensagem de alerta (ex: *"Este campo é obrigatório"*).
+* **Então** o sistema deve impedir a gravação, manter os dados já digitados no formulário e destacar visualmente os campos ausentes com uma mensagem de erro (ex: *"Este campo é obrigatório"*).
 
 </div>
 
 
 
 
-## 🚧 2.4 - `RF-PESSOA-04`: Detalhes da Pessoa
+## 🚧 2.4 - `RF-PESSOA-04`: Detalhes da Pessoa (INCOMPLETO)
 <div style="border:1px solid #ccc; padding:16px; border-radius:8px;">
 
 ### 2.4.1 - Descrição

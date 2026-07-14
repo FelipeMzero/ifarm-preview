@@ -53,8 +53,7 @@ erDiagram
   
 
   "user_settings" {
-    String id "🗝️"
-    String user_id 
+    String user_id "🗝️"
     String current_property_id "❓"
     DateTime created_at 
     DateTime updated_at 

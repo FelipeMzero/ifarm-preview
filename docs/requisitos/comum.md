@@ -20,5 +20,8 @@ Endereços para propriedades, compradores, fornecedores ou qualquer outra entida
 
 
 
-Soft Delete
-Toda entidade do banco que está registrada em alguma movimentação não pode ser efetivamente removido do banco, por isso será usada a estratégia de soft delete
+## Soft Delete
+Toda entidade do banco que está registrada em alguma movimentação não pode ser efetivamente removido do banco, por isso será usada a estratégia de soft delete. Para cada entidade terá que ser verificada a regra que permite ou proíbe a sua exclusão.
+
+## Propriedade selecionada
+O sistema deve ter selecionado a propridade no qual todas as movimentações serão vinculadas. A seleção deve ocorrer no cabeçalho da barra lateral.
