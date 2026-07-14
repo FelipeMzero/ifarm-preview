@@ -18,7 +18,7 @@ Os dados identificados para raças são:
 
 # 2 - Requisitos Funcionais (RF)
 
-## 2.1 - `RF-RACA-01`: Gerenciar Raças
+## ✅ 2.1 - `RF-RACA-01`: Gerenciar Raças
 <div style="border:1px solid #ccc; padding:16px; border-radius:8px;">
 
 ### 2.1.1 - Descrição

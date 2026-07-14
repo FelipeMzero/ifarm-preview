@@ -14,7 +14,7 @@ datasource db {
 generator erd {
   provider      = "prisma-erd-generator"
   output        = "../docs/ERD.md"
-  ignorePattern = "Breed,Batch,Farm,Animal"
+  ignorePattern = "User,Session,Account,Verification,Batch,Farm,Animal"
   ignoreEnums   = true
 }
 
@@ -90,10 +90,31 @@ model Property {
   deletedAt DateTime? @map("deleted_at")
 
   selectedByUserSettings UserSettings[]
+  areas                  Area[]
 
   @@index([name])
   @@index([ownerId])
   @@map("property")
+}
+
+model Area {
+  id           String   @id @default(uuid()) @db.Uuid
+  name         String                                 // Nome, ex: "Piquete 01"
+  polygon      Json                                   // Contorno desenhado no mapa
+  hectares     Float                                  // Área total (ha)
+  stockingRate Float    @map("stocking_rate")         // Taxa de lotação (UA/ha)
+  notes        String?                                // Observação
+
+  propertyId String   @map("property_id") @db.Uuid
+  property   Property @relation(fields: [propertyId], references: [id])
+
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+  deletedAt     DateTime? @map("deleted_at")
+  deactivatedAt DateTime? @map("deactivated_at")
+
+  @@index([propertyId])
+  @@map("area")
 }
 
 model UserSettings {

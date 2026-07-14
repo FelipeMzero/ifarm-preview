@@ -35,7 +35,7 @@ Os dados identificados para propriedades são:
 # 2 - Requisitos Funcionais (RF)
 
 
-## 2.1 - `RF-PROPRIEDADE-01`: Listagem de Propriedades
+## ✅ 2.1 - `RF-PROPRIEDADE-01`: Listagem de Propriedades
 <div style="border:1px solid #ccc; padding:16px; border-radius:8px;">
 
 ### 2.1.1 - Descrição
@@ -128,7 +128,7 @@ Tela com um formulário destinada ao cadastro de propriedades (fazendas), viabil
 
 
 
-## 2.3 - `RF-PROPRIEDADE-03`: Atualizar Propriedade
+## ✅ 2.3 - `RF-PROPRIEDADE-03`: Atualizar Propriedade
 <div style="border:1px solid #ccc; padding:16px; border-radius:8px;">
 
 ### 2.3.1 - Descrição

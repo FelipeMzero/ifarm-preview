@@ -46,7 +46,7 @@ Cada área de pastagem no mapa deve ser representada por uma cor diferente e ter
 * [ ] A localização do mapa deve iniciar na localização definida na propriedade selecionada.
 * [ ] O mapa possibibilita navegar pela área visível e aproximar/afastar.
 * [ ] O mapa deve exibir todas as áreas da propridade selecionada no sistema, desenhando a forma de cada área sobre um mapa.
-* [ ] Cada desenho da área sobre o mapa deve ter um preenchimento semitransparente de cor diferente (determinística por UUID, estável entre acessos, cor provisória neutra durante a criação) e o nome da área como rótulo.
+* [ ] Cada desenho da área sobre o mapa deve ter um preenchimento semitransparente de cor diferente (determinística por ID, estável entre acessos, cor provisória neutra durante a criação) e o nome da área como rótulo.
 * [ ] No topo do mapa deve ter um botão que inicia a ação de criar uma nova área de pastagem.
 * [ ] Clicar em uma área de pastagem aciona a edição de áreas de pastagem.
 * [ ] Clique duplo em uma área de pastagem aciona a exibição de detalhes sobre a pastagem.
