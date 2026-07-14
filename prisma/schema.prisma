@@ -18,48 +18,6 @@ generator erd {
   ignoreEnums   = true
 }
 
-enum Sex {
-  MALE   // Macho
-  FEMALE // Fêmea
-
-  @@map("sex")
-}
-
-enum AnimalOrigin {
-  BIRTH    // Nascimento
-  PURCHASE // Compra
-  TRANSFER // Transferência
-
-  @@map("animal_origin")
-}
-
-enum AnimalStatus {
-  ACTIVE      // Ativo
-  SOLD        // Vendido
-  DEAD        // Morto
-  TRANSFERRED // Transferido
-  DISCARDED   // Descarte
-  SLAUGHTERED // Abate
-
-  @@map("animal_status")
-}
-
-enum PersonType {
-  INDIVIDUAL // Pessoa Física
-  COMPANY    // Pessoa Jurídica
-
-  @@map("person_type")
-}
-
-enum MaritalStatus {
-  SINGLE       // Solteiro
-  MARRIED      // Casado
-  STABLE_UNION // União Estável
-  DIVORCED     // Divorciado
-  WIDOWED      // Viúvo
-
-  @@map("marital_status")
-}
 
 model Address {
   id          Int     @id @default(autoincrement())
@@ -150,6 +108,61 @@ model UserSettings {
 
   @@map("user_settings")
 }
+
+
+
+// Enums
+
+enum Sex {
+  MALE   // Macho
+  FEMALE // Fêmea
+
+  @@map("sex")
+}
+
+enum AnimalOrigin {
+  BIRTH    // Nascimento
+  PURCHASE // Compra
+  TRANSFER // Transferência
+
+  @@map("animal_origin")
+}
+
+enum AnimalStatus {
+  ACTIVE      // Ativo
+  SOLD        // Vendido
+  DEAD        // Morto
+  TRANSFERRED // Transferido
+  DISCARDED   // Descarte
+  SLAUGHTERED // Abate
+
+  @@map("animal_status")
+}
+
+enum PersonType {
+  INDIVIDUAL // Pessoa Física
+  COMPANY    // Pessoa Jurídica
+
+  @@map("person_type")
+}
+
+enum MaritalStatus {
+  SINGLE       // Solteiro
+  MARRIED      // Casado
+  STABLE_UNION // União Estável
+  DIVORCED     // Divorciado
+  WIDOWED      // Viúvo
+
+  @@map("marital_status")
+}
+
+
+
+
+
+
+
+
 
 
 
