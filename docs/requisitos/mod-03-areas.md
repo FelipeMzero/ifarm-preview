@@ -115,7 +115,7 @@ Tela com mapa interativo destinada ao cadastro de áreas de pastagens, possibili
 * **Dado que** o usuário está na interface de cadastro de áreas;
 * **E** deixou de preencher ou desenhar um ou mais campos obrigatórios (como `Nome`, `Polígono` ou `Taxa de Lotação`);
 * **Quando** ele acionar a ação de "Salvar";
-* **Então** o sistema deve impedir a gravação, manter os dados já preenchidos no formulário e destacar visualmente os campos ausentes com uma mensagem de alerta (ex: *"Este campo é obrigatório"*).
+* **Então** o sistema deve impedir a gravação, manter os dados já preenchidos no formulário e destacar visualmente os campos ausentes com uma mensagem de erro (ex: *"Este campo é obrigatório"*).
 
 </div>
 
