@@ -313,13 +313,13 @@ export default function PropertyForm({ id, title, onCancel, onSuccess }: Propert
           <FormField name="totalArea" label="Área Total (ha)"
             control={control}
             render={({ field, id: fieldId }) => (
-              <Input {...field} id={fieldId} type="number" step="0.01" min="0" placeholder="Ex: 120" />
+              <Input {...field} id={fieldId} type="number" step="0.0001" min="0" placeholder="Ex: 120" />
             )}
           />
           <FormField name="productiveArea" label="Área Produtiva (ha)"
             control={control}
             render={({ field, id: fieldId }) => (
-              <Input {...field} id={fieldId} type="number" step="0.01" min="0" placeholder="Ex: 100" />
+              <Input {...field} id={fieldId} type="number" step="0.0001" min="0" placeholder="Ex: 100" />
             )}
           />
         </FieldRow>

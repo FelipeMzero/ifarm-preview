@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
       data: properties.map((p) => ({
         id:            p.id,
         name:          p.name,
-        totalArea:     p.totalArea,
+        totalArea:     p.totalArea?.toNumber() ?? null,
         city:          p.address?.city ?? null,
         state:         p.address?.state ?? null,
         ownerName:     p.owner.name,

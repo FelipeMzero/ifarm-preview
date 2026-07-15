@@ -70,8 +70,8 @@ model Person {
 model Property {
   id             String  @id @default(uuid()) @db.Uuid
   name           String
-  totalArea      Float?  @map("total_area")      // Área Total (ha)
-  productiveArea Float?  @map("productive_area")  // Área Produtiva (ha)
+  totalArea      Decimal? @db.Decimal(10, 4) @map("total_area")      // Área Total (ha)
+  productiveArea Decimal? @db.Decimal(10, 4) @map("productive_area")  // Área Produtiva (ha)
   car            String? @unique                  // Cadastro Ambiental Rural
   cib            String? @unique                  // Cadastro Imobiliário Brasileiro
   ccir           String? @unique                  // Certificado de Cadastro de Imóvel Rural (INCRA)
@@ -101,8 +101,8 @@ model Area {
   id           String   @id @default(uuid()) @db.Uuid
   name         String                                 // Nome, ex: "Piquete 01"
   polygon      Json                                   // Contorno desenhado no mapa
-  hectares     Float                                  // Área total (ha)
-  stockingRate Float    @map("stocking_rate")         // Taxa de lotação (UA/ha)
+  hectares     Decimal  @db.Decimal(10, 4)             // Área total (ha)
+  stockingRate Decimal  @db.Decimal(10, 4) @map("stocking_rate") // Taxa de lotação (UA/ha)
   notes        String?                                // Observação
 
   propertyId String   @map("property_id") @db.Uuid
@@ -216,7 +216,7 @@ model Animal {
   rfid           String?      @unique
   name           String?
   birthDate      DateTime?    @db.Date @map("birth_date")
-  birthWeightKg  Float?       @map("birth_weight_kg")
+  birthWeightKg  Decimal?     @db.Decimal(10, 2) @map("birth_weight_kg")
   sex            Sex          @default(MALE)
   origin         AnimalOrigin @default(BIRTH)
   status         AnimalStatus @default(ACTIVE)
@@ -243,7 +243,7 @@ model Animal {
   purchasePrice     Decimal?  @db.Decimal(10, 2) @map("purchase_price")
   entryAgeMonths    Int?      @map("entry_age_months")
 
-  currentWeightKg Float? @map("current_weight_kg") // denormalizado para simplificar consulta no frontend
+  currentWeightKg Decimal? @db.Decimal(10, 2) @map("current_weight_kg") // denormalizado para simplificar consulta no frontend
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")

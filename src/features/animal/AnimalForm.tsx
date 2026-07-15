@@ -232,7 +232,7 @@ export default function AnimalForm({ id, title, onCancel, onSuccess }: AnimalFor
           <FormField name="birthWeightKg" label="Peso Nascimento (kg)"
             control={control}
             render={({ field, id }) => (
-              <Input {...field} id={id} type="number" step="0.1" min="0" placeholder="Ex: 32.5" />
+              <Input {...field} id={id} type="number" step="0.01" min="0" placeholder="Ex: 32.5" />
             )}
           />
         </FieldRow>

@@ -36,8 +36,8 @@ erDiagram
   "property" {
     String owner_id "🗝️"
     String name 
-    Float total_area "❓"
-    Float productive_area "❓"
+    Decimal total_area "❓"
+    Decimal productive_area "❓"
     String car "❓"
     String cib "❓"
     String ccir "❓"
@@ -55,8 +55,8 @@ erDiagram
     String id "🗝️"
     String name 
     Json polygon 
-    Float hectares 
-    Float stocking_rate 
+    Decimal hectares 
+    Decimal stocking_rate 
     String notes "❓"
     String property_id 
     DateTime created_at 
