@@ -112,10 +112,12 @@ export async function getProperties(params: {
   page?: number;
   pageSize?: number;
   search?: string;
+  status?: string;
 } = {}): Promise<PropertyListResult> {
-  const { page = 0, pageSize = 10, search = "" } = params;
+  const { page = 0, pageSize = 10, search = "", status = "" } = params;
   const query = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
   if (search) query.set("search", search);
+  if (status) query.set("status", status);
 
   const response = await fetch(`${API_ENDPOINTS.PROPERTIES}?${query}`);
   const result = await response.json();

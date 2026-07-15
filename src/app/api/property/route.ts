@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ message: "Parâmetros inválidos." }, { status: 400 });
     }
 
-    const { page, pageSize, search } = validation.data;
+    const { page, pageSize, search, status } = validation.data;
 
     const where = {
       ...(search ? {
@@ -28,6 +28,8 @@ export async function GET(request: NextRequest) {
           { owner: { name: { contains: search, mode: "insensitive" as const } } },
         ],
       } : {}),
+      ...(status === "active" ? { deactivatedAt: null } : {}),
+      ...(status === "inactive" ? { deactivatedAt: { not: null } } : {}),
     };
 
     const [properties, total] = await Promise.all([

@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 
 import { DataTable } from "@/components/our/DataTable";
 import ListSkeleton from "@/components/our/ListSkeleton";
+import { ConfirmDialog } from "@/components/our/ConfirmDialog";
 import PropertyDetails from "./PropertyDetails";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -24,10 +25,19 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
+import { SelectField } from "@/components/our/SelectField";
 import { PropertyRow, getProperties, togglePropertyStatus } from "./services";
 import { ErrorPage } from "@/components/our/ErrorPage";
 
 const DEFAULT_PAGE_SIZE = 10;
+
+const STATUS_FILTER = { ALL: "todos", ACTIVE: "ativo", INACTIVE: "inativo" } as const;
+
+function filterToStatus(filter: string): string | undefined {
+  if (filter === STATUS_FILTER.ACTIVE) return "active";
+  if (filter === STATUS_FILTER.INACTIVE) return "inactive";
+  return undefined;
+}
 
 const COLUMN_LABELS: Record<string, string> = {
   totalArea: "Área Total",
@@ -100,19 +110,20 @@ function buildColumns(
       enableSorting: false,
       cell: ({ row }) => (
         <div className="flex items-center gap-1">
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            title={row.original.deactivatedAt ? "Ativar" : "Desativar"}
-            onClick={() => onRequestToggleStatus(row.original.id)}
-          >
-            <Power className="size-4" />
-          </Button>
           <Button variant="ghost" size="icon-sm" title="Editar" onClick={() => onRequestEdit(row.original.id)}>
             <Pencil className="size-4" />
           </Button>
           <Button variant="ghost" size="icon-sm" title="Detalhes" onClick={() => onRequestViewDetails(row.original.id)}>
             <IdCard className="size-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            title={row.original.deactivatedAt ? "Ativar" : "Desativar"}
+            className={row.original.deactivatedAt ? undefined : "text-destructive hover:text-destructive"}
+            onClick={() => onRequestToggleStatus(row.original.id)}
+          >
+            <Power className="size-4" />
           </Button>
         </div>
       ),
@@ -129,12 +140,15 @@ export default function PropertyList() {
   const [total, setTotal] = useState(0);
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [filter, setFilter] = useState<string>(STATUS_FILTER.ACTIVE);
   const [loading, setLoading] = useState(true);
   const [isFirstLoad, setIsFirstLoad] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({ totalArea: false, updatedAt: false });
   const [refreshKey, setRefreshKey] = useState(0);
   const [viewingDetailsId, setViewingDetailsId] = useState<string | null>(null);
+  const [togglingId, setTogglingId] = useState<string | null>(null);
+  const [isToggling, setIsToggling] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -150,7 +164,7 @@ export default function PropertyList() {
     async function load() {
       setLoading(true);
       try {
-        const result = await getProperties({ page: pageIndex, pageSize, search: debouncedSearch });
+        const result = await getProperties({ page: pageIndex, pageSize, search: debouncedSearch, status: filterToStatus(filter) });
         if (!cancelled) {
           setProperties(result.data);
           setPageCount(result.pageCount);
@@ -168,19 +182,27 @@ export default function PropertyList() {
 
     load();
     return () => { cancelled = true; };
-  }, [pageIndex, pageSize, debouncedSearch, refreshKey]);
+  }, [pageIndex, pageSize, debouncedSearch, filter, refreshKey]);
 
-  async function toggleStatus(id: string) {
+  async function confirmToggleStatus() {
+    if (!togglingId) return;
+
+    setIsToggling(true);
     try {
-      await togglePropertyStatus(id);
+      await togglePropertyStatus(togglingId);
       setRefreshKey((k) => k + 1);
+      setTogglingId(null);
     } catch {
       // erro silencioso
+    } finally {
+      setIsToggling(false);
     }
   }
 
+  const togglingProperty = properties.find((p) => p.id === togglingId);
+
   const columns = buildColumns(
-    toggleStatus,
+    setTogglingId,
     (id) => router.push(`/propriedades/${id}`),
     setViewingDetailsId,
   );
@@ -218,6 +240,16 @@ export default function PropertyList() {
             className="pl-8"
           />
         </div>
+
+        <SelectField
+          value={filter}
+          onValueChange={(val) => { setFilter(val); setPageIndex(0); }}
+          items={[
+            { value: STATUS_FILTER.ALL, label: "Todos" },
+            { value: STATUS_FILTER.ACTIVE, label: "Ativo" },
+            { value: STATUS_FILTER.INACTIVE, label: "Inativo" },
+          ]}
+        />
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -277,6 +309,20 @@ export default function PropertyList() {
           )}
         </DialogContent>
       </Dialog>
+
+      <ConfirmDialog
+        open={togglingId !== null}
+        onOpenChange={(open) => !open && !isToggling && setTogglingId(null)}
+        onConfirm={confirmToggleStatus}
+        title={togglingProperty?.deactivatedAt ? "Confirmar ativação" : "Confirmar inativação"}
+        description={
+          togglingProperty?.deactivatedAt
+            ? "Tem certeza que deseja ativar esta propriedade?"
+            : "Tem certeza que deseja inativar esta propriedade? Ela deixará de aparecer nas listagens de novos cadastros."
+        }
+        confirmLabel={togglingProperty?.deactivatedAt ? "Ativar" : "Inativar"}
+        variant={togglingProperty?.deactivatedAt ? "default" : "destructive"}
+      />
     </div>
   );
 }

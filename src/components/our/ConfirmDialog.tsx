@@ -17,6 +17,7 @@ interface ConfirmDialogProps {
   description?: string;
   confirmLabel?: string;
   cancelLabel?: string;
+  variant?: "destructive" | "default";
 }
 
 export function ConfirmDialog({
@@ -27,6 +28,7 @@ export function ConfirmDialog({
   description = "Esta ação não pode ser desfeita. O registro será removido permanentemente.",
   confirmLabel = "Excluir",
   cancelLabel = "Cancelar",
+  variant = "destructive",
 }: ConfirmDialogProps) {
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
@@ -37,7 +39,7 @@ export function ConfirmDialog({
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>{cancelLabel}</AlertDialogCancel>
-          <AlertDialogAction variant="destructive" onClick={onConfirm}>
+          <AlertDialogAction variant={variant} onClick={onConfirm}>
             {confirmLabel}
           </AlertDialogAction>
         </AlertDialogFooter>

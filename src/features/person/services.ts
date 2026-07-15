@@ -112,11 +112,13 @@ export async function getPeople(params: {
   pageSize?: number;
   search?: string;
   type?: string;
+  status?: string;
 } = {}): Promise<PersonListResult> {
-  const { page = 0, pageSize = 10, search = "", type = "" } = params;
+  const { page = 0, pageSize = 10, search = "", type = "", status = "" } = params;
   const query = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
   if (search) query.set("search", search);
   if (type) query.set("type", type);
+  if (status) query.set("status", status);
 
   const response = await fetch(`${API_ENDPOINTS.PEOPLE}?${query}`);
   const result = await response.json();

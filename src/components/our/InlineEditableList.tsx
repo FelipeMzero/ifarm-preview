@@ -55,6 +55,9 @@ export function InlineEditableList<T extends { id: string | number }>({
   const [deletingId, setDeletingId] = useState<T["id"] | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
+  const [togglingId, setTogglingId] = useState<T["id"] | null>(null);
+  const [isTogglingActive, setIsTogglingActive] = useState(false);
+
   const firstEditingInputRef = useRef<HTMLInputElement | null>(null);
 
   const visibleItems = useMemo(() => {
@@ -128,15 +131,22 @@ export function InlineEditableList<T extends { id: string | number }>({
     }
   }
 
-  async function handleToggleActive(id: T["id"]) {
-    if (!onToggleActive) return;
+  async function confirmToggleActive() {
+    if (!onToggleActive || togglingId == null) return;
 
+    setIsTogglingActive(true);
     try {
-      await onToggleActive(id);
+      await onToggleActive(togglingId);
+      setTogglingId(null);
     } catch (e) {
       toast.error((e as Error).message || `Não foi possível atualizar ${itemLabel}.`);
+    } finally {
+      setIsTogglingActive(false);
     }
   }
+
+  const togglingItem = items.find((item) => item.id === togglingId);
+  const togglingItemIsActive = togglingItem && isActive ? isActive(togglingItem) : false;
 
   return (
     <div className="w-full max-w-2xl space-y-3">
@@ -244,19 +254,19 @@ export function InlineEditableList<T extends { id: string | number }>({
                     </>
                   ) : (
                     <>
+                      <Button variant="ghost" size="icon-sm" title="Editar" onClick={() => startEditing(item)}>
+                        <Pencil className="size-4" />
+                      </Button>
                       {onToggleActive && isActive && (
                         <Button
                           variant="ghost"
                           size="icon-sm"
                           title={isActive(item) ? "Desativar" : "Ativar"}
-                          onClick={() => handleToggleActive(item.id)}
+                          onClick={() => setTogglingId(item.id)}
                         >
                           <Power className="size-4" />
                         </Button>
                       )}
-                      <Button variant="ghost" size="icon-sm" title="Editar" onClick={() => startEditing(item)}>
-                        <Pencil className="size-4" />
-                      </Button>
                       <Button
                         variant="ghost"
                         size="icon-sm"
@@ -280,6 +290,20 @@ export function InlineEditableList<T extends { id: string | number }>({
         onOpenChange={(open) => !open && !isDeleting && setDeletingId(null)}
         onConfirm={handleDelete}
         description="Tem certeza que deseja excluir este registro? Esta ação não pode ser desfeita."
+      />
+
+      <ConfirmDialog
+        open={togglingId != null}
+        onOpenChange={(open) => !open && !isTogglingActive && setTogglingId(null)}
+        onConfirm={confirmToggleActive}
+        title={togglingItemIsActive ? "Confirmar inativação" : "Confirmar ativação"}
+        description={
+          togglingItemIsActive
+            ? "Tem certeza que deseja desativar este registro? Ele deixará de aparecer nas listagens de novos cadastros."
+            : "Tem certeza que deseja ativar este registro?"
+        }
+        confirmLabel={togglingItemIsActive ? "Desativar" : "Ativar"}
+        variant={togglingItemIsActive ? "destructive" : "default"}
       />
     </div>
   );

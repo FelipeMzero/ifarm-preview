@@ -94,6 +94,7 @@ export const personQuerySchema = z.object({
   pageSize: z.coerce.number().int().min(1).optional().default(10),
   search:   z.string().trim().optional().default(""),
   type:     z.preprocess( v => v === "" ? undefined : v, z.enum(PersonType).optional()),
+  status:   z.preprocess( v => v === "" ? undefined : v, z.enum(["active", "inactive"]).optional()),
 });
 
 export type PersonQueryData = z.infer<typeof personQuerySchema>;
@@ -150,6 +151,7 @@ export const propertyQuerySchema = z.object({
   page:     z.coerce.number().int().min(0).optional().default(0),
   pageSize: z.coerce.number().int().min(1).optional().default(10),
   search:   z.string().trim().optional().default(""),
+  status:   z.preprocess( v => v === "" ? undefined : v, z.enum(["active", "inactive"]).optional()),
 });
 
 export type PropertyQueryData = z.infer<typeof propertyQuerySchema>;

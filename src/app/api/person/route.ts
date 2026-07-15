@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ message: "Parâmetros inválidos." }, { status: 400 });
     }
 
-    const { page, pageSize, search, type } = validation.data;
+    const { page, pageSize, search, type, status } = validation.data;
 
     const where = {
       ...(search ? {
@@ -29,6 +29,8 @@ export async function GET(request: NextRequest) {
         ],
       } : {}),
       ...(type ? { type } : {}),
+      ...(status === "active" ? { deactivatedAt: null } : {}),
+      ...(status === "inactive" ? { deactivatedAt: { not: null } } : {}),
     };
 
     const [people, total] = await Promise.all([

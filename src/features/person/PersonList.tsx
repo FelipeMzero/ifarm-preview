@@ -8,6 +8,7 @@ import React, { useEffect, useState } from "react";
 
 import { DataTable } from "@/components/our/DataTable";
 import ListSkeleton from "@/components/our/ListSkeleton";
+import { ConfirmDialog } from "@/components/our/ConfirmDialog";
 import PersonDetails from "./PersonDetails";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -31,6 +32,15 @@ import { ErrorPage } from "@/components/our/ErrorPage";
 import { formatTaxId } from "@/lib/tax-id";
 
 const DEFAULT_PAGE_SIZE = 10;
+
+const STATUS_FILTER = { ALL: "todos", ACTIVE: "ativo", INACTIVE: "inativo" } as const;
+
+function filterToParams(filter: string): { type?: string; status?: string } {
+  if (filter === STATUS_FILTER.ACTIVE) return { status: "active" };
+  if (filter === STATUS_FILTER.INACTIVE) return { status: "inactive" };
+  if (filter === EnumPersonType.INDIVIDUAL || filter === EnumPersonType.COMPANY) return { type: filter };
+  return {};
+}
 
 function formatPhone(value: string): string {
   const digits = value.replace(/\D/g, "");
@@ -115,19 +125,20 @@ function buildColumns(
       enableSorting: false,
       cell: ({ row }) => (
         <div className="flex items-center gap-1">
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            title={row.original.deactivatedAt ? "Ativar" : "Desativar"}
-            onClick={() => onRequestToggleStatus(row.original.id)}
-          >
-            <Power className="size-4" />
-          </Button>
           <Button variant="ghost" size="icon-sm" title="Editar" onClick={() => onRequestEdit(row.original.id)}>
             <Pencil className="size-4" />
           </Button>
           <Button variant="ghost" size="icon-sm" title="Ficha" onClick={() => onRequestViewDetails(row.original.id)}>
             <IdCard className="size-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            title={row.original.deactivatedAt ? "Ativar" : "Desativar"}
+            className={row.original.deactivatedAt ? undefined : "text-destructive hover:text-destructive"}
+            onClick={() => onRequestToggleStatus(row.original.id)}
+          >
+            <Power className="size-4" />
           </Button>
         </div>
       ),
@@ -144,13 +155,15 @@ export default function PersonList() {
   const [total, setTotal] = useState(0);
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [type, setType] = useState<string>("");
+  const [filter, setFilter] = useState<string>(STATUS_FILTER.ACTIVE);
   const [loading, setLoading] = useState(true);
   const [isFirstLoad, setIsFirstLoad] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({ phone: false, email: false });
   const [refreshKey, setRefreshKey] = useState(0);
   const [viewingDetailsId, setViewingProfileId] = useState<string | null>(null);
+  const [togglingId, setTogglingId] = useState<string | null>(null);
+  const [isToggling, setIsToggling] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -166,7 +179,7 @@ export default function PersonList() {
     async function load() {
       setLoading(true);
       try {
-        const result = await getPeople({ page: pageIndex, pageSize, search: debouncedSearch, type });
+        const result = await getPeople({ page: pageIndex, pageSize, search: debouncedSearch, ...filterToParams(filter) });
         if (!cancelled) {
           setPeople(result.data);
           setPageCount(result.pageCount);
@@ -184,19 +197,27 @@ export default function PersonList() {
 
     load();
     return () => { cancelled = true; };
-  }, [pageIndex, pageSize, debouncedSearch, type, refreshKey]);
+  }, [pageIndex, pageSize, debouncedSearch, filter, refreshKey]);
 
-  async function toggleStatus(id: string) {
+  async function confirmToggleStatus() {
+    if (!togglingId) return;
+
+    setIsToggling(true);
     try {
-      await togglePersonStatus(id);
+      await togglePersonStatus(togglingId);
       setRefreshKey((k) => k + 1);
+      setTogglingId(null);
     } catch {
       // erro silencioso
+    } finally {
+      setIsToggling(false);
     }
   }
 
+  const togglingPerson = people.find((p) => p.id === togglingId);
+
   const columns = buildColumns(
-    toggleStatus,
+    setTogglingId,
     (id) => router.push(`/pessoas/${id}`),
     setViewingProfileId,
   );
@@ -220,7 +241,7 @@ export default function PersonList() {
           <h1 className="text-xl font-semibold">Pessoas</h1>
         </div>
         <Button onClick={() => router.push("/pessoas/novo")}>
-          <Plus className="size-4" /> Nova Pessoa
+          <Plus className="size-4" /> Adicionar
         </Button>
       </div>
 
@@ -236,10 +257,12 @@ export default function PersonList() {
         </div>
 
         <SelectField
-          value={type}
-          onValueChange={(val) => { setType(val); setPageIndex(0); }}
+          value={filter}
+          onValueChange={(val) => { setFilter(val); setPageIndex(0); }}
           items={[
-            { value: "", label: "Todos" },
+            { value: STATUS_FILTER.ALL, label: "Todos" },
+            { value: STATUS_FILTER.ACTIVE, label: "Ativo" },
+            { value: STATUS_FILTER.INACTIVE, label: "Inativo" },
             { value: EnumPersonType.INDIVIDUAL, label: "Física" },
             { value: EnumPersonType.COMPANY, label: "Jurídica" },
           ]}
@@ -304,6 +327,20 @@ export default function PersonList() {
           )}
         </DialogContent>
       </Dialog>
+
+      <ConfirmDialog
+        open={togglingId !== null}
+        onOpenChange={(open) => !open && !isToggling && setTogglingId(null)}
+        onConfirm={confirmToggleStatus}
+        title={togglingPerson?.deactivatedAt ? "Confirmar ativação" : "Confirmar inativação"}
+        description={
+          togglingPerson?.deactivatedAt
+            ? "Tem certeza que deseja ativar esta pessoa?"
+            : "Tem certeza que deseja inativar esta pessoa? Ela deixará de aparecer nas listagens de novos cadastros."
+        }
+        confirmLabel={togglingPerson?.deactivatedAt ? "Ativar" : "Inativar"}
+        variant={togglingPerson?.deactivatedAt ? "default" : "destructive"}
+      />
     </div>
   );
 }

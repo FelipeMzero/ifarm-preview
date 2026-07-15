@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/api-auth";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
-import { uniqueConstraintErrors, isReferencedElsewhereError } from "../../dbErrors";
+import { uniqueConstraintErrors, referencedElsewhereMessage } from "../../dbErrors";
 import { personApiSchema } from "../../schemas";
 import { buildAddressWrite } from "../../addressHelpers";
 
@@ -118,11 +118,9 @@ export async function DELETE(_request: NextRequest, { params }: { params: Promis
     await prisma.person.delete({ where: { id } });
     return NextResponse.json({ success: true });
   } catch (error) {
-    if (isReferencedElsewhereError(error)) {
-      return NextResponse.json(
-        { success: false, message: "Não é possível excluir: existem propriedades vinculadas a esta pessoa. Use Inativar." },
-        { status: 409 }
-      );
+    const referencedMessage = referencedElsewhereMessage(error);
+    if (referencedMessage) {
+      return NextResponse.json({ success: false, message: referencedMessage }, { status: 409 });
     }
 
     console.error(error);

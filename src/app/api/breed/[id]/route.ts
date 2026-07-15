@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma, Prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/api-auth";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
-import { uniqueConstraintErrors, isReferencedElsewhereError } from "../../dbErrors";
+import { uniqueConstraintErrors, referencedElsewhereMessage } from "../../dbErrors";
 import { breedApiSchema } from "../../schemas";
 
 
@@ -62,11 +62,9 @@ export async function DELETE(_request: NextRequest, { params }: { params: Promis
       return NextResponse.json({ success: false, message: "Raça não encontrada." }, { status: 404 });
     }
 
-    if (isReferencedElsewhereError(error)) {
-      return NextResponse.json(
-        { success: false, message: "Não é possível excluir: existem animais vinculados a esta raça. Use Inativar." },
-        { status: 409 }
-      );
+    const referencedMessage = referencedElsewhereMessage(error);
+    if (referencedMessage) {
+      return NextResponse.json({ success: false, message: referencedMessage }, { status: 409 });
     }
 
     console.error(error);
