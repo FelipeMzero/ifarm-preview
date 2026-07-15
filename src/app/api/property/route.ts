@@ -22,7 +22,6 @@ export async function GET(request: NextRequest) {
     const { page, pageSize, search } = validation.data;
 
     const where = {
-      deletedAt: null,
       ...(search ? {
         OR: [
           { name:  { contains: search, mode: "insensitive" as const } },
@@ -44,13 +43,14 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       data: properties.map((p) => ({
-        id:         p.id,
-        name:       p.name,
-        totalArea:  p.totalArea,
-        city:       p.address?.city ?? null,
-        state:      p.address?.state ?? null,
-        ownerName:  p.owner.name,
-        updatedAt:  p.updatedAt.toISOString(),
+        id:            p.id,
+        name:          p.name,
+        totalArea:     p.totalArea,
+        city:          p.address?.city ?? null,
+        state:         p.address?.state ?? null,
+        ownerName:     p.owner.name,
+        deactivatedAt: p.deactivatedAt?.toISOString() ?? null,
+        updatedAt:     p.updatedAt.toISOString(),
       })),
       total,
       pageCount: Math.ceil(total / pageSize),
@@ -86,8 +86,8 @@ export async function POST(request: NextRequest) {
       ? { zipCode, street, number, complement, neighborhood, city, state, country: "Brasil" }
       : null;
 
-    const owner = await prisma.person.findUnique({ where: { id: ownerId }, select: { id: true, deletedAt: true } });
-    if (!owner || owner.deletedAt) {
+    const owner = await prisma.person.findUnique({ where: { id: ownerId }, select: { id: true, deactivatedAt: true } });
+    if (!owner || owner.deactivatedAt) {
       return NextResponse.json({ success: false, errors: { ownerId: "Titular inválido." } }, { status: 400 });
     }
 

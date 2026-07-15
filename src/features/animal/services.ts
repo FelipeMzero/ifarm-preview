@@ -1,4 +1,5 @@
 import { AnimalFormData } from "./schema";
+import { PropertyOption } from "@/features/property/services";
 
 export class ApiError extends Error {
   errors?: Record<string, string>;
@@ -32,13 +33,12 @@ const API_ENDPOINTS = {
 
 export type Breed = { id: string; name: string };
 export type Batch = { id: number; name: string };
-export type Farm = { id: number; name: string };
 export type AnimalSummary = { id: string; earTag: string; rfid: string | null; sex: string };
 
 export type Metadata = {
   breeds: Breed[];
   batches: Batch[];
-  farms: Farm[];
+  properties: PropertyOption[];
   farmAnimals: AnimalSummary[];
 };
 

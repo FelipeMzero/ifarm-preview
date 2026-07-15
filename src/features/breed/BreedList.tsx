@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { InlineEditableList, InlineEditableColumn } from "@/components/our/InlineEditableList";
 import { ErrorPage } from "@/components/our/ErrorPage";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Breed, getBreeds, createBreed, updateBreed, deleteBreed } from "./services";
+import { Breed, getBreeds, createBreed, updateBreed, deleteBreed, toggleBreedStatus } from "./services";
 
 const COLUMNS: InlineEditableColumn<Breed>[] = [
   { key: "name", label: "Nome", placeholder: "Nome da raça" },
@@ -50,14 +50,19 @@ export default function BreedList() {
     setBreeds((prev) => [...prev, created]);
   }
 
-  async function handleUpdate(id: number, values: Record<string, string>) {
+  async function handleUpdate(id: string, values: Record<string, string>) {
     const updated = await updateBreed(id, values.name);
     setBreeds((prev) => prev.map((breed) => (breed.id === id ? updated : breed)));
   }
 
-  async function handleDelete(id: number) {
+  async function handleDelete(id: string) {
     await deleteBreed(id);
     setBreeds((prev) => prev.filter((breed) => breed.id !== id));
+  }
+
+  async function handleToggleActive(id: string) {
+    const updated = await toggleBreedStatus(id);
+    setBreeds((prev) => prev.map((breed) => (breed.id === id ? updated : breed)));
   }
 
   if (error) {
@@ -78,6 +83,8 @@ export default function BreedList() {
         onUpdate={handleUpdate}
         onDelete={handleDelete}
         itemLabel="raça"
+        isActive={(breed) => !breed.deactivatedAt}
+        onToggleActive={handleToggleActive}
       />
     </div>
   );

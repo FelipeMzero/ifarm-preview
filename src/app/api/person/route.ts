@@ -4,7 +4,6 @@ import { requireSession } from "@/lib/api-auth";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
 import { uniqueConstraintErrors } from "../dbErrors";
 import { personApiSchema, personQuerySchema } from "../schemas";
-import { buildAddressWrite } from "../addressHelpers";
 
 
 
@@ -23,7 +22,6 @@ export async function GET(request: NextRequest) {
     const { page, pageSize, search, type } = validation.data;
 
     const where = {
-      deletedAt: null,
       ...(search ? {
         OR: [
           { name:  { contains: search, mode: "insensitive" as const } },
@@ -88,29 +86,14 @@ export async function POST(request: NextRequest) {
       ? { zipCode, street, number, complement, neighborhood, city, state, country: "Brasil" }
       : null;
 
-    // Documento de um registro excluído pode ser reaproveitado: restaura em vez de bloquear por unicidade.
-    const deletedPerson = await prisma.person.findFirst({
-      where: { taxId: personData.taxId, deletedAt: { not: null } },
+    const person = await prisma.person.create({
+      data: {
+        ...personData,
+        ...(addressData ? { address: { create: addressData } } : {}),
+      },
     });
 
-    const person = deletedPerson
-      ? await prisma.person.update({
-          where: { id: deletedPerson.id },
-          data: {
-            ...personData,
-            deletedAt: null,
-            deactivatedAt: null,
-            ...buildAddressWrite(addressData, deletedPerson.addressId),
-          },
-        })
-      : await prisma.person.create({
-          data: {
-            ...personData,
-            ...(addressData ? { address: { create: addressData } } : {}),
-          },
-        });
-
-    return NextResponse.json({ success: true, data: person }, { status: deletedPerson ? 200 : 201 });
+    return NextResponse.json({ success: true, data: person }, { status: 201 });
 
   } catch (error) {
     const errors = uniqueConstraintErrors(error);

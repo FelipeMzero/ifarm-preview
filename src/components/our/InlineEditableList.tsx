@@ -1,9 +1,10 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
-import { ArrowDownAZ, ArrowUpAZ, Check, Pencil, Plus, Search, Trash2, X } from "lucide-react";
+import { ArrowDownAZ, ArrowUpAZ, Check, Pencil, Plus, Power, Search, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ConfirmDialog } from "@/components/our/ConfirmDialog";
@@ -23,6 +24,9 @@ type InlineEditableListProps<T extends { id: string | number }> = {
   onUpdate: (id: T["id"], values: Record<string, string>) => Promise<void>;
   onDelete: (id: T["id"]) => Promise<void>;
   itemLabel: string;
+  /** Se informado (junto com onToggleActive), exibe um badge Ativo/Inativo e um botão de alternância por linha. */
+  isActive?: (item: T) => boolean;
+  onToggleActive?: (id: T["id"]) => Promise<void>;
 };
 
 export function InlineEditableList<T extends { id: string | number }>({
@@ -32,6 +36,8 @@ export function InlineEditableList<T extends { id: string | number }>({
   onUpdate,
   onDelete,
   itemLabel,
+  isActive,
+  onToggleActive,
 }: InlineEditableListProps<T>) {
   const editableColumns = columns.filter((column) => column.editable !== false);
   const sortKey = columns[0]?.key;
@@ -119,6 +125,16 @@ export function InlineEditableList<T extends { id: string | number }>({
       toast.error((e as Error).message || `Não foi possível excluir ${itemLabel}.`);
     } finally {
       setIsDeleting(false);
+    }
+  }
+
+  async function handleToggleActive(id: T["id"]) {
+    if (!onToggleActive) return;
+
+    try {
+      await onToggleActive(id);
+    } catch (e) {
+      toast.error((e as Error).message || `Não foi possível atualizar ${itemLabel}.`);
     }
   }
 
@@ -211,6 +227,12 @@ export function InlineEditableList<T extends { id: string | number }>({
                     )
                   )}
 
+                  {!isEditing && isActive && (
+                    <Badge variant={isActive(item) ? "default" : "outline"} className="shrink-0">
+                      {isActive(item) ? "Ativo" : "Inativo"}
+                    </Badge>
+                  )}
+
                   {isEditing ? (
                     <>
                       <Button variant="ghost" size="icon-sm" disabled={isSaving} onClick={() => handleUpdate(item.id)}>
@@ -222,6 +244,16 @@ export function InlineEditableList<T extends { id: string | number }>({
                     </>
                   ) : (
                     <>
+                      {onToggleActive && isActive && (
+                        <Button
+                          variant="ghost"
+                          size="icon-sm"
+                          title={isActive(item) ? "Desativar" : "Ativar"}
+                          onClick={() => handleToggleActive(item.id)}
+                        >
+                          <Power className="size-4" />
+                        </Button>
+                      )}
                       <Button variant="ghost" size="icon-sm" title="Editar" onClick={() => startEditing(item)}>
                         <Pencil className="size-4" />
                       </Button>

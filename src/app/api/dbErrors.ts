@@ -21,3 +21,10 @@ export function uniqueConstraintErrors(error: unknown): Record<string, string> |
 
   return Object.keys(errors).length ? errors : null;
 }
+
+// Exclusão condicionada (comum.md): registros referenciados por outra entidade (FK
+// com onDelete: Restrict) não podem ser apagados. Retorna uma mensagem amigável em
+// vez do erro cru do Postgres.
+export function isReferencedElsewhereError(error: unknown): boolean {
+  return error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2003";
+}

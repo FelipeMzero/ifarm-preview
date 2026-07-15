@@ -20,8 +20,12 @@ Endereços para propriedades, compradores, fornecedores ou qualquer outra entida
 
 
 
-## Soft Delete
-Toda entidade do banco que está registrada em alguma movimentação não pode ser efetivamente removido do banco, por isso será usada a estratégia de soft delete. Para cada entidade terá que ser verificada a regra que permite ou proíbe a sua exclusão.
+## Exclusão vs Inativação
+Toda exclusão no banco será condicionada, ou seja, as entidades cadastradas que tiverem referências registradas em outras entidades não poderão ser excluídas.
+
+Por outro lado, essas entidades podem ter o estado Ativo/Inativo, que será usado para filtrar aqueles registros que não são mais usados (como um cliente que não faz mais negócios), ele permanece no sistema, pois aparece em registros antigos, mas é filtrado para novos registros.
+
+
 
 ## Propriedade selecionada
 O sistema deve ter selecionado a propridade no qual todas as movimentações serão vinculadas. A seleção deve ocorrer no cabeçalho da barra lateral.

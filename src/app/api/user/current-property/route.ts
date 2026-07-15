@@ -35,10 +35,10 @@ export async function PUT(request: NextRequest) {
 
   const property = await prisma.property.findUnique({
     where: { id: propertyId },
-    select: { id: true, name: true, deletedAt: true },
+    select: { id: true, name: true },
   });
 
-  if (!property || property.deletedAt) {
+  if (!property) {
     return NextResponse.json({ message: "Propriedade não encontrada." }, { status: 404 });
   }
 

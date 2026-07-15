@@ -1,7 +1,7 @@
 "use client";
 
 import { ColumnDef, VisibilityState } from "@tanstack/react-table";
-import { IdCard, MapPin, Pencil, Plus, Search, Settings2, Tractor, User } from "lucide-react";
+import { IdCard, MapPin, Pencil, Plus, Power, Search, Settings2, Tractor, User } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 import { useEffect, useState } from "react";
@@ -9,6 +9,7 @@ import { useEffect, useState } from "react";
 import { DataTable } from "@/components/our/DataTable";
 import ListSkeleton from "@/components/our/ListSkeleton";
 import PropertyDetails from "./PropertyDetails";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -23,7 +24,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
-import { PropertyRow, getProperties } from "./services";
+import { PropertyRow, getProperties, togglePropertyStatus } from "./services";
 import { ErrorPage } from "@/components/our/ErrorPage";
 
 const DEFAULT_PAGE_SIZE = 10;
@@ -32,10 +33,12 @@ const COLUMN_LABELS: Record<string, string> = {
   totalArea: "Área Total",
   location: "Município/UF",
   ownerName: "Titular",
+  status: "Status",
   updatedAt: "Atualizado em",
 };
 
 function buildColumns(
+  onRequestToggleStatus: (id: string) => void,
   onRequestEdit: (id: string) => void,
   onRequestViewDetails: (id: string) => void,
 ): ColumnDef<PropertyRow>[] {
@@ -72,6 +75,15 @@ function buildColumns(
       ),
     },
     {
+      header: "Status",
+      accessorKey: "status",
+      cell: ({ row }) => (
+        <Badge variant={row.original.deactivatedAt ? "outline" : "default"}>
+          {row.original.deactivatedAt ? "Inativo" : "Ativo"}
+        </Badge>
+      ),
+    },
+    {
       header: "Atualizado em",
       accessorKey: "updatedAt",
       cell: ({ row }) => {
@@ -88,6 +100,14 @@ function buildColumns(
       enableSorting: false,
       cell: ({ row }) => (
         <div className="flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            title={row.original.deactivatedAt ? "Ativar" : "Desativar"}
+            onClick={() => onRequestToggleStatus(row.original.id)}
+          >
+            <Power className="size-4" />
+          </Button>
           <Button variant="ghost" size="icon-sm" title="Editar" onClick={() => onRequestEdit(row.original.id)}>
             <Pencil className="size-4" />
           </Button>
@@ -150,7 +170,17 @@ export default function PropertyList() {
     return () => { cancelled = true; };
   }, [pageIndex, pageSize, debouncedSearch, refreshKey]);
 
+  async function toggleStatus(id: string) {
+    try {
+      await togglePropertyStatus(id);
+      setRefreshKey((k) => k + 1);
+    } catch {
+      // erro silencioso
+    }
+  }
+
   const columns = buildColumns(
+    toggleStatus,
     (id) => router.push(`/propriedades/${id}`),
     setViewingDetailsId,
   );

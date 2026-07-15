@@ -11,15 +11,17 @@ export type CurrentPropertyOption = {
 export async function getOrAssignCurrentProperty(userId: string): Promise<CurrentPropertyOption | null> {
   const settings = await prisma.userSettings.findUnique({
     where: { userId },
-    select: { currentProperty: { select: { id: true, name: true, deletedAt: true } } },
+    select: { currentProperty: { select: { id: true, name: true } } },
   });
 
-  if (settings?.currentProperty && !settings.currentProperty.deletedAt) {
-    return { id: settings.currentProperty.id, name: settings.currentProperty.name };
+  // Se a propriedade selecionada tiver sido excluída, a FK já virou null automaticamente
+  // (onDelete: SetNull); uma propriedade apenas inativada continua sendo uma seleção válida.
+  if (settings?.currentProperty) {
+    return settings.currentProperty;
   }
 
   const oldest = await prisma.property.findFirst({
-    where: { deletedAt: null },
+    where: { deactivatedAt: null },
     select: { id: true, name: true },
     orderBy: { createdAt: "asc" },
   });

@@ -29,7 +29,6 @@ erDiagram
     MaritalStatus marital_status "❓"
     DateTime created_at 
     DateTime updated_at 
-    DateTime deleted_at "❓"
     DateTime deactivated_at "❓"
     }
   
@@ -48,7 +47,7 @@ erDiagram
     String owner_id 
     DateTime created_at 
     DateTime updated_at 
-    DateTime deleted_at "❓"
+    DateTime deactivated_at "❓"
     }
   
 
@@ -62,7 +61,6 @@ erDiagram
     String property_id 
     DateTime created_at 
     DateTime updated_at 
-    DateTime deleted_at "❓"
     DateTime deactivated_at "❓"
     }
   
@@ -80,7 +78,6 @@ erDiagram
     String name 
     DateTime created_at 
     DateTime updated_at 
-    DateTime deleted_at "❓"
     DateTime deactivated_at "❓"
     }
   

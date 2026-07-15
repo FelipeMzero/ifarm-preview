@@ -11,7 +11,8 @@ export const animalApiSchema = z.object({
   motherId:          z.string().optional().transform(v => v || null),
   fatherId:          z.string().optional().transform(v => v || null),
   breedId:           z.string().optional().transform(v => v || null),
-  originFarmName:    z.string().optional().transform(v => v || null),
+  originPropertyId:  z.string().optional().transform(v => v || null),
+  originPropertyName: z.string().optional().transform(v => v || null),
 
   sex:               z.preprocess( v => v === "" ? undefined : v, z.enum(Sex).optional()),
   origin:            z.preprocess( v => v === "" ? undefined : v, z.enum(AnimalOrigin).optional()),
@@ -20,7 +21,6 @@ export const animalApiSchema = z.object({
   birthDate:         z.string().optional().transform(v => v ? new Date(`${v}T00:00:00`) : null),
   birthWeightKg:     z.string().optional().transform(v => v ? parseFloat(v) : null),
   batchId:           z.string().optional().transform(v => v ? parseInt(v) : null),
-  originFarmId:      z.string().optional().transform(v => v ? parseInt(v) : null),
   acquisitionDate:   z.string().optional().transform(v => v ? new Date(`${v}T00:00:00`) : null),
   purchasePrice:     z.string().optional().transform(v => v ? parseFloat(v) : null),
   entryAgeMonths:    z.string().optional().transform(v => v ? parseInt(v) : null),

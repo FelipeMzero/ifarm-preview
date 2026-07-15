@@ -27,7 +27,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       sex:             animal.sex,
       origin:          animal.origin,
       status:          animal.status,
-      originFarmName:  animal.originFarmName  ?? "",
+      originPropertyName: animal.originPropertyName ?? "",
       motherId:        animal.motherId        ?? "",
       fatherId:        animal.fatherId        ?? "",
       birthDate:       animal.birthDate?.toISOString().slice(0, 10) ?? "",
@@ -38,7 +38,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       entryAgeMonths:  animal.entryAgeMonths?.toString() ?? "",
       breedId:         animal.breedId?.toString()        ?? "",
       batchId:         animal.batchId?.toString()         ?? "",
-      originFarmId:    animal.originFarmId?.toString()    ?? "",
+      originPropertyId: animal.originPropertyId ?? "",
     });
 
   } catch (error) {

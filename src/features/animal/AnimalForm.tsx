@@ -4,7 +4,8 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
-import { getAnimal, updateAnimal, createAnimal, getAnimals, getMetadata, ApiError, Breed, Batch, AnimalSummary, Farm } from "./services";
+import { getAnimal, updateAnimal, createAnimal, getAnimals, getMetadata, ApiError, Breed, Batch, AnimalSummary } from "./services";
+import { PropertyOption } from "@/features/property/services";
 import { ErrorPage } from "@/components/our/ErrorPage";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -46,7 +47,7 @@ export default function AnimalForm({ id, title, onCancel, onSuccess }: AnimalFor
   const [breeds, setBreeds] = useState<Breed[]>([]);
   const [batches, setBatches] = useState<Batch[]>([]);
   const [animals, setAnimals] = useState<AnimalSummary[]>([]);
-  const [farms, setFarms] = useState<Farm[]>([]);
+  const [properties, setProperties] = useState<PropertyOption[]>([]);
 
   type FatherItem = { value: string; label: string };
   const [fatherItems, setFatherItems] = useState<FatherItem[]>([]);
@@ -75,8 +76,8 @@ export default function AnimalForm({ id, title, onCancel, onSuccess }: AnimalFor
       batchId: "",
       motherId: "",
       fatherId: "",
-      originFarmId: "",
-      originFarmName: "",
+      originPropertyId: "",
+      originPropertyName: "",
       acquisitionDate: "",
       purchasePrice: "",
       entryAgeMonths: "",
@@ -97,7 +98,7 @@ export default function AnimalForm({ id, title, onCancel, onSuccess }: AnimalFor
         setBreeds(meta.breeds);
         setBatches(meta.batches);
         setAnimals(meta.farmAnimals);
-        setFarms(meta.farms);
+        setProperties(meta.properties);
         setFatherItems(fatherResult.data.map(a => ({ value: a.id, label: a.earTag })));
 
         if (id) {
@@ -293,16 +294,16 @@ export default function AnimalForm({ id, title, onCancel, onSuccess }: AnimalFor
               />
             </FieldRow>
             <FieldRow cols={2}>
-              <FormField name="originFarmId" label="Fazenda de Origem"
+              <FormField name="originPropertyId" label="Propriedade de Origem"
                 control={control}
                 render={({ id, field, fieldState }) => (
                   <SearchCombobox placeholder="buscar..."
                     id={id} field={field} fieldState={fieldState}
-                    items={farms.map(f => ({ value: f.id.toString(), label: f.name }))}
+                    items={properties.map(p => ({ value: p.id, label: p.name }))}
                   />
                 )}
               />
-              <FormField name="originFarmName" label="Nome da Fazenda (se externa)"
+              <FormField name="originPropertyName" label="Nome da Fazenda (se externa)"
                 control={control}
                 render={({ field, id }) => <Input {...field} id={id} placeholder="Ex: Fazenda Santa Fé" />}
               />

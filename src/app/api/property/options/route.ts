@@ -11,7 +11,7 @@ export async function GET() {
 
   try {
     const properties = await prisma.property.findMany({
-      where: { deletedAt: null },
+      where: { deactivatedAt: null },
       select: { id: true, name: true },
       orderBy: { name: "asc" },
     });

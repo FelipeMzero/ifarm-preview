@@ -9,13 +9,14 @@ export class ApiError extends Error {
 }
 
 export type Breed = {
-  id: number;
+  id: string;
   name: string;
+  deactivatedAt: string | null;
 };
 
 const API_ENDPOINTS = {
   BREEDS: "/api/breed",
-  BREED_BY_ID: (id: number) => `/api/breed/${id}`,
+  BREED_BY_ID: (id: string) => `/api/breed/${id}`,
 } as const;
 
 export async function getBreeds(): Promise<Breed[]> {
@@ -45,7 +46,7 @@ export async function createBreed(name: string): Promise<Breed> {
   return result.data;
 }
 
-export async function updateBreed(id: number, name: string): Promise<Breed> {
+export async function updateBreed(id: string, name: string): Promise<Breed> {
   const response = await fetch(API_ENDPOINTS.BREED_BY_ID(id), {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
@@ -61,11 +62,22 @@ export async function updateBreed(id: number, name: string): Promise<Breed> {
   return result.data;
 }
 
-export async function deleteBreed(id: number): Promise<void> {
+export async function deleteBreed(id: string): Promise<void> {
   const response = await fetch(API_ENDPOINTS.BREED_BY_ID(id), { method: "DELETE" });
   const result = await response.json();
 
   if (!response.ok) {
     throw new Error(result.message);
   }
+}
+
+export async function toggleBreedStatus(id: string): Promise<Breed> {
+  const response = await fetch(API_ENDPOINTS.BREED_BY_ID(id), { method: "PATCH" });
+  const result = await response.json();
+
+  if (!response.ok) {
+    throw new Error(result.message);
+  }
+
+  return result.data;
 }

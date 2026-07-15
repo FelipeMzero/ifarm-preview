@@ -12,7 +12,7 @@ export async function GET() {
   if (response) return response;
 
   try {
-    const breeds = await prisma.breed.findMany({ where: { deletedAt: null }, orderBy: { name: "asc" } });
+    const breeds = await prisma.breed.findMany({ orderBy: { name: "asc" } });
     return NextResponse.json({ data: breeds });
   } catch (error) {
     console.error(error);
@@ -39,20 +39,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, errors }, { status: 400 });
     }
 
-    // Uma raça sem uso pode ser excluída (soft delete); recriar com o mesmo nome
-    // restaura o registro em vez de esbarrar na unicidade de `name`.
-    const deletedBreed = await prisma.breed.findFirst({
-      where: { name: validation.data.name, deletedAt: { not: null } },
-    });
+    const breed = await prisma.breed.create({ data: validation.data });
 
-    const breed = deletedBreed
-      ? await prisma.breed.update({
-          where: { id: deletedBreed.id },
-          data: { deletedAt: null, deactivatedAt: null },
-        })
-      : await prisma.breed.create({ data: validation.data });
-
-    return NextResponse.json({ success: true, data: breed }, { status: deletedBreed ? 200 : 201 });
+    return NextResponse.json({ success: true, data: breed }, { status: 201 });
 
   } catch (error) {
     const errors = uniqueConstraintErrors(error);

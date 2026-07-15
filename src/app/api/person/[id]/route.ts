@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/api-auth";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
-import { uniqueConstraintErrors } from "../../dbErrors";
+import { uniqueConstraintErrors, isReferencedElsewhereError } from "../../dbErrors";
 import { personApiSchema } from "../../schemas";
 import { buildAddressWrite } from "../../addressHelpers";
 
@@ -17,7 +17,7 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
   try {
     const person = await prisma.person.findUnique({ where: { id }, include: { address: true } });
 
-    if (!person || person.deletedAt) {
+    if (!person) {
       return NextResponse.json({ message: "Pessoa não encontrada." }, { status: 404 });
     }
 
@@ -114,10 +114,17 @@ export async function DELETE(_request: NextRequest, { params }: { params: Promis
   const { id } = await params;
 
   try {
-    // Soft-delete (RN-PESSOA-03): preserva o registro em vez de apagá-lo.
-    await prisma.person.update({ where: { id }, data: { deletedAt: new Date() } });
+    // Exclusão condicionada (RN-PESSOA-03): bloqueada se houver propriedade vinculada.
+    await prisma.person.delete({ where: { id } });
     return NextResponse.json({ success: true });
   } catch (error) {
+    if (isReferencedElsewhereError(error)) {
+      return NextResponse.json(
+        { success: false, message: "Não é possível excluir: existem propriedades vinculadas a esta pessoa. Use Inativar." },
+        { status: 409 }
+      );
+    }
+
     console.error(error);
     return NextResponse.json({ success: false, message: "Ocorreu um erro interno no servidor." }, { status: 500 });
   }

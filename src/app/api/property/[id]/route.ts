@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/api-auth";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
-import { uniqueConstraintErrors } from "../../dbErrors";
+import { uniqueConstraintErrors, isReferencedElsewhereError } from "../../dbErrors";
 import { propertyApiSchema } from "../../schemas";
 import { buildAddressWrite } from "../../addressHelpers";
 
@@ -17,7 +17,7 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
   try {
     const property = await prisma.property.findUnique({ where: { id }, include: { address: true, owner: true } });
 
-    if (!property || property.deletedAt) {
+    if (!property) {
       return NextResponse.json({ message: "Propriedade não encontrada." }, { status: 404 });
     }
 
@@ -83,8 +83,8 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       return NextResponse.json({ success: false, message: "Propriedade não encontrada." }, { status: 404 });
     }
 
-    const owner = await prisma.person.findUnique({ where: { id: ownerId }, select: { id: true, deletedAt: true } });
-    if (!owner || owner.deletedAt) {
+    const owner = await prisma.person.findUnique({ where: { id: ownerId }, select: { id: true, deactivatedAt: true } });
+    if (!owner || owner.deactivatedAt) {
       return NextResponse.json({ success: false, errors: { ownerId: "Titular inválido." } }, { status: 400 });
     }
 
@@ -119,9 +119,43 @@ export async function DELETE(_request: NextRequest, { params }: { params: Promis
   const { id } = await params;
 
   try {
-    // Soft-delete (RN-PROPRIEDADE-04): preserva o registro em vez de apagá-lo.
-    await prisma.property.update({ where: { id }, data: { deletedAt: new Date() } });
+    // Exclusão condicionada (RN-PROPRIEDADE-04): bloqueada se houver área ou usuário vinculado.
+    await prisma.property.delete({ where: { id } });
     return NextResponse.json({ success: true });
+  } catch (error) {
+    if (isReferencedElsewhereError(error)) {
+      return NextResponse.json(
+        { success: false, message: "Não é possível excluir: existem áreas ou registros vinculados a esta propriedade. Use Inativar." },
+        { status: 409 }
+      );
+    }
+
+    console.error(error);
+    return NextResponse.json({ success: false, message: "Ocorreu um erro interno no servidor." }, { status: 500 });
+  }
+}
+
+
+
+export async function PATCH(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { response } = await requireSession(RESOURCE_ACCESS.propriedades);
+  if (response) return response;
+
+  const { id } = await params;
+
+  try {
+    const property = await prisma.property.findUnique({ where: { id }, select: { deactivatedAt: true } });
+
+    if (!property) {
+      return NextResponse.json({ message: "Propriedade não encontrada." }, { status: 404 });
+    }
+
+    const updated = await prisma.property.update({
+      where: { id },
+      data: { deactivatedAt: property.deactivatedAt ? null : new Date() },
+    });
+
+    return NextResponse.json({ success: true, data: updated });
   } catch (error) {
     console.error(error);
     return NextResponse.json({ success: false, message: "Ocorreu um erro interno no servidor." }, { status: 500 });

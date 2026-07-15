@@ -17,6 +17,7 @@ export type PropertyRow = {
   city: string | null;
   state: string | null;
   ownerName: string;
+  deactivatedAt: string | null;
   updatedAt: string;
 };
 
@@ -64,6 +65,19 @@ export async function updateProperty(id: string, data: PropertyFormData) {
 
 export async function deleteProperty(id: string) {
   const response = await fetch(API_ENDPOINTS.PROPERTY_BY_ID(id), { method: "DELETE" });
+  const result = await response.json();
+
+  if (!response.ok) {
+    throw new Error(result.message);
+  }
+
+  return result;
+}
+
+
+
+export async function togglePropertyStatus(id: string) {
+  const response = await fetch(API_ENDPOINTS.PROPERTY_BY_ID(id), { method: "PATCH" });
   const result = await response.json();
 
   if (!response.ok) {
