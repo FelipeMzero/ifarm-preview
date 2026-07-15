@@ -12,7 +12,7 @@ Os dados identificados para raças são:
 
 # 1 - Regras de Negócio do Módulo (RN)
 
-* **`RN-RACA-01` - Preservação de Histórico:** Raças vinculadas a um ou mais animais cadastrados não podem ter sua existência apagada, garantindo a rastreabilidade do rebanho.
+* **`RN-RACA-01` - Preservação de Registro:** Raças que possuam registros associados não podem ser excluídas.
 
 ---
 
@@ -22,7 +22,7 @@ Os dados identificados para raças são:
 <div style="border:1px solid #ccc; padding:16px; border-radius:8px;">
 
 ### 2.1.1 - Descrição
-Tela única responsável por listar, criar, editar e excluir raças cadastradas no sistema, utilizadas na classificação de animais.
+Tela única responsável por listar, criar, editar, ativar/desativar e excluir raças cadastradas no sistema, utilizadas na classificação de animais.
 
 | Tipo | Valor |
 | :--- | :--- |
