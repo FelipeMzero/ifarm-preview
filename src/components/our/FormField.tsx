@@ -2,7 +2,7 @@
 
 import React from "react"
 import { Control, Controller, ControllerFieldState, ControllerRenderProps, FieldPath, FieldValues } from "react-hook-form"
-import { CircleAlert, Info } from "lucide-react"
+import { CircleAlert, Info, TriangleAlert } from "lucide-react"
 import { Field, FieldError, FieldLabel } from "@/components/ui/field"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 
@@ -12,6 +12,8 @@ interface FormFieldProps<T extends FieldValues, TName extends FieldPath<T>> {
   label?: string
   helperText?: string
   required?: boolean
+  /** Aviso não-bloqueante exibido abaixo do campo (não impede o submit, diferente do erro de validação). */
+  warning?: string | null
   render: (props: {
     field: ControllerRenderProps<T, TName>
     fieldState: ControllerFieldState
@@ -25,6 +27,7 @@ export function FormField<T extends FieldValues, TName extends FieldPath<T>>({
   label,
   helperText,
   required,
+  warning,
   render,
 }: FormFieldProps<T, TName>) {
   const id = `field-${name}`
@@ -58,12 +61,17 @@ export function FormField<T extends FieldValues, TName extends FieldPath<T>>({
               </FieldLabel>
             )}
             {input}
-            {fieldState.invalid && (
+            {fieldState.invalid ? (
               <div className="-mt-1 flex items-center gap-1.5">
                 <CircleAlert className="h-4 w-4 shrink-0 text-destructive" />
                 <FieldError className="text-xs" errors={[fieldState.error]} />
               </div>
-            )}
+            ) : warning ? (
+              <div className="-mt-1 flex items-center gap-1.5">
+                <TriangleAlert className="h-4 w-4 shrink-0 text-warning" />
+                <span className="text-xs text-warning">{warning}</span>
+              </div>
+            ) : null}
           </Field>
         )
       }}
