@@ -1,5 +1,6 @@
 # 📦 Módulo: `MOD-AREAS`
 
+
 Módulo responsável pelo gerenciamento das áreas de pastagem de cada propriedade (fazenda). O módulo deve possibilitar consulta, criação e alteração dos dados de área de pastagem, sendo que os limites de cada área devem ser desenhados sobre um mapa para tornar a sua identificação mais rápida e fácil. Cada área de pastagem está vinculada a uma propriedade específica.
 
 Os dados identificados para áreas de pastagem são:
@@ -188,7 +189,7 @@ Tela destinada à exibição de informações detalhadas de uma área de pastage
 
 | Tipo | Valor |
 | :--- | :--- |
-| **User Story** | Como **Gerente** quero **consultar a ficha completa de uma área de pastagem cadastrada** para visualizar seus dados detalhados e o histórico de lotes e animais vinculados a ela. |
+| **User Story** | Como **Gerente** quero **consultar os detalhes de uma área de pastagem cadastrada** para visualizar seus dados detalhados e o histórico de lotes e animais vinculados a ela. |
 | **Dependências** | `RF-AREA-02` |
 | **Regras Vinculadas**| `RN-AREA-02` |
 | **Atores** | Gerente |
@@ -205,7 +206,7 @@ Tela destinada à exibição de informações detalhadas de uma área de pastage
 * **Quando** o Gerente acionar a exibição de detalhes a partir do mapa;
 * **Então** o sistema deve exibir os dados cadastrais da área, sua localização no mapa e o histórico de lotes e animais vinculados a ela.
 
-**Cenário 2: Exibição da ficha sem histórico vinculado**
+**Cenário 2: Exibição dos detalhes**
 * **Dado que** existe uma área cadastrada sem nenhum lote ou animal vinculado a ela;
 * **Quando** o Gerente acionar a exibição de detalhes a partir do mapa;
 * **Então** o sistema deve exibir os dados cadastrais da área e indicar que não há histórico vinculado.

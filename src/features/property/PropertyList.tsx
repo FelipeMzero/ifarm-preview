@@ -144,7 +144,7 @@ export default function PropertyList() {
   const [loading, setLoading] = useState(true);
   const [isFirstLoad, setIsFirstLoad] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({ totalArea: false, updatedAt: false });
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({ totalArea: false });
   const [refreshKey, setRefreshKey] = useState(0);
   const [viewingDetailsId, setViewingDetailsId] = useState<string | null>(null);
   const [togglingId, setTogglingId] = useState<string | null>(null);

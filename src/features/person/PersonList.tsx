@@ -128,7 +128,7 @@ function buildColumns(
           <Button variant="ghost" size="icon-sm" title="Editar" onClick={() => onRequestEdit(row.original.id)}>
             <Pencil className="size-4" />
           </Button>
-          <Button variant="ghost" size="icon-sm" title="Ficha" onClick={() => onRequestViewDetails(row.original.id)}>
+          <Button variant="ghost" size="icon-sm" title="Detalhes" onClick={() => onRequestViewDetails(row.original.id)}>
             <IdCard className="size-4" />
           </Button>
           <Button
