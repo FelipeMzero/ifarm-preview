@@ -7,9 +7,9 @@ export default function ProtectedLayout({ children }: { children: React.ReactNod
     <CurrentPropertyProvider>
       <SidebarProvider className="h-svh overflow-hidden">
         <Sidebar />
-        <SidebarInset className="min-h-0">
+        <SidebarInset className="min-h-0 min-w-0">
           <SidebarTrigger className="m-2" />
-          <main className="flex-1 overflow-y-auto">
+          <main className="min-w-0 flex-1 overflow-y-auto">
             {children}
           </main>
         </SidebarInset>
