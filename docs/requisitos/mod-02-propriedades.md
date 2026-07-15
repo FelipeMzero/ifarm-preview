@@ -43,7 +43,7 @@ Tela de entrada do módulo, responsável por exibir todas as propriedades cadast
 
 | Tipo | Valor |
 | :--- | :--- |
-| **User Story** | Como **Gerente**, quero **visualizar a lista de propriedades cadastradas** para localizar rapidamente um registro e acessar as ações que podem ser executadas para ela. |
+| **User Story** | Como **Administrador** ou **Gerente**, quero **visualizar a lista de propriedades cadastradas** para localizar rapidamente um registro e acessar as ações que podem ser executadas para ela. |
 | **Dependências** | — |
 | **Regras Vinculadas**| — |
 | **Atores** | Administrador, Gerente |
@@ -62,16 +62,16 @@ Tela de entrada do módulo, responsável por exibir todas as propriedades cadast
 
 **Cenário 1: Listagem carregada com sucesso**
 * **Dado que** existem propriedades cadastradas no sistema;
-* **Quando** o Gerente acessar a tela de listagem de propriedades;
+* **Quando** o usuário acessar a tela de listagem de propriedades;
 * **Então** o sistema deve exibir a lista com cada propriedade.
 
 **Cenário 2: Busca sem resultados**
-* **Dado que** o Gerente está na tela de listagem de propriedades;
+* **Dado que** o usuário está na tela de listagem de propriedades;
 * **Quando** ele buscar por um `Nome` ou `Titular` que não corresponda a nenhum registro;
 * **Então** o sistema deve exibir a mensagem: *"Nenhum registro encontrado."*.
 
 **Cenário 3: Acesso a uma ação a partir da listagem**
-* **Dado que** o Gerente está na tela de listagem de propriedades;
+* **Dado que** o usuário está na tela de listagem de propriedades;
 * **Quando** ele acionar uma ação em uma linha da lista;
 * **Então** o sistema deve executar a ação escolhida.
 
@@ -88,7 +88,7 @@ Tela com um formulário destinada ao cadastro de propriedades (fazendas), viabil
 
 | Tipo | Valor |
 | :--- | :--- |
-| **User Story** | Como um **Gerente**, quero **cadastrar uma propriedade** no sistema para que ela possa ter suas áreas, lotes e animais gerenciados de forma independente. |
+| **User Story** | Como um **Administrador** ou **Gerente**, quero **cadastrar uma propriedade** no sistema para que ela possa ter suas áreas, lotes e animais gerenciados de forma independente. |
 | **Dependências** | `RF-PESSOA-02` (o `Titular` deve existir previamente como Pessoa) |
 | **Regras Vinculadas**| `RN-PROPRIEDADE-01`, `RN-PROPRIEDADE-02`, `RN-PROPRIEDADE-03` |
 | **Atores** | Administrador, Gerente |
@@ -104,22 +104,22 @@ Tela com um formulário destinada ao cadastro de propriedades (fazendas), viabil
 ### 2.2.3 - Cenários de Uso
 
 **Cenário 1: Cadastro realizado com sucesso**
-* **Dado que** o Gerente está na interface de cadastro de propriedades e preencheu corretamente todos os dados obrigatórios e válidos;
+* **Dado que** o usuário está na interface de cadastro de propriedades e preencheu corretamente todos os dados obrigatórios e válidos;
 * **Quando** ele acionar a ação de "Salvar";
 * **Então** o sistema deve persistir os dados no banco de dados e exibir a mensagem: *"Registro salvo com sucesso!"*.
 
 **Cenário 2: Tentativa de cadastro com área produtiva maior que a área total**
-* **Dado que** o Gerente informou uma `Área Produtiva` maior que a `Área Total`;
+* **Dado que** o usuário informou uma `Área Produtiva` maior que a `Área Total`;
 * **Quando** ele acionar a ação de "Salvar";
 * **Então** o sistema deve impedir a gravação e destacar o campo `Área Produtiva` exibindo o erro: *"A área produtiva não pode ser maior que a área total."* (Aplica `RN-PROPRIEDADE-03`).
 
 **Cenário 3: Tentativa de cadastro com documento fundiário duplicado**
-* **Dado que** o Gerente informou um `CIB`, `CCIR` ou `CAR` que já pertence a outra propriedade registrada;
+* **Dado que** o usuário informou um `CIB`, `CCIR` ou `CAR` que já pertence a outra propriedade registrada;
 * **Quando** ele acionar a ação de "Salvar";
 * **Então** o sistema deve impedir a gravação e destacar o campo duplicado exibindo o erro: *"Este valor já está em uso."* (Aplica `RN-PROPRIEDADE-01`).
 
 **Cenário 4: Tentativa de cadastro com campos obrigatórios ausentes**
-* **Dado que** o Gerente está na interface de cadastro de propriedades;
+* **Dado que** o usuário está na interface de cadastro de propriedades;
 * **E** deixou de preencher um ou mais campos obrigatórios (como `Nome` ou `Titular`);
 * **Quando** ele acionar a ação de "Salvar";
 * **Então** o sistema deve impedir a gravação, manter os dados já digitados no formulário e destacar visualmente os campos ausentes com uma mensagem de erro (ex: *"Este campo é obrigatório"*).
@@ -137,7 +137,7 @@ Tela com formulário destinado à edição dos dados cadastrais de uma proprieda
 
 | Tipo | Valor |
 | :--- | :--- |
-| **User Story** | Como um **Gerente**, quero **atualizar os dados de uma propriedade já cadastrada** para manter as informações corretas e atualizadas no sistema. |
+| **User Story** | Como um **Administrador** ou **Gerente**, quero **atualizar os dados de uma propriedade já cadastrada** para manter as informações corretas e atualizadas no sistema. |
 | **Dependências** | `RF-PROPRIEDADE-02` |
 | **Regras Vinculadas**| `RN-PROPRIEDADE-01`, `RN-PROPRIEDADE-02`, `RN-PROPRIEDADE-03` |
 | **Atores** | Administrador, Gerente |
@@ -152,22 +152,22 @@ Tela com formulário destinado à edição dos dados cadastrais de uma proprieda
 ### 2.3.3 - Cenários de Uso
 
 **Cenário 1: Atualização realizada com sucesso**
-* **Dado que** o Gerente está na tela de edição de uma propriedade já cadastrada e alterou um ou mais campos com valores válidos;
+* **Dado que** o usuário está na tela de edição de uma propriedade já cadastrada e alterou um ou mais campos com valores válidos;
 * **Quando** ele acionar a ação de "Salvar";
 * **Então** o sistema deve persistir as alterações e exibir a mensagem: *"Registro atualizado com sucesso!"*.
 
 **Cenário 2: Tentativa de atualização com área produtiva maior que a área total**
-* **Dado que** o Gerente alterou a `Área Produtiva` para um valor maior que a `Área Total`;
+* **Dado que** o usuário alterou a `Área Produtiva` para um valor maior que a `Área Total`;
 * **Quando** ele acionar a ação de "Salvar";
 * **Então** o sistema deve impedir a gravação e destacar o campo `Área Produtiva` exibindo o erro: *"A área produtiva não pode ser maior que a área total."* (Aplica `RN-PROPRIEDADE-03`).
 
 **Cenário 3: Tentativa de atualização com documento fundiário duplicado**
-* **Dado que** o Gerente alterou o `CIB`, `CCIR` ou `CAR` para um valor que já pertence a outra propriedade registrada;
+* **Dado que** o usuário alterou o `CIB`, `CCIR` ou `CAR` para um valor que já pertence a outra propriedade registrada;
 * **Quando** ele acionar a ação de "Salvar";
 * **Então** o sistema deve impedir a gravação e destacar o campo duplicado exibindo o erro: *"Este valor já está em uso."* (Aplica `RN-PROPRIEDADE-01`).
 
 **Cenário 4: Tentativa de atualização com campos obrigatórios ausentes**
-* **Dado que** o Gerente está na tela de edição de uma propriedade já cadastrada;
+* **Dado que** o usuário está na tela de edição de uma propriedade já cadastrada;
 * **E** removeu o preenchimento de um ou mais campos obrigatórios (como `Nome` ou `Titular`);
 * **Quando** ele acionar a ação de "Salvar";
 * **Então** o sistema deve impedir a gravação, manter os dados já digitados no formulário e destacar visualmente os campos ausentes com uma mensagem de erro (ex: *"Este campo é obrigatório"*).
@@ -185,7 +185,7 @@ Tela destinada à exibição de informações mais detalhadas da propriedade, co
 
 | Tipo | Valor |
 | :--- | :--- |
-| **User Story** | Como **Gerente**, quero **consultar os detalhes de uma propriedade cadastrada** para visualizar seus dados completos em um só lugar. |
+| **User Story** | Como **Administrador** ou **Gerente**, quero **consultar os detalhes de uma propriedade cadastrada** para visualizar seus dados completos em um só lugar. |
 | **Dependências** | `RF-PROPRIEDADE-02` |
 | **Regras Vinculadas**| `RN-PROPRIEDADE-04` |
 | **Atores** | Administrador, Gerente |
@@ -199,7 +199,7 @@ Tela destinada à exibição de informações mais detalhadas da propriedade, co
 
 **Cenário 1: Exibição dos detalhes**
 * **Dado que** existe uma propriedade cadastrada;
-* **Quando** o Gerente acionar a ação "Detalhes" a partir da listagem;
+* **Quando** o usuário acionar a ação "Detalhes" a partir da listagem;
 * **Então** o sistema deve exibir ...
 
 
@@ -215,7 +215,7 @@ Funcionalidade destinada à exclusão de uma propriedade cadastrada no sistema a
 
 | Tipo | Valor |
 | :--- | :--- |
-| **User Story** | Como **Gerente**, quero **excluir uma propriedade cadastrada** para manter a base de dados organizada e consistente. |
+| **User Story** | Como **Administrador** ou **Gerente**, quero **excluir uma propriedade cadastrada** para manter a base de dados organizada e consistente. |
 | **Dependências** | `RF-PROPRIEDADE-02` |
 | **Regras Vinculadas**| `RN-PROPRIEDADE-04` |
 | **Atores** | Administrador, Gerente |
@@ -227,12 +227,12 @@ Funcionalidade destinada à exclusão de uma propriedade cadastrada no sistema a
 ### 2.5.3 - Cenários de Uso
 
 **Cenário 1: Exclusão de propriedade sem registros vinculados**
-* **Dado que** o Gerente está na tela de detalhes de uma propriedade sem registros vinculados a ela;
+* **Dado que** o usuário está na tela de detalhes de uma propriedade sem registros vinculados a ela;
 * **Quando** ele confirmar a ação de "Excluir";
 * **Então** o sistema deve excluir o registro e exibir a mensagem: *"Registro excluído com sucesso!"*.
 
 **Cenário 2: Tentativa de exclusão de propriedade com registro vinculado**
-* **Dado que** o Gerente está na tela de detalhes de uma propriedade que possui registros vinculados a ela;
+* **Dado que** o usuário está na tela de detalhes de uma propriedade que possui registros vinculados a ela;
 * **Quando** ele confirmar a ação de "Excluir";
 * **Então** o sistema deve impedir a exclusão e exibir a mensagem: *"Este registro já possui registros e não pode ser excluído."* (Aplica `RN-PROPRIEDADE-04`).
 
@@ -248,7 +248,7 @@ Funcionalidade destinada à ativação/desativação de uma propriedade, possibi
 
 | Tipo | Valor |
 | :--- | :--- |
-| **User Story** | Como **Gerente**, quero **ativar ou desativar uma propriedade cadastrada** para ocultá-la das listagens quando ela não tiver mais relacionamento ativo com o negócio, sem perder seus dados e histórico. |
+| **User Story** | Como **Administrador** ou **Gerente**, quero **ativar ou desativar uma propriedade cadastrada** para ocultá-la das listagens quando ela não tiver mais relacionamento ativo com o negócio, sem perder seus dados e histórico. |
 | **Dependências** | `RF-PROPRIEDADE-02` |
 | **Regras Vinculadas**| — |
 | **Atores** | Administrador, Gerente |
@@ -262,12 +262,12 @@ Funcionalidade destinada à ativação/desativação de uma propriedade, possibi
 
 **Cenário 1: Desativação de propriedade ativa**
 * **Dado que** existe uma propriedade cadastrada com status `Ativo`;
-* **Quando** o Gerente acionar a ação "Desativar";
+* **Quando** o usuário acionar a ação "Desativar";
 * **Então** o sistema deve alterar seu status para `Inativo` e ocultá-la da listagem padrão.
 
 **Cenário 2: Ativação de propriedade inativa**
 * **Dado que** existe uma propriedade cadastrada com status `Inativo`;
-* **Quando** o Gerente acionar a ação "Ativar";
+* **Quando** o usuário acionar a ação "Ativar";
 * **Então** o sistema deve alterar seu status para `Ativo` e voltar a exibi-la na listagem padrão.
 
 </div>

@@ -55,7 +55,7 @@ Tela de entrada do módulo, responsável por exibir todas as pessoas físicas e 
 
 | Tipo | Valor |
 | :--- | :--- |
-| **User Story** | Como **Gerente**, quero **visualizar a lista de pessoas cadastradas** para localizar rapidamente um registro e acessar as ações que podem ser executadas para ela. |
+| **User Story** | Como **Administrador** ou **Gerente**, quero **visualizar a lista de pessoas cadastradas** para localizar rapidamente um registro e acessar as ações que podem ser executadas para ela. |
 | **Dependências** | — |
 | **Regras Vinculadas**| — |
 | **Atores** | Administrador, Gerente |
@@ -74,16 +74,16 @@ Tela de entrada do módulo, responsável por exibir todas as pessoas físicas e 
 
 **Cenário 1: Listagem carregada com sucesso**
 * **Dado que** existem pessoas cadastradas no sistema;
-* **Quando** o Gerente acessar a tela de listagem de pessoas;
+* **Quando** o usuário acessar a tela de listagem de pessoas;
 * **Então** o sistema deve exibir a lista com `Tipo`, `Documento`, `Nome` e `Status` de cada pessoa.
 
 **Cenário 2: Busca sem resultados**
-* **Dado que** o Gerente está na tela de listagem de pessoas;
+* **Dado que** o usuário está na tela de listagem de pessoas;
 * **Quando** ele buscar por um `Nome` ou `Documento` que não corresponda a nenhum registro;
 * **Então** o sistema deve exibir a mensagem: *"Nenhum registro encontrado."*.
 
 **Cenário 3: Acesso a uma ação a partir da listagem**
-* **Dado que** o Gerente está na tela de listagem de pessoas;
+* **Dado que** o usuário está na tela de listagem de pessoas;
 * **Quando** ele acionar uma ação em uma linha da lista;
 * **Então** o sistema deve executar a ação escolhida.
 
@@ -100,7 +100,7 @@ Tela com um formulário destinada ao cadastro de pessoas físicas ou jurídicas,
 
 | Tipo | Valor |
 | :--- | :--- |
-| **User Story** | Como um **Gerente**, quero **cadastrar uma pessoa física ou jurídica** no sistema para que ela possa ser associada a transações comerciais, financeiras e contratuais. |
+| **User Story** | Como **Administrador** ou **Gerente**, quero **cadastrar uma pessoa física ou jurídica** no sistema para que ela possa ser associada a transações comerciais, financeiras e contratuais. |
 | **Dependências** | — |
 | **Regras Vinculadas**| `RN-PESSOA-01`, `RN-PESSOA-02` |
 | **Atores** | Administrador, Gerente |
@@ -117,22 +117,22 @@ Tela com um formulário destinada ao cadastro de pessoas físicas ou jurídicas,
 ### 2.2.3 - Cenários de Uso
 
 **Cenário 1: Cadastro realizado com sucesso**
-* **Dado que** o Gerente está na interface de cadastro de pessoas e preencheu corretamente todos os dados obrigatórios e válidos;
+* **Dado que** o usuário está na interface de cadastro de pessoas e preencheu corretamente todos os dados obrigatórios e válidos;
 * **Quando** ele acionar a ação de "Salvar";
 * **Então** o sistema deve persistir os dados no banco de dados e exibir a mensagem: *"Registro salvo com sucesso!"*.
 
 **Cenário 2: Tentativa de cadastro com documento inválido**
-* **Dado que** o Gerente informou um CPF ou CNPJ com numeração matematicamente inválida;
+* **Dado que** o usuário informou um CPF ou CNPJ com numeração matematicamente inválida;
 * **Quando** ele acionar a ação de "Salvar";
 * **Então** o sistema deve impedir a gravação e destacar o campo documento exibindo o erro: *"Valor inválido."* (Aplica `RN-PESSOA-01`).
 
 **Cenário 3: Tentativa de cadastro com campo duplicado**
-* **Dado que** o Gerente informou um CPF ou CNPJ que já pertence a outra pessoa registrada;
+* **Dado que** o usuário informou um CPF ou CNPJ que já pertence a outra pessoa registrada;
 * **Quando** ele acionar a ação de "Salvar";
 * **Então** o sistema deve impedir a gravação e destacar o campo duplicado exibindo o erro: *"Este valor já está em uso."* (Aplica `RN-PESSOA-02`).
 
 **Cenário 4: Tentativa de cadastro com campos obrigatórios ausentes**
-* **Dado que** o Gerente está na interface de cadastro de pessoas;
+* **Dado que** o usuário está na interface de cadastro de pessoas;
 * **E** deixou de preencher um ou mais campos obrigatórios (como `Tipo`, `Documento` ou `Nome`);
 * **Quando** ele acionar a ação de "Salvar";
 * **Então** o sistema deve impedir a gravação, manter os dados já digitados no formulário e destacar visualmente os campos ausentes com uma mensagem de erro (ex: *"Este campo é obrigatório"*).
@@ -152,7 +152,7 @@ Tela com formulário destinado à edição dos dados cadastrais de uma pessoa f�
 
 | Tipo | Valor |
 | :--- | :--- |
-| **User Story** | Como um **Gerente**, quero **atualizar os dados de uma pessoa já cadastrada** para manter as informações corretas e atualizadas no sistema. |
+| **User Story** | Como **Administrador** ou **Gerente**, quero **atualizar os dados de uma pessoa já cadastrada** para manter as informações corretas e atualizadas no sistema. |
 | **Dependências** | `RF-PESSOA-02` |
 | **Regras Vinculadas**| `RN-PESSOA-01`, `RN-PESSOA-02` |
 | **Atores** | Administrador, Gerente |
@@ -168,22 +168,22 @@ Tela com formulário destinado à edição dos dados cadastrais de uma pessoa f�
 ### 2.3.3 - Cenários de Uso
 
 **Cenário 1: Atualização realizada com sucesso**
-* **Dado que** o Gerente está na tela de edição de uma pessoa já cadastrada e alterou um ou mais campos com valores válidos;
+* **Dado que** o usuário está na tela de edição de uma pessoa já cadastrada e alterou um ou mais campos com valores válidos;
 * **Quando** ele acionar a ação de "Salvar";
 * **Então** o sistema deve persistir as alterações e exibir a mensagem: *"Registro atualizado com sucesso!"*.
 
 **Cenário 2: Tentativa de edição dos campos imutáveis**
-* **Dado que** o Gerente está na tela de edição de uma pessoa já cadastrada;
+* **Dado que** o usuário está na tela de edição de uma pessoa já cadastrada;
 * **Quando** ele visualizar os campos `Tipo` e `Documento`;
 * **Então** o sistema deve exibi-los como somente leitura, impedindo qualquer alteração em seus valores.
 
 **Cenário 3: Tentativa de atualização com campo duplicado**
-* **Dado que** o Gerente informou um `Email`, `RG` ou `Inscrição Estadual` que já pertence a outra pessoa registrada;
+* **Dado que** o usuário informou um `Email`, `RG` ou `Inscrição Estadual` que já pertence a outra pessoa registrada;
 * **Quando** ele acionar a ação de "Salvar";
 * **Então** o sistema deve impedir a gravação e destacar o campo duplicado exibindo o erro: *"Este valor já está em uso."* (Aplica `RN-PESSOA-02`).
 
 **Cenário 4: Tentativa de atualização com campos obrigatórios ausentes**
-* **Dado que** o Gerente está na interface de edição de pessoas;
+* **Dado que** o usuário está na interface de edição de pessoas;
 * **E** deixou de preencher um ou mais campos obrigatórios (`Nome`);
 * **Quando** ele acionar a ação de "Salvar";
 * **Então** o sistema deve impedir a gravação, manter os dados já digitados no formulário e destacar visualmente os campos ausentes com uma mensagem de erro (ex: *"Este campo é obrigatório"*).
@@ -201,7 +201,7 @@ Tela destinada à exibição de informações mais detalhadas da pessoa, como: .
 
 | Tipo | Valor |
 | :--- | :--- |
-| **User Story** | Como **Gerente**, quero **consultar os detalhes de uma pessoa cadastrada** para visualizar seus dados detalhados. |
+| **User Story** | Como **Administrador** ou **Gerente**, quero **consultar os detalhes de uma pessoa cadastrada** para visualizar seus dados detalhados. |
 | **Dependências** | `RF-PESSOA-02` |
 | **Regras Vinculadas**| `RN-PESSOA-03` |
 | **Atores** | Administrador, Gerente |
@@ -215,7 +215,7 @@ Tela destinada à exibição de informações mais detalhadas da pessoa, como: .
 
 **Cenário 1: Exibição dos detalhes**
 * **Dado que** existe uma pessoa cadastrada;
-* **Quando** o Gerente acionar a ação "Detalhes";
+* **Quando** o usuário acionar a ação "Detalhes";
 * **Então** o sistema deve exibir ....
 
 
@@ -233,7 +233,7 @@ Funcionalidade destinada à exclusão de uma pessoa física ou jurídica cadastr
 
 | Tipo | Valor |
 | :--- | :--- |
-| **User Story** | Como **Gerente**, quero **excluir uma pessoa cadastrada** apenas se ela não possuir qualquer registro vinculado. |
+| **User Story** | Como **Administrador** ou **Gerente**, quero **excluir uma pessoa cadastrada** apenas se ela não possuir qualquer registro vinculado. |
 | **Dependências** | `RF-PESSOA-02` |
 | **Regras Vinculadas**| `RN-PESSOA-03` |
 | **Atores** | Administrador, Gerente |
@@ -245,12 +245,12 @@ Funcionalidade destinada à exclusão de uma pessoa física ou jurídica cadastr
 ### 2.5.3 - Cenários de Uso
 
 **Cenário 1: Exclusão de pessoa sem registros vinculados**
-* **Dado que** o Gerente está na tela de detalhes de uma pessoa sem nenhum registro vinculado;
+* **Dado que** o usuário está na tela de detalhes de uma pessoa sem nenhum registro vinculado;
 * **Quando** ele confirmar a ação de "Excluir";
 * **Então** o sistema deve excluir o registro e exibir a mensagem: *"Registro excluído com sucesso!"*.
 
 **Cenário 2: Tentativa de exclusão de pessoa com registro vinculado**
-* **Dado que** o Gerente está na tela de detalhes de uma pessoa que possui registro vinculado;
+* **Dado que** o usuário está na tela de detalhes de uma pessoa que possui registro vinculado;
 * **Quando** ele confirmar a ação de "Excluir";
 * **Então** o sistema deve impedir a exclusão e exibir a mensagem: *"Este registro possui registro vinculado e não pode ser excluído."* (Aplica `RN-PESSOA-03`).
 
@@ -266,7 +266,7 @@ Funcionalidade destinada à ativação/desativação de uma pessoa física ou ju
 
 | Tipo | Valor |
 | :--- | :--- |
-| **User Story** | Como **Gerente**, quero **ativar ou desativar uma pessoa cadastrada** para ocultá-la das listagens quando ela não tiver mais relacionamento ativo com o negócio sem ter que excluí-la. |
+| **User Story** | Como **Administrador** ou **Gerente**, quero **ativar ou desativar uma pessoa cadastrada** para ocultá-la das listagens quando ela não tiver mais relacionamento ativo com o negócio sem ter que excluí-la. |
 | **Dependências** | `RF-PESSOA-02` |
 | **Regras Vinculadas**| — |
 | **Atores** | Administrador, Gerente |
@@ -280,12 +280,12 @@ Funcionalidade destinada à ativação/desativação de uma pessoa física ou ju
 
 **Cenário 1: Desativação de pessoa ativa**
 * **Dado que** existe uma pessoa cadastrada com status `Ativo`;
-* **Quando** o Gerente acionar a ação "Desativar";
+* **Quando** o usuário acionar a ação "Desativar";
 * **Então** o sistema deve alterar seu status para `Inativo` e ocultá-la da listagem padrão.
 
 **Cenário 2: Ativação de pessoa inativa**
 * **Dado que** existe uma pessoa cadastrada com status `Inativo`;
-* **Quando** o Gerente acionar a ação "Ativar";
+* **Quando** o usuário acionar a ação "Ativar";
 * **Então** o sistema deve alterar seu status para `Ativo` e voltar a exibi-la na listagem padrão.
 
 </div>

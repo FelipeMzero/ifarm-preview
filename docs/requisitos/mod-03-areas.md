@@ -37,10 +37,10 @@ Cada área de pastagem no mapa deve ser representada por uma cor diferente e ter
 
 | Tipo | Valor |
 | :--- | :--- |
-| **User Story** | Como **Gerente** quero **visualizar as áreas de pastagem cadastradas da propriedade selecionada através de desenhos de suas formas sobre um mapa** para localizar rapidamente um registro e acessar as ações que podem ser executadas para ela. |
+| **User Story** | Como **Administrador**, **Gerente** ou **Funcionário** quero **visualizar as áreas de pastagem cadastradas da propriedade selecionada através de desenhos de suas formas sobre um mapa** para localizar rapidamente um registro e acessar as ações que podem ser executadas para ela. |
 | **Dependências** | `RF-PROPRIEDADE-02` (a propriedade deve existir previamente) |
 | **Regras Vinculadas**| — |
-| **Atores** | Gerente |
+| **Atores** | Administrador, Gerente, Funcionário |
 | **Plataformas**| Web |
 
 ### 2.1.2 - Critérios de Aceitação
@@ -91,10 +91,10 @@ Tela com mapa interativo destinada ao cadastro de áreas de pastagens, possibili
 
 | Tipo | Valor |
 | :--- | :--- |
-| **User Story** | Como **Gerente** quero **cadastrar uma área desenhando seus limites no mapa** para que ela possa ser gerenciada e vinculada a lotes e animais. |
+| **User Story** | Como **Administrador**, **Gerente** ou **Funcionário** quero **cadastrar uma área desenhando seus limites no mapa** para que ela possa ser gerenciada e vinculada a lotes e animais. |
 | **Dependências** | `RF-PROPRIEDADE-02` (a propriedade deve existir previamente) |
 | **Regras Vinculadas**| `RN-AREA-01` |
-| **Atores** | Gerente |
+| **Atores** | Administrador, Gerente, Funcionário |
 | **Plataformas**| Web |
 
 ### 2.2.2 - Critérios de Aceitação
@@ -142,10 +142,10 @@ Tela com mapa interativo e sheet lateral destinada à edição dos dados de uma 
 
 | Tipo | Valor |
 | :--- | :--- |
-| **User Story** | Como **Gerente** quero **atualizar os dados de uma área de pastagem já cadastrada** para manter as informações corretas e atualizadas no sistema. |
+| **User Story** | Como **Administrador**, **Gerente** ou **Funcionário** quero **atualizar os dados de uma área de pastagem já cadastrada** para manter as informações corretas e atualizadas no sistema. |
 | **Dependências** | `RF-AREA-02` |
 | **Regras Vinculadas**| `RN-AREA-01` |
-| **Atores** | Gerente |
+| **Atores** | Administrador, Gerente, Funcionário |
 | **Plataformas**| Web |
 
 ### 2.3.2 - Critérios de Aceitação
@@ -189,10 +189,10 @@ Tela destinada à exibição de informações detalhadas de uma área de pastage
 
 | Tipo | Valor |
 | :--- | :--- |
-| **User Story** | Como **Gerente** quero **consultar os detalhes de uma área de pastagem cadastrada** para visualizar seus dados detalhados e o histórico de lotes e animais vinculados a ela. |
+| **User Story** | Como **Administrador**, **Gerente** ou **Funcionário** quero **consultar os detalhes de uma área de pastagem cadastrada** para visualizar seus dados detalhados e o histórico de lotes e animais vinculados a ela. |
 | **Dependências** | `RF-AREA-02` |
 | **Regras Vinculadas**| `RN-AREA-02` |
-| **Atores** | Gerente |
+| **Atores** | Administrador, Gerente, Funcionário |
 | **Plataformas**| Web |
 
 ### 2.4.2 - Critérios de Aceitação
@@ -228,10 +228,10 @@ Funcionalidade destinada à exclusão de uma área de pastagem cadastrada no sis
 
 | Tipo | Valor |
 | :--- | :--- |
-| **User Story** | Como **Gerente**, quero **excluir uma área de pastagem** para manter a base de dados organizada e consistente. |
+| **User Story** | Como **Administrador**, **Gerente** ou **Funcionário**, quero **excluir uma área de pastagem** para manter a base de dados organizada e consistente. |
 | **Dependências** | — |
 | **Regras Vinculadas**| `RN-AREA-02` |
-| **Atores** | Administrador, Gerente |
+| **Atores** | Administrador, Gerente, Funcionário |
 | **Plataformas**| Web |
 
 ### 2.5.2 - Critérios de Aceitação
@@ -261,10 +261,10 @@ Funcionalidade destinada à ativação/desativação de uma área de pastagem, p
 
 | Tipo | Valor |
 | :--- | :--- |
-| **User Story** | Como **Gerente**, quero **ativar ou desativar uma área de pastagem cadastrada** para ocultá-la das listagens quando ela não tiver mais relacionamento ativo com o negócio, sem perder seus dados e histórico. |
+| **User Story** | Como **Administrador**, **Gerente** ou **Funcionário**, quero **ativar ou desativar uma área de pastagem cadastrada** para ocultá-la das listagens quando ela não tiver mais relacionamento ativo com o negócio, sem perder seus dados e histórico. |
 | **Dependências** | `RF-AREA-02` |
 | **Regras Vinculadas**| — |
-| **Atores** | Administrador, Gerente |
+| **Atores** | Administrador, Gerente, Funcionário |
 | **Plataformas**| Web |
 
 ### 2.6.2 - Critérios de Aceitação

@@ -26,10 +26,10 @@ Tela única responsável por listar, criar, editar, ativar/desativar e excluir r
 
 | Tipo | Valor |
 | :--- | :--- |
-| **User Story** | Como **Gerente** quero **gerenciar as raças cadastradas no sistema** para classificar corretamente os animais do rebanho. |
+| **User Story** | Como **Administrador** ou **Gerente** quero **gerenciar as raças cadastradas no sistema** para classificar corretamente os animais do rebanho. |
 | **Dependências** | — |
 | **Regras Vinculadas**| `RN-RACA-01` |
-| **Atores** | Gerente |
+| **Atores** | Administrador, Gerente |
 | **Plataformas**| Web |
 
 ### 2.1.2 - Critérios de Aceitação
