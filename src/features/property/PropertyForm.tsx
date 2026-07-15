@@ -24,6 +24,7 @@ import { Separator } from "@/components/ui/separator";
 import { BR_STATE_ITEMS } from "@/lib/br-states";
 import { cn } from "@/lib/utils";
 import { LocationPickerDialog } from "./LocationPickerDialog";
+import { useCurrentProperty } from "@/features/shell/CurrentPropertyProvider";
 
 
 
@@ -124,6 +125,7 @@ type PropertyFormProps = {
 };
 
 export default function PropertyForm({ id, title, onCancel, onSuccess }: PropertyFormProps) {
+  const { refresh: refreshCurrentProperty } = useCurrentProperty();
   const [isDataLoading, setIsDataLoading] = useState(!!id);
   const [loadFailed, setLoadFailed] = useState(false);
   const [isZipLoading, setIsZipLoading] = useState(false);
@@ -242,11 +244,13 @@ export default function PropertyForm({ id, title, onCancel, onSuccess }: Propert
         const fresh = await getProperty(id);
         reset(fresh);
         toast.success("Registro atualizado com sucesso!");
+        refreshCurrentProperty();
         onSuccess?.();
 
       } else {
         const response = await createProperty(data);
         toast.success("Registro salvo com sucesso!");
+        refreshCurrentProperty();
         onSuccess?.(response.data.id);
       }
     } catch (error) {

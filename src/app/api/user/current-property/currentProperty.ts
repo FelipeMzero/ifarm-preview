@@ -5,21 +5,35 @@ export type CurrentPropertyOption = {
   name: string;
 };
 
-// Se o usuário ainda não tiver uma propriedade selecionada (ou a selecionada foi
-// removida), assume automaticamente a propriedade mais antiga cadastrada, sem exigir
-// escolha manual no primeiro acesso.
+// Se o usuário nunca teve uma propriedade selecionada, assume automaticamente a
+// propriedade ativa mais antiga cadastrada, sem exigir escolha manual no primeiro
+// acesso. Mas se ele já tinha uma seleção válida e ela deixou de ser válida (foi
+// desativada, ou excluída — nesse caso a FK já vira null via onDelete: SetNull), NÃO
+// reatribui sozinho: trocar de propriedade sem ação direta do usuário é arriscado
+// (pode levar a cadastros/consultas na fazenda errada). Fica sem seleção até o
+// usuário escolher manualmente entre as opções ainda disponíveis.
 export async function getOrAssignCurrentProperty(userId: string): Promise<CurrentPropertyOption | null> {
   const settings = await prisma.userSettings.findUnique({
     where: { userId },
-    select: { currentProperty: { select: { id: true, name: true } } },
+    select: { currentProperty: { select: { id: true, name: true, deactivatedAt: true } } },
   });
 
-  // Se a propriedade selecionada tiver sido excluída, a FK já virou null automaticamente
-  // (onDelete: SetNull); uma propriedade apenas inativada continua sendo uma seleção válida.
-  if (settings?.currentProperty) {
-    return settings.currentProperty;
+  // A linha de settings só existe se o usuário já teve uma seleção (manual ou
+  // automática) em algum momento — ou seja, isto NÃO é o primeiro acesso.
+  if (settings) {
+    if (settings.currentProperty && !settings.currentProperty.deactivatedAt) {
+      return settings.currentProperty;
+    }
+
+    if (settings.currentProperty?.deactivatedAt) {
+      await prisma.userSettings.update({ where: { userId }, data: { currentPropertyId: null } });
+    }
+
+    return null;
   }
 
+  // Primeiro acesso: nunca houve seleção nem linha de settings — atribui a propriedade
+  // ativa mais antiga automaticamente.
   const oldest = await prisma.property.findFirst({
     where: { deactivatedAt: null },
     select: { id: true, name: true },
@@ -28,11 +42,7 @@ export async function getOrAssignCurrentProperty(userId: string): Promise<Curren
 
   if (!oldest) return null;
 
-  await prisma.userSettings.upsert({
-    where: { userId },
-    create: { userId, currentPropertyId: oldest.id },
-    update: { currentPropertyId: oldest.id },
-  });
+  await prisma.userSettings.create({ data: { userId, currentPropertyId: oldest.id } });
 
   return oldest;
 }

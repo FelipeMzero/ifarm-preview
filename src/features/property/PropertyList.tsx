@@ -28,6 +28,7 @@ import { Input } from "@/components/ui/input";
 import { SelectField } from "@/components/our/SelectField";
 import { PropertyRow, getProperties, togglePropertyStatus } from "./services";
 import { ErrorPage } from "@/components/our/ErrorPage";
+import { useCurrentProperty } from "@/features/shell/CurrentPropertyProvider";
 
 const DEFAULT_PAGE_SIZE = 10;
 
@@ -133,6 +134,7 @@ function buildColumns(
 
 export default function PropertyList() {
   const router = useRouter();
+  const { refresh: refreshCurrentProperty } = useCurrentProperty();
   const [properties, setProperties] = useState<PropertyRow[]>([]);
   const [pageIndex, setPageIndex] = useState(0);
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
@@ -192,6 +194,7 @@ export default function PropertyList() {
       await togglePropertyStatus(togglingId);
       setRefreshKey((k) => k + 1);
       setTogglingId(null);
+      refreshCurrentProperty();
     } catch {
       // erro silencioso
     } finally {

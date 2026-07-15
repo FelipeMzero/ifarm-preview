@@ -15,6 +15,7 @@ import { ConfirmDialog } from "@/components/our/ConfirmDialog";
 import { ErrorPage } from "@/components/our/ErrorPage";
 import { deleteProperty, getProperty } from "./services";
 import { PropertyFormData } from "./schema";
+import { useCurrentProperty } from "@/features/shell/CurrentPropertyProvider";
 
 function DetailsSkeleton() {
   return (
@@ -29,6 +30,7 @@ function DetailsSkeleton() {
 
 export default function PropertyDetails({ id, onClose }: { id: string; onClose?: () => void }) {
   const router = useRouter();
+  const { refresh: refreshCurrentProperty } = useCurrentProperty();
   const [property, setProperty] = useState<PropertyFormData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -57,6 +59,7 @@ export default function PropertyDetails({ id, onClose }: { id: string; onClose?:
     try {
       await deleteProperty(id);
       toast.success("Registro excluído com sucesso!");
+      refreshCurrentProperty();
       if (onClose) onClose(); else router.push("/propriedades");
     } catch (e) {
       toast.error((e as Error).message || "Não foi possível excluir o registro.");

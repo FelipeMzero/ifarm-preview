@@ -23,7 +23,7 @@ function DashboardSkeleton() {
 }
 
 export default function Dashboard() {
-  const { property: currentProperty, isLoading: isCurrentPropertyLoading } = useCurrentProperty();
+  const { property: currentProperty, options: propertyOptions, isLoading: isCurrentPropertyLoading } = useCurrentProperty();
   const [property, setProperty] = useState<CurrentPropertyDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -59,13 +59,23 @@ export default function Dashboard() {
   }
 
   if (!property) {
+    if (propertyOptions.length === 0) {
+      return (
+        <div className="flex flex-col items-center justify-center gap-3 py-16 text-center text-muted-foreground">
+          <Tractor className="size-8" />
+          <p>Nenhuma propriedade cadastrada ainda.</p>
+          <Button asChild size="sm">
+            <Link href="/propriedades/novo">Cadastrar propriedade</Link>
+          </Button>
+        </div>
+      );
+    }
+
     return (
       <div className="flex flex-col items-center justify-center gap-3 py-16 text-center text-muted-foreground">
         <Tractor className="size-8" />
-        <p>Nenhuma propriedade cadastrada ainda.</p>
-        <Button asChild size="sm">
-          <Link href="/propriedades/novo">Cadastrar propriedade</Link>
-        </Button>
+        <p>Nenhuma propriedade selecionada.</p>
+        <p className="text-sm">Escolha uma propriedade no menu lateral para continuar.</p>
       </div>
     );
   }

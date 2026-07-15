@@ -44,7 +44,7 @@ export function PropertySwitcher() {
     return (
       <SidebarMenuButton size="sm" disabled className="text-muted-foreground">
         <Tractor className="size-3.5" />
-        <span className="truncate text-xs">Nenhuma propriedade cadastrada</span>
+        <span className="truncate text-xs">Nenhuma propriedade disponível</span>
       </SidebarMenuButton>
     );
   }
