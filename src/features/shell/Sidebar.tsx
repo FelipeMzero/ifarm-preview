@@ -30,6 +30,7 @@ import {
   SidebarMenuSubItem,
 } from '@/components/ui/sidebar';
 import { signOut, useSession } from '@/lib/auth-client';
+import { RESOURCE_ACCESS } from '@/lib/permissions';
 import { ChangePasswordDialog } from './ChangePasswordDialog';
 import { PropertySwitcher } from './PropertySwitcher';
 import { ThemeToggle } from './ThemeToggle';
@@ -39,28 +40,27 @@ const NAV = [
     label: 'Animais',
     icon: Beef,
     items: [
-      { href: '/animais/novo', label: 'Novo Animal' },
-      { href: '/animais', label: 'Gestão de Animais' },
+      { href: '/animais', label: 'Animais' },
       { href: '/racas', label: 'Raças' },
     ],
   },
-  {
-    label: 'Pessoas',
-    icon: Users,
-    items: [
-      { href: '/pessoas/novo', label: 'Nova Pessoa' },
-      { href: '/pessoas', label: 'Gestão de Pessoas' },
-    ],
-  },
-  {
-    label: 'Propriedades',
-    icon: Tractor,
-    items: [
-      { href: '/propriedades/novo', label: 'Nova Propriedade' },
-      { href: '/propriedades', label: 'Gestão de Propriedades' },
-    ],
-  },
 ];
+
+// Links diretos (sem submenu) — criar um novo registro fica a cargo do botão
+// "+ Adicionar" já existente em cada tela de listagem.
+const DIRECT_LINKS = [
+  { href: '/pessoas', label: 'Pessoas', icon: Users },
+  { href: '/propriedades', label: 'Propriedades', icon: Tractor },
+  { href: '/usuarios', label: 'Usuários', icon: UserCog },
+];
+
+// Extrai o primeiro segmento da rota (ex: "/animais/novo" -> "animais") pra achar a
+// entrada correspondente em RESOURCE_ACCESS — mesma lógica de match usada no proxy.
+function isHrefAllowed(href: string, role: string): boolean {
+  const resource = href.split('/').filter(Boolean)[0] as keyof typeof RESOURCE_ACCESS | undefined;
+  if (!resource || !(resource in RESOURCE_ACCESS)) return true;
+  return !(RESOURCE_ACCESS[resource].forbiddenRoles as readonly string[]).includes(role);
+}
 
 function getInitials(name?: string | null): string {
   if (!name) return '?';
@@ -77,14 +77,15 @@ export function Sidebar() {
   const router = useRouter();
   const { data: session } = useSession();
   const user = session?.user;
-  const isAdmin = user?.role === 'admin';
-  const isTechnician = user?.role === 'technician';
-  const isWorker = user?.role === 'worker';
+  const role = user?.role ?? '';
   const [changingPassword, setChangingPassword] = useState(false);
 
-  const visibleNav = NAV.filter((item) =>
-    !(['Pessoas', 'Propriedades'].includes(item.label) && (isTechnician || isWorker))
-  );
+  const visibleNav = NAV
+    .map((group) => ({
+      ...group,
+      items: group.items.filter((item) => isHrefAllowed(item.href, role)),
+    }))
+    .filter((group) => group.items.length > 0);
 
   async function handleLogout() {
     await signOut();
@@ -151,16 +152,16 @@ export function Sidebar() {
             );
           })}
 
-          {isAdmin && (
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild isActive={pathname.startsWith('/usuarios')}>
-                <Link href="/usuarios">
-                  <UserCog />
-                  <span>Usuários</span>
+          {DIRECT_LINKS.filter((link) => isHrefAllowed(link.href, role)).map(({ href, label, icon: Icon }) => (
+            <SidebarMenuItem key={href}>
+              <SidebarMenuButton asChild isActive={pathname.startsWith(href)}>
+                <Link href={href}>
+                  <Icon />
+                  <span>{label}</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
-          )}
+          ))}
         </SidebarMenu>
       </SidebarContent>
       <SidebarFooter>

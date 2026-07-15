@@ -14,9 +14,9 @@ export const roles = {
 // As chaves (pessoas/usuarios) ficam em pt-br de propósito: são comparadas
 // diretamente contra o segmento da rota (/pessoas, /usuarios) em src/proxy.ts.
 export const RESOURCE_ACCESS = {
-  animais: { forbiddenRoles: [] },
+  animais: { forbiddenRoles: ["technician", "worker"] },
+  racas: { forbiddenRoles: ["technician", "worker"] },
   pessoas: { forbiddenRoles: ["technician", "worker"] },
   propriedades: { forbiddenRoles: ["technician", "worker"] },
   usuarios: { forbiddenRoles: ["manager", "technician", "worker"] },
-  racas: { forbiddenRoles: [] },
 } as const;
