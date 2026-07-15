@@ -9,8 +9,8 @@ Os dados identificados para áreas de pastagem são:
 |-|-|-|
 | `Nome*` | Texto | Nome da área, como "Piquete 01" |
 | `Polígono*` | Json | Referência visual da área no mapa |
-| `Hectares*` | Número | Área total em hectares (ha) |
-| `Taxa de Lotação*` | Número | Taxa de lotação da área (UA/ha) |
+| `Hectares*` | Decimal | Área total em hectares (ha) |
+| `Taxa de Lotação*` | Decimal | Taxa de lotação da área (UA/ha) |
 | `Observação` | Texto | Qualquer observação sobre a área, como "Área para engorda com capim-braquiarão" |
 | `Propriedade*` | Referência | Propriedade selecionada do sistema |
 

@@ -9,13 +9,13 @@ Os dados identificados para propriedades são:
 | Campo | Tipo | Descrição |
 |-|-|-|
 | `Nome*` | Texto | Nome da propriedade, como "Fazendão São João" |
-| `Área Total` | Número | Área total da propriedade em hectares (ha) |
-| `Área Produtiva` | Número | Área produtiva da propriedade em hectares (ha) |
+| `Área Total` | Decimal | Área total da propriedade em hectares (ha) |
+| `Área Produtiva` | Decimal | Área produtiva da propriedade em hectares (ha) |
 | `CAR` | Texto/Único | Cadastro Ambiental Rural, tem o formato UF-1234567-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX, por exemplo MT-5107909-E8C2B3F6D1A94E8BB7F5C3E2A1D0B9C8 |
 | `CIB` | Texto/Único | Cadastro Imobiliário Brasileiro, tendo o padrão AAAAAAA-D, por exemplo ABC1234-5 |
 | `CCIR` | Texto/Único | Certificado de Cadastro de Imóvel Rural no INCRA, tem o formato 999.999.999.999-9 |
-| `Latitude` | Número | Latitude da propriedade |
-| `Longitude` | Número | Longitude da propriedade |
+| `Latitude` | Real | Latitude da propriedade |
+| `Longitude` | Real | Longitude da propriedade |
 | `Endereço` | Referência | Endereço da propriedade |
 | `Titular*` | Referência | Pessoa (física ou jurídica) responsável legal pela propriedade |
 
