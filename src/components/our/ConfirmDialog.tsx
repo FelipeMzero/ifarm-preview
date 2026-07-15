@@ -37,8 +37,10 @@ export function ConfirmDialog({
           <AlertDialogTitle>{title}</AlertDialogTitle>
           <AlertDialogDescription>{description}</AlertDialogDescription>
         </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>{cancelLabel}</AlertDialogCancel>
+        <AlertDialogFooter className="border-border">
+          <AlertDialogCancel variant={"secondary"}>
+            {cancelLabel}
+          </AlertDialogCancel>
           <AlertDialogAction variant={variant} onClick={onConfirm}>
             {confirmLabel}
           </AlertDialogAction>
