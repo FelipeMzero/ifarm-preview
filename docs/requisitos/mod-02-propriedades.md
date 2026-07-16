@@ -98,8 +98,11 @@ Tela com um formulário destinada ao cadastro de propriedades (fazendas), viabil
 * [ ] Os campos `Nome` e `Titular` são obrigatórios.
 * [ ] Os campos `CIB`, `CCIR` e `CAR` são opcionais, mas únicos quando informados.
 * [ ] O campo `Titular` deve referenciar uma Pessoa já cadastrada no sistema.
+* [ ] As opções para o campo `Titular` são apenas pessoas ativas.
 * [ ] Os campos `Área Total`, `Área Produtiva`, `Latitude` e `Longitude` são opcionais e numéricos.
 * [ ] O sistema deve impedir o cadastro e avisar caso `Área Produtiva` seja maior que `Área Total` quando os dois valores forem informados.
+* [ ] Após informar o CEP, o sistema deve consultar o endereço no viaCEP e preencher os outros campos de endereço automaticamente.
+* [ ] Após informar o CEP, o sistema deve consultar a localização pelo serviço OpenStreetMap e preencher automaticamente os campos latitude e longitude da propriedade.
 
 ### 2.2.3 - Cenários de Uso
 
@@ -145,9 +148,11 @@ Tela com formulário destinado à edição dos dados cadastrais de uma proprieda
 
 ### 2.3.2 - Critérios de Aceitação (Checklist de Homologação)
 * [ ] O campo `Nome` é editável e obrigatório.
-* [ ] O campo `Titular` é editável, mas deve sempre referenciar uma Pessoa já cadastrada.
+* [ ] O campo `Titular` é editável, mas deve sempre referenciar uma Pessoa já cadastrada e ativa.
 * [ ] Os campos `CIB`, `CCIR` e `CAR` continuam únicos após a edição.
 * [ ] O sistema deve impedir a atualização caso `Área Produtiva` seja maior que `Área Total`.
+* [ ] Após informar o CEP, o sistema deve consultar o endereço no viaCEP e preencher os outros campos de endereço automaticamente.
+* [ ] Após informar o CEP, o sistema deve consultar a localização pelo serviço OpenStreetMap e preencher automaticamente os campos latitude e longitude da propriedade.
 
 ### 2.3.3 - Cenários de Uso
 

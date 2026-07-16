@@ -136,7 +136,7 @@ export default function PropertyForm({ id, title, onCancel, onSuccess }: Propert
   const searchOwners = useCallback((query: string) => {
     if (ownerDebounce.current) clearTimeout(ownerDebounce.current);
     ownerDebounce.current = setTimeout(async () => {
-      const result = await getPeople({ search: query, pageSize: query ? 20 : 5 });
+      const result = await getPeople({ search: query, pageSize: query ? 20 : 5, status: "active" });
       setOwnerItems(result.data.map((p) => ({ value: p.id, label: p.name })));
     }, 300);
   }, []);
@@ -170,7 +170,7 @@ export default function PropertyForm({ id, title, onCancel, onSuccess }: Propert
   useEffect(() => {
     async function loadData() {
       try {
-        const initialOwners = await getPeople({ pageSize: 5 });
+        const initialOwners = await getPeople({ pageSize: 5, status: "active" });
         let seededOwners = initialOwners.data.map((p) => ({ value: p.id, label: p.name }));
 
         if (id) {
@@ -300,7 +300,7 @@ export default function PropertyForm({ id, title, onCancel, onSuccess }: Propert
           <FormField name="ownerId" label="Titular" required
             control={control}
             render={({ id: fieldId, field, fieldState }) => (
-              <SearchCombobox placeholder="buscar..."
+              <SearchCombobox placeholder="Selecionar..."
                 id={fieldId} field={field} fieldState={fieldState}
                 items={ownerItems}
                 onInputValueChange={(val) => searchOwners(val)}
@@ -327,7 +327,21 @@ export default function PropertyForm({ id, title, onCancel, onSuccess }: Propert
         <FieldRow cols={3}>
           <FormField name="car" label="CAR"
             control={control}
-            render={({ field, id: fieldId }) => <Input {...field} id={fieldId} placeholder="Ex: MT-5107909-E8C2..." />}
+            render={({ field, id: fieldId }) => (
+              <IMaskInput
+                mask="aa-0000000-HHHH.HHHH.HHHH.HHHH.HHHH.HHHH.HHHH.HHHH"
+                definitions={{ H: /[0-9A-Fa-f]/ }}
+                prepareChar={(char) => char.toUpperCase()}
+                id={fieldId}
+                name={field.name}
+                value={field.value}
+                placeholder="Ex: MT-5107909-E8C2.A75A.C69A.4A7C.8C26.99F5.CC59.9B9A"
+                onAccept={(value) => field.onChange(value)}
+                onBlur={field.onBlur}
+                inputRef={field.ref}
+                className={MASKED_INPUT_CLASSNAME}
+              />
+            )}
           />
           <FormField name="cib" label="CIB"
             control={control}
@@ -335,7 +349,20 @@ export default function PropertyForm({ id, title, onCancel, onSuccess }: Propert
           />
           <FormField name="ccir" label="CCIR"
             control={control}
-            render={({ field, id: fieldId }) => <Input {...field} id={fieldId} placeholder="Ex: 999.999.999.999-9" />}
+            render={({ field, id: fieldId }) => (
+              <IMaskInput
+                mask="000.000.000.000-0"
+                unmask
+                id={fieldId}
+                name={field.name}
+                value={field.value}
+                placeholder="Ex: 999.999.999.999-9"
+                onAccept={(value) => field.onChange(value)}
+                onBlur={field.onBlur}
+                inputRef={field.ref}
+                className={MASKED_INPUT_CLASSNAME}
+              />
+            )}
           />
         </FieldRow>
       </FieldSet>
@@ -348,19 +375,24 @@ export default function PropertyForm({ id, title, onCancel, onSuccess }: Propert
             <FormField name="zipCode" label="CEP"
               control={control}
               render={({ field, id: fieldId }) => (
-                <IMaskInput
-                  mask="00000-000"
-                  unmask
-                  id={fieldId}
-                  name={field.name}
-                  value={field.value}
-                  disabled={isZipLoading}
-                  placeholder="Ex: 78000-000"
-                  onAccept={(value) => field.onChange(value)}
-                  onBlur={(e) => { field.onBlur(); handleZipBlur(e.target.value); }}
-                  inputRef={field.ref}
-                  className={MASKED_INPUT_CLASSNAME}
-                />
+                <div className="relative">
+                  <IMaskInput
+                    mask="00000-000"
+                    unmask
+                    id={fieldId}
+                    name={field.name}
+                    value={field.value}
+                    disabled={isZipLoading}
+                    placeholder="Ex: 78000-000"
+                    onAccept={(value) => field.onChange(value)}
+                    onBlur={(e) => { field.onBlur(); handleZipBlur(e.target.value); }}
+                    inputRef={field.ref}
+                    className={cn(MASKED_INPUT_CLASSNAME, isZipLoading && "pr-8")}
+                  />
+                  {isZipLoading && (
+                    <Loader2 className="absolute top-1/2 right-2.5 size-4 -translate-y-1/2 animate-spin text-muted-foreground" />
+                  )}
+                </div>
               )}
             />
           </FieldRow>
@@ -380,11 +412,11 @@ export default function PropertyForm({ id, title, onCancel, onSuccess }: Propert
           <FieldRow cols={2}>
             <FormField name="complement" label="Complemento"
               control={control}
-              render={({ field, id: fieldId }) => <Input {...field} id={fieldId} placeholder="Opcional" />}
+              render={({ field, id: fieldId }) => <Input {...field} id={fieldId} placeholder="Ex: Galpão 2" />}
             />
             <FormField name="neighborhood" label="Bairro"
               control={control}
-              render={({ field, id: fieldId }) => <Input {...field} id={fieldId} placeholder="Opcional" />}
+              render={({ field, id: fieldId }) => <Input {...field} id={fieldId} placeholder="Ex: Centro" />}
             />
           </FieldRow>
 

@@ -21,6 +21,7 @@ import { PersonFormData, personFormSchema, EnumPersonType, EnumMaritalStatus } f
 import { Separator } from "@/components/ui/separator";
 import { BR_STATE_ITEMS } from "@/lib/br-states";
 import { FormActionBar } from "@/components/our/FormActionBar";
+import { cn } from "@/lib/utils";
 
 
 
@@ -223,7 +224,7 @@ export default function PersonForm({ id, title, onCancel, onSuccess }: PersonFor
           {isCompany ? (
             <FormField name="tradeName" label="Nome Fantasia"
               control={control}
-              render={({ field, id: fieldId }) => <Input {...field} id={fieldId} placeholder="Opcional" />}
+              render={({ field, id: fieldId }) => <Input {...field} id={fieldId} placeholder="Ex: AgroVacinas Distribuidora" />}
             />
           ) : (
             <FormField name="rg" label="RG"
@@ -237,7 +238,7 @@ export default function PersonForm({ id, title, onCancel, onSuccess }: PersonFor
           <FieldRow cols={2}>
             <FormField name="stateRegistration" label="Inscrição Estadual"
               control={control}
-              render={({ field, id: fieldId }) => <Input {...field} id={fieldId} placeholder="Opcional" />}
+              render={({ field, id: fieldId }) => <Input {...field} id={fieldId} placeholder="Ex: 123.456.789.123" />}
             />
           </FieldRow>
         ) : (
@@ -295,19 +296,24 @@ export default function PersonForm({ id, title, onCancel, onSuccess }: PersonFor
           <FormField name="zipCode" label="CEP"
             control={control}
             render={({ field, id: fieldId }) => (
-              <IMaskInput
-                mask="00000-000"
-                unmask
-                id={fieldId}
-                name={field.name}
-                value={field.value}
-                disabled={isZipLoading}
-                placeholder="Ex: 78000-000"
-                onAccept={(value) => field.onChange(value)}
-                onBlur={(e) => { field.onBlur(); handleZipBlur(e.target.value); }}
-                inputRef={field.ref}
-                className={MASKED_INPUT_CLASSNAME}
-              />
+              <div className="relative">
+                <IMaskInput
+                  mask="00000-000"
+                  unmask
+                  id={fieldId}
+                  name={field.name}
+                  value={field.value}
+                  disabled={isZipLoading}
+                  placeholder="Ex: 78000-000"
+                  onAccept={(value) => field.onChange(value)}
+                  onBlur={(e) => { field.onBlur(); handleZipBlur(e.target.value); }}
+                  inputRef={field.ref}
+                  className={cn(MASKED_INPUT_CLASSNAME, isZipLoading && "pr-8")}
+                />
+                {isZipLoading && (
+                  <Loader2 className="absolute top-1/2 right-2.5 size-4 -translate-y-1/2 animate-spin text-muted-foreground" />
+                )}
+              </div>
             )}
           />
           <FormField name="street" label="Logradouro"
@@ -322,18 +328,18 @@ export default function PersonForm({ id, title, onCancel, onSuccess }: PersonFor
         <FieldRow cols={3}>
           <FormField name="complement" label="Complemento"
             control={control}
-            render={({ field, id: fieldId }) => <Input {...field} id={fieldId} placeholder="Opcional" />}
+            render={({ field, id: fieldId }) => <Input {...field} id={fieldId} placeholder="Ex: Galpão 2" />}
           />
           <FormField name="neighborhood" label="Bairro"
             control={control}
-            render={({ field, id: fieldId }) => <Input {...field} id={fieldId} placeholder="Opcional" />}
+            render={({ field, id: fieldId }) => <Input {...field} id={fieldId} placeholder="Ex: Centro" />}
           />
           <FormField name="city" label="Município"
             control={control}
             render={({ field, id: fieldId }) => <Input {...field} id={fieldId} placeholder="Ex: Cuiabá" />}
           />
         </FieldRow>
-        <FieldRow cols={2}>
+        <FieldRow cols={3}>
           <FormField name="state" label="UF"
             control={control}
             render={({ id: fieldId, field, fieldState }) => (

@@ -113,6 +113,8 @@ Tela com um formulário destinada ao cadastro de pessoas físicas ou jurídicas,
 * [ ] A interface deve adaptar dinamicamente os campos exibidos com base no `Tipo`:
   * **Se Jurídica:** Exibir `Nome` (como Razão Social), `Nome Fantasia` e `Inscrição Estadual`. Ocultar campos exclusivos de Pessoa Física.
   * **Se Física:** Exibir `Nome` (como Nome Completo), `RG`, `Data de Nascimento` e `Estado Civil`. Ocultar campos exclusivos de Pessoa Jurídica.
+* [ ] Após informar o CEP, o sistema deve consultar o endereço no viaCEP e preencher os outros campos de endereço automaticamente.
+
 
 ### 2.2.3 - Cenários de Uso
 
@@ -163,6 +165,7 @@ Tela com formulário destinado à edição dos dados cadastrais de uma pessoa f�
 * [ ] Os campos `Tipo` e `Documento` são imutáveis após o cadastro - não podem ser alterados na edição, apenas exibidos como somente leitura.
 * [ ] O campo `Nome` é editável e obrigatório.
 * [ ] Os campos `Inscrição Estadual`, `Email` e `RG` são únicos.
+* [ ] Após informar o CEP, o sistema deve consultar o endereço no viaCEP e preencher os outros campos de endereço automaticamente.
 
 
 ### 2.3.3 - Cenários de Uso

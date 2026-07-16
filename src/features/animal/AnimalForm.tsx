@@ -187,7 +187,7 @@ export default function AnimalForm({ id, title, onCancel, onSuccess }: AnimalFor
         <FieldRow cols={2}>
           <FormField name="name" label="Apelido"
             control={control}
-            render={({ field, id }) => <Input {...field} id={id} placeholder="Opcional" />}
+            render={({ field, id }) => <Input {...field} id={id} placeholder="Ex: Mimosa" />}
           />
 
           <FormField name="sex" label="Sexo"
