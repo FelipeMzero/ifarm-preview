@@ -44,7 +44,6 @@ CREATE TABLE "person" (
     "marital_status" "marital_status",
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
-    "deleted_at" TIMESTAMP(3),
     "deactivated_at" TIMESTAMP(3),
 
     CONSTRAINT "person_pkey" PRIMARY KEY ("id")
@@ -54,8 +53,8 @@ CREATE TABLE "person" (
 CREATE TABLE "property" (
     "id" UUID NOT NULL,
     "name" TEXT NOT NULL,
-    "total_area" DOUBLE PRECISION,
-    "productive_area" DOUBLE PRECISION,
+    "total_area" DECIMAL(10,4),
+    "productive_area" DECIMAL(10,4),
     "car" TEXT,
     "cib" TEXT,
     "ccir" TEXT,
@@ -65,9 +64,25 @@ CREATE TABLE "property" (
     "owner_id" UUID NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
-    "deleted_at" TIMESTAMP(3),
+    "deactivated_at" TIMESTAMP(3),
 
     CONSTRAINT "property_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "area" (
+    "id" UUID NOT NULL,
+    "name" TEXT NOT NULL,
+    "polygon" JSONB NOT NULL,
+    "hectares" DECIMAL(10,4) NOT NULL,
+    "stocking_rate" DECIMAL(10,4) NOT NULL,
+    "notes" TEXT,
+    "property_id" UUID NOT NULL,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL,
+    "deactivated_at" TIMESTAMP(3),
+
+    CONSTRAINT "area_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -82,8 +97,11 @@ CREATE TABLE "user_settings" (
 
 -- CreateTable
 CREATE TABLE "breed" (
-    "id" SERIAL NOT NULL,
+    "id" UUID NOT NULL,
     "name" TEXT NOT NULL,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL,
+    "deactivated_at" TIMESTAMP(3),
 
     CONSTRAINT "breed_pkey" PRIMARY KEY ("id")
 );
@@ -97,37 +115,28 @@ CREATE TABLE "batch" (
 );
 
 -- CreateTable
-CREATE TABLE "farm" (
-    "id" SERIAL NOT NULL,
-    "name" TEXT NOT NULL,
-
-    CONSTRAINT "farm_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
 CREATE TABLE "animal" (
     "id" UUID NOT NULL,
     "ear_tag" TEXT NOT NULL,
     "rfid" TEXT,
     "name" TEXT,
     "birth_date" DATE,
-    "birth_weight_kg" DOUBLE PRECISION,
+    "birth_weight_kg" DECIMAL(10,2),
     "sex" "sex" NOT NULL DEFAULT 'MALE',
     "origin" "animal_origin" NOT NULL DEFAULT 'BIRTH',
     "status" "animal_status" NOT NULL DEFAULT 'ACTIVE',
-    "breed_id" INTEGER,
+    "breed_id" UUID,
     "batch_id" INTEGER,
     "mother_id" UUID,
     "father_id" UUID,
-    "origin_farm_id" INTEGER,
-    "origin_farm_name" TEXT,
+    "origin_property_id" UUID,
+    "origin_property_name" TEXT,
     "acquisition_date" DATE,
     "purchase_price" DECIMAL(10,2),
     "entry_age_months" INTEGER,
-    "current_weight_kg" DOUBLE PRECISION,
+    "current_weight_kg" DECIMAL(10,2),
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
-    "deleted_at" TIMESTAMP(3),
 
     CONSTRAINT "animal_pkey" PRIMARY KEY ("id")
 );
@@ -235,13 +244,13 @@ CREATE INDEX "property_name_idx" ON "property"("name");
 CREATE INDEX "property_owner_id_idx" ON "property"("owner_id");
 
 -- CreateIndex
+CREATE INDEX "area_property_id_idx" ON "area"("property_id");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "breed_name_key" ON "breed"("name");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "batch_name_key" ON "batch"("name");
-
--- CreateIndex
-CREATE UNIQUE INDEX "farm_name_key" ON "farm"("name");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "animal_ear_tag_key" ON "animal"("ear_tag");
@@ -274,25 +283,28 @@ ALTER TABLE "property" ADD CONSTRAINT "property_address_id_fkey" FOREIGN KEY ("a
 ALTER TABLE "property" ADD CONSTRAINT "property_owner_id_fkey" FOREIGN KEY ("owner_id") REFERENCES "person"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "area" ADD CONSTRAINT "area_property_id_fkey" FOREIGN KEY ("property_id") REFERENCES "property"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "user_settings" ADD CONSTRAINT "user_settings_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "user"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "user_settings" ADD CONSTRAINT "user_settings_current_property_id_fkey" FOREIGN KEY ("current_property_id") REFERENCES "property"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "animal" ADD CONSTRAINT "animal_breed_id_fkey" FOREIGN KEY ("breed_id") REFERENCES "breed"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "animal" ADD CONSTRAINT "animal_breed_id_fkey" FOREIGN KEY ("breed_id") REFERENCES "breed"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "animal" ADD CONSTRAINT "animal_batch_id_fkey" FOREIGN KEY ("batch_id") REFERENCES "batch"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "animal" ADD CONSTRAINT "animal_batch_id_fkey" FOREIGN KEY ("batch_id") REFERENCES "batch"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "animal" ADD CONSTRAINT "animal_mother_id_fkey" FOREIGN KEY ("mother_id") REFERENCES "animal"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "animal" ADD CONSTRAINT "animal_mother_id_fkey" FOREIGN KEY ("mother_id") REFERENCES "animal"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "animal" ADD CONSTRAINT "animal_father_id_fkey" FOREIGN KEY ("father_id") REFERENCES "animal"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "animal" ADD CONSTRAINT "animal_father_id_fkey" FOREIGN KEY ("father_id") REFERENCES "animal"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "animal" ADD CONSTRAINT "animal_origin_farm_id_fkey" FOREIGN KEY ("origin_farm_id") REFERENCES "farm"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "animal" ADD CONSTRAINT "animal_origin_property_id_fkey" FOREIGN KEY ("origin_property_id") REFERENCES "property"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "session" ADD CONSTRAINT "session_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "user"("id") ON DELETE CASCADE ON UPDATE CASCADE;
