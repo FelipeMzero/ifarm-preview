@@ -14,6 +14,8 @@ As dependências já foram instaladas pelo `pnpm install` rodado na raiz do repo
 
 ### 1. Configurar variável de ambiente
 
+Dentro da pasta `apps/mobile`:
+
 ```bash
 cp .env.example .env
 ```

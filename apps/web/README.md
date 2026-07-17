@@ -15,10 +15,13 @@ Antes de começar, você precisará ter instalado em sua máquina:
 
 ## 🛠️ Configuração e Instalação
 
-Siga os passos abaixo para configurar o ambiente de desenvolvimento local:
+As dependências já devem ter sido instaladas com `pnpm install` na raiz do repositório (veja o [README raiz](../../README.md)).
+
+
+Agora dentro da pasta `apps/web` siga os passos abaixo para configurar app web:
 
 ### 1. Configurar Variáveis de Ambiente
-O projeto utiliza um arquivo `.env` para gerenciar credenciais e configurações de conexão. Copie o modelo de exemplo e preencha com seus dados locais:
+O projeto utiliza um arquivo `.env` para gerenciar credenciais e configurações de conexão, copie o modelo de exemplo e preencha com seus dados locais:
 
 ```bash
 cp .env.example .env
@@ -38,14 +41,7 @@ Suba o container do PostgreSQL utilizando o Docker:
 docker compose up -d
 ```
 
-### 3. Instalar Dependências
-Instale os pacotes necessários do Node.js utilizando o pnpm:
-
-```bash
-pnpm install
-```
-
-### 4. Sincronizar o Prisma ORM
+### 3. Sincronizar o Prisma ORM
 Gere o cliente do Prisma e aplique as migrações para estruturar o banco de dados — o usuário admin (credenciais definidas em `SEED_ADMIN_EMAIL`/`SEED_ADMIN_PASSWORD` no `.env`) e alguns dados fictícios serão criados automaticamente:
 
 ```bash
@@ -56,10 +52,16 @@ pnpm prisma migrate dev
 
 ## 💻 Executando o Projeto
 
-Após concluir a configuração, você pode iniciar o servidor de desenvolvimento:
+Após concluir a configuração, você pode iniciar o servidor de desenvolvimento. Dentro de `apps/web`:
 
 ```bash
 pnpm dev
+```
+
+Ou a partir da raiz do repositório:
+
+```bash
+pnpm --filter web dev
 ```
 
 O projeto estará disponível em: http://localhost:3000
