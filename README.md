@@ -1,83 +1,45 @@
-# iFarm - Next.js Project
+# iFarm — Sistema de Gestão Pecuária
 
-Este é um projeto desenvolvido com Next.js, utilizando Prisma ORM para persistência de dados e Docker para orquestração do banco de dados PostgreSQL.
+Plataforma para gestão do ciclo produtivo de fazendas de pecuária de corte (cria, recria, engorda e abate), cobrindo controle de animais, propriedades, áreas de pastagem e usuários. Monorepo com os apps **web** e **mobile**, compartilhando o mesmo backend.
 
-## 🚀 Pré-requisitos
+## 📂 Estrutura
 
-Antes de começar, você precisará ter instalado em sua máquina:
-* [Node.js](https://nodejs.org/) (recomendado v22+)
-* [pnpm](https://pnpm.io/) (gerenciador de pacotes)
-* [Docker](https://www.docker.com/) com suporte ao Docker Compose V2
-
----
-
-## 🛠️ Configuração e Instalação
-
-Siga os passos abaixo para configurar o ambiente de desenvolvimento local:
-
-### 1. Configurar Variáveis de Ambiente
-O projeto utiliza um arquivo `.env` para gerenciar credenciais e configurações de conexão. Copie o modelo de exemplo e preencha com seus dados locais:
-
-```bash
-cp .env.example .env
 ```
-
-Depois, gere um valor para `BETTER_AUTH_SECRET` (usado para assinar sessões/cookies) e preencha no `.env`:
-
-```bash
-openssl rand -base64 32
+apps/
+  web/      → Next.js (site + API + banco de dados). Ver apps/web/README.md
+  mobile/   → Expo / React Native. Ver apps/mobile/README.md
+packages/
+  shared/   → código compartilhado entre web e mobile
+docs/       → requisitos, arquitetura e visão do produto
 ```
 
 
-### 2. Iniciar o Banco de Dados
-Suba o container do PostgreSQL utilizando o Docker:
 
-```bash
-docker compose up -d
-```
+## 🚀 Setup
 
-### 3. Instalar Dependências
-Instale os pacotes necessários do Node.js utilizando o pnpm:
+Pré-requisitos: [Node.js](https://nodejs.org/) 22+, [pnpm](https://pnpm.io/), [Docker](https://www.docker.com/) (só para o `apps/web`).
+
+Na raiz do repositório, instale as dependências dos dois apps com:
 
 ```bash
 pnpm install
 ```
 
-### 4. Sincronizar o Prisma ORM
-Gere o cliente do Prisma e aplique as migrações para estruturar o banco de dados — o usuário admin (credenciais definidas em `SEED_ADMIN_EMAIL`/`SEED_ADMIN_PASSWORD` no `.env`) e alguns dados fictícios serão criados automaticamente:
+Depois, configure **cada app separadamente**:
 
-```bash
-pnpm prisma generate
-pnpm prisma migrate dev
-```
----
+1. **[apps/web](apps/web/README.md)**
+2. **[apps/mobile](apps/mobile/README.md)**
 
-## 💻 Executando o Projeto
+O `apps/mobile` **depende do `apps/web` estar rodando**, pois consome a API do web pela rede. Sempre suba o web antes de testar o mobile.
 
-Após concluir a configuração, você pode iniciar o servidor de desenvolvimento:
-
-```bash
-pnpm dev
-```
-
-O projeto estará disponível em: http://localhost:3000
-
----
-
-## 🔍 Comandos Úteis
+## 🔍 Comandos úteis na raiz
 
 | Comando | Descrição |
 | :--- | :--- |
-| pnpm prisma studio | Abre uma interface gráfica para visualizar e editar os dados do banco. |
-| pnpm exec prisma db seed | Roda novamente o seed (cria admin e dados de exemplo). |
-| docker compose logs -f | Visualiza os logs do banco de dados em tempo real. |
-| docker compose down | Para e remove os containers do projeto. |
+| `pnpm dev` | Atalho para `pnpm --filter web dev` |
+| `pnpm --filter web <script>` | Roda um script definido em `apps/web/package.json` |
+| `pnpm --filter mobile <script>` | Roda um script definido em `apps/mobile/package.json` |
 
----
+## 📖 Documentação do produto
 
-## 📂 Estrutura do Banco de Dados
-O projeto utiliza o PostgreSQL. O esquema de dados é definido no arquivo prisma/schema.prisma. Sempre que realizar alterações neste arquivo, lembre-se de rodar o comando abaixo para sincronizar o banco.
-
-```bash
-pnpm prisma migrate dev 
-```
+Requisitos, regras de negócio e arquitetura ficam em [docs/](docs/).
