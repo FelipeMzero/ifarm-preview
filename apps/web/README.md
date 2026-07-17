@@ -48,6 +48,11 @@ Gere o cliente do Prisma e aplique as migrações para estruturar o banco de dad
 pnpm prisma generate
 pnpm prisma migrate dev
 ```
+
+> ⚠️ O `migrate dev` só roda o seed automaticamente quando ele aplica alguma migração nova. Se ao final não aparecerem logs como `- admin (...) criado`, rode o seed manualmente:
+> ```bash
+> pnpm prisma db seed
+> ```
 ---
 
 ## 💻 Executando o Projeto
