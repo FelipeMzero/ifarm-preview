@@ -243,7 +243,6 @@ function MapReferenceController({ onMapReady }: { onMapReady: (map: L.Map) => vo
 
 type GeomanControllerProps = {
   isDrawing: boolean;
-  isGlobalEditing: boolean;
   isEditingSingle: boolean;
   onPolygonCreated: (layer: L.Polygon) => void;
   onPolygonChange: (points: { lat: number; lng: number }[]) => void;
@@ -252,7 +251,6 @@ type GeomanControllerProps = {
 
 function GeomanController({
   isDrawing,
-  isGlobalEditing,
   isEditingSingle,
   onPolygonCreated,
   onPolygonChange,
@@ -265,7 +263,7 @@ function GeomanController({
     map.pm.setLang("pt_br");
   }, [map]);
 
-  const activeMode = isDrawing || isGlobalEditing || isEditingSingle;
+  const activeMode = isDrawing || isEditingSingle;
 
   useEffect(() => {
     if (!map || !activeMode) return;
@@ -276,9 +274,6 @@ function GeomanController({
         if (isDrawing) {
           map.pm.disableDraw();
         }
-        if (isGlobalEditing && map.pm && typeof map.pm.globalEditModeEnabled === "function" && map.pm.globalEditModeEnabled()) {
-          map.pm.disableGlobalEditMode();
-        }
         onCancelEditing();
       }
     };
@@ -287,7 +282,7 @@ function GeomanController({
     return () => {
       window.removeEventListener("keydown", handleKeyDown, true);
     };
-  }, [map, activeMode, isDrawing, isGlobalEditing, onCancelEditing]);
+  }, [map, activeMode, isDrawing, onCancelEditing]);
 
   useEffect(() => {
     if (!map || !isDrawing) return;
@@ -331,27 +326,6 @@ function GeomanController({
     };
   }, [map, isDrawing, onPolygonCreated, onPolygonChange]);
 
-  useEffect(() => {
-    if (!map) return;
-
-    if (isGlobalEditing) {
-      map.pm.enableGlobalEditMode({
-        allowSelfIntersection: false,
-        snappable: true,
-      });
-    } else {
-      if (map.pm && typeof map.pm.globalEditModeEnabled === "function" && map.pm.globalEditModeEnabled()) {
-        map.pm.disableGlobalEditMode();
-      }
-    }
-
-    return () => {
-      if (map.pm && typeof map.pm.globalEditModeEnabled === "function" && map.pm.globalEditModeEnabled()) {
-        map.pm.disableGlobalEditMode();
-      }
-    };
-  }, [map, isGlobalEditing]);
-
   return null;
 }
 
@@ -373,25 +347,21 @@ function extractPointsFromLayer(layer: L.Polygon): { lat: number; lng: number }[
 type EditablePolygonProps = {
   area: AreaRow;
   isEditing: boolean;
-  isGlobalEditing: boolean;
   editingPoints?: { lat: number; lng: number }[];
   onPolygonChange: (points: { lat: number; lng: number }[]) => void;
-  onGlobalPolygonChange?: (areaId: string, points: { lat: number; lng: number }[]) => void;
   children?: React.ReactNode;
 };
 
 function EditablePolygon({
   area,
   isEditing,
-  isGlobalEditing,
   editingPoints,
   onPolygonChange,
-  onGlobalPolygonChange,
   children,
 }: EditablePolygonProps) {
   const [leafletLayer, setLeafletLayer] = useState<L.Polygon | null>(null);
 
-  const activeEditing = isEditing || isGlobalEditing;
+  const activeEditing = isEditing;
 
   const rawCoords =
     isEditing && editingPoints && editingPoints.length > 0
@@ -449,11 +419,7 @@ function EditablePolygon({
     const handleEdit = () => {
       const points = extractPointsFromLayer(leafletLayer);
       if (points.length > 0) {
-        if (isEditing) {
-          onPolygonChange(points);
-        } else if (isGlobalEditing && onGlobalPolygonChange) {
-          onGlobalPolygonChange(area.id, points);
-        }
+        onPolygonChange(points);
       }
     };
 
@@ -468,7 +434,7 @@ function EditablePolygon({
       leafletLayer.off("pm:edit", handleEdit);
       leafletLayer.off("pm:remove", handleEdit);
     };
-  }, [leafletLayer, activeEditing, isEditing, isGlobalEditing, onPolygonChange, onGlobalPolygonChange, area.id]);
+  }, [leafletLayer, activeEditing, onPolygonChange, area.id]);
 
   return (
     <Polygon
@@ -559,7 +525,6 @@ export default function AreaMap() {
 
   const [mapInstance, setMapInstance] = useState<L.Map | null>(null);
   const [isDrawing, setIsDrawing] = useState(false);
-  const [isGlobalEditing, setIsGlobalEditing] = useState(false);
   const [drawnLayer, setDrawnLayer] = useState<L.Polygon | null>(null);
   const [polygonPoints, setPolygonPoints] = useState<{ lat: number; lng: number }[]>([]);
 
@@ -579,42 +544,6 @@ export default function AreaMap() {
       propertyId: "",
     },
   });
-
-  const handleGlobalPolygonChange = useCallback(
-    async (areaId: string, points: { lat: number; lng: number }[]) => {
-      setAreas((prev) =>
-        prev.map((a) => {
-          if (a.id === areaId) {
-            const newHectares = calculateAreaHectares(points);
-            return {
-              ...a,
-              polygon: points,
-              hectares: Number(newHectares.toFixed(2)),
-            };
-          }
-          return a;
-        })
-      );
-
-      try {
-        const areaToUpdate = areas.find((a) => a.id === areaId);
-        if (!areaToUpdate) return;
-        const newHectares = calculateAreaHectares(points);
-        await updateArea(areaId, {
-          name: areaToUpdate.name,
-          propertyId: areaToUpdate.propertyId,
-          polygon: points,
-          hectares: newHectares.toFixed(2),
-          stockingRate: String(areaToUpdate.stockingRate),
-          notes: areaToUpdate.notes ?? "",
-        });
-        toast.success(`Limites de "${areaToUpdate.name}" atualizados!`);
-      } catch (err: any) {
-        toast.error("Erro ao salvar alteração da área.");
-      }
-    },
-    [areas]
-  );
 
   useEffect(() => {
     if (!currentProperty) {
@@ -668,7 +597,6 @@ export default function AreaMap() {
 
   const handleCleanup = useCallback(() => {
     setIsDrawing(false);
-    setIsGlobalEditing(false);
     setSheetOpen(false);
     if (drawnLayer) {
       drawnLayer.remove();
@@ -697,7 +625,6 @@ export default function AreaMap() {
 
   const startEditing = (area: AreaRow) => {
     setIsDrawing(false);
-    setIsGlobalEditing(false);
     if (drawnLayer) {
       drawnLayer.remove();
       setDrawnLayer(null);
@@ -870,38 +797,9 @@ export default function AreaMap() {
           </div>
 
           {statusFilter === "active" && !isDrawing && !editingArea && (
-            <>
-              <Button
-                variant={isGlobalEditing ? "secondary" : "outline"}
-                onClick={() => {
-                  setIsGlobalEditing(!isGlobalEditing);
-                  if (sheetOpen) setSheetOpen(false);
-                }}
-                className="gap-2 w-40"
-              >
-                <Pencil className="size-4 text-primary" />
-                {isGlobalEditing ? "Concluir Edição" : "Ajustar contornos"}
-              </Button>
-
-              <Button onClick={startDrawing} className="gap-2 w-40">
-                <Plus className="size-4" /> Área
-              </Button>
-            </>
-          )}
-
-          {isGlobalEditing && (
-            <div className="flex items-center gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-1.5 text-xs font-medium text-amber-700 dark:text-amber-300">
-              <Pencil className="size-4 shrink-0 text-amber-600 dark:text-amber-400" />
-              <span>Arraste os vértices de qualquer área no mapa para ajustar os limites. [Esc] cancela.</span>
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => setIsGlobalEditing(false)}
-                className="h-7 text-xs px-2 hover:bg-amber-500/20 text-amber-800 dark:text-amber-200"
-              >
-                Concluir Edição
-              </Button>
-            </div>
+            <Button onClick={startDrawing} className="gap-2 w-40">
+              <Plus className="size-4" /> Área
+            </Button>
           )}
 
           {isDrawing && (
@@ -958,7 +856,6 @@ export default function AreaMap() {
 
             <GeomanController
               isDrawing={isDrawing}
-              isGlobalEditing={isGlobalEditing}
               isEditingSingle={editingArea !== null}
               onPolygonCreated={handlePolygonCreated}
               onPolygonChange={handlePolygonChange}
@@ -975,12 +872,10 @@ export default function AreaMap() {
                   <EditablePolygon
                     area={area}
                     isEditing={isSelectedForEdit}
-                    isGlobalEditing={isGlobalEditing}
                     editingPoints={isSelectedForEdit ? polygonPoints : undefined}
                     onPolygonChange={handlePolygonChange}
-                    onGlobalPolygonChange={handleGlobalPolygonChange}
                   >
-                    {/* {!isSelectedForEdit && !isGlobalEditing && (
+                    {/* {!isSelectedForEdit && (
                       <Tooltip sticky>
                         <div className="p-1 text-xs space-y-0.5">
                           <p className="font-semibold text-sm border-b pb-0.5 mb-1">{area.name}</p>
@@ -991,7 +886,7 @@ export default function AreaMap() {
                       </Tooltip>
                     )} */}
 
-                    {!isSelectedForEdit && !isGlobalEditing && (
+                    {!isSelectedForEdit && (
                       <Popup>
                         <div className="min-w-40 p-1 text-foreground ">
                           <h4 className="font-semibold text-sm border-b border-border pb-1 mb-2">{area.name}</h4>
