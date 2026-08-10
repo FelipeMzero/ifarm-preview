@@ -524,6 +524,7 @@ export default function AreaMap() {
   }, [currentProperty?.id]);
 
   const [mapInstance, setMapInstance] = useState<L.Map | null>(null);
+  const [mapAreaEl, setMapAreaEl] = useState<HTMLDivElement | null>(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [drawnLayer, setDrawnLayer] = useState<L.Polygon | null>(null);
   const [polygonPoints, setPolygonPoints] = useState<{ lat: number; lng: number }[]>([]);
@@ -578,6 +579,7 @@ export default function AreaMap() {
 
   const handlePolygonCreated = useCallback((layer: L.Polygon) => {
     setDrawnLayer(layer);
+    setIsDrawing(false);
   }, []);
 
   const handlePolygonChange = useCallback((points: { lat: number; lng: number }[]) => {
@@ -761,20 +763,6 @@ export default function AreaMap() {
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
-          <div className="w-45">
-            <Select
-              value={statusFilter}
-              onValueChange={(val) => setStatusFilter(val as "active" | "inactive")}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Filtro de Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="active">Áreas Ativas</SelectItem>
-                <SelectItem value="inactive">Áreas Inativas</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
 
           <div className="w-40">
             <Select
@@ -796,7 +784,25 @@ export default function AreaMap() {
             </Select>
           </div>
 
-          {statusFilter === "active" && !isDrawing && !editingArea && (
+          {!isDrawing && (
+            <div className="w-45">
+              <Select
+                value={statusFilter}
+                onValueChange={(val) => setStatusFilter(val as "active" | "inactive")}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Filtro de Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="active">Áreas Ativas</SelectItem>
+                  <SelectItem value="inactive">Áreas Inativas</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+
+          {statusFilter === "active" && !isDrawing && (
             <Button onClick={startDrawing} className="gap-2 w-40">
               <Plus className="size-4" /> Área
             </Button>
@@ -805,25 +811,18 @@ export default function AreaMap() {
           {isDrawing && (
             <div className="flex items-center gap-2 rounded-lg border border-warning/30 bg-warning/10 px-3 py-1.5 text-xs font-medium text-warning-foreground">
               <AlertTriangle className="size-4 text-warning shrink-0" />
-              <span>Clique no mapa para desenhar. Duplo clique encerra. [Esc] cancela.</span>
-              <Button size="sm" variant="ghost" onClick={handleCleanup} className="h-7 text-xs px-2 hover:bg-warning/20">
+              <span>Desenhe o contorno da área no mapa </span>
+              <Button size="sm" variant="secondary" onClick={handleCleanup} className="h-7 text-xs px-2 hover:bg-warning/20">
                 Cancelar
               </Button>
             </div>
           )}
 
-          {editingArea && (
-            <div className="flex items-center gap-2 rounded-lg border border-primary/30 bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary">
-              <span>Editando limite da área: <strong>{editingArea.name}</strong>. [Esc] cancela.</span>
-              <Button size="sm" variant="ghost" onClick={handleCleanup} className="h-7 text-xs px-2 hover:bg-primary/20">
-                Cancelar
-              </Button>
-            </div>
-          )}
         </div>
+
       </div>
 
-      <div className="relative min-h-0 flex-1 overflow-hidden">
+      <div ref={setMapAreaEl} className="relative min-h-0 flex-1 overflow-hidden will-change-transform">
         {currentProperty ? (
           <MapContainer
             key={`${currentProperty.id}-${areasCentroid ? areasCentroid.join(",") : propertyCoords ? propertyCoords.join(",") : "default"}-${statusFilter}`}
@@ -856,7 +855,7 @@ export default function AreaMap() {
 
             <GeomanController
               isDrawing={isDrawing}
-              isEditingSingle={editingArea !== null}
+              isEditingSingle={sheetOpen}
               onPolygonCreated={handlePolygonCreated}
               onPolygonChange={handlePolygonChange}
               onCancelEditing={handleCleanup}
@@ -977,6 +976,7 @@ export default function AreaMap() {
       </div>
 
       <AreaForm
+        container={mapAreaEl}
         open={sheetOpen}
         onOpenChange={(open) => {
           if (!open) {

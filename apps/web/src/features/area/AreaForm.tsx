@@ -1,7 +1,7 @@
 "use client";
 
 import { UseFormReturn } from "react-hook-form";
-import { Loader2, Pencil } from "lucide-react";
+import { Hexagon, Loader2, MapPin, Pencil, Ruler } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -15,6 +15,8 @@ import {
 } from "@/components/ui/sheet";
 import { AreaFormData } from "./schema";
 import { AreaRow } from "./services";
+import FieldRow from "@/components/our/FieldRow";
+import { FormActionBar } from "@/components/our/FormActionBar";
 
 interface AreaFormProps {
   open: boolean;
@@ -27,6 +29,7 @@ interface AreaFormProps {
   onRedraw?: () => void;
   polygonPointsCount?: number;
   calculatedHectares?: number;
+  container?: HTMLElement | null;
 }
 
 export function AreaForm({
@@ -40,6 +43,7 @@ export function AreaForm({
   onRedraw,
   polygonPointsCount = 0,
   calculatedHectares = 0,
+  container,
 }: AreaFormProps) {
   const hasPolygon = polygonPointsCount >= 3 || form.watch("polygon") != null;
 
@@ -49,67 +53,53 @@ export function AreaForm({
         showOverlay={false}
         className="border-l border-border"
         onPointerDownOutside={(e) => e.preventDefault()}
+        container={container}
       >
         <SheetHeader className="border-b border-border">
           <SheetTitle>
             {editingArea ? "Editar Área de Pastagem" : "Nova Área de Pastagem"}
           </SheetTitle>
           <SheetDescription>
-            {editingArea
-              ? "Ajuste os contornos no mapa arrastando os vértices ou altere os dados abaixo."
-              : "Defina o contorno no mapa e informe os dados cadastrais abaixo."}
+            Ajuste os contornos no mapa e preencha os dados abaixo.
           </SheetDescription>
         </SheetHeader>
 
-        <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col flex-1 min-h-0">
-          <div className="flex-1 overflow-y-auto p-6 space-y-6">
-            <div className="rounded-lg border border-border bg-muted/50 p-3 space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col flex-1 min-h-0 p-6 pt-1">
+          <div className="flex-1 overflow-y-auto space-y-6">
+            <div className="rounded-lg border border-border bg-muted/50 p-4 space-y-3">
+              <div className="flex items-center gap-2 justify-center">
+                <MapPin className="size-4 text-primary" />
+                <span className="text-xs font-semibold text-foreground uppercase tracking-wider">
                   Contorno no Mapa
                 </span>
-                {onRedraw && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={onRedraw}
-                    className="h-7 text-xs px-2 gap-1 text-primary hover:text-primary hover:bg-primary/10"
-                  >
-                    <Pencil className="size-3" /> Redesenhar no Mapa
-                  </Button>
-                )}
               </div>
 
-              {hasPolygon ? (
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground text-xs">
-                    {polygonPointsCount > 0 ? `${polygonPointsCount} vértices definidos` : "Polígono cadastrado"}
-                  </span>
-                  {calculatedHectares > 0 && (
-                    <span className="font-medium text-xs text-primary">
-                      Área no mapa: {calculatedHectares.toFixed(2)} ha
-                    </span>
-                  )}
+              <div className="flex items-center gap-4 text-sm justify-center">
+                <div className="flex items-center gap-1.5">
+                  <Ruler className="size-3.5 text-muted-foreground" />
+                  <span className="font-medium text-foreground">{calculatedHectares.toFixed(2)} ha </span>
                 </div>
-              ) : (
-                <p className="text-xs text-amber-600 dark:text-amber-400 font-medium">
-                  Nenhum polígono desenhado. Desenhe a área diretamente sobre o mapa.
-                </p>
-              )}
+                <div className="flex items-center gap-1.5">
+                  <Hexagon className="size-3.5 text-muted-foreground" />
+                  <span className="font-medium text-foreground">{polygonPointsCount} vértices </span>
+                </div>
+              </div>
             </div>
 
-            <FormField
-              name="name"
-              control={form.control}
-              label="Nome da Área"
-              required
-              render={({ field }) => (
-                <Input {...field} placeholder="Ex: Piquete 01, Invernada Grande" />
-              )}
-            />
 
-            <div className="grid grid-cols-2 gap-4">
+            <FieldRow>
+              <FormField
+                name="name"
+                control={form.control}
+                label="Nome da Área"
+                required
+                render={({ field }) => (
+                  <Input {...field} placeholder="Ex: Piquete 01, Invernada Grande" />
+                )}
+              />
+            </FieldRow>
+
+            <FieldRow cols={2}>
               <FormField
                 name="hectares"
                 control={form.control}
@@ -130,32 +120,36 @@ export function AreaForm({
                   <Input {...field} type="number" step="any" placeholder="Ex: 1.80" />
                 )}
               />
-            </div>
+            </FieldRow>
 
-            <FormField
-              name="notes"
-              control={form.control}
-              label="Observação"
-              render={({ field }) => (
-                <Textarea
-                  {...field}
-                  placeholder="Ex: Capim-braquiarão, solo adubado, proximidade com bebedouro..."
-                  className="resize-none"
-                  rows={3}
-                />
-              )}
-            />
+            <FieldRow>
+              <FormField
+                name="notes"
+                control={form.control}
+                label="Observação"
+                render={({ field }) => (
+                  <Textarea
+                    {...field}
+                    placeholder="Ex: Capim-braquiarão, solo adubado, proximidade com bebedouro..."
+                    className="resize-none"
+                    rows={3}
+                  />
+                )}
+              />
+            </FieldRow>
           </div>
 
-          <div className="flex items-center justify-end gap-3 border-t border-border p-4 shrink-0">
-            <Button type="button" variant="secondary" onClick={onCancel}>
-              Cancelar
-            </Button>
-            <Button type="submit" disabled={form.formState.isSubmitting}>
-              {form.formState.isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Salvar
-            </Button>
-          </div>
+      <FormActionBar padding={6}>
+        <Button type="button" variant="secondary" onClick={onCancel}>
+          Cancelar
+        </Button>
+        <Button type="submit" disabled={form.formState.isSubmitting}>
+          {form.formState.isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          Salvar
+        </Button>
+      </FormActionBar>
+
+
         </form>
       </SheetContent>
     </Sheet>

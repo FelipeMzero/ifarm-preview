@@ -26,7 +26,7 @@ interface FieldRowProps {
 
 function FieldRow({
   className,
-  cols,
+  cols=1,
   children,
   ...props
 }: FieldRowProps) {
