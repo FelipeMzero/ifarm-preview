@@ -219,9 +219,25 @@ function MapZoomController({ mapMode }: { mapMode: "padrao" | "satelite" }) {
 
 function MapReferenceController({ onMapReady }: { onMapReady: (map: L.Map) => void }) {
   const map = useMap();
+
   useEffect(() => {
     if (map) onMapReady(map);
   }, [map, onMapReady]);
+
+  useEffect(() => {
+    if (!map) return;
+
+    const container = map.getContainer();
+    const resizeObserver = new ResizeObserver(() => {
+      map.invalidateSize();
+    });
+    resizeObserver.observe(container);
+
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, [map]);
+
   return null;
 }
 
@@ -817,7 +833,7 @@ export default function AreaMap() {
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
-          <div className="w-[180px]">
+          <div className="w-45">
             <Select
               value={statusFilter}
               onValueChange={(val) => setStatusFilter(val as "active" | "inactive")}
@@ -832,7 +848,7 @@ export default function AreaMap() {
             </Select>
           </div>
 
-          <div className="w-[160px]">
+          <div className="w-40">
             <Select
               value={mapMode}
               onValueChange={(val) => setMapMode(val as "padrao" | "satelite")}
