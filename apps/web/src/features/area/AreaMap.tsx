@@ -283,9 +283,9 @@ function GeomanController({
       }
     };
 
-    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("keydown", handleKeyDown, true);
     return () => {
-      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("keydown", handleKeyDown, true);
     };
   }, [map, activeMode, isDrawing, isGlobalEditing, onCancelEditing]);
 
