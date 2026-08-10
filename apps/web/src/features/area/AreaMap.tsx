@@ -669,6 +669,7 @@ export default function AreaMap() {
   const handleCleanup = useCallback(() => {
     setIsDrawing(false);
     setIsGlobalEditing(false);
+    setSheetOpen(false);
     if (drawnLayer) {
       drawnLayer.remove();
       setDrawnLayer(null);
