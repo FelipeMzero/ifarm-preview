@@ -64,8 +64,9 @@ export function AreaForm({
           </SheetDescription>
         </SheetHeader>
 
-        <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col flex-1 min-h-0 p-6 pt-1">
-          <div className="flex-1 overflow-y-auto space-y-6">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col flex-1 min-h-0">
+
+          <div className="flex flex-1 flex-col gap-6 overflow-y-auto p-6 pt-1">
             <div className="rounded-lg border border-border bg-muted/50 p-4 space-y-3">
               <div className="flex items-center gap-2 justify-center">
                 <MapPin className="size-4 text-primary" />
@@ -137,19 +138,17 @@ export function AreaForm({
                 )}
               />
             </FieldRow>
+
+            <FormActionBar padding={6} className="mt-auto">
+              <Button type="button" variant="secondary" onClick={onCancel}>
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={form.formState.isSubmitting}>
+                {form.formState.isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Salvar
+              </Button>
+            </FormActionBar>
           </div>
-
-      <FormActionBar padding={6}>
-        <Button type="button" variant="secondary" onClick={onCancel}>
-          Cancelar
-        </Button>
-        <Button type="submit" disabled={form.formState.isSubmitting}>
-          {form.formState.isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          Salvar
-        </Button>
-      </FormActionBar>
-
-
         </form>
       </SheetContent>
     </Sheet>

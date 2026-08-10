@@ -33,7 +33,7 @@ export function AreaDetails({
 
         {area && (
           <div className="space-y-4 py-2">
-            <div className="grid grid-cols-2 gap-4 border-b pb-3 text-sm">
+            <div className="grid grid-cols-2 gap-4 border-b border-border pb-3 text-sm">
               <div>
                 <span className="text-xs text-muted-foreground block">NOME</span>
                 <span className="font-semibold">{area.name}</span>
@@ -46,7 +46,7 @@ export function AreaDetails({
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4 border-b pb-3 text-sm">
+            <div className="grid grid-cols-2 gap-4 border-b border-border pb-3 text-sm">
               <div>
                 <span className="text-xs text-muted-foreground block">ÁREA</span>
                 <span>{area.hectares} ha</span>
@@ -66,18 +66,18 @@ export function AreaDetails({
           </div>
         )}
 
-        <DialogFooter className="flex sm:justify-between items-center border-t pt-4">
+        <DialogFooter className="flex sm:justify-between items-center border-t border-border pt-4">
           {area && (
             <Button
               type="button"
-              variant="ghost"
+              variant="destructive"
               className="text-destructive hover:text-destructive hover:bg-destructive/10 justify-start"
               onClick={() => onDelete(area.id)}
             >
-              <Trash2 className="size-4 mr-2" /> Excluir Área
+              <Trash2 className="size-4 mr-2" /> Excluir
             </Button>
           )}
-          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+          <Button type="button" variant="secondary" onClick={() => onOpenChange(false)}>
             Fechar
           </Button>
         </DialogFooter>
