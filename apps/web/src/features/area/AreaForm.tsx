@@ -45,7 +45,11 @@ export function AreaForm({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange} modal={false}>
-      <SheetContent showOverlay={false} className="border-l border-border">
+      <SheetContent
+        showOverlay={false}
+        className="border-l border-border"
+        onPointerDownOutside={(e) => e.preventDefault()}
+      >
         <SheetHeader className="border-b border-border">
           <SheetTitle>
             {editingArea ? "Editar Área de Pastagem" : "Nova Área de Pastagem"}
