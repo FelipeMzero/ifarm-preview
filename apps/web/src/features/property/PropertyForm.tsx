@@ -331,12 +331,12 @@ export default function PropertyForm({ id, title, onCancel, onSuccess }: Propert
               <IMaskInput
                 mask="aa-0000000-HHHH.HHHH.HHHH.HHHH.HHHH.HHHH.HHHH.HHHH"
                 definitions={{ H: /[0-9A-Fa-f]/ }}
-                prepareChar={(char) => char.toUpperCase()}
+                prepareChar={(char: string) => char.toUpperCase()}
                 id={fieldId}
                 name={field.name}
                 value={field.value}
                 placeholder="Ex: MT-5107909-E8C2.A75A.C69A.4A7C.8C26.99F5.CC59.9B9A"
-                onAccept={(value) => field.onChange(value)}
+                onAccept={(value: string) => field.onChange(value)}
                 onBlur={field.onBlur}
                 inputRef={field.ref}
                 className={MASKED_INPUT_CLASSNAME}
@@ -357,7 +357,7 @@ export default function PropertyForm({ id, title, onCancel, onSuccess }: Propert
                 name={field.name}
                 value={field.value}
                 placeholder="Ex: 999.999.999.999-9"
-                onAccept={(value) => field.onChange(value)}
+                onAccept={(value: string) => field.onChange(value)}
                 onBlur={field.onBlur}
                 inputRef={field.ref}
                 className={MASKED_INPUT_CLASSNAME}
@@ -384,8 +384,8 @@ export default function PropertyForm({ id, title, onCancel, onSuccess }: Propert
                     value={field.value}
                     disabled={isZipLoading}
                     placeholder="Ex: 78000-000"
-                    onAccept={(value) => field.onChange(value)}
-                    onBlur={(e) => { field.onBlur(); handleZipBlur(e.target.value); }}
+                    onAccept={(value: string) => field.onChange(value)}
+                    onBlur={(e: any) => { field.onBlur(); handleZipBlur(e.target.value); }}
                     inputRef={field.ref}
                     className={cn(MASKED_INPUT_CLASSNAME, isZipLoading && "pr-8")}
                   />

@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Beef, ChevronRight, KeyRound, LayoutDashboard, LogOut, Tractor, UserCog, Users } from 'lucide-react';
+import { Beef, ChevronRight, KeyRound, LayoutDashboard, LogOut, Map, Tractor, UserCog, Users } from 'lucide-react';
 import {
   Collapsible,
   CollapsibleContent,
@@ -51,6 +51,7 @@ const NAV = [
 const DIRECT_LINKS = [
   { href: '/pessoas', label: 'Pessoas', icon: Users },
   { href: '/propriedades', label: 'Propriedades', icon: Tractor },
+  { href: '/areas', label: 'Áreas', icon: Map },
   { href: '/usuarios', label: 'Usuários', icon: UserCog },
 ];
 

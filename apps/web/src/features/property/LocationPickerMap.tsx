@@ -2,7 +2,6 @@
 
 import { MapContainer, Marker, TileLayer, useMapEvents } from "react-leaflet";
 import L from "leaflet";
-import "leaflet/dist/leaflet.css";
 import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
 import markerIcon from "leaflet/dist/images/marker-icon.png";
 import markerShadow from "leaflet/dist/images/marker-shadow.png";
@@ -61,7 +60,7 @@ export default function LocationPickerMap({ latitude, longitude, onPick }: Locat
           icon={markerIconDefault}
           draggable
           eventHandlers={{
-            dragend: (e) => {
+            dragend: (e: any) => {
               const { lat, lng } = e.target.getLatLng();
               onPick(lat, lng);
             },

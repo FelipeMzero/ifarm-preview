@@ -41,7 +41,7 @@ function LocationPickerBody({ latitude, longitude, onConfirm, onCancel }: Locati
         <LocationPickerMap
           latitude={picked?.lat ?? null}
           longitude={picked?.lon ?? null}
-          onPick={(lat, lon) => setPicked({ lat, lon })}
+          onPick={(lat: number, lon: number) => setPicked({ lat, lon })}
         />
       </div>
 

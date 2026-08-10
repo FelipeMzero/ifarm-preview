@@ -206,7 +206,7 @@ export default function PersonForm({ id, title, onCancel, onSuccess }: PersonFor
                 value={field.value}
                 disabled={!!id}
                 placeholder={isCompany ? "Ex: 12.345.678/0001-90" : "Ex: 123.456.789-00"}
-                onAccept={(value) => field.onChange(value)}
+                onAccept={(value: string) => field.onChange(value)}
                 onBlur={field.onBlur}
                 inputRef={field.ref}
                 className={MASKED_INPUT_CLASSNAME}
@@ -275,7 +275,7 @@ export default function PersonForm({ id, title, onCancel, onSuccess }: PersonFor
                 name={field.name}
                 value={field.value}
                 placeholder="Ex: (11) 91234-5678"
-                onAccept={(value) => field.onChange(value)}
+                onAccept={(value: string) => field.onChange(value)}
                 onBlur={field.onBlur}
                 inputRef={field.ref}
                 className={MASKED_INPUT_CLASSNAME}
@@ -305,8 +305,8 @@ export default function PersonForm({ id, title, onCancel, onSuccess }: PersonFor
                   value={field.value}
                   disabled={isZipLoading}
                   placeholder="Ex: 78000-000"
-                  onAccept={(value) => field.onChange(value)}
-                  onBlur={(e) => { field.onBlur(); handleZipBlur(e.target.value); }}
+                  onAccept={(value: string) => field.onChange(value)}
+                  onBlur={(e: any) => { field.onBlur(); handleZipBlur(e.target.value); }}
                   inputRef={field.ref}
                   className={cn(MASKED_INPUT_CLASSNAME, isZipLoading && "pr-8")}
                 />
