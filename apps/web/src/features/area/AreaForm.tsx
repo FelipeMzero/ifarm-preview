@@ -17,6 +17,7 @@ import { AreaFormData } from "./schema";
 import { AreaRow } from "./services";
 import FieldRow from "@/components/our/FieldRow";
 import { FormActionBar } from "@/components/our/FormActionBar";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 
 interface AreaFormProps {
   open: boolean;
@@ -65,28 +66,26 @@ export function AreaForm({
         </SheetHeader>
 
         <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col flex-1 min-h-0">
+          <div className="flex flex-1 flex-col gap-6 overflow-y-auto px-6 pt-1">
 
-          <div className="flex flex-1 flex-col gap-6 overflow-y-auto p-6 pt-1">
-            <div className="rounded-lg border border-border bg-muted/50 p-4 space-y-3">
-              <div className="flex items-center gap-2 justify-center">
+            <Card className="bg-muted/50 shrink-0">
+              <CardHeader className="flex flex-row items-center justify-center gap-2 pb-2">
                 <MapPin className="size-4 text-primary" />
                 <span className="text-xs font-semibold text-foreground uppercase tracking-wider">
                   Contorno no Mapa
                 </span>
-              </div>
-
-              <div className="flex items-center gap-4 text-sm justify-center">
+              </CardHeader>
+              <CardContent className="flex items-center justify-center gap-4 text-sm">
                 <div className="flex items-center gap-1.5">
                   <Ruler className="size-3.5 text-muted-foreground" />
-                  <span className="font-medium text-foreground">{calculatedHectares.toFixed(2)} ha </span>
+                  <span className="font-medium text-foreground">{calculatedHectares.toFixed(2)} ha</span>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <Hexagon className="size-3.5 text-muted-foreground" />
-                  <span className="font-medium text-foreground">{polygonPointsCount} vértices </span>
+                  <span className="font-medium text-foreground">{polygonPointsCount} vértices</span>
                 </div>
-              </div>
-            </div>
-
+              </CardContent>
+            </Card>
 
             <FieldRow>
               <FormField
@@ -148,6 +147,8 @@ export function AreaForm({
                 Salvar
               </Button>
             </FormActionBar>
+
+            
           </div>
         </form>
       </SheetContent>

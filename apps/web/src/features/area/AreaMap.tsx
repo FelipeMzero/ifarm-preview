@@ -745,7 +745,7 @@ export default function AreaMap() {
 
   if (loading && areas.length === 0) {
     return (
-      <div className="flex h-[calc(100vh-64px)] items-center justify-center gap-2">
+      <div className="flex h-full items-center justify-center gap-2">
         <Loader2 className="h-6 w-6 animate-spin text-primary" />
         <span className="text-sm text-muted-foreground">Carregando áreas de pastagem...</span>
       </div>
@@ -753,7 +753,7 @@ export default function AreaMap() {
   }
 
   return (
-    <div className="flex h-[calc(100vh-64px)] flex-col">
+    <div className="flex h-full flex-col">
       <div className="flex flex-col gap-4 border-b border-border bg-background/95 p-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-xl font-bold tracking-tight">Mapa de Áreas de Pastagem</h1>
