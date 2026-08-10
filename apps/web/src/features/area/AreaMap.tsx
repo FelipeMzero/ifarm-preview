@@ -149,8 +149,8 @@ function MapTileLoadingOverlay() {
   if (!isLoading) return null;
 
   return (
-    <div className="absolute inset-0 z-[500] flex items-center justify-center bg-background/30 backdrop-blur-[1px] pointer-events-none transition-all duration-200">
-      <div className="flex items-center gap-2.5 rounded-lg border bg-card/95 px-3 py-2 shadow-md text-card-foreground">
+    <div >
+      <div>
         <Loader2 className="h-4 w-4 animate-spin text-primary" />
         <span className="text-xs font-medium">Carregando mapa...</span>
       </div>
@@ -824,7 +824,7 @@ export default function AreaMap() {
 
   return (
     <div className="flex h-[calc(100vh-64px)] flex-col">
-      <div className="flex flex-col gap-4 border-b bg-background/95 p-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-4 border-b border-border bg-background/95 p-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-xl font-bold tracking-tight">Mapa de Áreas de Pastagem</h1>
           <p className="text-sm text-muted-foreground">
@@ -876,14 +876,14 @@ export default function AreaMap() {
                   setIsGlobalEditing(!isGlobalEditing);
                   if (sheetOpen) setSheetOpen(false);
                 }}
-                className="gap-2"
+                className="gap-2 w-40"
               >
                 <Pencil className="size-4 text-primary" />
-                {isGlobalEditing ? "Concluir Edição" : "Editar Várias Áreas"}
+                {isGlobalEditing ? "Concluir Edição" : "Ajustar contornos"}
               </Button>
 
-              <Button onClick={startDrawing} className="gap-2">
-                <Plus className="size-4" /> Adicionar Área
+              <Button onClick={startDrawing} className="gap-2 w-40">
+                <Plus className="size-4" /> Área
               </Button>
             </>
           )}
@@ -979,7 +979,7 @@ export default function AreaMap() {
                     onPolygonChange={handlePolygonChange}
                     onGlobalPolygonChange={handleGlobalPolygonChange}
                   >
-                    {!isSelectedForEdit && !isGlobalEditing && (
+                    {/* {!isSelectedForEdit && !isGlobalEditing && (
                       <Tooltip sticky>
                         <div className="p-1 text-xs space-y-0.5">
                           <p className="font-semibold text-sm border-b pb-0.5 mb-1">{area.name}</p>
@@ -988,18 +988,17 @@ export default function AreaMap() {
                           <p><strong>Observação:</strong> {area.notes || "Nenhuma"}</p>
                         </div>
                       </Tooltip>
-                    )}
+                    )} */}
 
                     {!isSelectedForEdit && !isGlobalEditing && (
                       <Popup>
-                        <div className="min-w-[160px] p-1 text-foreground">
-                          <h4 className="font-semibold text-sm border-b pb-1 mb-2">{area.name}</h4>
+                        <div className="min-w-40 p-1 text-foreground ">
+                          <h4 className="font-semibold text-sm border-b border-border pb-1 mb-2">{area.name}</h4>
                           <div className="flex flex-col gap-1.5">
                             {statusFilter === "active" ? (
                               <>
                                 <Button
                                   size="sm"
-                                  variant="outline"
                                   className="h-8 justify-start text-xs font-normal"
                                   onClick={() => startEditing(area)}
                                 >
@@ -1007,7 +1006,6 @@ export default function AreaMap() {
                                 </Button>
                                 <Button
                                   size="sm"
-                                  variant="outline"
                                   className="h-8 justify-start text-xs font-normal"
                                   onClick={() => setDetailsArea(area)}
                                 >
@@ -1015,19 +1013,19 @@ export default function AreaMap() {
                                 </Button>
                                 <Button
                                   size="sm"
-                                  variant="ghost"
-                                  className="h-8 justify-start text-xs font-normal text-destructive hover:text-destructive hover:bg-destructive/10"
-                                  onClick={() => handleDeleteArea(area.id)}
-                                >
-                                  <Trash2 className="size-3.5 mr-2" /> Excluir
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
+                                  variant="secondary"
                                   className="h-8 justify-start text-xs font-normal text-muted-foreground hover:bg-accent"
                                   onClick={() => handleToggleStatus(area.id)}
                                 >
                                   <EyeOff className="size-3.5 mr-2" /> Desativar
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="destructive"
+                                  className="h-8 justify-start text-xs font-normal text-destructive hover:text-destructive hover:bg-destructive/10"
+                                  onClick={() => handleDeleteArea(area.id)}
+                                >
+                                  <Trash2 className="size-3.5 mr-2" /> Excluir
                                 </Button>
                               </>
                             ) : (

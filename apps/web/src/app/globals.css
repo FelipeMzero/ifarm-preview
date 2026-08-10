@@ -152,3 +152,11 @@
     --shadow-xl: var(--shadow-xl);
     --shadow-2xl: var(--shadow-2xl);
 }
+
+.leaflet-popup-content-wrapper {
+  background: var(--popover);
+  color: var(--popover-foreground);
+}
+.leaflet-popup-tip {
+  background: var(--popover);
+}

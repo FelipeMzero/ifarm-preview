@@ -45,8 +45,8 @@ export function AreaForm({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange} modal={false}>
-      <SheetContent showOverlay={false} className="sm:max-w-md flex flex-col h-full p-0 shadow-2xl border-l z-[1000]">
-        <SheetHeader className="p-6 pb-4 border-b shrink-0">
+      <SheetContent showOverlay={false} className="border-l border-border">
+        <SheetHeader className="border-b border-border">
           <SheetTitle>
             {editingArea ? "Editar Área de Pastagem" : "Nova Área de Pastagem"}
           </SheetTitle>
@@ -59,7 +59,7 @@ export function AreaForm({
 
         <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col flex-1 min-h-0">
           <div className="flex-1 overflow-y-auto p-6 space-y-6">
-            <div className="rounded-lg border bg-muted/40 p-3 space-y-2">
+            <div className="rounded-lg border border-border bg-muted/50 p-3 space-y-2">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                   Contorno no Mapa
@@ -83,7 +83,7 @@ export function AreaForm({
                     {polygonPointsCount > 0 ? `${polygonPointsCount} vértices definidos` : "Polígono cadastrado"}
                   </span>
                   {calculatedHectares > 0 && (
-                    <span className="font-medium text-xs text-emerald-600 dark:text-emerald-400">
+                    <span className="font-medium text-xs text-primary">
                       Área no mapa: {calculatedHectares.toFixed(2)} ha
                     </span>
                   )}
@@ -143,8 +143,8 @@ export function AreaForm({
             />
           </div>
 
-          <div className="flex items-center justify-end gap-3 border-t bg-background p-4 shrink-0">
-            <Button type="button" variant="outline" onClick={onCancel}>
+          <div className="flex items-center justify-end gap-3 border-t border-border p-4 shrink-0">
+            <Button type="button" variant="secondary" onClick={onCancel}>
               Cancelar
             </Button>
             <Button type="submit" disabled={form.formState.isSubmitting}>
