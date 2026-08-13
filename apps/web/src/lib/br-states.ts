@@ -26,4 +26,4 @@ export const BR_STATE_ITEMS = [
   { value: "SP", label: "São Paulo" },
   { value: "SE", label: "Sergipe" },
   { value: "TO", label: "Tocantins" },
-];
+] as const;

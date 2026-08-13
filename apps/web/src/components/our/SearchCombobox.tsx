@@ -15,7 +15,7 @@ export type SearchComboboxItem = { value: string; label: string }
 type SearchComboboxProps<T extends FieldValues, TName extends FieldPath<T>> = {
   field: ControllerRenderProps<T, TName>
   fieldState: ControllerFieldState
-  items: SearchComboboxItem[]
+  items: readonly SearchComboboxItem[]
   onInputValueChange?: (val: string) => void
   placeholder?: string
   emptyMessage?: string
