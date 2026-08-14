@@ -8,7 +8,7 @@ import { MapContainer, TileLayer, Marker, Tooltip, Popup, useMap, Polygon } from
 import { polygon as turfPolygon } from "@turf/helpers";
 import turfArea from "@turf/area";
 import { toast } from "sonner";
-import { Loader2, Pencil, Plus, Trash2, Eye, EyeOff, Info, AlertTriangle, Landmark, Globe, Map as MapIcon } from "lucide-react";
+import { Loader2, Pencil, Plus, Trash2, Eye, EyeOff, Info, AlertTriangle, Landmark, Globe, Map as MapIcon, LocateFixed } from "lucide-react";
 
 import "@geoman-io/leaflet-geoman-free";
 
@@ -797,6 +797,22 @@ export default function AreaMap() {
   const center: [number, number] = areasCentroid ?? fallbackCoords ?? DEFAULT_MAP_CENTER;
   const zoom = areasCentroid || fallbackCoords ? 15 : DEFAULT_MAP_ZOOM;
 
+  const handleRecenterMap = () => {
+    if (!mapInstance) return;
+
+    if (allAreaPoints.length > 0) {
+      const bounds = L.latLngBounds(allAreaPoints.map((p) => [p.lat, p.lng] as [number, number]));
+      if (bounds.isValid()) {
+        mapInstance.fitBounds(bounds, { padding: [50, 50], maxZoom: 16, animate: true });
+        return;
+      }
+    }
+
+    mapInstance.setView(fallbackCoords ?? DEFAULT_MAP_CENTER, fallbackCoords ? 16 : DEFAULT_MAP_ZOOM, {
+      animate: true,
+    });
+  };
+
   if (loading && areas.length === 0) {
     return (
       <div className="flex h-full items-center justify-center gap-2">
@@ -817,6 +833,17 @@ export default function AreaMap() {
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
+
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            title="Centralizar na localização da propriedade"
+            disabled={!currentProperty || !mapInstance}
+            onClick={handleRecenterMap}
+          >
+            <LocateFixed className="size-4" />
+          </Button>
 
           <div className="w-40">
             <Select
