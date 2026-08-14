@@ -159,12 +159,17 @@ function MapTileLoadingOverlay() {
 }
 
 
+const DEFAULT_MAP_CENTER: [number, number] = [-14.235, -51.925];
+const DEFAULT_MAP_ZOOM = 4;
+
 function MapBoundsController({
   areas,
-  propertyCoords,
+  fallbackCoords,
+  locating,
 }: {
   areas: AreaRow[];
-  propertyCoords: [number, number] | null;
+  fallbackCoords: [number, number] | null;
+  locating: boolean;
 }) {
   const map = useMap();
   const fittedRef = useRef(false);
@@ -193,11 +198,23 @@ function MapBoundsController({
       }
     }
 
-    if (propertyCoords && !fittedRef.current) {
-      map.setView(propertyCoords, 16, { animate: true });
+    // Áreas reais (acima) sempre têm prioridade e nunca ficam travadas; os fallbacks abaixo
+    // só centralizam uma vez por montagem, pra não "puxar" o mapa se o usuário já navegou.
+    if (fittedRef.current) return;
+
+    if (fallbackCoords) {
+      map.setView(fallbackCoords, 16, { animate: true });
+      fittedRef.current = true;
+      return;
+    }
+
+    // Sem áreas nem localização (nem da propriedade, nem do navegador): só assume o centro
+    // padrão depois que a busca de localização terminar, para não "piscar" antes de resolver.
+    if (!locating) {
+      map.setView(DEFAULT_MAP_CENTER, DEFAULT_MAP_ZOOM, { animate: true });
       fittedRef.current = true;
     }
-  }, [map, areas, propertyCoords]);
+  }, [map, areas, fallbackCoords, locating]);
 
   return null;
 }
@@ -495,32 +512,63 @@ export default function AreaMap() {
   const { property: currentProperty } = useCurrentProperty();
 
   const [areas, setAreas] = useState<AreaRow[]>([]);
+  const [areasPropertyId, setAreasPropertyId] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<"active" | "inactive">("active");
   const [mapMode, setMapMode] = useState<"padrao" | "satelite">("padrao");
   const [loading, setLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
   const [propertyCoords, setPropertyCoords] = useState<[number, number] | null>(null);
+  const [browserCoords, setBrowserCoords] = useState<[number, number] | null>(null);
+  const [locatingProperty, setLocatingProperty] = useState(false);
 
   useEffect(() => {
+    setPropertyCoords(null);
+    setBrowserCoords(null);
+
     if (!currentProperty?.id) {
-      setPropertyCoords(null);
+      setLocatingProperty(false);
       return;
     }
+
+    let active = true;
+    setLocatingProperty(true);
 
     async function loadPropertyCoords() {
       try {
         const details = await getProperty(currentProperty!.id);
         if (details.latitude && details.longitude) {
-          setPropertyCoords([Number(details.latitude), Number(details.longitude)]);
-        } else {
-          const coords = await geocodeAddress(details.zipCode, details.city, details.state);
-          setPropertyCoords(coords);
+          if (active) setPropertyCoords([Number(details.latitude), Number(details.longitude)]);
+          return;
+        }
+        const coords = await geocodeAddress(details.zipCode, details.city, details.state);
+        if (coords) {
+          if (active) setPropertyCoords(coords);
+          return;
         }
       } catch {
-        setPropertyCoords(null);
+        // sem localização/endereço cadastrados: cai para a geolocalização do navegador abaixo
       }
+
+      if (!navigator.geolocation) return;
+      await new Promise<void>((resolve) => {
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            if (active) setBrowserCoords([pos.coords.latitude, pos.coords.longitude]);
+            resolve();
+          },
+          () => resolve(),
+          { timeout: 8000 }
+        );
+      });
     }
-    loadPropertyCoords();
+
+    loadPropertyCoords().finally(() => {
+      if (active) setLocatingProperty(false);
+    });
+
+    return () => {
+      active = false;
+    };
   }, [currentProperty?.id]);
 
   const [mapInstance, setMapInstance] = useState<L.Map | null>(null);
@@ -559,6 +607,7 @@ export default function AreaMap() {
         const result = await getAreas({ propertyId: currentProperty?.id, status: statusFilter });
         if (active) {
           setAreas(result.data);
+          setAreasPropertyId(currentProperty!.id);
         }
       } catch (err: any) {
         toast.error(err.message ?? "Não foi possível carregar as áreas de pastagem.");
@@ -736,12 +785,17 @@ export default function AreaMap() {
     }
   }
 
+  // Só usa `areas` no mapa quando já pertencem à propriedade atual — evita mostrar
+  // por um instante o polígono/centro da fazenda anterior enquanto a nova carrega.
+  const displayAreas = currentProperty && areasPropertyId === currentProperty.id ? areas : [];
+
   // Calcula centro inicial baseado nas áreas cadastradas se houverem
-  const allAreaPoints = areas.flatMap((a) => (Array.isArray(a.polygon) ? (a.polygon as { lat: number; lng: number }[]) : []));
+  const allAreaPoints = displayAreas.flatMap((a) => (Array.isArray(a.polygon) ? (a.polygon as { lat: number; lng: number }[]) : []));
   const areasCentroid = allAreaPoints.length > 0 ? getCentroid(allAreaPoints) : null;
 
-  const center: [number, number] = areasCentroid ?? propertyCoords ?? [-14.235, -51.925];
-  const zoom = areasCentroid || propertyCoords ? 15 : 4;
+  const fallbackCoords = propertyCoords ?? browserCoords;
+  const center: [number, number] = areasCentroid ?? fallbackCoords ?? DEFAULT_MAP_CENTER;
+  const zoom = areasCentroid || fallbackCoords ? 15 : DEFAULT_MAP_ZOOM;
 
   if (loading && areas.length === 0) {
     return (
@@ -824,8 +878,9 @@ export default function AreaMap() {
 
       <div ref={setMapAreaEl} className="relative min-h-0 flex-1 overflow-hidden will-change-transform">
         {currentProperty ? (
+          <>
           <MapContainer
-            key={`${currentProperty.id}-${areasCentroid ? areasCentroid.join(",") : propertyCoords ? propertyCoords.join(",") : "default"}-${statusFilter}`}
+            key={`${currentProperty.id}-${statusFilter}`}
             center={center}
             zoom={zoom}
             maxZoom={19}
@@ -834,7 +889,7 @@ export default function AreaMap() {
           >
             <MapTileLoadingOverlay />
             <MapReferenceController onMapReady={setMapInstance} />
-            <MapBoundsController areas={areas} propertyCoords={propertyCoords} />
+            <MapBoundsController areas={displayAreas} fallbackCoords={fallbackCoords} locating={locatingProperty} />
             <MapZoomController mapMode={mapMode} />
 
             <TileLayer
@@ -861,7 +916,7 @@ export default function AreaMap() {
               onCancelEditing={handleCleanup}
             />
 
-            {areas.map((area) => {
+            {displayAreas.map((area) => {
               const rawPoints = area.polygon as { lat: number; lng: number }[];
               const centroid = getCentroid(rawPoints);
               const isSelectedForEdit = editingArea?.id === area.id;
@@ -964,6 +1019,13 @@ export default function AreaMap() {
               );
             })}
           </MapContainer>
+          {locatingProperty && !areasCentroid && !fallbackCoords && (
+            <div className="pointer-events-none absolute inset-0 z-1000 flex flex-col items-center justify-center gap-2 bg-background/70 backdrop-blur-sm">
+              <Loader2 className="h-6 w-6 animate-spin text-primary" />
+              <span className="text-sm font-medium text-foreground">Localizando propriedade...</span>
+            </div>
+          )}
+          </>
         ) : (
           <div className="flex h-full flex-col items-center justify-center gap-3 bg-muted/30 p-8 text-center">
             <Landmark className="h-12 w-12 text-muted-foreground/60" />
