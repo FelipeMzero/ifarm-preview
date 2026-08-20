@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { isValidTaxId } from "@/lib/tax-id";
+import { FIELD_LIMITS } from "@/lib/field-limits";
 
 const enumValues = <T extends Record<string, string>>(e: T) =>
   Object.values(e) as [T[keyof T], ...T[keyof T][]];
@@ -17,26 +18,26 @@ export const personFormSchema = z
   .object({
     type:              z.enum(enumValues(EnumPersonType), "Este campo não pode ser vazio"),
     taxId:             z.string().min(1, "Este campo não pode ser vazio"),
-    name:              z.string().min(1, "Este campo não pode ser vazio"),
-    stateRegistration: z.string().optional(),
+    name:              z.string().min(1, "Este campo não pode ser vazio").max(FIELD_LIMITS.person.name, `Máximo de ${FIELD_LIMITS.person.name} caracteres`),
+    stateRegistration: z.string().max(FIELD_LIMITS.person.stateRegistration, `Máximo de ${FIELD_LIMITS.person.stateRegistration} caracteres`).optional(),
     phone:             z.string().optional(),
-    email:             z.string().optional(),
+    email:             z.string().max(FIELD_LIMITS.person.email, `Máximo de ${FIELD_LIMITS.person.email} caracteres`).optional(),
 
     // Exclusivo de Pessoa Jurídica
-    tradeName:         z.string().optional(),
+    tradeName:         z.string().max(FIELD_LIMITS.person.tradeName, `Máximo de ${FIELD_LIMITS.person.tradeName} caracteres`).optional(),
 
     // Exclusivos de Pessoa Física
-    rg:                z.string().optional(),
+    rg:                z.string().max(FIELD_LIMITS.person.rg, `Máximo de ${FIELD_LIMITS.person.rg} caracteres`).optional(),
     birthDate:         z.string().optional(),
     maritalStatus:     z.string().optional(),
 
     // Endereço
     zipCode:           z.string().optional(),
-    street:            z.string().optional(),
-    number:            z.string().optional(),
-    complement:        z.string().optional(),
-    neighborhood:      z.string().optional(),
-    city:              z.string().optional(),
+    street:            z.string().max(FIELD_LIMITS.address.street, `Máximo de ${FIELD_LIMITS.address.street} caracteres`).optional(),
+    number:            z.string().max(FIELD_LIMITS.address.number, `Máximo de ${FIELD_LIMITS.address.number} caracteres`).optional(),
+    complement:        z.string().max(FIELD_LIMITS.address.complement, `Máximo de ${FIELD_LIMITS.address.complement} caracteres`).optional(),
+    neighborhood:      z.string().max(FIELD_LIMITS.address.neighborhood, `Máximo de ${FIELD_LIMITS.address.neighborhood} caracteres`).optional(),
+    city:              z.string().max(FIELD_LIMITS.address.city, `Máximo de ${FIELD_LIMITS.address.city} caracteres`).optional(),
     state:             z.string().optional(),
   })
   .check((ctx) => {

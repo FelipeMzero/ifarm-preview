@@ -15,6 +15,7 @@ export type InlineEditableColumn<T> = {
   placeholder?: string;
   /** @default true */
   editable?: boolean;
+  maxLength?: number;
 };
 
 type InlineEditableListProps<T extends { id: string | number }> = {
@@ -188,6 +189,7 @@ export function InlineEditableList<T extends { id: string | number }>({
               placeholder={column.placeholder ?? column.label}
               value={newValues[column.key] ?? ""}
               disabled={isCreating}
+              maxLength={column.maxLength}
               onChange={(e) => setNewValues((prev) => ({ ...prev, [column.key]: e.target.value }))}
               onKeyDown={(e) => e.key === "Enter" && handleCreate()}
             />
@@ -224,6 +226,7 @@ export function InlineEditableList<T extends { id: string | number }>({
                         ref={index === 0 ? firstEditingInputRef : undefined}
                         value={editingValues[column.key] ?? ""}
                         disabled={isSaving}
+                        maxLength={column.maxLength}
                         onChange={(e) => setEditingValues((prev) => ({ ...prev, [column.key]: e.target.value }))}
                         onKeyDown={(e) => {
                           if (e.key === "Enter") handleUpdate(item.id);

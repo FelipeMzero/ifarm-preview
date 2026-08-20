@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { FIELD_LIMITS } from "@/lib/field-limits";import { useCallback, useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { IMaskInput } from "react-imask";
@@ -294,7 +294,7 @@ export default function PropertyForm({ id, title, onCancel, onSuccess }: Propert
         <FieldRow cols={2}>
           <FormField name="name" label="Nome" required
             control={control}
-            render={({ field, id: fieldId }) => <Input {...field} id={fieldId} placeholder="Ex: Fazendão São João" />}
+            render={({ field, id: fieldId }) => <Input {...field} id={fieldId} maxLength={FIELD_LIMITS.property.name} placeholder="Ex: Fazendão São João" />}
           />
 
           <FormField name="ownerId" label="Titular" required
@@ -345,7 +345,7 @@ export default function PropertyForm({ id, title, onCancel, onSuccess }: Propert
           />
           <FormField name="cib" label="CIB"
             control={control}
-            render={({ field, id: fieldId }) => <Input {...field} id={fieldId} placeholder="Ex: ABC1234-5" />}
+            render={({ field, id: fieldId }) => <Input {...field} id={fieldId} maxLength={FIELD_LIMITS.property.cib} placeholder="Ex: ABC1234-5" />}
           />
           <FormField name="ccir" label="CCIR"
             control={control}
@@ -400,30 +400,30 @@ export default function PropertyForm({ id, title, onCancel, onSuccess }: Propert
           <FieldRow cols={2}>
             <FormField name="street" label="Logradouro"
               control={control}
-              render={({ field, id: fieldId }) => <Input {...field} id={fieldId} placeholder="Ex: Av. Brasil" />}
+              render={({ field, id: fieldId }) => <Input {...field} id={fieldId} maxLength={FIELD_LIMITS.address.street} placeholder="Ex: Av. Brasil" />}
             />
 
             <FormField name="number" label="Número"
               control={control}
-              render={({ field, id: fieldId }) => <Input {...field} id={fieldId} placeholder="Ex: 1200" />}
+              render={({ field, id: fieldId }) => <Input {...field} id={fieldId} maxLength={FIELD_LIMITS.address.number} placeholder="Ex: 1200" />}
             />
           </FieldRow>
 
           <FieldRow cols={2}>
             <FormField name="complement" label="Complemento"
               control={control}
-              render={({ field, id: fieldId }) => <Input {...field} id={fieldId} placeholder="Ex: Galpão 2" />}
+              render={({ field, id: fieldId }) => <Input {...field} id={fieldId} maxLength={FIELD_LIMITS.address.complement} placeholder="Ex: Galpão 2" />}
             />
             <FormField name="neighborhood" label="Bairro"
               control={control}
-              render={({ field, id: fieldId }) => <Input {...field} id={fieldId} placeholder="Ex: Centro" />}
+              render={({ field, id: fieldId }) => <Input {...field} id={fieldId} maxLength={FIELD_LIMITS.address.neighborhood} placeholder="Ex: Centro" />}
             />
           </FieldRow>
 
           <FieldRow cols={2}>
             <FormField name="city" label="Município"
               control={control}
-              render={({ field, id: fieldId }) => <Input {...field} id={fieldId} placeholder="Ex: Cuiabá" />}
+              render={({ field, id: fieldId }) => <Input {...field} id={fieldId} maxLength={FIELD_LIMITS.address.city} placeholder="Ex: Cuiabá" />}
             />
             <FormField name="state" label="UF"
               control={control}

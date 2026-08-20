@@ -6,9 +6,10 @@ import { InlineEditableList, InlineEditableColumn } from "@/components/our/Inlin
 import { ErrorPage } from "@/components/our/ErrorPage";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Breed, getBreeds, createBreed, updateBreed, deleteBreed, toggleBreedStatus } from "./services";
+import { FIELD_LIMITS } from "@/lib/field-limits";
 
 const COLUMNS: InlineEditableColumn<Breed>[] = [
-  { key: "name", label: "Nome", placeholder: "Nome da raça" },
+  { key: "name", label: "Nome", placeholder: "Nome da raça", maxLength: FIELD_LIMITS.breed.name },
 ];
 
 function BreedListSkeleton() {

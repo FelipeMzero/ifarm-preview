@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, useCallback } from "react";
+import { FIELD_LIMITS } from "@/lib/field-limits";import { useEffect, useRef, useState, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
@@ -175,19 +175,19 @@ export default function AnimalForm({ id, title, onCancel, onSuccess }: AnimalFor
         <FieldRow cols={2}>
           <FormField name="earTag" label="Brinco" required
             control={control}
-            render={({ field, id }) => <Input {...field} id={id} placeholder="Ex: MS-001234" />}
+            render={({ field, id }) => <Input {...field} id={id} maxLength={FIELD_LIMITS.animal.earTag} placeholder="Ex: MS-001234" />}
           />
 
           <FormField name="rfid" label="RFID / Chip"
             control={control}
-            render={({ field, id }) => <Input {...field} id={id} placeholder="Ex: 900082000169813" />}
+            render={({ field, id }) => <Input {...field} id={id} maxLength={FIELD_LIMITS.animal.rfid} placeholder="Ex: 900082000169813" />}
           />
         </FieldRow>
 
         <FieldRow cols={2}>
           <FormField name="name" label="Apelido"
             control={control}
-            render={({ field, id }) => <Input {...field} id={id} placeholder="Ex: Mimosa" />}
+            render={({ field, id }) => <Input {...field} id={id} maxLength={FIELD_LIMITS.animal.name} placeholder="Ex: Mimosa" />}
           />
 
           <FormField name="sex" label="Sexo"
@@ -305,7 +305,7 @@ export default function AnimalForm({ id, title, onCancel, onSuccess }: AnimalFor
               />
               <FormField name="originPropertyName" label="Nome da Fazenda (se externa)"
                 control={control}
-                render={({ field, id }) => <Input {...field} id={id} placeholder="Ex: Fazenda Santa Fé" />}
+                render={({ field, id }) => <Input {...field} id={id} maxLength={FIELD_LIMITS.animal.originPropertyName} placeholder="Ex: Fazenda Santa Fé" />}
               />
             </FieldRow>
           </>

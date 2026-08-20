@@ -20,6 +20,7 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { authClient, useSession } from "@/lib/auth-client";
 import { ResetPasswordDialog } from "./ResetPasswordDialog";
+import { FIELD_LIMITS } from "@/lib/field-limits";
 
 const DEFAULT_PAGE_SIZE = 10;
 
@@ -40,8 +41,8 @@ const ROLE_LABEL: Record<string, string> = {
 };
 
 const newUserSchema = z.object({
-  name: z.string().min(1, "Este campo não pode ser vazio"),
-  email: z.email("E-mail inválido"),
+  name: z.string().min(1, "Este campo não pode ser vazio").max(FIELD_LIMITS.user.name, `Máximo de ${FIELD_LIMITS.user.name} caracteres`),
+  email: z.string().email("E-mail inválido").max(FIELD_LIMITS.user.email, `Máximo de ${FIELD_LIMITS.user.email} caracteres`),
   password: z.string().min(8, "A senha deve ter ao menos 8 caracteres"),
   role: z.enum(["admin", "manager", "technician", "worker"], "Este campo não pode ser vazio"),
 });
@@ -266,10 +267,10 @@ export default function UserList() {
             <h2 className="text-xl font-semibold">Novo Usuário</h2>
 
             <FormField name="name" label="Nome" required control={control}
-              render={({ id, field }) => <Input id={id} {...field} />}
+              render={({ id, field }) => <Input id={id} maxLength={FIELD_LIMITS.user.name} {...field} />}
             />
             <FormField name="email" label="E-mail" required control={control}
-              render={({ id, field }) => <Input id={id} type="email" {...field} />}
+              render={({ id, field }) => <Input id={id} type="email" maxLength={FIELD_LIMITS.user.email} {...field} />}
             />
             <FormField name="password" label="Senha" required control={control}
               render={({ id, field }) => <Input id={id} type="password" {...field} />}

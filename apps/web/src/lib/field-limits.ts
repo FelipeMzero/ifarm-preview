@@ -1,0 +1,9 @@
+export const FIELD_LIMITS = {
+  person: { name: 100, stateRegistration: 20, email: 255, tradeName: 200, rg: 20 },
+  property: { name: 200, cib: 20 },
+  animal: { earTag: 30, rfid: 50, name: 50, originPropertyName: 200 },
+  area: { name: 100, notes: 500 },
+  breed: { name: 60 },
+  address: { street: 150, number: 15, complement: 100, neighborhood: 100, city: 60 },
+  user: { name: 100, email: 255 },
+} as const;

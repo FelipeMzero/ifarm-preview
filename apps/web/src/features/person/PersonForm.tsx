@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { FIELD_LIMITS } from "@/lib/field-limits";import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { IMaskInput } from "react-imask";
@@ -218,18 +218,18 @@ export default function PersonForm({ id, title, onCancel, onSuccess }: PersonFor
         <FieldRow cols={2}>
           <FormField name="name" label={isCompany ? "Razão Social" : "Nome"} required
             control={control}
-            render={({ field, id: fieldId }) => <Input {...field} id={fieldId} placeholder="Ex: João da Silva" />}
+            render={({ field, id: fieldId }) => <Input {...field} id={fieldId} maxLength={FIELD_LIMITS.person.name} placeholder="Ex: João da Silva" />}
           />
 
           {isCompany ? (
             <FormField name="tradeName" label="Nome Fantasia"
               control={control}
-              render={({ field, id: fieldId }) => <Input {...field} id={fieldId} placeholder="Ex: AgroVacinas Distribuidora" />}
+              render={({ field, id: fieldId }) => <Input {...field} id={fieldId} maxLength={FIELD_LIMITS.person.tradeName} placeholder="Ex: AgroVacinas Distribuidora" />}
             />
           ) : (
             <FormField name="rg" label="RG"
               control={control}
-              render={({ field, id: fieldId }) => <Input {...field} id={fieldId} placeholder="Ex: 12345678" />}
+              render={({ field, id: fieldId }) => <Input {...field} id={fieldId} maxLength={FIELD_LIMITS.person.rg} placeholder="Ex: 12345678" />}
             />
           )}
         </FieldRow>
@@ -238,7 +238,7 @@ export default function PersonForm({ id, title, onCancel, onSuccess }: PersonFor
           <FieldRow cols={2}>
             <FormField name="stateRegistration" label="Inscrição Estadual"
               control={control}
-              render={({ field, id: fieldId }) => <Input {...field} id={fieldId} placeholder="Ex: 123.456.789.123" />}
+              render={({ field, id: fieldId }) => <Input {...field} id={fieldId} maxLength={FIELD_LIMITS.person.stateRegistration} placeholder="Ex: 123.456.789.123" />}
             />
           </FieldRow>
         ) : (
@@ -284,7 +284,7 @@ export default function PersonForm({ id, title, onCancel, onSuccess }: PersonFor
           />
           <FormField name="email" label="E-mail"
             control={control}
-            render={({ field, id: fieldId }) => <Input {...field} id={fieldId} type="email" placeholder="Ex: contato@exemplo.com" />}
+            render={({ field, id: fieldId }) => <Input {...field} id={fieldId} type="email" maxLength={FIELD_LIMITS.person.email} placeholder="Ex: contato@exemplo.com" />}
           />
         </FieldRow>
       </FieldSet>
@@ -318,25 +318,25 @@ export default function PersonForm({ id, title, onCancel, onSuccess }: PersonFor
           />
           <FormField name="street" label="Logradouro"
             control={control}
-            render={({ field, id: fieldId }) => <Input {...field} id={fieldId} placeholder="Ex: Av. Brasil" />}
+            render={({ field, id: fieldId }) => <Input {...field} id={fieldId} maxLength={FIELD_LIMITS.address.street} placeholder="Ex: Av. Brasil" />}
           />
           <FormField name="number" label="Número"
             control={control}
-            render={({ field, id: fieldId }) => <Input {...field} id={fieldId} placeholder="Ex: 1200" />}
+            render={({ field, id: fieldId }) => <Input {...field} id={fieldId} maxLength={FIELD_LIMITS.address.number} placeholder="Ex: 1200" />}
           />
         </FieldRow>
         <FieldRow cols={3}>
           <FormField name="complement" label="Complemento"
             control={control}
-            render={({ field, id: fieldId }) => <Input {...field} id={fieldId} placeholder="Ex: Galpão 2" />}
+            render={({ field, id: fieldId }) => <Input {...field} id={fieldId} maxLength={FIELD_LIMITS.address.complement} placeholder="Ex: Galpão 2" />}
           />
           <FormField name="neighborhood" label="Bairro"
             control={control}
-            render={({ field, id: fieldId }) => <Input {...field} id={fieldId} placeholder="Ex: Centro" />}
+            render={({ field, id: fieldId }) => <Input {...field} id={fieldId} maxLength={FIELD_LIMITS.address.neighborhood} placeholder="Ex: Centro" />}
           />
           <FormField name="city" label="Município"
             control={control}
-            render={({ field, id: fieldId }) => <Input {...field} id={fieldId} placeholder="Ex: Cuiabá" />}
+            render={({ field, id: fieldId }) => <Input {...field} id={fieldId} maxLength={FIELD_LIMITS.address.city} placeholder="Ex: Cuiabá" />}
           />
         </FieldRow>
         <FieldRow cols={3}>

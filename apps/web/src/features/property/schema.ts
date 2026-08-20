@@ -1,14 +1,15 @@
 import { z } from "zod";
+import { FIELD_LIMITS } from "@/lib/field-limits";
 
 export const propertyFormSchema = z
   .object({
-    name:           z.string().min(1, "Este campo não pode ser vazio"),
+    name:           z.string().min(1, "Este campo não pode ser vazio").max(FIELD_LIMITS.property.name, `Máximo de ${FIELD_LIMITS.property.name} caracteres`),
     ownerId:        z.string().min(1, "Este campo não pode ser vazio"),
     ownerName:      z.string().optional(),
 
     totalArea:      z.string().optional(),
     productiveArea: z.string().optional(),
-    cib:            z.string().optional(),
+    cib:            z.string().max(FIELD_LIMITS.property.cib, `Máximo de ${FIELD_LIMITS.property.cib} caracteres`).optional(),
     ccir:           z.string().optional(),
     car:            z.string().optional(),
     latitude:       z.string().optional()
@@ -18,11 +19,11 @@ export const propertyFormSchema = z
 
     // Endereço
     zipCode:        z.string().optional(),
-    street:         z.string().optional(),
-    number:         z.string().optional(),
-    complement:     z.string().optional(),
-    neighborhood:   z.string().optional(),
-    city:           z.string().optional(),
+    street:         z.string().max(FIELD_LIMITS.address.street, `Máximo de ${FIELD_LIMITS.address.street} caracteres`).optional(),
+    number:         z.string().max(FIELD_LIMITS.address.number, `Máximo de ${FIELD_LIMITS.address.number} caracteres`).optional(),
+    complement:     z.string().max(FIELD_LIMITS.address.complement, `Máximo de ${FIELD_LIMITS.address.complement} caracteres`).optional(),
+    neighborhood:   z.string().max(FIELD_LIMITS.address.neighborhood, `Máximo de ${FIELD_LIMITS.address.neighborhood} caracteres`).optional(),
+    city:           z.string().max(FIELD_LIMITS.address.city, `Máximo de ${FIELD_LIMITS.address.city} caracteres`).optional(),
     state:          z.string().optional(),
   })
   .check((ctx) => {

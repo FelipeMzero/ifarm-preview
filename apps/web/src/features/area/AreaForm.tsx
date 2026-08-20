@@ -1,6 +1,6 @@
 "use client";
 
-import { UseFormReturn } from "react-hook-form";
+import { FIELD_LIMITS } from "@/lib/field-limits";import { UseFormReturn } from "react-hook-form";
 import { Hexagon, Loader2, MapPin, Pencil, Ruler } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -94,7 +94,7 @@ export function AreaForm({
                 label="Nome da Área"
                 required
                 render={({ field }) => (
-                  <Input {...field} placeholder="Ex: Piquete 01, Invernada Grande" />
+                  <Input {...field} maxLength={FIELD_LIMITS.area.name} placeholder="Ex: Piquete 01, Invernada Grande" />
                 )}
               />
             </FieldRow>
@@ -130,6 +130,7 @@ export function AreaForm({
                 render={({ field }) => (
                   <Textarea
                     {...field}
+                    maxLength={FIELD_LIMITS.area.notes}
                     placeholder="Ex: Capim-braquiarão, solo adubado, proximidade com bebedouro..."
                     className="resize-none"
                     rows={3}
