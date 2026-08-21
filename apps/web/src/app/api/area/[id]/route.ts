@@ -28,7 +28,7 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
       stockingRate: area.stockingRate.toNumber(),
       notes: area.notes ?? "",
       propertyId: area.propertyId,
-      deactivatedAt: area.deactivatedAt?.toISOString() ?? null,
+      closedAt: area.closedAt?.toISOString() ?? null,
       updatedAt: area.updatedAt.toISOString(),
     });
   } catch (error) {
@@ -113,7 +113,7 @@ export async function PATCH(_request: NextRequest, { params }: { params: Promise
   const { id } = await params;
 
   try {
-    const area = await prisma.area.findUnique({ where: { id }, select: { deactivatedAt: true } });
+    const area = await prisma.area.findUnique({ where: { id }, select: { closedAt: true } });
 
     if (!area) {
       return NextResponse.json({ message: "Área não encontrada." }, { status: 404 });
@@ -121,7 +121,7 @@ export async function PATCH(_request: NextRequest, { params }: { params: Promise
 
     const updated = await prisma.area.update({
       where: { id },
-      data: { deactivatedAt: area.deactivatedAt ? null : new Date() },
+      data: { closedAt: area.closedAt ? null : new Date() },
     });
 
     return NextResponse.json({ success: true, data: updated });

@@ -18,7 +18,7 @@ export type AreaRow = {
   stockingRate: number;
   notes: string | null;
   propertyId: string;
-  deactivatedAt: string | null;
+  closedAt: string | null;
   updatedAt: string;
 };
 

@@ -1,6 +1,108 @@
 ```mermaid
 erDiagram
 
+  "property" {
+    String owner_id "🗝️"
+    String name 
+    Decimal total_area "❓"
+    Decimal productive_area "❓"
+    String car "❓"
+    String cib "❓"
+    String ccir "❓"
+    Float latitude "❓"
+    Float longitude "❓"
+    DateTime deactivated_at "❓"
+    Int address_id "❓"
+    String owner_id 
+    DateTime created_at 
+    DateTime updated_at 
+    }
+  
+
+  "area" {
+    String id "🗝️"
+    String name 
+    Json polygon 
+    Decimal hectares 
+    Decimal stocking_rate 
+    String notes "❓"
+    DateTime closed_at "❓"
+    String property_id 
+    DateTime created_at 
+    DateTime updated_at 
+    }
+  
+
+  "batch" {
+    String id "🗝️"
+    String name 
+    DateTime closed_at "❓"
+    DateTime created_at 
+    DateTime updated_at 
+    String property_id 
+    }
+  
+
+  "animal" {
+    String dam_id "🗝️"
+    Int code 
+    String name "❓"
+    DateTime birth_date "❓"
+    AnimalOrigin origin 
+    Sex sex 
+    AnimalStatus status 
+    DateTime created_at 
+    DateTime updated_at 
+    String breed_id "❓"
+    String dam_id "❓"
+    String sire_id "❓"
+    String current_batch_id "❓"
+    String current_property_id 
+    String current_tag "❓"
+    String current_rfid "❓"
+    Decimal current_weight "❓"
+    Boolean neutered 
+    }
+  
+
+  "user_settings" {
+    String user_id "🗝️"
+    String current_property_id "❓"
+    DateTime created_at 
+    DateTime updated_at 
+    }
+  
+
+  "person" {
+    String id "🗝️"
+    PersonType type 
+    String tax_id 
+    String name 
+    String state_registration "❓"
+    String phone "❓"
+    String email "❓"
+    DateTime deactivated_at "❓"
+    String trade_name "❓"
+    String rg "❓"
+    DateTime birth_date "❓"
+    MaritalStatus marital_status "❓"
+    Int address_id "❓"
+    DateTime created_at 
+    DateTime updated_at 
+    }
+  
+
+  "batch_sale_goal" {
+    Int id "🗝️"
+    Decimal target_weight "❓"
+    Decimal target_value "❓"
+    DateTime target_date "❓"
+    String batch_id 
+    DateTime created_at 
+    DateTime updated_at 
+    }
+  
+
   "address" {
     Int id "🗝️"
     String zip_code 
@@ -14,77 +116,256 @@ erDiagram
     }
   
 
-  "person" {
-    String id "🗝️"
-    PersonType type 
-    String tax_id 
-    String name 
-    String state_registration "❓"
-    String phone "❓"
-    String email "❓"
-    Int address_id "❓"
-    String trade_name "❓"
-    String rg "❓"
-    DateTime birth_date "❓"
-    MaritalStatus marital_status "❓"
-    DateTime created_at 
-    DateTime updated_at 
-    DateTime deactivated_at "❓"
-    }
-  
-
-  "property" {
-    String owner_id "🗝️"
-    String name 
-    Decimal total_area "❓"
-    Decimal productive_area "❓"
-    String car "❓"
-    String cib "❓"
-    String ccir "❓"
-    Float latitude "❓"
-    Float longitude "❓"
-    Int address_id "❓"
-    String owner_id 
-    DateTime created_at 
-    DateTime updated_at 
-    DateTime deactivated_at "❓"
-    }
-  
-
-  "area" {
-    String id "🗝️"
-    String name 
-    Json polygon 
-    Decimal hectares 
-    Decimal stocking_rate 
-    String notes "❓"
-    String property_id 
-    DateTime created_at 
-    DateTime updated_at 
-    DateTime deactivated_at "❓"
-    }
-  
-
-  "user_settings" {
-    String user_id "🗝️"
-    String current_property_id "❓"
-    DateTime created_at 
-    DateTime updated_at 
-    }
-  
-
   "breed" {
     String id "🗝️"
     String name 
+    DateTime deactivated_at "❓"
     DateTime created_at 
     DateTime updated_at 
-    DateTime deactivated_at "❓"
     }
   
-    "person" |o--|o address : "address"
+
+  "management_session" {
+    String batch_id "🗝️"
+    DateTime management_date 
+    String notes "❓"
+    DateTime confirmed_at "❓"
+    DateTime cancelled_at "❓"
+    String batch_id "❓"
+    String property_id 
+    DateTime created_at 
+    DateTime updated_at 
+    }
+  
+
+  "management_participant" {
+    Int batch_id "🗝️"
+    String management_session_id 
+    String animal_id 
+    DateTime created_at 
+    }
+  
+
+  "identification_management" {
+    String id "🗝️"
+    String management_session_id 
+    DateTime created_at 
+    DateTime updated_at 
+    }
+  
+
+  "identification_management_item" {
+    Int id "🗝️"
+    String notes "❓"
+    Boolean tag_changed 
+    String tag "❓"
+    Boolean rfid_changed 
+    String rfid "❓"
+    String management_id 
+    String animal_id 
+    DateTime created_at 
+    }
+  
+
+  "neutering_management" {
+    String id "🗝️"
+    String method "❓"
+    String management_session_id 
+    DateTime created_at 
+    DateTime updated_at 
+    }
+  
+
+  "neutering_management_item" {
+    Int id "🗝️"
+    String notes "❓"
+    String management_id 
+    String animal_id 
+    DateTime created_at 
+    }
+  
+
+  "weighing_management" {
+    String id "🗝️"
+    String management_session_id 
+    DateTime created_at 
+    DateTime updated_at 
+    }
+  
+
+  "weighing_management_item" {
+    Int id "🗝️"
+    Decimal weight 
+    String notes "❓"
+    String management_id 
+    String animal_id 
+    DateTime created_at 
+    }
+  
+
+  "health_management" {
+    String management_session_id "🗝️"
+    String title "❓"
+    DateTime withdrawal_until "❓"
+    DateTime next_due_date "❓"
+    HealthManagementPricingType pricing_type "❓"
+    Decimal unit_price "❓"
+    String type_id 
+    String management_session_id 
+    String veterinarian_id "❓"
+    DateTime created_at 
+    DateTime updated_at 
+    }
+  
+
+  "health_management_item" {
+    Int id "🗝️"
+    String notes "❓"
+    Decimal cost "❓"
+    String management_id 
+    String animal_id 
+    DateTime created_at 
+    }
+  
+
+  "health_management_type" {
+    String id "🗝️"
+    String name 
+    DateTime deactivated_at "❓"
+    DateTime created_at 
+    DateTime updated_at 
+    }
+  
+
+  "animal_property_transfer" {
+    String origin_batch_id "🗝️"
+    DateTime transfer_date 
+    String notes "❓"
+    String gta_number "❓"
+    DateTime confirmed_at "❓"
+    DateTime cancelled_at "❓"
+    String origin_property_id 
+    String destination_property_id 
+    String origin_batch_id "❓"
+    String destination_batch_id "❓"
+    DateTime created_at 
+    DateTime updated_at 
+    }
+  
+
+  "animal_property_transfer_item" {
+    Int id "🗝️"
+    String notes "❓"
+    String transfer_id 
+    String animal_id 
+    DateTime created_at 
+    }
+  
+
+  "animal_property_history" {
+    Int id "🗝️"
+    DateTime entered_at 
+    DateTime exited_at "❓"
+    String notes "❓"
+    DateTime created_at 
+    DateTime updated_at 
+    String animal_id 
+    String property_id 
+    }
+  
+
+  "animal_batch_transfer" {
+    String origin_batch_id "🗝️"
+    DateTime transfer_date 
+    String notes "❓"
+    DateTime confirmed_at "❓"
+    DateTime cancelled_at "❓"
+    String origin_batch_id "❓"
+    String destination_batch_id 
+    String property_id 
+    DateTime created_at 
+    DateTime updated_at 
+    }
+  
+
+  "animal_batch_transfer_item" {
+    Int id "🗝️"
+    String notes "❓"
+    String transfer_id 
+    String animal_id 
+    DateTime created_at 
+    }
+  
+
+  "animal_batch_history" {
+    Int batch_id "🗝️"
+    DateTime entered_at 
+    DateTime exited_at "❓"
+    String notes "❓"
+    DateTime created_at 
+    DateTime updated_at 
+    String animal_id 
+    String batch_id "❓"
+    }
+  
+
+  "batch_area_history" {
+    Int id "🗝️"
+    DateTime entered_at 
+    DateTime exited_at "❓"
+    String notes "❓"
+    DateTime created_at 
+    DateTime updated_at 
+    String batch_id 
+    String area_id 
+    }
+  
     "property" |o--|o address : "address"
     "property" }o--|| person : "owner"
     "area" }o--|| property : "property"
+    "batch" }o--|| property : "property"
+    "animal" }o--|o breed : "breed"
+    "animal" |o--|o animal : "dam"
+    "animal" |o--|o animal : "sire"
+    "animal" }o--|o batch : "currentBatch"
+    "animal" }o--|| property : "currentProperty"
     "user_settings" |o--|| "User" : "user"
     "user_settings" }o--|o property : "currentProperty"
+    "person" |o--|o address : "address"
+    "batch_sale_goal" |o--|| batch : "batch"
+    "management_session" }o--|o batch : "batch"
+    "management_session" }o--|| property : "property"
+    "management_participant" }o--|| management_session : "managementSession"
+    "management_participant" }o--|| animal : "batch_id"
+    "identification_management" |o--|| management_session : "managementSession"
+    "identification_management_item" }o--|| identification_management : "management"
+    "identification_management_item" }o--|| animal : "animal"
+    "neutering_management" |o--|| management_session : "managementSession"
+    "neutering_management_item" }o--|| neutering_management : "management"
+    "neutering_management_item" }o--|| animal : "animal"
+    "weighing_management" |o--|| management_session : "managementSession"
+    "weighing_management_item" }o--|| weighing_management : "management"
+    "weighing_management_item" }o--|| animal : "animal"
+    "health_management" }o--|| health_management_type : "type"
+    "health_management" }o--|| management_session : "managementSession"
+    "health_management" }o--|o person : "veterinarian"
+    "health_management_item" }o--|| health_management : "management"
+    "health_management_item" }o--|| animal : "animal"
+    "animal_property_transfer" }o--|| property : "originProperty"
+    "animal_property_transfer" }o--|| property : "destinationProperty"
+    "animal_property_transfer" }o--|o batch : "originBatch"
+    "animal_property_transfer" }o--|o batch : "destinationBatch"
+    "animal_property_transfer_item" }o--|| animal_property_transfer : "transfer"
+    "animal_property_transfer_item" }o--|| animal : "animal"
+    "animal_property_history" }o--|| animal : "animal"
+    "animal_property_history" }o--|| property : "property"
+    "animal_batch_transfer" }o--|o batch : "originBatch"
+    "animal_batch_transfer" }o--|| batch : "destinationBatch"
+    "animal_batch_transfer" }o--|| property : "property"
+    "animal_batch_transfer_item" }o--|| animal_batch_transfer : "transfer"
+    "animal_batch_transfer_item" }o--|| animal : "animal"
+    "animal_batch_history" }o--|| animal : "batch_id"
+    "animal_batch_history" }o--|o batch : "batch"
+    "batch_area_history" }o--|| batch : "batch"
+    "batch_area_history" }o--|| area : "area"
 ```

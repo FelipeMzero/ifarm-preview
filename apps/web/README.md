@@ -42,17 +42,18 @@ docker compose up -d
 ```
 
 ### 3. Sincronizar o Prisma ORM
-Gere o cliente do Prisma e aplique as migrações para estruturar o banco de dados — o usuário admin (credenciais definidas em `SEED_ADMIN_EMAIL`/`SEED_ADMIN_PASSWORD` no `.env`) e alguns dados fictícios serão criados automaticamente:
+Gere o cliente do Prisma e sincronize o banco de dados com o schema atual:
 
 ```bash
 pnpm prisma generate
-pnpm prisma migrate dev
+pnpm prisma db push
 ```
 
-> ⚠️ O `migrate dev` só roda o seed automaticamente quando ele aplica alguma migração nova. Se ao final não aparecerem logs como `- admin (...) criado`, rode o seed manualmente:
-> ```bash
-> pnpm prisma db seed
-> ```
+Depois, rode o seed para criar o usuário admin (credenciais definidas em `SEED_ADMIN_EMAIL`/`SEED_ADMIN_PASSWORD` no `.env`) e alguns dados fictícios:
+
+```bash
+pnpm prisma db seed
+```
 ---
 
 ## 💻 Executando o Projeto
@@ -88,5 +89,5 @@ O projeto estará disponível em: http://localhost:3000
 O projeto utiliza o PostgreSQL. O esquema de dados é definido no arquivo prisma/schema.prisma. Sempre que realizar alterações neste arquivo, lembre-se de rodar o comando abaixo para sincronizar o banco.
 
 ```bash
-pnpm prisma migrate dev 
+pnpm prisma db push
 ```

@@ -5,6 +5,7 @@
 generator client {
   provider        = "prisma-client"
   output          = "../src/generated/prisma"
+  previewFeatures = ["partialIndexes"]
 }
 
 datasource db {
@@ -14,10 +15,224 @@ datasource db {
 generator erd {
   provider      = "prisma-erd-generator"
   output        = "../docs/ERD.md"
-  ignorePattern = "User,Session,Account,Verification,Batch,Animal"
+  ignorePattern = "User,Session,Account,Verification"
   ignoreEnums   = true
 }
 
+
+
+model Property {
+  id             String  @id @default(uuid()) @db.Uuid
+  name           String
+  totalArea      Decimal? @db.Decimal(10, 4) @map("total_area")      // Área Total (ha)
+  productiveArea Decimal? @db.Decimal(10, 4) @map("productive_area")  // Área Produtiva (ha)
+  car            String? @unique                  // Cadastro Ambiental Rural
+  cib            String? @unique                  // Cadastro Imobiliário Brasileiro
+  ccir           String? @unique                  // Certificado de Cadastro de Imóvel Rural (INCRA)
+  latitude       Float?
+  longitude      Float?
+  deactivatedAt DateTime? @map("deactivated_at")
+
+  addressId Int?     @unique @map("address_id")
+  address   Address? @relation(fields: [addressId], references: [id])
+
+  ownerId String @db.Uuid @map("owner_id") // Titular
+  owner   Person @relation(fields: [ownerId], references: [id], onDelete: Restrict)
+
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  selectedByUserSettings  UserSettings[]
+  areas                   Area[]
+  batches                 Batch[]
+  animals                 Animal[]
+
+  originatedTransfers AnimalPropertyTransfer[] @relation("AnimalPropertyTransferOrigin")
+  receivedTransfers AnimalPropertyTransfer[] @relation("AnimalPropertyTransferDestination")
+  batchTransfers AnimalBatchTransfer[]
+  animalPropertyHistories AnimalPropertyHistory[]
+  managementSessions ManagementSession[]
+
+
+  @@index([name])
+  @@index([ownerId])
+  @@map("property")
+}
+
+model Area {
+  id           String   @id @default(uuid()) @db.Uuid
+  name         String                                 // Nome, ex: "Piquete 01"
+  polygon      Json                                   // Contorno desenhado no mapa
+  hectares     Decimal  @db.Decimal(10, 4)             // Área total (ha)
+  stockingRate Decimal  @db.Decimal(10, 4) @map("stocking_rate") // Taxa de lotação (UA/ha)
+  notes        String?                                // Observação
+  closedAt DateTime? @map("closed_at")            // No caso da Área e Fazenda acho que vai se tornar closedAt (fechar uma área não é o mesmo que desativar uma pessoa)
+
+  propertyId String   @db.Uuid @map("property_id")
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Restrict)
+
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  batchAreaHistories BatchAreaHistory[]
+
+  @@index([propertyId])
+  @@map("area")
+}
+
+
+model Batch {
+  id      String      @id @default(uuid()) @db.Uuid
+  name    String
+  saleGoal BatchSaleGoal?
+  closedAt DateTime? @map("closed_at")
+
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  propertyId String   @db.Uuid @map("property_id") 
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Restrict)
+
+  // Manejos
+  animals Animal[]
+  managementSessions ManagementSession[]
+
+  // Tramsferências e históricos
+  batchAreaHistories           BatchAreaHistory[]
+  animalBatchHistories         AnimalBatchHistory[]
+  originAnimalTransfers      AnimalBatchTransfer[]    @relation("AnimalBatchTransferOrigin")
+  destinationAnimalTransfers AnimalBatchTransfer[]    @relation("AnimalBatchTransferDestination")
+  originPropertyTransfers      AnimalPropertyTransfer[] @relation("AnimalPropertyTransferOriginBatch")
+  destinationPropertyTransfers AnimalPropertyTransfer[] @relation("AnimalPropertyTransferDestinationBatch")
+
+  @@index([propertyId])
+  @@map("batch")
+}
+
+model Animal {
+  id                String @db.Uuid       @id @default(uuid())
+  code              Int                   @unique @default(autoincrement())
+  name              String?
+  birthDate         DateTime? @db.Date    @map("birth_date")
+  origin            AnimalOrigin          @default(UNDEFINED)
+  sex               Sex                   @default(MALE)
+  status            AnimalStatus          @default(PRESENT)
+
+  createdAt         DateTime @default(now())  @map("created_at")
+  updatedAt         DateTime @updatedAt       @map("updated_at")
+
+  breedId String? @db.Uuid @map("breed_id")
+  breed   Breed?  @relation(fields: [breedId], references: [id], onDelete: Restrict)
+
+  damId       String?  @db.Uuid @map("dam_id") //Matriz (mãe)
+  dam         Animal?  @relation("AnimalDam", fields: [damId], references: [id], onDelete: Restrict)
+  damProgeny  Animal[] @relation("AnimalDam")
+
+  sireId       String?  @db.Uuid @map("sire_id") //Reprodutor (pai)
+  sire         Animal?  @relation("AnimalSire", fields: [sireId], references: [id], onDelete: Restrict)
+  sireProgeny  Animal[] @relation("AnimalSire")
+
+
+  // desnormalizado/sincronizado para lote
+  currentBatchId String? @db.Uuid @map("current_batch_id")
+  currentBatch   Batch?  @relation(fields: [currentBatchId], references: [id], onDelete: Restrict)
+
+  // desnormalizado/sincronizado para propriedade
+  currentPropertyId String   @db.Uuid @map("current_property_id") // Campo desnormalizado, pois há constraints que dependem dele, os históricos são apenas registros
+  currentProperty   Property @relation(fields: [currentPropertyId], references: [id], onDelete: Restrict)
+
+  // desnormalizado/sincronizado
+  currentTag        String?      @map("current_tag") // Campo desnormalizado, pois há constraints que dependem dele, os históricos são apenas registros
+  currentRfid       String?      @map("current_rfid") // Campo desnormalizado, pois há constraints que dependem dele, os históricos são apenas registros
+  currentWeight    Decimal? @db.Decimal(10, 2)   @map("current_weight") // peso atual (kg)
+  neutered          Boolean      @default(false)    // Indica se está castrado ou não
+
+  // Manejos
+  neuteringManagementItems NeuteringManagementItem[]
+  weighingManagementItems WeighingManagementItem[]
+  identificationManagementItems IdentificationManagementItem[]
+  healthManagementItems HealthManagementItem[]
+  managementParticipants ManagementParticipant[]
+
+  // Transferências e históricos
+  propertyTransferItems AnimalPropertyTransferItem[]
+  batchTransferItems AnimalBatchTransferItem[]
+  animalPropertyHistories AnimalPropertyHistory[]
+  animalBatchHistories AnimalBatchHistory[]
+
+
+  @@index([status])
+  @@index([breedId])
+  @@index([damId])
+  @@index([sireId])
+  @@index([currentPropertyId])
+  @@unique([currentPropertyId, currentTag], where: { status: "PRESENT", currentTag: { not: null } })
+  @@unique([currentPropertyId, currentRfid], where: { status: "PRESENT", currentRfid: { not: null } })
+  @@map("animal")
+}
+
+
+model UserSettings {
+  userId String @id @map("user_id")
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  currentPropertyId String?   @db.Uuid @map("current_property_id")
+  currentProperty   Property? @relation(fields: [currentPropertyId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([currentPropertyId])
+  @@map("user_settings")
+}
+
+model Person {
+  id             String     @id @default(uuid()) @db.Uuid
+  type           PersonType
+  taxId          String     @unique @map("tax_id") // CPF/CNPJ
+  name           String
+  stateRegistration String? @unique @map("state_registration") // Inscrição Estadual
+  phone          String?
+  email          String?    @unique
+  deactivatedAt DateTime? @map("deactivated_at")
+
+  // Exclusivo de Pessoa Jurídica
+  tradeName String? @map("trade_name") // Nome Fantasia
+
+  // Exclusivos de Pessoa Física
+  rg            String?        @unique          // RG (Registro Geral)
+  birthDate     DateTime?      @db.Date @map("birth_date") // Data de nascimento
+  maritalStatus MaritalStatus? @map("marital_status") // Estado civil
+
+  addressId Int?     @unique @map("address_id")
+  address   Address? @relation(fields: [addressId], references: [id])
+
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  properties Property[]
+  healthManagements HealthManagement[]
+
+
+  @@index([type])
+  @@index([name])
+  @@map("person")
+}
+
+model BatchSaleGoal {
+  id             Int       @id @default(autoincrement())
+  targetWeight   Decimal?  @db.Decimal(10, 2) @map("target_weight")
+  targetValue    Decimal?  @db.Decimal(12, 2) @map("target_value")
+  targetDate     DateTime? @db.Date           @map("target_date")
+
+  batchId String @unique @db.Uuid @map("batch_id")
+  batch   Batch  @relation(fields: [batchId], references: [id], onDelete: Restrict)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("batch_sale_goal")
+}
 
 model Address {
   id          Int     @id @default(autoincrement())
@@ -36,110 +251,456 @@ model Address {
   @@map("address")
 }
 
-model Person {
-  id             String     @id @default(uuid()) @db.Uuid
-  type           PersonType
-  taxId          String     @unique @map("tax_id") // CPF/CNPJ
-  name           String
-  stateRegistration String? @unique @map("state_registration") // Inscrição Estadual
-  phone          String?
-  email          String?    @unique
-
-  addressId Int?     @unique @map("address_id")
-  address   Address? @relation(fields: [addressId], references: [id])
-
-  // Exclusivo de Pessoa Jurídica
-  tradeName String? @map("trade_name") // Nome Fantasia
-
-  // Exclusivos de Pessoa Física
-  rg            String?        @unique          // RG (Registro Geral)
-  birthDate     DateTime?      @db.Date @map("birth_date") // Data de nascimento
-  maritalStatus MaritalStatus? @map("marital_status") // Estado civil
+model Breed {
+  id      String   @id @default(uuid()) @db.Uuid
+  name    String   @unique
+  deactivatedAt DateTime? @map("deactivated_at")
 
   createdAt     DateTime  @default(now()) @map("created_at")
   updatedAt     DateTime  @updatedAt @map("updated_at")
-  deactivatedAt DateTime? @map("deactivated_at")
 
-  properties Property[]
+  animals Animal[]
 
-  @@index([type])
-  @@index([name])
-  @@map("person")
+  @@map("breed")
 }
 
-model Property {
-  id             String  @id @default(uuid()) @db.Uuid
-  name           String
-  totalArea      Decimal? @db.Decimal(10, 4) @map("total_area")      // Área Total (ha)
-  productiveArea Decimal? @db.Decimal(10, 4) @map("productive_area")  // Área Produtiva (ha)
-  car            String? @unique                  // Cadastro Ambiental Rural
-  cib            String? @unique                  // Cadastro Imobiliário Brasileiro
-  ccir           String? @unique                  // Certificado de Cadastro de Imóvel Rural (INCRA)
-  latitude       Float?
-  longitude      Float?
 
-  addressId Int?     @unique @map("address_id")
-  address   Address? @relation(fields: [addressId], references: [id])
 
-  ownerId String @map("owner_id") @db.Uuid // Titular
-  owner   Person @relation(fields: [ownerId], references: [id], onDelete: Restrict)
 
-  createdAt     DateTime  @default(now()) @map("created_at")
-  updatedAt     DateTime  @updatedAt @map("updated_at")
-  deactivatedAt DateTime? @map("deactivated_at")
 
-  selectedByUserSettings UserSettings[]
-  areas                  Area[]
-  originAnimals          Animal[] @relation("PropertyOrigin")
 
-  @@index([name])
-  @@index([ownerId])
-  @@map("property")
-}
 
-model Area {
-  id           String   @id @default(uuid()) @db.Uuid
-  name         String                                 // Nome, ex: "Piquete 01"
-  polygon      Json                                   // Contorno desenhado no mapa
-  hectares     Decimal  @db.Decimal(10, 4)             // Área total (ha)
-  stockingRate Decimal  @db.Decimal(10, 4) @map("stocking_rate") // Taxa de lotação (UA/ha)
-  notes        String?                                // Observação
+model ManagementSession {
+  id             String    @id @default(uuid()) @db.Uuid
+  managementDate DateTime  @map("management_date")
+  notes          String?
+  confirmedAt    DateTime? @map("confirmed_at")
+  cancelledAt    DateTime? @map("cancelled_at")
 
-  propertyId String   @map("property_id") @db.Uuid
+  batchId String? @db.Uuid @map("batch_id")     // Lote associado à sessão
+  batch   Batch?  @relation(fields: [batchId], references: [id], onDelete: Restrict)
+
+  propertyId String   @db.Uuid @map("property_id")
   property   Property @relation(fields: [propertyId], references: [id], onDelete: Restrict)
 
-  createdAt     DateTime  @default(now()) @map("created_at")
-  updatedAt     DateTime  @updatedAt @map("updated_at")
-  deactivatedAt DateTime? @map("deactivated_at")
+  participants ManagementParticipant[]
 
-  @@index([propertyId])
-  @@map("area")
-}
-
-model UserSettings {
-  userId String @id @map("user_id")
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  currentPropertyId String?   @map("current_property_id") @db.Uuid
-  currentProperty   Property? @relation(fields: [currentPropertyId], references: [id], onDelete: SetNull)
+  weighingManagement        WeighingManagement?
+  neuteringManagement       NeuteringManagement?
+  identificationManagement  IdentificationManagement?
+  healthManagements         HealthManagement[]
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  @@map("user_settings")
+  @@index([propertyId, managementDate])
+  @@index([batchId])
+  @@map("management_session")
 }
 
-model Breed {
-  id      String   @id @default(uuid()) @db.Uuid
-  name    String   @unique
-  animals Animal[]
+model ManagementParticipant {
+  id Int @id @default(autoincrement())
+
+  managementSessionId String            @db.Uuid @map("management_session_id")
+  managementSession    ManagementSession @relation(fields: [managementSessionId], references: [id], onDelete: Restrict)
+
+  animalId String @db.Uuid @map("animal_id")
+  animal   Animal @relation(fields: [animalId], references: [id], onDelete: Restrict)
+
+  // batchId String? @db.Uuid @map("batch_id") // Colocar isso se for frequente precisar de "todas as pesagens realizadas enquanto o animal estava no Lote X"
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@unique([managementSessionId, animalId])
+  @@index([animalId])
+  @@map("management_participant")
+}
+
+model IdentificationManagement {
+  id     String  @id @default(uuid()) @db.Uuid
+  items IdentificationManagementItem[]
+
+  managementSessionId String            @unique @db.Uuid @map("management_session_id")
+  managementSession   ManagementSession @relation(fields: [managementSessionId], references: [id], onDelete: Restrict)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("identification_management")
+}
+
+model IdentificationManagementItem {
+  id Int @id @default(autoincrement())
+  notes String? // observação específica desse animal
+
+  tagChanged  Boolean @default(false) @map("tag_changed")
+  tag         String? // preenchido quando tagChanged=true; null com tagChanged=true = tag removida
+
+  rfidChanged Boolean @default(false) @map("rfid_changed")
+  rfid        String? // preenchido quando rfidChanged=true; null com rfidChanged=true = rfid removido
+
+  managementId String                    @db.Uuid @map("management_id")
+  management   IdentificationManagement  @relation(fields: [managementId], references: [id], onDelete: Restrict)
+
+  animalId String @db.Uuid @map("animal_id")
+  animal   Animal @relation(fields: [animalId], references: [id], onDelete: Restrict)
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([animalId])
+  @@index([managementId])
+  @@map("identification_management_item")
+}
+
+
+model NeuteringManagement {
+  id     String  @id @default(uuid()) @db.Uuid
+  method String?
+  items NeuteringManagementItem[]
+
+  managementSessionId String            @unique @db.Uuid @map("management_session_id")
+  managementSession   ManagementSession @relation(fields: [managementSessionId], references: [id], onDelete: Restrict)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("neutering_management")
+}
+
+model NeuteringManagementItem {
+  id    Int     @id @default(autoincrement())
+  notes String? // observação específica desse animal (ex.: complicação, sangramento, recastração)
+
+  managementId String              @db.Uuid @map("management_id")
+  management   NeuteringManagement @relation(fields: [managementId], references: [id], onDelete: Restrict)
+
+  animalId String @db.Uuid @map("animal_id")
+  animal   Animal @relation(fields: [animalId], references: [id], onDelete: Restrict)
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([animalId])
+  @@index([managementId])
+  @@map("neutering_management_item")
+}
+
+model WeighingManagement {
+  id    String  @id @default(uuid()) @db.Uuid
+  items WeighingManagementItem[]
+
+  managementSessionId String            @unique @db.Uuid @map("management_session_id")
+  managementSession   ManagementSession @relation(fields: [managementSessionId], references: [id], onDelete: Restrict)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("weighing_management")
+}
+
+model WeighingManagementItem {
+  id     Int     @id @default(autoincrement())
+  weight Decimal @db.Decimal(10, 2) // valor da pesagem (kg), sempre individual
+  notes  String?
+
+  managementId String             @db.Uuid @map("management_id")
+  management   WeighingManagement @relation(fields: [managementId], references: [id], onDelete: Restrict)
+
+  animalId String @db.Uuid @map("animal_id")
+  animal   Animal @relation(fields: [animalId], references: [id], onDelete: Restrict)
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([animalId])
+  @@index([managementId])
+  @@map("weighing_management_item")
+}
+
+
+model HealthManagement {
+  id                String                       @id @default(uuid()) @db.Uuid
+  title             String?
+  withdrawalUntil   DateTime?                    @db.Date @map("withdrawal_until")          // data até quando o animal não pode ser comercializado/abatido
+  nextDueDate       DateTime?                    @db.Date @map("next_due_date")             // data recomendada para repetir o procedimento deste mesmo tipo de manejo
+  pricingType       HealthManagementPricingType?  @map("pricing_type")                        // null = custo não rastreado
+  unitPrice         Decimal?                     @db.Decimal(10, 2) @map("unit_price")       // valor fixo por animal OU valor por kg, conforme pricingType (null se não rastreado)
+
+  items HealthManagementItem[]
+
+  typeId String                @db.Uuid @map("type_id")
+  type   HealthManagementType  @relation(fields: [typeId], references: [id], onDelete: Restrict)
+
+  managementSessionId String            @db.Uuid @map("management_session_id") // sem @unique — múltiplos procedimentos sanitários podem existir na mesma sessão
+  managementSession   ManagementSession @relation(fields: [managementSessionId], references: [id], onDelete: Restrict)
+
+  veterinarianId String? @db.Uuid @map("veterinarian_id")
+  veterinarian   Person? @relation(fields: [veterinarianId], references: [id], onDelete: Restrict)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([managementSessionId])
+  @@index([nextDueDate])
+  @@map("health_management")
+}
+
+model HealthManagementItem {
+  id    Int      @id @default(autoincrement())
+  notes String?  // observação específica desse animal nesse procedimento (reação adversa, etc.)
+  cost  Decimal? @db.Decimal(10, 2) // Custo individual
+
+  managementId String           @db.Uuid @map("management_id")
+  management   HealthManagement @relation(fields: [managementId], references: [id], onDelete: Restrict)
+
+  animalId String @db.Uuid @map("animal_id")
+  animal   Animal @relation(fields: [animalId], references: [id], onDelete: Restrict)
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([animalId])
+  @@index([managementId])
+  @@map("health_management_item")
+}
+
+model HealthManagementType {
+  id            String    @id @default(uuid()) @db.Uuid
+  name          String    @unique
+  deactivatedAt DateTime? @map("deactivated_at")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  managements HealthManagement[]
+
+  @@map("health_management_type")
+}
+
+
+enum HealthManagementPricingType {
+  FREE        // gratuito de fato (campanha subsidiada, produto doado)
+  FIXED       // valor fixo por animal, independente de peso
+  PER_WEIGHT  // valor por kg de peso vivo
+  @@map("health_management_pricing_type")
+}
+
+
+
+
+
+
+
+
+
+
+model AnimalPropertyTransfer {
+  id             String    @id @default(uuid()) @db.Uuid
+  transferDate   DateTime  @map("transfer_date")
+  notes          String?
+  gtaNumber      String?   @map("gta_number")
+
+  confirmedAt    DateTime? @map("confirmed_at")
+  cancelledAt    DateTime? @map("cancelled_at")
+
+  items AnimalPropertyTransferItem[]
+
+  originPropertyId String   @db.Uuid @map("origin_property_id")
+  originProperty   Property @relation("AnimalPropertyTransferOrigin", fields: [originPropertyId], references: [id], onDelete: Restrict)
+
+  destinationPropertyId String   @db.Uuid @map("destination_property_id")
+  destinationProperty   Property @relation("AnimalPropertyTransferDestination", fields: [destinationPropertyId], references: [id], onDelete: Restrict)
+
+  originBatchId String? @db.Uuid @map("origin_batch_id") // null = animais vinham sem lote
+  originBatch   Batch?  @relation("AnimalPropertyTransferOriginBatch", fields: [originBatchId], references: [id], onDelete: Restrict)
+
+  destinationBatchId String? @db.Uuid @map("destination_batch_id") // null = animais chegam sem lote
+  destinationBatch   Batch?  @relation("AnimalPropertyTransferDestinationBatch", fields: [destinationBatchId], references: [id], onDelete: Restrict)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([originPropertyId])
+  @@index([destinationPropertyId])
+  @@index([originBatchId])
+  @@index([destinationBatchId])
+  @@map("animal_property_transfer")
+}
+
+model AnimalPropertyTransferItem {
+  id    Int     @id @default(autoincrement())
+  notes String?
+
+  transferId String                @db.Uuid @map("transfer_id")
+  transfer   AnimalPropertyTransfer @relation(fields: [transferId], references: [id], onDelete: Restrict)
+
+  animalId String @db.Uuid @map("animal_id")
+  animal   Animal @relation(fields: [animalId], references: [id], onDelete: Restrict)
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([animalId])
+  @@index([transferId])
+  @@map("animal_property_transfer_item")
+}
+
+model AnimalPropertyHistory {
+  id        Int       @id @default(autoincrement())
+  enteredAt DateTime  @map("entered_at")
+  exitedAt  DateTime? @map("exited_at")
+  notes     String?
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+
+  animalId String @db.Uuid @map("animal_id")
+  animal   Animal @relation(fields: [animalId], references: [id], onDelete: Restrict)
+
+  propertyId String   @db.Uuid @map("property_id")
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Restrict)
+
+  @@index([animalId, enteredAt])
+  @@index([propertyId], where: { exitedAt: null })
+  @@unique([animalId], where: { exitedAt: null })
+  @@map("animal_property_history")
+}
+
+model AnimalBatchTransfer {
+  id           String    @id @default(uuid()) @db.Uuid
+  transferDate DateTime  @map("transfer_date")
+  notes        String?
+  confirmedAt  DateTime? @map("confirmed_at")
+  cancelledAt  DateTime? @map("cancelled_at")
+
+  items AnimalBatchTransferItem[]
+
+  originBatchId String? @db.Uuid @map("origin_batch_id") // null = animal não estava em lote nenhum
+  originBatch   Batch?  @relation("AnimalBatchTransferOrigin", fields: [originBatchId], references: [id], onDelete: Restrict)
+
+  destinationBatchId String @db.Uuid @map("destination_batch_id")
+  destinationBatch   Batch  @relation("AnimalBatchTransferDestination", fields: [destinationBatchId], references: [id], onDelete: Restrict)
+
+  propertyId String   @db.Uuid @map("property_id")
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Restrict)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([originBatchId])
+  @@index([destinationBatchId])
+  @@index([propertyId])
+  @@map("animal_batch_transfer")
+}
+
+model AnimalBatchTransferItem {
+  id    Int     @id @default(autoincrement())
+  notes String?
+
+  transferId String             @db.Uuid @map("transfer_id")
+  transfer   AnimalBatchTransfer @relation(fields: [transferId], references: [id], onDelete: Restrict)
+
+  animalId String @db.Uuid @map("animal_id")
+  animal   Animal @relation(fields: [animalId], references: [id], onDelete: Restrict)
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([animalId])
+  @@index([transferId])
+  @@map("animal_batch_transfer_item")
+}
+
+model AnimalBatchHistory {
+  id        Int      @id @default(autoincrement())
+  enteredAt DateTime @map("entered_at")
+  exitedAt  DateTime? @map("exited_at")
+  notes     String?
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+
+  animalId String @db.Uuid @map("animal_id")
+  animal   Animal @relation(fields: [animalId], references: [id], onDelete: Restrict)
+
+  batchId String? @db.Uuid @map("batch_id") // null = animal sem lote nesse período
+  batch   Batch?  @relation(fields: [batchId], references: [id], onDelete: Restrict)
+
+  @@index([animalId, enteredAt])
+  @@index([batchId], where: { exitedAt: null })
+  @@unique([animalId], where: { exitedAt: null })
+  @@map("animal_batch_history")
+}
+
+model BatchAreaHistory {
+  id        Int     @id @default(autoincrement())
+  enteredAt DateTime  @map("entered_at")
+  exitedAt  DateTime? @map("exited_at")
+  notes     String?
 
   createdAt     DateTime  @default(now()) @map("created_at")
   updatedAt     DateTime  @updatedAt @map("updated_at")
-  deactivatedAt DateTime? @map("deactivated_at")
 
-  @@map("breed")
+  batchId   String    @db.Uuid @map("batch_id")
+  batch     Batch     @relation(fields: [batchId], references: [id], onDelete: Restrict)
+
+  areaId    String    @db.Uuid @map("area_id")
+  area      Area      @relation(fields: [areaId], references: [id], onDelete: Restrict)
+
+  @@index([batchId, enteredAt])
+  @@index([areaId], where: { exitedAt: null })
+  @@unique([batchId], where: { exitedAt: null })
+  @@map("batch_area_history")
 }
+
+
+/*
+model PurchaseEvent {
+  id             String    @id @default(uuid()) @db.Uuid
+  purchaseDate   DateTime  @map("purchase_date")
+  pricePerArroba Decimal?  @db.Decimal(10, 2) @map("price_per_arroba")
+  gtaNumber      String?   @map("gta_number")
+  notes          String?
+  confirmedAt    DateTime? @map("confirmed_at")
+  cancelledAt    DateTime? @map("cancelled_at")
+
+  items PurchaseEventItem[]
+
+  sellerId String @db.Uuid @map("seller_id")
+  seller   Person @relation(fields: [sellerId], references: [id], onDelete: Restrict)
+
+  destinationPropertyId String   @db.Uuid @map("destination_property_id")
+  destinationProperty   Property @relation(fields: [destinationPropertyId], references: [id], onDelete: Restrict)
+
+  destinationBatchId String? @db.Uuid @map("destination_batch_id") // mesmo padrão de AnimalPropertyTransfer
+  destinationBatch   Batch?  @relation(fields: [destinationBatchId], references: [id], onDelete: Restrict)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([sellerId])
+  @@index([destinationPropertyId])
+  @@index([destinationBatchId])
+  @@map("purchase_event")
+}
+
+model PurchaseEventItem {
+  id     Int      @id @default(autoincrement())
+  weight Decimal? @db.Decimal(10, 2) // peso de entrada — base do preço por arroba
+  tag    String?
+  rfid   String?
+  sex    Sex?
+  breedId String? @db.Uuid @map("breed_id")
+  breed   Breed?  @relation(fields: [breedId], references: [id], onDelete: Restrict)
+  notes  String?
+
+  eventId String        @db.Uuid @map("event_id")
+  event   PurchaseEvent @relation(fields: [eventId], references: [id], onDelete: Restrict)
+
+  animalId String? @unique @db.Uuid @map("animal_id") // null até a confirmação; preenchido ao materializar o Animal
+  animal   Animal? @relation(fields: [animalId], references: [id], onDelete: Restrict)
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([eventId])
+  @@map("purchase_event_item")
+}
+*/
 
 
 
@@ -148,26 +709,26 @@ model Breed {
 enum Sex {
   MALE   // Macho
   FEMALE // Fêmea
-
   @@map("sex")
 }
 
 enum AnimalOrigin {
-  BIRTH    // Nascimento
-  PURCHASE // Compra
-  TRANSFER // Transferência
-
+  UNDEFINED // Indefinida
+  BIRTH     // Nascimento
+  PURCHASE  // Compra
+  DONATION  // Doação
+  REFERENCE // Referência (o animal não existe na fazenda, serve apenas de referência para genealogia)
   @@map("animal_origin")
 }
 
 enum AnimalStatus {
-  ACTIVE      // Ativo
+  PRESENT     // Presente na propriedade
   SOLD        // Vendido
+  DONATED     // Doado
   DEAD        // Morto
-  TRANSFERRED // Transferido
   DISCARDED   // Descarte
   SLAUGHTERED // Abate
-
+  REFERENCE   // Referência (o animal não existe na fazenda, serve apenas de referência para genealogia)
   @@map("animal_status")
 }
 
@@ -197,62 +758,6 @@ enum MaritalStatus {
 
 
 
-
-
-
-// Não validados
-
-model Batch {
-  id      Int      @id @default(autoincrement())
-  name    String   @unique
-  animals Animal[]
-
-  @@map("batch")
-}
-
-model Animal {
-  id             String       @id @default(uuid()) @db.Uuid
-  earTag         String       @unique @map("ear_tag") // Brinco (identificação do animal)
-  rfid           String?      @unique
-  name           String?
-  birthDate      DateTime?    @db.Date @map("birth_date")
-  birthWeightKg  Decimal?     @db.Decimal(10, 2) @map("birth_weight_kg")
-  sex            Sex          @default(MALE)
-  origin         AnimalOrigin @default(BIRTH)
-  status         AnimalStatus @default(ACTIVE)
-
-  breedId String? @map("breed_id") @db.Uuid
-  breed   Breed?  @relation(fields: [breedId], references: [id], onDelete: Restrict)
-
-  batchId Int?   @map("batch_id")
-  batch   Batch? @relation(fields: [batchId], references: [id], onDelete: Restrict)
-
-  motherId       String?  @map("mother_id") @db.Uuid
-  mother         Animal?  @relation("AnimalMother", fields: [motherId], references: [id], onDelete: Restrict)
-  motherChildren Animal[] @relation("AnimalMother")
-
-  fatherId       String?  @map("father_id") @db.Uuid
-  father         Animal?  @relation("AnimalFather", fields: [fatherId], references: [id], onDelete: Restrict)
-  fatherChildren Animal[] @relation("AnimalFather")
-
-  originPropertyId   String?   @map("origin_property_id") @db.Uuid
-  originProperty     Property? @relation("PropertyOrigin", fields: [originPropertyId], references: [id], onDelete: Restrict)
-  originPropertyName String?   @map("origin_property_name") // usado quando a fazenda não está cadastrada localmente
-
-  acquisitionDate   DateTime? @db.Date @map("acquisition_date")
-  purchasePrice     Decimal?  @db.Decimal(10, 2) @map("purchase_price")
-  entryAgeMonths    Int?      @map("entry_age_months")
-
-  currentWeightKg Decimal? @db.Decimal(10, 2) @map("current_weight_kg") // denormalizado para simplificar consulta no frontend
-
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  @@index([batchId])
-  @@index([breedId])
-  @@index([status])
-  @@map("animal")
-}
 
 
 

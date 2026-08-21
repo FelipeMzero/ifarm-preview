@@ -78,6 +78,8 @@ async function seedProperties() {
       totalArea: 120,
       productiveArea: 95,
       cib: "SR12345-6",
+      latitude: -18.9636,
+      longitude: -48.3532,
       address: {
         zipCode: "38400000",
         street: "Rodovia BR-050, km 12",
@@ -92,6 +94,8 @@ async function seedProperties() {
       totalArea: 340,
       productiveArea: 300,
       ccir: "123.456.789.012-3",
+      latitude: -15.5321,
+      longitude: -55.8654,
       address: {
         zipCode: "78000000",
         street: "Rodovia MT-040, km 25",
@@ -122,6 +126,108 @@ async function seedProperties() {
   }
 }
 
+async function seedAreas() {
+  const areasByProperty = [
+    {
+      propertyName: "Fazenda Santa Rita",
+      items: [
+        {
+          name: "Piquete 01",
+          hectares: 4.6774,
+          stockingRate: 1.8,
+          polygon: [
+            { lat: -18.96, lng: -48.355 },
+            { lat: -18.96, lng: -48.353 },
+            { lat: -18.962, lng: -48.353 },
+            { lat: -18.962, lng: -48.355 },
+          ],
+        },
+        {
+          name: "Piquete 02",
+          hectares: 4.6774,
+          stockingRate: 2.1,
+          polygon: [
+            { lat: -18.96, lng: -48.353 },
+            { lat: -18.96, lng: -48.351 },
+            { lat: -18.962, lng: -48.351 },
+            { lat: -18.962, lng: -48.353 },
+          ],
+        },
+        {
+          name: "Piquete 03",
+          hectares: 4.6774,
+          stockingRate: 1.5,
+          notes: "Área de descanso",
+          polygon: [
+            { lat: -18.96, lng: -48.351 },
+            { lat: -18.96, lng: -48.349 },
+            { lat: -18.962, lng: -48.349 },
+            { lat: -18.962, lng: -48.351 },
+          ],
+        },
+      ],
+    },
+    {
+      propertyName: "Fazenda Boa Vista",
+      items: [
+        {
+          name: "Piquete 01",
+          hectares: 4.7651,
+          stockingRate: 1.6,
+          polygon: [
+            { lat: -15.53, lng: -55.868 },
+            { lat: -15.53, lng: -55.866 },
+            { lat: -15.532, lng: -55.866 },
+            { lat: -15.532, lng: -55.868 },
+          ],
+        },
+        {
+          name: "Piquete 02",
+          hectares: 4.7651,
+          stockingRate: 1.9,
+          polygon: [
+            { lat: -15.53, lng: -55.866 },
+            { lat: -15.53, lng: -55.864 },
+            { lat: -15.532, lng: -55.864 },
+            { lat: -15.532, lng: -55.866 },
+          ],
+        },
+        {
+          name: "Piquete 03",
+          hectares: 4.7651,
+          stockingRate: 1.3,
+          notes: "Área de descanso",
+          polygon: [
+            { lat: -15.53, lng: -55.864 },
+            { lat: -15.53, lng: -55.862 },
+            { lat: -15.532, lng: -55.862 },
+            { lat: -15.532, lng: -55.864 },
+          ],
+        },
+      ],
+    },
+  ];
+
+  for (const { propertyName, items } of areasByProperty) {
+    const property = await prisma.property.findFirst({ where: { name: propertyName } });
+    if (!property) {
+      console.log(`- propriedade ${propertyName} não encontrada, pulando áreas`);
+      continue;
+    }
+
+    for (const area of items) {
+      const existing = await prisma.area.findFirst({ where: { name: area.name, propertyId: property.id } });
+      if (existing) {
+        console.log(`- área ${area.name} (${propertyName}) já existe, pulando`);
+        continue;
+      }
+
+      await prisma.area.create({ data: { ...area, propertyId: property.id } });
+      console.log(`- área ${area.name} (${propertyName}) criada`);
+    }
+  }
+}
+
 async function seedBreeds() {
   const breeds = ["Nelore", "Brahman", "Gir", "Guzerá", "Tabapuã"];
 
@@ -141,6 +247,7 @@ async function main() {
   await seedAdmin();
   await seedPeople();
   await seedProperties();
+  await seedAreas();
   await seedBreeds();
 }
 

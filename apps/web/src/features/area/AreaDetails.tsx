@@ -41,7 +41,7 @@ export function AreaDetails({
               <div>
                 <span className="text-xs text-muted-foreground block">STATUS</span>
                 <span className="font-semibold">
-                  {area.deactivatedAt ? "Inativa" : "Ativa"}
+                  {area.closedAt ? "Inativa" : "Ativa"}
                 </span>
               </div>
             </div>

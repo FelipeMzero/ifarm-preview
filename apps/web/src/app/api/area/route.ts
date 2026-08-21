@@ -30,8 +30,8 @@ export async function GET(request: NextRequest) {
 
     const where = {
       propertyId,
-      ...(status === "active" ? { deactivatedAt: null } : {}),
-      ...(status === "inactive" ? { deactivatedAt: { not: null } } : {}),
+      ...(status === "active" ? { closedAt: null } : {}),
+      ...(status === "inactive" ? { closedAt: { not: null } } : {}),
     };
 
     const areas = await prisma.area.findMany({
@@ -48,7 +48,7 @@ export async function GET(request: NextRequest) {
         stockingRate: a.stockingRate.toNumber(),
         notes: a.notes,
         propertyId: a.propertyId,
-        deactivatedAt: a.deactivatedAt?.toISOString() ?? null,
+        closedAt: a.closedAt?.toISOString() ?? null,
         updatedAt: a.updatedAt.toISOString(),
       })),
     });
