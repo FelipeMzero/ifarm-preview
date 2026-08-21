@@ -1,7 +1,7 @@
 "use client";
 
-import { FIELD_LIMITS } from "@/lib/field-limits";import { useEffect, useRef, useState, useCallback } from "react";
-import { useForm } from "react-hook-form";
+import { useEffect, useRef, useState, useCallback } from "react";
+import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import { getAnimal, updateAnimal, createAnimal, getAnimals, getMetadata, ApiError, Breed, Batch, AnimalSummary } from "./services";
@@ -9,8 +9,10 @@ import { PropertyOption } from "@/features/property/services";
 import { ErrorPage } from "@/components/our/ErrorPage";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { FieldLegend, FieldSet } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { FormField } from "@/components/our/FormField";
 import FieldRow from "@/components/our/FieldRow";
 
@@ -33,6 +35,7 @@ type AnimalFormProps = {
 
 export default function AnimalForm({ id, title, onCancel, onSuccess }: AnimalFormProps) {
   const ORIGIN_ITEMS = [
+    { value: EnumAnimalOrigin.UNDEFINED, label: "Indefinida" },
     { value: EnumAnimalOrigin.BIRTH, label: "Nascimento" },
     { value: EnumAnimalOrigin.PURCHASE, label: "Compra" },
     { value: EnumAnimalOrigin.TRANSFER, label: "Transferência" },
@@ -57,7 +60,7 @@ export default function AnimalForm({ id, title, onCancel, onSuccess }: AnimalFor
     if (fatherDebounce.current) clearTimeout(fatherDebounce.current);
     fatherDebounce.current = setTimeout(async () => {
       const result = await getAnimals({ search: query, sex: EnumSex.MALE, pageSize: query ? 20 : 2 });
-      setFatherItems(result.data.map(a => ({ value: a.id, label: a.earTag })));
+      setFatherItems(result.data.map(a => ({ value: a.id, label: a.currentTag ?? "—" })));
     }, 300);
   }, []);
 
@@ -70,8 +73,12 @@ export default function AnimalForm({ id, title, onCancel, onSuccess }: AnimalFor
       sex: EnumSex.MALE,
       birthDate: "",
       birthWeightKg: "",
-      origin: EnumAnimalOrigin.BIRTH,
-      status: EnumAnimalStatus.ACTIVE,
+      propertyEntryDate: "",
+      origin: EnumAnimalOrigin.UNDEFINED,
+      status: EnumAnimalStatus.PRESENT,
+      neutered: false,
+      neuteringDate: "",
+      neuteringMethod: "",
       breedId: "",
       batchId: "",
       motherId: "",
@@ -87,33 +94,36 @@ export default function AnimalForm({ id, title, onCancel, onSuccess }: AnimalFor
 
   const origin = watch("origin");
   const isPurchaseOrTransfer = origin === EnumAnimalOrigin.PURCHASE || origin === EnumAnimalOrigin.TRANSFER;
+  const neutered = watch("neutered");
 
   useEffect(() => {
-    async function loadData() {
-      try {
-        const [meta, fatherResult] = await Promise.all([
-          getMetadata(),
-          getAnimals({ sex: EnumSex.MALE, pageSize: 2 }),
-        ]);
-        setBreeds(meta.breeds);
-        setBatches(meta.batches);
-        setAnimals(meta.farmAnimals);
-        setProperties(meta.properties);
-        setFatherItems(fatherResult.data.map(a => ({ value: a.id, label: a.earTag })));
+    // TODO: reativar após ajustar as leituras ao novo schema (earTag/motherId/fatherId etc mudaram de nome)
+    // async function loadData() {
+    //   try {
+    //     const [meta, fatherResult] = await Promise.all([
+    //       getMetadata(),
+    //       getAnimals({ sex: EnumSex.MALE, pageSize: 2 }),
+    //     ]);
+    //     setBreeds(meta.breeds);
+    //     setBatches(meta.batches);
+    //     setAnimals(meta.farmAnimals);
+    //     setProperties(meta.properties);
+    //     setFatherItems(fatherResult.data.map(a => ({ value: a.id, label: a.earTag })));
 
-        if (id) {
-          const data = await getAnimal(id);
-          reset(data);
-        }
+    //     if (id) {
+    //       const data = await getAnimal(id);
+    //       reset(data);
+    //     }
 
-      } catch {
-        setLoadFailed(true);
-      } finally {
-        setIsDataLoading(false);
-      }
-    }
+    //   } catch {
+    //     setLoadFailed(true);
+    //   } finally {
+    //     setIsDataLoading(false);
+    //   }
+    // }
 
-    loadData();
+    // loadData();
+    setIsDataLoading(false);
   }, [id, reset]);
 
 
@@ -172,38 +182,50 @@ export default function AnimalForm({ id, title, onCancel, onSuccess }: AnimalFor
       <FieldSet className="border-0">
         <FieldLegend> Identificação </FieldLegend>
 
-        <FieldRow cols={2}>
+        <FieldRow cols={3}>
           <FormField name="earTag" label="Brinco" required
             control={control}
-            render={({ field, id }) => <Input {...field} id={id} maxLength={FIELD_LIMITS.animal.earTag} placeholder="Ex: MS-001234" />}
+            render={({ field, id }) => <Input {...field} id={id} placeholder="Ex: MS-001234" />}
           />
 
           <FormField name="rfid" label="RFID / Chip"
             control={control}
-            render={({ field, id }) => <Input {...field} id={id} maxLength={FIELD_LIMITS.animal.rfid} placeholder="Ex: 900082000169813" />}
+            render={({ field, id }) => <Input {...field} id={id} placeholder="Ex: 900082000169813" />}
           />
-        </FieldRow>
 
-        <FieldRow cols={2}>
           <FormField name="name" label="Apelido"
             control={control}
-            render={({ field, id }) => <Input {...field} id={id} maxLength={FIELD_LIMITS.animal.name} placeholder="Ex: Mimosa" />}
-          />
-
-          <FormField name="sex" label="Sexo"
-            control={control}
-            render={({ id, field, fieldState }) => (
-              <SearchCombobox
-                id={id} field={field} fieldState={fieldState}
-                items={SEX_ITEMS}
-                keepSelection
-              />
-            )}
+            render={({ field, id }) => <Input {...field} id={id} placeholder="Ex: Mimosa" />}
           />
         </FieldRow>
 
+        <FieldRow cols={3}>
+          <Controller name="sex" control={control}
+            render={({ field }) => (
+              <FieldSet className="w-full gap-2 py-2">
+                <FieldLegend variant="label" className="text-muted-foreground">SEXO</FieldLegend>
+                <RadioGroup
+                  value={field.value}
+                  onValueChange={field.onChange}
+                  onBlur={field.onBlur}
+                  className="flex flex-row gap-6"
+                >
+                  {SEX_ITEMS.map((item) => (
+                    <label key={item.value} className="flex items-center gap-2 text-sm">
+                      <RadioGroupItem value={item.value} />
+                      {item.label}
+                    </label>
+                  ))}
+                </RadioGroup>
+              </FieldSet>
+            )}
+          />
 
-        <FieldRow cols={2}>
+          <FormField name="birthDate" label="Data de Nascimento"
+            control={control}
+            render={({ field, id }) => <Input {...field} id={id} type="date" />}
+          />
+
           <FormField name="breedId" label="Raça"
             control={control}
             render={({ id, field, fieldState }) => (
@@ -211,6 +233,19 @@ export default function AnimalForm({ id, title, onCancel, onSuccess }: AnimalFor
                 id={id} field={field} fieldState={fieldState}
                 items={breeds.map(r => ({ value: r.id.toString(), label: r.name }))}
               />
+            )}
+          />
+        </FieldRow>
+
+        <FieldRow cols={3}>
+          <FormField name="propertyEntryDate" label="Data de Entrada na Propriedade"
+            control={control}
+            render={({ field, id }) => <Input {...field} id={id} type="date" />}
+          />
+          <FormField name="birthWeightKg" label="Peso (kg)"
+            control={control}
+            render={({ field, id }) => (
+              <Input {...field} id={id} type="number" step="0.01" min="0" placeholder="Ex: 32.5" />
             )}
           />
           <FormField name="batchId" label="Lote"
@@ -224,18 +259,29 @@ export default function AnimalForm({ id, title, onCancel, onSuccess }: AnimalFor
           />
         </FieldRow>
 
-        <FieldRow cols={2}>
-          <FormField name="birthDate" label="Data de Nascimento"
-            control={control}
-            render={({ field, id }) => <Input {...field} id={id} type="date" />}
-          />
-          <FormField name="birthWeightKg" label="Peso Nascimento (kg)"
-            control={control}
-            render={({ field, id }) => (
-              <Input {...field} id={id} type="number" step="0.01" min="0" placeholder="Ex: 32.5" />
+        <FieldRow cols={1}>
+          <Controller name="neutered" control={control}
+            render={({ field }) => (
+              <label className="flex w-fit items-center gap-2 text-sm font-medium">
+                <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+                Castrado?
+              </label>
             )}
           />
         </FieldRow>
+
+        {neutered && (
+          <FieldRow cols={2}>
+            <FormField name="neuteringDate" label="Data da Castração"
+              control={control}
+              render={({ field, id }) => <Input {...field} id={id} type="date" />}
+            />
+            <FormField name="neuteringMethod" label="Método"
+              control={control}
+              render={({ field, id }) => <Input {...field} id={id} placeholder="Ex: Cirúrgico" />}
+            />
+          </FieldRow>
+        )}
 
       </FieldSet>
       <Separator />
@@ -305,7 +351,7 @@ export default function AnimalForm({ id, title, onCancel, onSuccess }: AnimalFor
               />
               <FormField name="originPropertyName" label="Nome da Fazenda (se externa)"
                 control={control}
-                render={({ field, id }) => <Input {...field} id={id} maxLength={FIELD_LIMITS.animal.originPropertyName} placeholder="Ex: Fazenda Santa Fé" />}
+                render={({ field, id }) => <Input {...field} id={id} placeholder="Ex: Fazenda Santa Fé" />}
               />
             </FieldRow>
           </>

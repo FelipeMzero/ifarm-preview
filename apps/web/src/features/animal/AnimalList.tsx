@@ -142,7 +142,7 @@ export default function AnimalList() {
   const [total, setTotal] = useState(0);
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [status, setStatus] = useState<string>(EnumAnimalStatus.ACTIVE);
+  const [status, setStatus] = useState<string>(EnumAnimalStatus.PRESENT);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});

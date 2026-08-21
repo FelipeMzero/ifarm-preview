@@ -5,8 +5,8 @@ const enumValues = <T extends Record<string, string>>(e: T) =>
   Object.values(e) as [T[keyof T], ...T[keyof T][]];
 
 export const EnumSex = { MALE: "MALE", FEMALE: "FEMALE" } as const;
-export const EnumAnimalOrigin = { BIRTH: "BIRTH", PURCHASE: "PURCHASE", TRANSFER: "TRANSFER" } as const;
-export const EnumAnimalStatus = { ACTIVE: "ACTIVE", SOLD: "SOLD", DEAD: "DEAD", TRANSFERRED: "TRANSFERRED", DISCARDED: "DISCARDED", SLAUGHTERED: "SLAUGHTERED" } as const;
+export const EnumAnimalOrigin = { UNDEFINED: "UNDEFINED", BIRTH: "BIRTH", PURCHASE: "PURCHASE", TRANSFER: "TRANSFER", DONATION: "DONATION", REFERENCE: "REFERENCE" } as const;
+export const EnumAnimalStatus = { PRESENT: "PRESENT", ACTIVE: "ACTIVE", SOLD: "SOLD", DEAD: "DEAD", TRANSFERRED: "TRANSFERRED", DISCARDED: "DISCARDED", SLAUGHTERED: "SLAUGHTERED" } as const;
 
 export const animalFormSchema = z.object({
   earTag:            z.string().min(1, "Este campo não pode ser vazio").max(FIELD_LIMITS.animal.earTag, `Máximo de ${FIELD_LIMITS.animal.earTag} caracteres`),
@@ -20,6 +20,7 @@ export const animalFormSchema = z.object({
   originPropertyName: z.string().max(FIELD_LIMITS.animal.originPropertyName, `Máximo de ${FIELD_LIMITS.animal.originPropertyName} caracteres`).optional(),
   birthDate:         z.string().optional(),
   birthWeightKg:     z.string().optional(),
+  propertyEntryDate: z.string().optional(),
   breedId:           z.string().optional(),
   batchId:           z.string().optional(),
   originPropertyId:  z.string().optional(),
@@ -27,6 +28,9 @@ export const animalFormSchema = z.object({
   purchasePrice:     z.string().optional(),
   entryAgeMonths:    z.string().optional(),
   currentWeightKg:   z.string().optional(),
+  neutered:          z.boolean().optional(),
+  neuteringDate:     z.string().optional(),
+  neuteringMethod:   z.string().optional(),
 });
 
 

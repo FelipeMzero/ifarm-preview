@@ -15,6 +15,7 @@ export type AnimalRow = {
   id: string;
   rfid: string | null;
   earTag: string;
+  currentTag: string | null;
   name: string | null;
   sex: string;
   birthDate: string | null;
