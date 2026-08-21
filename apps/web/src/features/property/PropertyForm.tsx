@@ -26,8 +26,9 @@ import { cn } from "@/lib/utils";
 import { LocationPickerDialog } from "./LocationPickerDialog";
 import { useCurrentProperty } from "@/features/shell/CurrentPropertyProvider";
 
-
-
+// Importações do Modal e do Componente de Pessoa
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import PersonForm from "../person/PersonForm";
 
 const MASKED_INPUT_CLASSNAME = "h-10 w-full min-w-0 rounded-lg border border-input bg-input/40 px-2.5 py-1 text-base transition-colors outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 aria-invalid:border-destructive aria-invalid:focus:ring-3 aria-invalid:ring-destructive/20 md:text-sm dark:bg-input/30 dark:disabled:bg-input/80 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40";
 
@@ -40,9 +41,6 @@ function isValidCoordinate(latitude: string, longitude: string) {
   return !isNaN(lat) && !isNaN(lon) && lat >= -90 && lat <= 90 && lon >= -180 && lon <= 180;
 }
 
-// Conversão lat/long -> tile do OSM contendo o ponto + posição percentual dentro dele
-// (a % é o que permite posicionar o marcador certo mesmo com a imagem esticada para
-// preencher um contêiner de qualquer tamanho/proporção).
 function getTilePosition(lat: number, lon: number, zoom: number) {
   const pixelX = ((lon + 180) / 360) * 2 ** zoom * MAP_TILE_SIZE;
   const latRad = (lat * Math.PI) / 180;
@@ -65,54 +63,54 @@ function MapPreview({ latitude, longitude, className, onDoubleClick }: { latitud
 
   return (
     <div className={cn("flex min-w-0 flex-col gap-2", className)}>
-      <span className="text-muted-foreground text-xs">LOCALIZAÇÃO NO MAPA</span>
-      <div
-        className="relative w-full flex-1 cursor-pointer overflow-hidden rounded-lg border border-input bg-input/40"
-        onDoubleClick={onDoubleClick}
-        title="Clique duas vezes para escolher no mapa"
-      >
-        {isValid ? (
-          (() => {
-            const { tileX, tileY, markerLeftPct, markerTopPct } = getTilePosition(Number(latitude), Number(longitude), MAP_TILE_ZOOM);
-            return (
-              <>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={`https://tile.openstreetmap.org/${MAP_TILE_ZOOM}/${tileX}/${tileY}.png`}
-                  alt="Localização da propriedade"
-                  className="size-full object-fill"
-                />
-                <MapPin
-                  className="absolute size-5 fill-destructive text-destructive-foreground drop-shadow"
-                  style={{ left: `${markerLeftPct}%`, top: `${markerTopPct}%`, transform: "translate(-50%, -100%)" }}
-                />
-                <a
-                  href="https://www.openstreetmap.org/copyright"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="absolute right-0 bottom-0 bg-background/70 px-1 text-[9px] leading-tight text-muted-foreground hover:underline"
-                >
-                  © OpenStreetMap
-                </a>
-              </>
-            );
-          })()
-        ) : (
-          <div className="flex h-full flex-col items-center justify-center gap-1 text-muted-foreground">
-            {hasInput ? (
-              <>
-                <MapPinOff className="size-5" />
-                <span className="text-xs">Sem localização</span>
-              </>
-            ) : (
-              <>
-                <MapPin className="size-5 opacity-50" />
-                <span className="text-xs">Informe a latitude e longitude</span>
-              </>
-            )}
-          </div>
-        )}
+    <span className="text-muted-foreground text-xs">LOCALIZAÇÃO NO MAPA</span>
+    <div
+    className="relative w-full flex-1 cursor-pointer overflow-hidden rounded-lg border border-input bg-input/40"
+    onDoubleClick={onDoubleClick}
+    title="Clique duas vezes para escolher no mapa"
+    >
+    {isValid ? (
+      (() => {
+        const { tileX, tileY, markerLeftPct, markerTopPct } = getTilePosition(Number(latitude), Number(longitude), MAP_TILE_ZOOM);
+        return (
+          <>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+          src={`https://tile.openstreetmap.org/${MAP_TILE_ZOOM}/${tileX}/${tileY}.png`}
+          alt="Localização da propriedade"
+          className="size-full object-fill"
+          />
+          <MapPin
+          className="absolute size-5 fill-destructive text-destructive-foreground drop-shadow"
+          style={{ left: `${markerLeftPct}%`, top: `${markerTopPct}%`, transform: "translate(-50%, -100%)" }}
+          />
+          <a
+          href="https://www.openstreetmap.org/copyright"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="absolute right-0 bottom-0 bg-background/70 px-1 text-[9px] leading-tight text-muted-foreground hover:underline"
+          >
+          © OpenStreetMap
+          </a>
+          </>
+        );
+      })()
+    ) : (
+      <div className="flex h-full flex-col items-center justify-center gap-1 text-muted-foreground">
+      {hasInput ? (
+        <>
+        <MapPinOff className="size-5" />
+        <span className="text-xs">Sem localização</span>
+        </>
+      ) : (
+        <>
+        <MapPin className="size-5 opacity-50" />
+        <span className="text-xs">Informe a latitude e longitude</span>
+        </>
+      )}
       </div>
+    )}
+    </div>
     </div>
   );
 }
@@ -130,6 +128,9 @@ export default function PropertyForm({ id, title, onCancel, onSuccess }: Propert
   const [loadFailed, setLoadFailed] = useState(false);
   const [isZipLoading, setIsZipLoading] = useState(false);
 
+  // Estado para controle do modal de Nova Pessoa
+  const [isPersonModalOpen, setIsPersonModalOpen] = useState(false);
+
   const [ownerItems, setOwnerItems] = useState<SearchComboboxItem[]>([]);
   const ownerDebounce = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -143,24 +144,24 @@ export default function PropertyForm({ id, title, onCancel, onSuccess }: Propert
 
   const { handleSubmit, control, reset, watch, setValue, setError, formState: { isSubmitting } } = useForm<PropertyFormData>({
     resolver: zodResolver(propertyFormSchema),
-    defaultValues: {
-      name: "",
-      ownerId: "",
-      totalArea: "",
-      productiveArea: "",
-      cib: "",
-      ccir: "",
-      car: "",
-      latitude: "",
-      longitude: "",
-      zipCode: "",
-      street: "",
-      number: "",
-      complement: "",
-      neighborhood: "",
-      city: "",
-      state: "",
-    },
+                                                                                                                             defaultValues: {
+                                                                                                                               name: "",
+                                                                                                                               ownerId: "",
+                                                                                                                               totalArea: "",
+                                                                                                                               productiveArea: "",
+                                                                                                                               cib: "",
+                                                                                                                               ccir: "",
+                                                                                                                               car: "",
+                                                                                                                               latitude: "",
+                                                                                                                               longitude: "",
+                                                                                                                               zipCode: "",
+                                                                                                                               street: "",
+                                                                                                                               number: "",
+                                                                                                                               complement: "",
+                                                                                                                               neighborhood: "",
+                                                                                                                               city: "",
+                                                                                                                               state: "",
+                                                                                                                             },
   });
 
   const latitude = watch("latitude");
@@ -191,8 +192,6 @@ export default function PropertyForm({ id, title, onCancel, onSuccess }: Propert
 
     loadData();
   }, [id, reset]);
-
-
 
   async function geocodeAddress(street: string, city: string, state: string, postalcode: string) {
     try {
@@ -236,7 +235,6 @@ export default function PropertyForm({ id, title, onCancel, onSuccess }: Propert
     }
   }
 
-
   async function onSubmit(data: PropertyFormData) {
     try {
       if (id) {
@@ -246,7 +244,6 @@ export default function PropertyForm({ id, title, onCancel, onSuccess }: Propert
         toast.success("Registro atualizado com sucesso!");
         refreshCurrentProperty();
         onSuccess?.();
-
       } else {
         const response = await createProperty(data);
         toast.success("Registro salvo com sucesso!");
@@ -265,8 +262,6 @@ export default function PropertyForm({ id, title, onCancel, onSuccess }: Propert
     }
   }
 
-
-
   if (loadFailed) {
     return (
       <ErrorPage message={"Não foi possível obter os dados do servidor."} onRetry={() => window.location.reload()} />
@@ -277,209 +272,237 @@ export default function PropertyForm({ id, title, onCancel, onSuccess }: Propert
     return <FormSkeleton />;
   }
 
-
   return (
+    <>
     <form className="mx-auto flex w-full max-w-300 flex-col gap-4" onSubmit={handleSubmit(onSubmit)}>
+    <Button type="button" variant="ghost" size="sm" className="w-fit" onClick={() => onCancel?.()}>
+    <ArrowLeft className="size-4" /> Voltar
+    </Button>
 
-      <Button type="button" variant="ghost" size="sm" className="w-fit" onClick={() => onCancel?.()}>
-        <ArrowLeft className="size-4" /> Voltar
-      </Button>
+    {title && <h1 className="text-2xl font-semibold">{title}</h1>}
+    <Separator />
 
-      {title && <h1 className="text-2xl font-semibold">{title}</h1>}
-      <Separator />
+    <FieldSet className="border-0">
+    <FieldLegend> Identificação </FieldLegend>
 
-      <FieldSet className="border-0">
-        <FieldLegend> Identificação </FieldLegend>
+    <FieldRow cols={2}>
+    <FormField name="name" label="Nome" required
+    control={control}
+    render={({ field, id: fieldId }) => <Input {...field} id={fieldId} placeholder="Ex: Fazendão São João" />}
+    />
 
-        <FieldRow cols={2}>
-          <FormField name="name" label="Nome" required
-            control={control}
-            render={({ field, id: fieldId }) => <Input {...field} id={fieldId} maxLength={FIELD_LIMITS.property.name} placeholder="Ex: Fazendão São João" />}
-          />
-
-          <FormField name="ownerId" label="Titular" required
-            control={control}
-            render={({ id: fieldId, field, fieldState }) => (
-              <SearchCombobox placeholder="Selecionar..."
-                id={fieldId} field={field} fieldState={fieldState}
-                items={ownerItems}
-                onInputValueChange={(val) => searchOwners(val)}
-              />
-            )}
-          />
-        </FieldRow>
-
-        <FieldRow cols={2}>
-          <FormField name="totalArea" label="Área Total (ha)"
-            control={control}
-            render={({ field, id: fieldId }) => (
-              <Input {...field} id={fieldId} type="number" step="0.0001" min="0" placeholder="Ex: 120" />
-            )}
-          />
-          <FormField name="productiveArea" label="Área Produtiva (ha)"
-            control={control}
-            render={({ field, id: fieldId }) => (
-              <Input {...field} id={fieldId} type="number" step="0.0001" min="0" placeholder="Ex: 100" />
-            )}
-          />
-        </FieldRow>
-
-        <FieldRow cols={3}>
-          <FormField name="car" label="CAR"
-            control={control}
-            render={({ field, id: fieldId }) => (
-              <IMaskInput
-                mask="aa-0000000-HHHH.HHHH.HHHH.HHHH.HHHH.HHHH.HHHH.HHHH"
-                definitions={{ H: /[0-9A-Fa-f]/ }}
-                prepareChar={(char: string) => char.toUpperCase()}
-                id={fieldId}
-                name={field.name}
-                value={field.value}
-                placeholder="Ex: MT-5107909-E8C2.A75A.C69A.4A7C.8C26.99F5.CC59.9B9A"
-                onAccept={(value: string) => field.onChange(value)}
-                onBlur={field.onBlur}
-                inputRef={field.ref}
-                className={MASKED_INPUT_CLASSNAME}
-              />
-            )}
-          />
-          <FormField name="cib" label="CIB"
-            control={control}
-            render={({ field, id: fieldId }) => <Input {...field} id={fieldId} maxLength={FIELD_LIMITS.property.cib} placeholder="Ex: ABC1234-5" />}
-          />
-          <FormField name="ccir" label="CCIR"
-            control={control}
-            render={({ field, id: fieldId }) => (
-              <IMaskInput
-                mask="000.000.000.000-0"
-                unmask
-                id={fieldId}
-                name={field.name}
-                value={field.value}
-                placeholder="Ex: 999.999.999.999-9"
-                onAccept={(value: string) => field.onChange(value)}
-                onBlur={field.onBlur}
-                inputRef={field.ref}
-                className={MASKED_INPUT_CLASSNAME}
-              />
-            )}
-          />
-        </FieldRow>
-      </FieldSet>
-      <Separator />
-
-      <div className="grid gap-4 md:grid-cols-[2fr_auto_1fr] items-stretch">
-        <FieldSet className="border-0">
-          <FieldLegend>Endereço</FieldLegend>
-          <FieldRow cols={1}>
-            <FormField name="zipCode" label="CEP"
-              control={control}
-              render={({ field, id: fieldId }) => (
-                <div className="relative">
-                  <IMaskInput
-                    mask="00000-000"
-                    unmask
-                    id={fieldId}
-                    name={field.name}
-                    value={field.value}
-                    disabled={isZipLoading}
-                    placeholder="Ex: 78000-000"
-                    onAccept={(value: string) => field.onChange(value)}
-                    onBlur={(e: any) => { field.onBlur(); handleZipBlur(e.target.value); }}
-                    inputRef={field.ref}
-                    className={cn(MASKED_INPUT_CLASSNAME, isZipLoading && "pr-8")}
-                  />
-                  {isZipLoading && (
-                    <Loader2 className="absolute top-1/2 right-2.5 size-4 -translate-y-1/2 animate-spin text-muted-foreground" />
-                  )}
-                </div>
-              )}
-            />
-          </FieldRow>
-
-          <FieldRow cols={2}>
-            <FormField name="street" label="Logradouro"
-              control={control}
-              render={({ field, id: fieldId }) => <Input {...field} id={fieldId} maxLength={FIELD_LIMITS.address.street} placeholder="Ex: Av. Brasil" />}
-            />
-
-            <FormField name="number" label="Número"
-              control={control}
-              render={({ field, id: fieldId }) => <Input {...field} id={fieldId} maxLength={FIELD_LIMITS.address.number} placeholder="Ex: 1200" />}
-            />
-          </FieldRow>
-
-          <FieldRow cols={2}>
-            <FormField name="complement" label="Complemento"
-              control={control}
-              render={({ field, id: fieldId }) => <Input {...field} id={fieldId} maxLength={FIELD_LIMITS.address.complement} placeholder="Ex: Galpão 2" />}
-            />
-            <FormField name="neighborhood" label="Bairro"
-              control={control}
-              render={({ field, id: fieldId }) => <Input {...field} id={fieldId} maxLength={FIELD_LIMITS.address.neighborhood} placeholder="Ex: Centro" />}
-            />
-          </FieldRow>
-
-          <FieldRow cols={2}>
-            <FormField name="city" label="Município"
-              control={control}
-              render={({ field, id: fieldId }) => <Input {...field} id={fieldId} maxLength={FIELD_LIMITS.address.city} placeholder="Ex: Cuiabá" />}
-            />
-            <FormField name="state" label="UF"
-              control={control}
-              render={({ id: fieldId, field, fieldState }) => (
-                <SearchCombobox placeholder="Selecionar..."
-                  id={fieldId} field={field} fieldState={fieldState}
-                  items={BR_STATE_ITEMS}
-                />
-              )}
-            />
-          </FieldRow>
-        </FieldSet>
-
-        <Separator orientation="vertical" className="hidden md:block" />
-
-        <FieldRow cols={1}>
-          <FieldLegend> Localização </FieldLegend>
-
-          <FormField name="latitude" label="Latitude"
-            control={control}
-            render={({ field, id: fieldId }) => (
-              <Input {...field} id={fieldId} type="number" step="any" placeholder="Ex: -15.6014" />
-            )}
-          />
-          <FormField name="longitude" label="Longitude"
-            control={control}
-            render={({ field, id: fieldId }) => (
-              <Input {...field} id={fieldId} type="number" step="any" placeholder="Ex: -56.0979" />
-            )}
-          />
-          <MapPreview
-            latitude={latitude ?? ""}
-            longitude={longitude ?? ""}
-            onDoubleClick={() => setIsPickerOpen(true)}
-          />
-        </FieldRow>
-      </div >
-
-      <FormActionBar>
-        <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting && <Loader2 className="animate-spin" />}
-          Salvar
-        </Button>
-      </FormActionBar>
-
-      <LocationPickerDialog
-        open={isPickerOpen}
-        onOpenChange={setIsPickerOpen}
-        latitude={latitude ? Number(latitude) : null}
-        longitude={longitude ? Number(longitude) : null}
-        onConfirm={(lat, lon) => {
-          setValue("latitude", lat.toFixed(6), { shouldValidate: true });
-          setValue("longitude", lon.toFixed(6), { shouldValidate: true });
-        }}
+    <FormField name="ownerId" label="Titular" required
+    control={control}
+    render={({ id: fieldId, field, fieldState }) => (
+      <SearchCombobox
+      placeholder="Selecionar..."
+      id={fieldId}
+      field={field}
+      fieldState={fieldState}
+      items={ownerItems}
+      onInputValueChange={(val) => searchOwners(val)}
+      allowCreate={true}
+      onCreateClick={() => setIsPersonModalOpen(true)}
       />
+    )}
+    />
+    </FieldRow>
 
+    <FieldRow cols={2}>
+    <FormField name="totalArea" label="Área Total (ha)"
+    control={control}
+    render={({ field, id: fieldId }) => (
+      <Input {...field} id={fieldId} type="number" step="0.0001" min="0" placeholder="Ex: 120" />
+    )}
+    />
+    <FormField name="productiveArea" label="Área Produtiva (ha)"
+    control={control}
+    render={({ field, id: fieldId }) => (
+      <Input {...field} id={fieldId} type="number" step="0.0001" min="0" placeholder="Ex: 100" />
+    )}
+    />
+    </FieldRow>
+
+    <FieldRow cols={3}>
+    <FormField name="car" label="CAR"
+    control={control}
+    render={({ field, id: fieldId }) => (
+      <IMaskInput
+      mask="aa-0000000-HHHH.HHHH.HHHH.HHHH.HHHH.HHHH.HHHH.HHHH"
+      definitions={{ H: /[0-9A-Fa-f]/ }}
+      prepareChar={(char: string) => char.toUpperCase()}
+      id={fieldId}
+      name={field.name}
+      value={field.value}
+      placeholder="Ex: MT-5107909-E8C2.A75A.C69A.4A7C.8C26.99F5.CC59.9B9A"
+      onAccept={(value: string) => field.onChange(value)}
+      onBlur={field.onBlur}
+      inputRef={field.ref}
+      className={MASKED_INPUT_CLASSNAME}
+      />
+    )}
+    />
+    <FormField name="cib" label="CIB"
+    control={control}
+    render={({ field, id: fieldId }) => <Input {...field} id={fieldId} placeholder="Ex: ABC1234-5" />}
+    />
+    <FormField name="ccir" label="CCIR"
+    control={control}
+    render={({ field, id: fieldId }) => (
+      <IMaskInput
+      mask="000.000.000.000-0"
+      unmask
+      id={fieldId}
+      name={field.name}
+      value={field.value}
+      placeholder="Ex: 999.999.999.999-9"
+      onAccept={(value: string) => field.onChange(value)}
+      onBlur={field.onBlur}
+      inputRef={field.ref}
+      className={MASKED_INPUT_CLASSNAME}
+      />
+    )}
+    />
+    </FieldRow>
+    </FieldSet>
+    <Separator />
+
+    <div className="grid gap-4 md:grid-cols-[2fr_auto_1fr] items-stretch">
+    <FieldSet className="border-0">
+    <FieldLegend>Endereço</FieldLegend>
+    <FieldRow cols={1}>
+    <FormField name="zipCode" label="CEP"
+    control={control}
+    render={({ field, id: fieldId }) => (
+      <div className="relative">
+      <IMaskInput
+      mask="00000-000"
+      unmask
+      id={fieldId}
+      name={field.name}
+      value={field.value}
+      disabled={isZipLoading}
+      placeholder="Ex: 78000-000"
+      onAccept={(value: string) => field.onChange(value)}
+      onBlur={(e: any) => { field.onBlur(); handleZipBlur(e.target.value); }}
+      inputRef={field.ref}
+      className={cn(MASKED_INPUT_CLASSNAME, isZipLoading && "pr-8")}
+      />
+      {isZipLoading && (
+        <Loader2 className="absolute top-1/2 right-2.5 size-4 -translate-y-1/2 animate-spin text-muted-foreground" />
+      )}
+      </div>
+    )}
+    />
+    </FieldRow>
+
+    <FieldRow cols={2}>
+    <FormField name="street" label="Logradouro"
+    control={control}
+    render={({ field, id: fieldId }) => <Input {...field} id={fieldId} placeholder="Ex: Av. Brasil" />}
+    />
+
+    <FormField name="number" label="Número"
+    control={control}
+    render={({ field, id: fieldId }) => <Input {...field} id={fieldId} placeholder="Ex: 1200" />}
+    />
+    </FieldRow>
+
+    <FieldRow cols={2}>
+    <FormField name="complement" label="Complemento"
+    control={control}
+    render={({ field, id: fieldId }) => <Input {...field} id={fieldId} placeholder="Ex: Galpão 2" />}
+    />
+    <FormField name="neighborhood" label="Bairro"
+    control={control}
+    render={({ field, id: fieldId }) => <Input {...field} id={fieldId} placeholder="Ex: Centro" />}
+    />
+    </FieldRow>
+
+    <FieldRow cols={2}>
+    <FormField name="city" label="Município"
+    control={control}
+    render={({ field, id: fieldId }) => <Input {...field} id={fieldId} placeholder="Ex: Cuiabá" />}
+    />
+    <FormField name="state" label="UF"
+    control={control}
+    render={({ id: fieldId, field, fieldState }) => (
+      <SearchCombobox placeholder="Selecionar..."
+      id={fieldId} field={field} fieldState={fieldState}
+      items={BR_STATE_ITEMS}
+      />
+    )}
+    />
+    </FieldRow>
+    </FieldSet>
+
+    <Separator orientation="vertical" className="hidden md:block" />
+
+    <FieldRow cols={1}>
+    <FieldLegend> Localização </FieldLegend>
+
+    <FormField name="latitude" label="Latitude"
+    control={control}
+    render={({ field, id: fieldId }) => (
+      <Input {...field} id={fieldId} type="number" step="any" placeholder="Ex: -15.6014" />
+    )}
+    />
+    <FormField name="longitude" label="Longitude"
+    control={control}
+    render={({ field, id: fieldId }) => (
+      <Input {...field} id={fieldId} type="number" step="any" placeholder="Ex: -56.0979" />
+    )}
+    />
+    <MapPreview
+    latitude={latitude ?? ""}
+    longitude={longitude ?? ""}
+    onDoubleClick={() => setIsPickerOpen(true)}
+    />
+    </FieldRow>
+    </div >
+
+    <FormActionBar>
+    <Button type="submit" disabled={isSubmitting}>
+    {isSubmitting && <Loader2 className="animate-spin" />}
+    Salvar
+    </Button>
+    </FormActionBar>
+
+    <LocationPickerDialog
+    open={isPickerOpen}
+    onOpenChange={setIsPickerOpen}
+    latitude={latitude ? Number(latitude) : null}
+    longitude={longitude ? Number(longitude) : null}
+    onConfirm={(lat, lon) => {
+      setValue("latitude", lat.toFixed(6), { shouldValidate: true });
+      setValue("longitude", lon.toFixed(6), { shouldValidate: true });
+    }}
+    />
     </form >
+
+    {/* Modal Independente para Cadastro de Nova Pessoa */}
+    <Dialog open={isPersonModalOpen} onOpenChange={setIsPersonModalOpen}>
+    <DialogContent className="max-h-[90vh] w-full max-w-2xl overflow-y-auto sm:max-w-3xl">
+    <DialogHeader>
+    <DialogTitle>Novo Titular</DialogTitle>
+    <DialogDescription className="sr-only">Cadastre um novo titular diretamente por esta tela.</DialogDescription>
+    </DialogHeader>
+
+    <PersonForm
+    onCancel={() => setIsPersonModalOpen(false)}
+    onSuccess={async (newId) => {
+      setIsPersonModalOpen(false);
+      if (newId) {
+        // Atualiza a listagem de titulares no client e auto-seleciona a nova pessoa
+        const result = await getPeople({ search: "", pageSize: 20, status: "active" });
+        setOwnerItems(result.data.map((p) => ({ value: p.id, label: p.name })));
+        setValue("ownerId", newId, { shouldValidate: true });
+        toast.success("Titular vinculado à propriedade com sucesso.");
+      }
+    }}
+    />
+    </DialogContent>
+    </Dialog>
+    </>
   );
 }
