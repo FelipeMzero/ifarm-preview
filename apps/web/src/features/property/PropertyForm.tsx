@@ -1,11 +1,17 @@
 "use client";
 
-import { FIELD_LIMITS } from "@/lib/field-limits"; import { useCallback, useEffect, useRef, useState } from "react";
+import { FIELD_LIMITS } from "@/lib/field-limits";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { IMaskInput } from "react-imask";
 
-import { getProperty, updateProperty, createProperty, ApiError } from "./services";
+import {
+  getProperty,
+  updateProperty,
+  createProperty,
+  ApiError,
+} from "./services";
 import { getPeople } from "@/features/person/services";
 import { ErrorPage } from "@/components/our/ErrorPage";
 import { toast } from "sonner";
@@ -16,7 +22,10 @@ import { FormField } from "@/components/our/FormField";
 import { FormActionBar } from "@/components/our/FormActionBar";
 import FieldRow from "@/components/our/FieldRow";
 
-import { SearchCombobox, SearchComboboxItem } from "@/components/our/SearchCombobox";
+import {
+  SearchCombobox,
+  SearchComboboxItem,
+} from "@/components/our/SearchCombobox";
 import { ArrowLeft, Loader2, MapPin, MapPinOff } from "lucide-react";
 import FormSkeleton from "@/components/our/FormSkeleton";
 import { PropertyFormData, propertyFormSchema } from "./schema";
@@ -27,10 +36,17 @@ import { LocationPickerDialog } from "./LocationPickerDialog";
 import { useCurrentProperty } from "@/features/shell/CurrentPropertyProvider";
 
 // Importações do Modal e do Componente de Pessoa
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import PersonForm from "../person/PersonForm";
 
-const MASKED_INPUT_CLASSNAME = "h-10 w-full min-w-0 rounded-lg border border-input bg-input/40 px-2.5 py-1 text-base transition-colors outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 aria-invalid:border-destructive aria-invalid:focus:ring-3 aria-invalid:ring-destructive/20 md:text-sm dark:bg-input/30 dark:disabled:bg-input/80 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40";
+const MASKED_INPUT_CLASSNAME =
+  "h-10 w-full min-w-0 rounded-lg border border-input bg-input/40 px-2.5 py-1 text-base transition-colors outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 aria-invalid:border-destructive aria-invalid:focus:ring-3 aria-invalid:ring-destructive/20 md:text-sm dark:bg-input/30 dark:disabled:bg-input/80 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40";
 
 const MAP_TILE_ZOOM = 14;
 const MAP_TILE_SIZE = 128;
@@ -38,13 +54,23 @@ const MAP_TILE_SIZE = 128;
 function isValidCoordinate(latitude: string, longitude: string) {
   const lat = Number(latitude);
   const lon = Number(longitude);
-  return Number.isFinite(lat) && Number.isFinite(lon) && lat >= -90 && lat <= 90 && lon >= -180 && lon <= 180;
+  return (
+    Number.isFinite(lat) &&
+    Number.isFinite(lon) &&
+    lat >= -90 &&
+    lat <= 90 &&
+    lon >= -180 &&
+    lon <= 180
+  );
 }
 
 function getTilePosition(lat: number, lon: number, zoom: number) {
   const pixelX = ((lon + 180) / 360) * 2 ** zoom * MAP_TILE_SIZE;
   const latRad = (lat * Math.PI) / 180;
-  const pixelY = ((1 - Math.log(Math.tan(latRad) + 1 / Math.cos(latRad)) / Math.PI) / 2) * 2 ** zoom * MAP_TILE_SIZE;
+  const pixelY =
+    ((1 - Math.log(Math.tan(latRad) + 1 / Math.cos(latRad)) / Math.PI) / 2) *
+    2 ** zoom *
+    MAP_TILE_SIZE;
 
   const tileX = Math.floor(pixelX / MAP_TILE_SIZE);
   const tileY = Math.floor(pixelY / MAP_TILE_SIZE);
@@ -57,9 +83,20 @@ function getTilePosition(lat: number, lon: number, zoom: number) {
   };
 }
 
-function MapPreview({ latitude, longitude, className, onDoubleClick }: { latitude: string; longitude: string; className?: string; onDoubleClick?: () => void }) {
+function MapPreview({
+  latitude,
+  longitude,
+  className,
+  onDoubleClick,
+}: {
+  latitude: string;
+  longitude: string;
+  className?: string;
+  onDoubleClick?: () => void;
+}) {
   const hasInput = !!latitude || !!longitude;
-  const isValid = !!latitude && !!longitude && isValidCoordinate(latitude, longitude);
+  const isValid =
+    !!latitude && !!longitude && isValidCoordinate(latitude, longitude);
 
   return (
     <div className={cn("flex min-w-0 flex-col gap-2", className)}>
@@ -71,7 +108,12 @@ function MapPreview({ latitude, longitude, className, onDoubleClick }: { latitud
       >
         {isValid ? (
           (() => {
-            const { tileX, tileY, markerLeftPct, markerTopPct } = getTilePosition(Number(latitude), Number(longitude), MAP_TILE_ZOOM);
+            const { tileX, tileY, markerLeftPct, markerTopPct } =
+              getTilePosition(
+                Number(latitude),
+                Number(longitude),
+                MAP_TILE_ZOOM,
+              );
             return (
               <>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -82,7 +124,11 @@ function MapPreview({ latitude, longitude, className, onDoubleClick }: { latitud
                 />
                 <MapPin
                   className="absolute size-5 fill-destructive text-destructive-foreground drop-shadow"
-                  style={{ left: `${markerLeftPct}%`, top: `${markerTopPct}%`, transform: "translate(-50%, -100%)" }}
+                  style={{
+                    left: `${markerLeftPct}%`,
+                    top: `${markerTopPct}%`,
+                    transform: "translate(-50%, -100%)",
+                  }}
                 />
                 <a
                   href="https://www.openstreetmap.org/copyright"
@@ -122,7 +168,12 @@ type PropertyFormProps = {
   onSuccess?: (newId?: string) => void;
 };
 
-export default function PropertyForm({ id, title, onCancel, onSuccess }: PropertyFormProps) {
+export default function PropertyForm({
+  id,
+  title,
+  onCancel,
+  onSuccess,
+}: PropertyFormProps) {
   const { refresh: refreshCurrentProperty } = useCurrentProperty();
   const [isDataLoading, setIsDataLoading] = useState(!!id);
   const [loadFailed, setLoadFailed] = useState(false);
@@ -137,12 +188,24 @@ export default function PropertyForm({ id, title, onCancel, onSuccess }: Propert
   const searchOwners = useCallback((query: string) => {
     if (ownerDebounce.current) clearTimeout(ownerDebounce.current);
     ownerDebounce.current = setTimeout(async () => {
-      const result = await getPeople({ search: query, pageSize: query ? 20 : 5, status: "active" });
+      const result = await getPeople({
+        search: query,
+        pageSize: query ? 20 : 5,
+        status: "active",
+      });
       setOwnerItems(result.data.map((p) => ({ value: p.id, label: p.name })));
     }, 300);
   }, []);
 
-  const { handleSubmit, control, reset, watch, setValue, setError, formState: { isSubmitting } } = useForm<PropertyFormData>({
+  const {
+    handleSubmit,
+    control,
+    reset,
+    watch,
+    setValue,
+    setError,
+    formState: { isSubmitting },
+  } = useForm<PropertyFormData>({
     resolver: zodResolver(propertyFormSchema),
     defaultValues: {
       name: "",
@@ -171,13 +234,26 @@ export default function PropertyForm({ id, title, onCancel, onSuccess }: Propert
   useEffect(() => {
     async function loadData() {
       try {
-        const initialOwners = await getPeople({ pageSize: 5, status: "active" });
-        let seededOwners = initialOwners.data.map((p) => ({ value: p.id, label: p.name }));
+        const initialOwners = await getPeople({
+          pageSize: 5,
+          status: "active",
+        });
+        let seededOwners = initialOwners.data.map((p) => ({
+          value: p.id,
+          label: p.name,
+        }));
 
         if (id) {
           const data = await getProperty(id);
-          if (data.ownerId && data.ownerName && !seededOwners.some((o) => o.value === data.ownerId)) {
-            seededOwners = [{ value: data.ownerId, label: data.ownerName }, ...seededOwners];
+          if (
+            data.ownerId &&
+            data.ownerName &&
+            !seededOwners.some((o) => o.value === data.ownerId)
+          ) {
+            seededOwners = [
+              { value: data.ownerId, label: data.ownerName },
+              ...seededOwners,
+            ];
           }
           reset(data);
         }
@@ -193,12 +269,29 @@ export default function PropertyForm({ id, title, onCancel, onSuccess }: Propert
     loadData();
   }, [id, reset]);
 
-  async function geocodeAddress(street: string, city: string, state: string, postalcode: string) {
+  async function geocodeAddress(
+    street: string,
+    city: string,
+    state: string,
+    postalcode: string,
+  ) {
     try {
-      const params = new URLSearchParams({ format: "json", street, city, state, postalcode, country: "Brasil", limit: "1" });
-      const response = await fetch(`https://nominatim.openstreetmap.org/search?${params}`);
+      const params = new URLSearchParams({
+        format: "json",
+        street,
+        city,
+        state,
+        postalcode,
+        country: "Brasil",
+        limit: "1",
+      });
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?${params}`,
+      );
       const results = await response.json();
-      return results?.[0] ? { lat: results[0].lat as string, lon: results[0].lon as string } : null;
+      return results?.[0]
+        ? { lat: results[0].lat as string, lon: results[0].lon as string }
+        : null;
     } catch {
       return null;
     }
@@ -223,7 +316,12 @@ export default function PropertyForm({ id, title, onCancel, onSuccess }: Propert
       setValue("city", data.localidade || "", { shouldValidate: true });
       setValue("state", data.uf || "", { shouldValidate: true });
 
-      const coordinates = await geocodeAddress(data.logradouro || "", data.localidade || "", data.uf || "", digits);
+      const coordinates = await geocodeAddress(
+        data.logradouro || "",
+        data.localidade || "",
+        data.uf || "",
+        digits,
+      );
       if (coordinates) {
         setValue("latitude", coordinates.lat, { shouldValidate: true });
         setValue("longitude", coordinates.lon, { shouldValidate: true });
@@ -253,7 +351,10 @@ export default function PropertyForm({ id, title, onCancel, onSuccess }: Propert
     } catch (error) {
       if (error instanceof ApiError && error.errors) {
         Object.entries(error.errors).forEach(([field, message]) => {
-          setError(field as keyof PropertyFormData, { type: "server", message });
+          setError(field as keyof PropertyFormData, {
+            type: "server",
+            message,
+          });
         });
         toast.error("Verifique os campos destacados.");
       } else {
@@ -264,7 +365,10 @@ export default function PropertyForm({ id, title, onCancel, onSuccess }: Propert
 
   if (loadFailed) {
     return (
-      <ErrorPage message={"Não foi possível obter os dados do servidor."} onRetry={() => window.location.reload()} />
+      <ErrorPage
+        message={"Não foi possível obter os dados do servidor."}
+        onRetry={() => window.location.reload()}
+      />
     );
   }
 
@@ -274,8 +378,17 @@ export default function PropertyForm({ id, title, onCancel, onSuccess }: Propert
 
   return (
     <>
-      <form className="mx-auto flex w-full max-w-300 flex-col gap-4" onSubmit={handleSubmit(onSubmit)}>
-        <Button type="button" variant="ghost" size="sm" className="w-fit" onClick={() => onCancel?.()}>
+      <form
+        className="mx-auto flex w-full max-w-300 flex-col gap-4"
+        onSubmit={handleSubmit(onSubmit)}
+      >
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="w-fit"
+          onClick={() => onCancel?.()}
+        >
           <ArrowLeft className="size-4" /> Voltar
         </Button>
 
@@ -286,12 +399,25 @@ export default function PropertyForm({ id, title, onCancel, onSuccess }: Propert
           <FieldLegend> Identificação </FieldLegend>
 
           <FieldRow cols={2}>
-            <FormField name="name" label="Nome" required
+            <FormField
+              name="name"
+              label="Nome"
+              required
               control={control}
-              render={({ field, id: fieldId }) => <Input {...field} id={fieldId} maxLength={FIELD_LIMITS.property.name} placeholder="Ex: Fazendão São João" />}
+              render={({ field, id: fieldId }) => (
+                <Input
+                  {...field}
+                  id={fieldId}
+                  maxLength={FIELD_LIMITS.property.name}
+                  placeholder="Ex: Fazendão São João"
+                />
+              )}
             />
 
-            <FormField name="ownerId" label="Titular" required
+            <FormField
+              name="ownerId"
+              label="Titular"
+              required
               control={control}
               render={({ id: fieldId, field, fieldState }) => (
                 <SearchCombobox
@@ -308,22 +434,42 @@ export default function PropertyForm({ id, title, onCancel, onSuccess }: Propert
           </FieldRow>
 
           <FieldRow cols={2}>
-            <FormField name="totalArea" label="Área Total (ha)"
+            <FormField
+              name="totalArea"
+              label="Área Total (ha)"
               control={control}
               render={({ field, id: fieldId }) => (
-                <Input {...field} id={fieldId} type="number" step="0.0001" min="0" placeholder="Ex: 120" />
+                <Input
+                  {...field}
+                  id={fieldId}
+                  type="number"
+                  step="0.0001"
+                  min="0"
+                  placeholder="Ex: 120"
+                />
               )}
             />
-            <FormField name="productiveArea" label="Área Produtiva (ha)"
+            <FormField
+              name="productiveArea"
+              label="Área Produtiva (ha)"
               control={control}
               render={({ field, id: fieldId }) => (
-                <Input {...field} id={fieldId} type="number" step="0.0001" min="0" placeholder="Ex: 100" />
+                <Input
+                  {...field}
+                  id={fieldId}
+                  type="number"
+                  step="0.0001"
+                  min="0"
+                  placeholder="Ex: 100"
+                />
               )}
             />
           </FieldRow>
 
           <FieldRow cols={3}>
-            <FormField name="car" label="CAR"
+            <FormField
+              name="car"
+              label="CAR"
               control={control}
               render={({ field, id: fieldId }) => (
                 <IMaskInput
@@ -341,11 +487,22 @@ export default function PropertyForm({ id, title, onCancel, onSuccess }: Propert
                 />
               )}
             />
-            <FormField name="cib" label="CIB"
+            <FormField
+              name="cib"
+              label="CIB"
               control={control}
-              render={({ field, id: fieldId }) => <Input {...field} id={fieldId} maxLength={FIELD_LIMITS.property.cib} placeholder="Ex: ABC1234-5" />}
+              render={({ field, id: fieldId }) => (
+                <Input
+                  {...field}
+                  id={fieldId}
+                  maxLength={FIELD_LIMITS.property.cib}
+                  placeholder="Ex: ABC1234-5"
+                />
+              )}
             />
-            <FormField name="ccir" label="CCIR"
+            <FormField
+              name="ccir"
+              label="CCIR"
               control={control}
               render={({ field, id: fieldId }) => (
                 <IMaskInput
@@ -370,7 +527,9 @@ export default function PropertyForm({ id, title, onCancel, onSuccess }: Propert
           <FieldSet className="border-0">
             <FieldLegend>Endereço</FieldLegend>
             <FieldRow cols={1}>
-              <FormField name="zipCode" label="CEP"
+              <FormField
+                name="zipCode"
+                label="CEP"
                 control={control}
                 render={({ field, id: fieldId }) => (
                   <div className="relative">
@@ -383,9 +542,15 @@ export default function PropertyForm({ id, title, onCancel, onSuccess }: Propert
                       disabled={isZipLoading}
                       placeholder="Ex: 78000-000"
                       onAccept={(value: string) => field.onChange(value)}
-                      onBlur={(e: any) => { field.onBlur(); handleZipBlur(e.target.value); }}
+                      onBlur={(e: any) => {
+                        field.onBlur();
+                        handleZipBlur(e.target.value);
+                      }}
                       inputRef={field.ref}
-                      className={cn(MASKED_INPUT_CLASSNAME, isZipLoading && "pr-8")}
+                      className={cn(
+                        MASKED_INPUT_CLASSNAME,
+                        isZipLoading && "pr-8",
+                      )}
                     />
                     {isZipLoading && (
                       <Loader2 className="absolute top-1/2 right-2.5 size-4 -translate-y-1/2 animate-spin text-muted-foreground" />
@@ -396,38 +561,88 @@ export default function PropertyForm({ id, title, onCancel, onSuccess }: Propert
             </FieldRow>
 
             <FieldRow cols={2}>
-              <FormField name="street" label="Logradouro"
+              <FormField
+                name="street"
+                label="Logradouro"
                 control={control}
-                render={({ field, id: fieldId }) => <Input {...field} id={fieldId} maxLength={FIELD_LIMITS.address.street} placeholder="Ex: Av. Brasil" />}
+                render={({ field, id: fieldId }) => (
+                  <Input
+                    {...field}
+                    id={fieldId}
+                    maxLength={FIELD_LIMITS.address.street}
+                    placeholder="Ex: Av. Brasil"
+                  />
+                )}
               />
 
-              <FormField name="number" label="Número"
+              <FormField
+                name="number"
+                label="Número"
                 control={control}
-                render={({ field, id: fieldId }) => <Input {...field} id={fieldId} maxLength={FIELD_LIMITS.address.number} placeholder="Ex: 1200" />}
+                render={({ field, id: fieldId }) => (
+                  <Input
+                    {...field}
+                    id={fieldId}
+                    maxLength={FIELD_LIMITS.address.number}
+                    placeholder="Ex: 1200"
+                  />
+                )}
               />
             </FieldRow>
 
             <FieldRow cols={2}>
-              <FormField name="complement" label="Complemento"
+              <FormField
+                name="complement"
+                label="Complemento"
                 control={control}
-                render={({ field, id: fieldId }) => <Input {...field} id={fieldId} maxLength={FIELD_LIMITS.address.complement} placeholder="Ex: Galpão 2" />}
+                render={({ field, id: fieldId }) => (
+                  <Input
+                    {...field}
+                    id={fieldId}
+                    maxLength={FIELD_LIMITS.address.complement}
+                    placeholder="Ex: Galpão 2"
+                  />
+                )}
               />
-              <FormField name="neighborhood" label="Bairro"
+              <FormField
+                name="neighborhood"
+                label="Bairro"
                 control={control}
-                render={({ field, id: fieldId }) => <Input {...field} id={fieldId} maxLength={FIELD_LIMITS.address.neighborhood} placeholder="Ex: Centro" />}
+                render={({ field, id: fieldId }) => (
+                  <Input
+                    {...field}
+                    id={fieldId}
+                    maxLength={FIELD_LIMITS.address.neighborhood}
+                    placeholder="Ex: Centro"
+                  />
+                )}
               />
             </FieldRow>
 
             <FieldRow cols={2}>
-              <FormField name="city" label="Município"
+              <FormField
+                name="city"
+                label="Município"
                 control={control}
-                render={({ field, id: fieldId }) => <Input {...field} id={fieldId} maxLength={FIELD_LIMITS.address.city} placeholder="Ex: Cuiabá" />}
+                render={({ field, id: fieldId }) => (
+                  <Input
+                    {...field}
+                    id={fieldId}
+                    maxLength={FIELD_LIMITS.address.city}
+                    placeholder="Ex: Cuiabá"
+                  />
+                )}
               />
-              <FormField name="state" label="UF"
+              <FormField
+                name="state"
+                label="UF"
                 control={control}
                 render={({ id: fieldId, field, fieldState }) => (
-                  <SearchCombobox placeholder="Selecionar..."
-                    id={fieldId} field={field} fieldState={fieldState}
+                  <SearchCombobox
+                    placeholder="Selecionar..."
+                    id={fieldId}
+                    field={field}
+                    fieldState={fieldState}
                     items={BR_STATE_ITEMS}
                   />
                 )}
@@ -440,16 +655,32 @@ export default function PropertyForm({ id, title, onCancel, onSuccess }: Propert
           <FieldRow cols={1}>
             <FieldLegend> Localização </FieldLegend>
 
-            <FormField name="latitude" label="Latitude"
+            <FormField
+              name="latitude"
+              label="Latitude"
               control={control}
               render={({ field, id: fieldId }) => (
-                <Input {...field} id={fieldId} type="number" step="any" placeholder="Ex: -15.6014" />
+                <Input
+                  {...field}
+                  id={fieldId}
+                  type="number"
+                  step="any"
+                  placeholder="Ex: -15.6014"
+                />
               )}
             />
-            <FormField name="longitude" label="Longitude"
+            <FormField
+              name="longitude"
+              label="Longitude"
               control={control}
               render={({ field, id: fieldId }) => (
-                <Input {...field} id={fieldId} type="number" step="any" placeholder="Ex: -56.0979" />
+                <Input
+                  {...field}
+                  id={fieldId}
+                  type="number"
+                  step="any"
+                  placeholder="Ex: -56.0979"
+                />
               )}
             />
             <MapPreview
@@ -458,7 +689,7 @@ export default function PropertyForm({ id, title, onCancel, onSuccess }: Propert
               onDoubleClick={() => setIsPickerOpen(true)}
             />
           </FieldRow>
-        </div >
+        </div>
 
         <FormActionBar>
           <Button type="submit" disabled={isSubmitting}>
@@ -477,14 +708,16 @@ export default function PropertyForm({ id, title, onCancel, onSuccess }: Propert
             setValue("longitude", lon.toFixed(6), { shouldValidate: true });
           }}
         />
-      </form >
+      </form>
 
       {/* Modal Independente para Cadastro de Nova Pessoa */}
       <Dialog open={isPersonModalOpen} onOpenChange={setIsPersonModalOpen}>
         <DialogContent className="max-h-[90vh] w-full max-w-2xl overflow-y-auto sm:max-w-3xl">
           <DialogHeader>
             <DialogTitle>Novo Titular</DialogTitle>
-            <DialogDescription className="sr-only">Cadastre um novo titular diretamente por esta tela.</DialogDescription>
+            <DialogDescription className="sr-only">
+              Cadastre um novo titular diretamente por esta tela.
+            </DialogDescription>
           </DialogHeader>
 
           <PersonForm
@@ -493,8 +726,14 @@ export default function PropertyForm({ id, title, onCancel, onSuccess }: Propert
               setIsPersonModalOpen(false);
               if (newId) {
                 // Atualiza a listagem de titulares no client e auto-seleciona a nova pessoa
-                const result = await getPeople({ search: "", pageSize: 20, status: "active" });
-                setOwnerItems(result.data.map((p) => ({ value: p.id, label: p.name })));
+                const result = await getPeople({
+                  search: "",
+                  pageSize: 20,
+                  status: "active",
+                });
+                setOwnerItems(
+                  result.data.map((p) => ({ value: p.id, label: p.name })),
+                );
                 setValue("ownerId", newId, { shouldValidate: true });
                 toast.success("Titular vinculado à propriedade com sucesso.");
               }

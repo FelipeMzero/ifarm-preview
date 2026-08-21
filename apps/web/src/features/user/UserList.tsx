@@ -41,10 +41,25 @@ const ROLE_LABEL: Record<string, string> = {
 };
 
 const newUserSchema = z.object({
-  name: z.string().min(1, "Este campo não pode ser vazio").max(FIELD_LIMITS.user.name, `Máximo de ${FIELD_LIMITS.user.name} caracteres`),
-  email: z.string().email("E-mail inválido").max(FIELD_LIMITS.user.email, `Máximo de ${FIELD_LIMITS.user.email} caracteres`),
+  name: z
+    .string()
+    .min(1, "Este campo não pode ser vazio")
+    .max(
+      FIELD_LIMITS.user.name,
+      `Máximo de ${FIELD_LIMITS.user.name} caracteres`,
+    ),
+  email: z
+    .string()
+    .email("E-mail inválido")
+    .max(
+      FIELD_LIMITS.user.email,
+      `Máximo de ${FIELD_LIMITS.user.email} caracteres`,
+    ),
   password: z.string().min(8, "A senha deve ter ao menos 8 caracteres"),
-  role: z.enum(["admin", "manager", "technician", "worker"], "Este campo não pode ser vazio"),
+  role: z.enum(
+    ["admin", "manager", "technician", "worker"],
+    "Este campo não pode ser vazio",
+  ),
 });
 
 type NewUserData = z.infer<typeof newUserSchema>;
@@ -80,8 +95,11 @@ function buildColumns(
       accessorKey: "createdAt",
       cell: ({ row }) =>
         new Date(row.original.createdAt).toLocaleString("pt-BR", {
-          day: "2-digit", month: "2-digit", year: "numeric",
-          hour: "2-digit", minute: "2-digit",
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
         }),
     },
     {
@@ -102,9 +120,19 @@ function buildColumns(
             <Button
               variant="ghost"
               size="icon-sm"
-              title={isSelf ? "Você não pode revogar seu próprio acesso" : row.original.banned ? "Reativar acesso" : "Revogar acesso"}
+              title={
+                isSelf
+                  ? "Você não pode revogar seu próprio acesso"
+                  : row.original.banned
+                    ? "Reativar acesso"
+                    : "Revogar acesso"
+              }
               disabled={isSelf}
-              className={row.original.banned ? "" : "text-destructive hover:text-destructive"}
+              className={
+                row.original.banned
+                  ? ""
+                  : "text-destructive hover:text-destructive"
+              }
               onClick={() => onToggleAccess(row.original)}
             >
               <Power className="size-4" />
@@ -127,12 +155,21 @@ export default function UserList() {
   const [error, setError] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
   const [isCreating, setIsCreating] = useState(false);
-  const [resetPasswordUserId, setResetPasswordUserId] = useState<string | null>(null);
-  const [togglingAccessFor, setTogglingAccessFor] = useState<UserRow | null>(null);
+  const [resetPasswordUserId, setResetPasswordUserId] = useState<string | null>(
+    null,
+  );
+  const [togglingAccessFor, setTogglingAccessFor] = useState<UserRow | null>(
+    null,
+  );
 
   const isAdmin = session?.user.role === "admin";
 
-  const { handleSubmit, control, reset, formState: { isSubmitting } } = useForm<NewUserData>({
+  const {
+    handleSubmit,
+    control,
+    reset,
+    formState: { isSubmitting },
+  } = useForm<NewUserData>({
     resolver: zodResolver(newUserSchema),
     defaultValues: { name: "", email: "", password: "", role: "worker" },
   });
@@ -154,7 +191,9 @@ export default function UserList() {
         });
         if (cancelled) return;
         if (error) {
-          setError(error.message ?? "Não foi possível obter os dados do servidor.");
+          setError(
+            error.message ?? "Não foi possível obter os dados do servidor.",
+          );
         } else {
           setUsers(data.users as UserRow[]);
           setTotal(data.total);
@@ -168,7 +207,9 @@ export default function UserList() {
     }
 
     load();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [isAdmin, pageIndex, pageSize, refreshKey]);
 
   async function onSubmit(formData: NewUserData) {
@@ -199,15 +240,25 @@ export default function UserList() {
       : await authClient.admin.banUser({ userId: id });
 
     if (error) {
-      toast.error(error.message ?? "Não foi possível atualizar o acesso do usuário.");
+      toast.error(
+        error.message ?? "Não foi possível atualizar o acesso do usuário.",
+      );
     } else {
-      toast.success(banned ? "Acesso reativado com sucesso!" : "Acesso revogado com sucesso!");
+      toast.success(
+        banned
+          ? "Acesso reativado com sucesso!"
+          : "Acesso revogado com sucesso!",
+      );
       setRefreshKey((k) => k + 1);
     }
     setTogglingAccessFor(null);
   }
 
-  const columns = buildColumns(session?.user.id, setResetPasswordUserId, setTogglingAccessFor);
+  const columns = buildColumns(
+    session?.user.id,
+    setResetPasswordUserId,
+    setTogglingAccessFor,
+  );
 
   if (isSessionPending) {
     return <ListSkeleton columns={6} />;
@@ -224,7 +275,10 @@ export default function UserList() {
 
   if (error) {
     return (
-      <ErrorPage message="Não foi possível obter os dados do servidor." onRetry={() => window.location.reload()} />
+      <ErrorPage
+        message="Não foi possível obter os dados do servidor."
+        onRetry={() => window.location.reload()}
+      />
     );
   }
 
@@ -241,7 +295,11 @@ export default function UserList() {
         </Button>
       </div>
 
-      <div className={loading ? "opacity-60 transition-opacity" : "transition-opacity"}>
+      <div
+        className={
+          loading ? "opacity-60 transition-opacity" : "transition-opacity"
+        }
+      >
         {users.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 gap-2 text-muted-foreground">
             <Users size={50} className="opacity-30" />
@@ -256,26 +314,67 @@ export default function UserList() {
             pageSize={pageSize}
             total={total}
             onPageChange={setPageIndex}
-            onPageSizeChange={(size) => { setPageSize(size); setPageIndex(0); }}
+            onPageSizeChange={(size) => {
+              setPageSize(size);
+              setPageIndex(0);
+            }}
           />
         )}
       </div>
 
-      <Dialog open={isCreating} onOpenChange={(open) => { if (!open) { setIsCreating(false); reset(); } }}>
+      <Dialog
+        open={isCreating}
+        onOpenChange={(open) => {
+          if (!open) {
+            setIsCreating(false);
+            reset();
+          }
+        }}
+      >
         <DialogContent className="p-8 sm:max-w-md">
-          <form className="flex flex-col gap-4" onSubmit={handleSubmit(onSubmit)}>
+          <form
+            className="flex flex-col gap-4"
+            onSubmit={handleSubmit(onSubmit)}
+          >
             <h2 className="text-xl font-semibold">Novo Usuário</h2>
 
-            <FormField name="name" label="Nome" required control={control}
-              render={({ id, field }) => <Input id={id} maxLength={FIELD_LIMITS.user.name} {...field} />}
+            <FormField
+              name="name"
+              label="Nome"
+              required
+              control={control}
+              render={({ id, field }) => (
+                <Input id={id} maxLength={FIELD_LIMITS.user.name} {...field} />
+              )}
             />
-            <FormField name="email" label="E-mail" required control={control}
-              render={({ id, field }) => <Input id={id} type="email" maxLength={FIELD_LIMITS.user.email} {...field} />}
+            <FormField
+              name="email"
+              label="E-mail"
+              required
+              control={control}
+              render={({ id, field }) => (
+                <Input
+                  id={id}
+                  type="email"
+                  maxLength={FIELD_LIMITS.user.email}
+                  {...field}
+                />
+              )}
             />
-            <FormField name="password" label="Senha" required control={control}
-              render={({ id, field }) => <Input id={id} type="password" {...field} />}
+            <FormField
+              name="password"
+              label="Senha"
+              required
+              control={control}
+              render={({ id, field }) => (
+                <Input id={id} type="password" {...field} />
+              )}
             />
-            <FormField name="role" label="Papel" required control={control}
+            <FormField
+              name="role"
+              label="Papel"
+              required
+              control={control}
               render={({ field }) => (
                 <SelectField
                   value={field.value}
@@ -291,7 +390,14 @@ export default function UserList() {
             />
 
             <div className="flex justify-end gap-2 mt-2">
-              <Button type="button" variant="outline" onClick={() => { setIsCreating(false); reset(); }}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setIsCreating(false);
+                  reset();
+                }}
+              >
                 Cancelar
               </Button>
               <Button type="submit" disabled={isSubmitting}>
@@ -302,11 +408,18 @@ export default function UserList() {
         </DialogContent>
       </Dialog>
 
-      <ResetPasswordDialog userId={resetPasswordUserId} onOpenChange={(open) => { if (!open) setResetPasswordUserId(null); }} />
+      <ResetPasswordDialog
+        userId={resetPasswordUserId}
+        onOpenChange={(open) => {
+          if (!open) setResetPasswordUserId(null);
+        }}
+      />
 
       <ConfirmDialog
         open={togglingAccessFor !== null}
-        onOpenChange={(open) => { if (!open) setTogglingAccessFor(null); }}
+        onOpenChange={(open) => {
+          if (!open) setTogglingAccessFor(null);
+        }}
         onConfirm={confirmToggleAccess}
         title={togglingAccessFor?.banned ? "Reativar acesso" : "Revogar acesso"}
         description={

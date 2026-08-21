@@ -1,22 +1,32 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
-import { Beef, ChevronRight, KeyRound, LayoutDashboard, LogOut, Map, Tractor, UserCog, Users } from 'lucide-react';
+import { useState } from "react";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+import {
+  Beef,
+  ChevronRight,
+  KeyRound,
+  LayoutDashboard,
+  LogOut,
+  Map,
+  Tractor,
+  UserCog,
+  Users,
+} from "lucide-react";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from '@/components/ui/collapsible';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Button } from '@/components/ui/button';
+} from "@/components/ui/collapsible";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+} from "@/components/ui/dropdown-menu";
 import {
   Sidebar as SidebarPrimitive,
   SidebarContent,
@@ -28,20 +38,20 @@ import {
   SidebarMenuSub,
   SidebarMenuSubButton,
   SidebarMenuSubItem,
-} from '@/components/ui/sidebar';
-import { signOut, useSession } from '@/lib/auth-client';
-import { RESOURCE_ACCESS } from '@/lib/permissions';
-import { ChangePasswordDialog } from './ChangePasswordDialog';
-import { PropertySwitcher } from './PropertySwitcher';
-import { ThemeToggle } from './ThemeToggle';
+} from "@/components/ui/sidebar";
+import { signOut, useSession } from "@/lib/auth-client";
+import { RESOURCE_ACCESS } from "@/lib/permissions";
+import { ChangePasswordDialog } from "./ChangePasswordDialog";
+import { PropertySwitcher } from "./PropertySwitcher";
+import { ThemeToggle } from "./ThemeToggle";
 
 const NAV = [
   {
-    label: 'Animais',
+    label: "Animais",
     icon: Beef,
     items: [
-      { href: '/animais', label: 'Animais' },
-      { href: '/racas', label: 'Raças' },
+      { href: "/animais", label: "Animais" },
+      { href: "/racas", label: "Raças" },
     ],
   },
 ];
@@ -49,28 +59,31 @@ const NAV = [
 // Links diretos (sem submenu) — criar um novo registro fica a cargo do botão
 // "+ Adicionar" já existente em cada tela de listagem.
 const DIRECT_LINKS = [
-  { href: '/pessoas', label: 'Pessoas', icon: Users },
-  { href: '/propriedades', label: 'Propriedades', icon: Tractor },
-  { href: '/areas', label: 'Áreas', icon: Map },
-  { href: '/usuarios', label: 'Usuários', icon: UserCog },
+  { href: "/pessoas", label: "Pessoas", icon: Users },
+  { href: "/propriedades", label: "Propriedades", icon: Tractor },
+  { href: "/areas", label: "Áreas", icon: Map },
+  { href: "/usuarios", label: "Usuários", icon: UserCog },
 ];
 
 // Extrai o primeiro segmento da rota (ex: "/animais/novo" -> "animais") pra achar a
 // entrada correspondente em RESOURCE_ACCESS — mesma lógica de match usada no proxy.
 function isHrefAllowed(href: string, role: string): boolean {
-  const resource = href.split('/').filter(Boolean)[0] as keyof typeof RESOURCE_ACCESS | undefined;
+  const resource = href.split("/").filter(Boolean)[0] as
+    keyof typeof RESOURCE_ACCESS | undefined;
   if (!resource || !(resource in RESOURCE_ACCESS)) return true;
-  return !(RESOURCE_ACCESS[resource].forbiddenRoles as readonly string[]).includes(role);
+  return !(
+    RESOURCE_ACCESS[resource].forbiddenRoles as readonly string[]
+  ).includes(role);
 }
 
 function getInitials(name?: string | null): string {
-  if (!name) return '?';
+  if (!name) return "?";
   return name
     .trim()
     .split(/\s+/)
     .slice(0, 2)
     .map((part) => part[0]?.toUpperCase())
-    .join('');
+    .join("");
 }
 
 export function Sidebar() {
@@ -78,28 +91,29 @@ export function Sidebar() {
   const router = useRouter();
   const { data: session } = useSession();
   const user = session?.user;
-  const role = user?.role ?? '';
+  const role = user?.role ?? "";
   const [changingPassword, setChangingPassword] = useState(false);
 
-  const visibleNav = NAV
-    .map((group) => ({
-      ...group,
-      items: group.items.filter((item) => isHrefAllowed(item.href, role)),
-    }))
-    .filter((group) => group.items.length > 0);
+  const visibleNav = NAV.map((group) => ({
+    ...group,
+    items: group.items.filter((item) => isHrefAllowed(item.href, role)),
+  })).filter((group) => group.items.length > 0);
 
   async function handleLogout() {
     await signOut();
-    router.push('/login');
+    router.push("/login");
     router.refresh();
   }
 
   return (
-    <SidebarPrimitive className='border-sidebar-border' collapsible="icon">
+    <SidebarPrimitive className="border-sidebar-border" collapsible="icon">
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton size="lg" className="cursor-default hover:bg-transparent active:bg-transparent">
+            <SidebarMenuButton
+              size="lg"
+              className="cursor-default hover:bg-transparent active:bg-transparent"
+            >
               <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
                 <Beef className="size-4" />
               </div>
@@ -114,7 +128,7 @@ export function Sidebar() {
       <SidebarContent>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild isActive={pathname === '/painel'}>
+            <SidebarMenuButton asChild isActive={pathname === "/painel"}>
               <Link href="/painel">
                 <LayoutDashboard />
                 <span>Painel</span>
@@ -123,10 +137,16 @@ export function Sidebar() {
           </SidebarMenuItem>
 
           {visibleNav.map(({ label, icon: Icon, items }) => {
-            const isGroupActive = items.some((item) => pathname.startsWith(item.href));
+            const isGroupActive = items.some((item) =>
+              pathname.startsWith(item.href),
+            );
 
             return (
-              <Collapsible key={label} defaultOpen={isGroupActive} className="group/collapsible">
+              <Collapsible
+                key={label}
+                defaultOpen={isGroupActive}
+                className="group/collapsible"
+              >
                 <SidebarMenuItem>
                   <CollapsibleTrigger asChild>
                     <SidebarMenuButton isActive={isGroupActive}>
@@ -139,7 +159,10 @@ export function Sidebar() {
                     <SidebarMenuSub>
                       {items.map((item) => (
                         <SidebarMenuSubItem key={item.href}>
-                          <SidebarMenuSubButton asChild isActive={pathname === item.href}>
+                          <SidebarMenuSubButton
+                            asChild
+                            isActive={pathname === item.href}
+                          >
                             <Link href={item.href}>
                               <span>{item.label}</span>
                             </Link>
@@ -153,16 +176,18 @@ export function Sidebar() {
             );
           })}
 
-          {DIRECT_LINKS.filter((link) => isHrefAllowed(link.href, role)).map(({ href, label, icon: Icon }) => (
-            <SidebarMenuItem key={href}>
-              <SidebarMenuButton asChild isActive={pathname.startsWith(href)}>
-                <Link href={href}>
-                  <Icon />
-                  <span>{label}</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          ))}
+          {DIRECT_LINKS.filter((link) => isHrefAllowed(link.href, role)).map(
+            ({ href, label, icon: Icon }) => (
+              <SidebarMenuItem key={href}>
+                <SidebarMenuButton asChild isActive={pathname.startsWith(href)}>
+                  <Link href={href}>
+                    <Icon />
+                    <span>{label}</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            ),
+          )}
         </SidebarMenu>
       </SidebarContent>
       <SidebarFooter>
@@ -181,8 +206,12 @@ export function Sidebar() {
                       </AvatarFallback>
                     </Avatar>
                     <div className="grid min-w-0 flex-1 text-left text-sm leading-tight">
-                      <span className="truncate font-medium">{user?.name ?? '—'}</span>
-                      <span className="truncate text-xs text-muted-foreground">{user?.email ?? ''}</span>
+                      <span className="truncate font-medium">
+                        {user?.name ?? "—"}
+                      </span>
+                      <span className="truncate text-xs text-muted-foreground">
+                        {user?.email ?? ""}
+                      </span>
                     </div>
                   </button>
                 </DropdownMenuTrigger>
@@ -194,14 +223,22 @@ export function Sidebar() {
                 </DropdownMenuContent>
               </DropdownMenu>
               <ThemeToggle />
-              <Button variant="ghost" size="icon-sm" title="Sair" onClick={handleLogout}>
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                title="Sair"
+                onClick={handleLogout}
+              >
                 <LogOut className="size-4" />
               </Button>
             </div>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>
-      <ChangePasswordDialog open={changingPassword} onOpenChange={setChangingPassword} />
+      <ChangePasswordDialog
+        open={changingPassword}
+        onOpenChange={setChangingPassword}
+      />
     </SidebarPrimitive>
   );
 }

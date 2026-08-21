@@ -13,7 +13,9 @@ export async function getCurrentProperty(): Promise<PropertyOption | null> {
   return result.data;
 }
 
-export async function setCurrentProperty(propertyId: string): Promise<PropertyOption> {
+export async function setCurrentProperty(
+  propertyId: string,
+): Promise<PropertyOption> {
   const response = await fetch(CURRENT_PROPERTY_ENDPOINT, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },

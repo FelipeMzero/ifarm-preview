@@ -1,6 +1,17 @@
 import { useEffect, useState } from "react";
-import { ActivityIndicator, Button, StyleSheet, Text, View } from "react-native";
-import { apiBaseURL, authClient, signOut, useSession } from "../lib/auth-client";
+import {
+  ActivityIndicator,
+  Button,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
+import {
+  apiBaseURL,
+  authClient,
+  signOut,
+  useSession,
+} from "../lib/auth-client";
 
 type PropertyDetails = {
   id: string;
@@ -27,9 +38,9 @@ export function HomeScreen() {
       // SecureStore — e isso só acontece em chamadas feitas por $fetch. Passar a URL
       // absoluta (em vez de um caminho relativo) faz o $fetch pular o prefixo /api/auth
       // que ele adiciona por padrão, já que essa rota não é do better-auth.
-      const { data, error } = await authClient.$fetch<{ data: PropertyDetails | null }>(
-        `${apiBaseURL}/api/user/current-property/details`,
-      );
+      const { data, error } = await authClient.$fetch<{
+        data: PropertyDetails | null;
+      }>(`${apiBaseURL}/api/user/current-property/details`);
 
       if (cancelled) return;
 
@@ -74,7 +85,9 @@ export function HomeScreen() {
                 Localização: {property.city ?? "-"}/{property.state ?? "-"}
               </Text>
             )}
-            {property.totalArea != null && <Text>Área total: {property.totalArea} ha</Text>}
+            {property.totalArea != null && (
+              <Text>Área total: {property.totalArea} ha</Text>
+            )}
             {property.productiveArea != null && (
               <Text>Área produtiva: {property.productiveArea} ha</Text>
             )}

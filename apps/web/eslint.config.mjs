@@ -8,7 +8,7 @@ const eslintConfig = defineConfig([
 
   {
     rules: {
-      "semi": ["error", "always"], // Obriga o uso de ponto e vírgula e marca como erro
+      semi: ["error", "always"], // Obriga o uso de ponto e vírgula e marca como erro
     },
   },
 

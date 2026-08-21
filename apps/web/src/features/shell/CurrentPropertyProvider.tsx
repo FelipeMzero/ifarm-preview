@@ -1,7 +1,16 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
-import { getPropertyOptions, PropertyOption } from "@/features/property/services";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  ReactNode,
+} from "react";
+import {
+  getPropertyOptions,
+  PropertyOption,
+} from "@/features/property/services";
 import { getCurrentProperty, setCurrentProperty } from "./services";
 
 type CurrentPropertyContextValue = {
@@ -12,7 +21,8 @@ type CurrentPropertyContextValue = {
   refresh: () => Promise<void>;
 };
 
-const CurrentPropertyContext = createContext<CurrentPropertyContextValue | null>(null);
+const CurrentPropertyContext =
+  createContext<CurrentPropertyContextValue | null>(null);
 
 // Fonte única da propriedade atualmente selecionada, compartilhada por qualquer
 // componente dentro da área logada (troca no seletor da sidebar, uso no painel, em
@@ -25,7 +35,10 @@ export function CurrentPropertyProvider({ children }: { children: ReactNode }) {
 
   async function refresh() {
     try {
-      const [freshOptions, freshProperty] = await Promise.all([getPropertyOptions(), getCurrentProperty()]);
+      const [freshOptions, freshProperty] = await Promise.all([
+        getPropertyOptions(),
+        getCurrentProperty(),
+      ]);
       setOptions(freshOptions);
       setProperty(freshProperty);
     } catch {
@@ -42,7 +55,9 @@ export function CurrentPropertyProvider({ children }: { children: ReactNode }) {
     }
 
     load();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   async function select(propertyId: string) {
@@ -51,7 +66,9 @@ export function CurrentPropertyProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <CurrentPropertyContext.Provider value={{ property, options, isLoading, select, refresh }}>
+    <CurrentPropertyContext.Provider
+      value={{ property, options, isLoading, select, refresh }}
+    >
       {children}
     </CurrentPropertyContext.Provider>
   );
@@ -60,7 +77,9 @@ export function CurrentPropertyProvider({ children }: { children: ReactNode }) {
 export function useCurrentProperty() {
   const context = useContext(CurrentPropertyContext);
   if (!context) {
-    throw new Error("useCurrentProperty deve ser usado dentro de um CurrentPropertyProvider");
+    throw new Error(
+      "useCurrentProperty deve ser usado dentro de um CurrentPropertyProvider",
+    );
   }
   return context;
 }

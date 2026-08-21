@@ -19,7 +19,7 @@ const geistMono = Geist_Mono({
 const fontHeading = Geist({
   variable: "--font-geist-heading",
   subsets: ["latin"],
-  weight: "600"
+  weight: "600",
 });
 
 export const metadata: Metadata = {
@@ -27,11 +27,22 @@ export const metadata: Metadata = {
   description: "Sistema de Gestão Pecuária Inteligente",
 };
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+export default function RootLayout({
+  children,
+}: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="pt-BR" className={`${geistSans.variable} ${geistMono.variable} ${fontHeading.variable}`} suppressHydrationWarning>
+    <html
+      lang="pt-BR"
+      className={`${geistSans.variable} ${geistMono.variable} ${fontHeading.variable}`}
+      suppressHydrationWarning
+    >
       <body className="bg-background text-foreground">
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
           <TooltipProvider>
             {children}
             <Toaster />

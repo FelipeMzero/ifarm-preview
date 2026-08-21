@@ -4,11 +4,11 @@ Este guia descreve o fluxo de trabalho para contribuir com o repositório oficia
 
 O fluxo passa por três camadas de repositórios, sendo elas:
 
-| Camada | O que é | Uso |
-|---|---|---|
+| Camada     | O que é                                        | Uso                                                 |
+| ---------- | ---------------------------------------------- | --------------------------------------------------- |
 | `upstream` | repositório oficial (`ufopa-orixi-devs/ifarm`) | de onde você puxa atualizações e para onde abre PRs |
-| `origin` | seu fork (`seu_usuario/ifarm`) | para onde você faz `push` |
-| `local` | clone local do fork | onde você edita, cria branches e faz commits |
+| `origin`   | seu fork (`seu_usuario/ifarm`)                 | para onde você faz `push`                           |
+| `local`    | clone local do fork                            | onde você edita, cria branches e faz commits        |
 
 O diagrama a seguir mostra o fluxo de contribuição via fork do GitHub.
 
@@ -65,7 +65,6 @@ git remote add upstream git@github.com:ufopa-orixi-devs/ifarm.git
 ### 1.2 - Instale o projeto
 
 Instale o projeto de acordo com o `README`.
-
 
 ## 2 - Fluxo de contribuição
 
@@ -214,7 +213,6 @@ git push origin --delete feat/FA-1/descricao-da-feat
 ```
 
 Com isso, seu fork está limpo e atualizado para a próxima tarefa.
-
 
 ---
 

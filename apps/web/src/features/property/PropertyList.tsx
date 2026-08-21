@@ -1,7 +1,17 @@
 "use client";
 
 import { ColumnDef, VisibilityState } from "@tanstack/react-table";
-import { IdCard, MapPin, Pencil, Plus, Power, Search, Settings2, Tractor, User } from "lucide-react";
+import {
+  IdCard,
+  MapPin,
+  Pencil,
+  Plus,
+  Power,
+  Search,
+  Settings2,
+  Tractor,
+  User,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 
 import { useEffect, useState } from "react";
@@ -12,10 +22,7 @@ import { ConfirmDialog } from "@/components/our/ConfirmDialog";
 import PropertyDetails from "./PropertyDetails";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -32,7 +39,11 @@ import { useCurrentProperty } from "@/features/shell/CurrentPropertyProvider";
 
 const DEFAULT_PAGE_SIZE = 10;
 
-const STATUS_FILTER = { ALL: "todos", ACTIVE: "ativo", INACTIVE: "inativo" } as const;
+const STATUS_FILTER = {
+  ALL: "todos",
+  ACTIVE: "ativo",
+  INACTIVE: "inativo",
+} as const;
 
 function filterToStatus(filter: string): string | undefined {
   if (filter === STATUS_FILTER.ACTIVE) return "active";
@@ -62,16 +73,22 @@ function buildColumns(
     {
       header: "Área Total",
       accessorKey: "totalArea",
-      cell: ({ row }) => row.original.totalArea != null ? `${row.original.totalArea} ha` : "—",
+      cell: ({ row }) =>
+        row.original.totalArea != null ? `${row.original.totalArea} ha` : "—",
     },
     {
       header: "Município/UF",
       id: "location",
-      accessorFn: (row) => row.city && row.state ? `${row.city}/${row.state}` : "",
+      accessorFn: (row) =>
+        row.city && row.state ? `${row.city}/${row.state}` : "",
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
           <MapPin className="size-4 text-muted-foreground" />
-          <span>{row.original.city && row.original.state ? `${row.original.city}/${row.original.state}` : "—"}</span>
+          <span>
+            {row.original.city && row.original.state
+              ? `${row.original.city}/${row.original.state}`
+              : "—"}
+          </span>
         </div>
       ),
     },
@@ -101,8 +118,11 @@ function buildColumns(
         const iso = row.original.updatedAt;
         if (!iso) return "—";
         return new Date(iso).toLocaleString("pt-BR", {
-          day: "2-digit", month: "2-digit", year: "numeric",
-          hour: "2-digit", minute: "2-digit",
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
         });
       },
     },
@@ -111,17 +131,31 @@ function buildColumns(
       enableSorting: false,
       cell: ({ row }) => (
         <div className="flex items-center gap-1">
-          <Button variant="ghost" size="icon-sm" title="Editar" onClick={() => onRequestEdit(row.original.id)}>
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            title="Editar"
+            onClick={() => onRequestEdit(row.original.id)}
+          >
             <Pencil className="size-4" />
           </Button>
-          <Button variant="ghost" size="icon-sm" title="Detalhes" onClick={() => onRequestViewDetails(row.original.id)}>
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            title="Detalhes"
+            onClick={() => onRequestViewDetails(row.original.id)}
+          >
             <IdCard className="size-4" />
           </Button>
           <Button
             variant="ghost"
             size="icon-sm"
             title={row.original.deactivatedAt ? "Ativar" : "Desativar"}
-            className={row.original.deactivatedAt ? undefined : "text-destructive hover:text-destructive"}
+            className={
+              row.original.deactivatedAt
+                ? undefined
+                : "text-destructive hover:text-destructive"
+            }
             onClick={() => onRequestToggleStatus(row.original.id)}
           >
             <Power className="size-4" />
@@ -146,7 +180,9 @@ export default function PropertyList() {
   const [loading, setLoading] = useState(true);
   const [isFirstLoad, setIsFirstLoad] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({ totalArea: false });
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({
+    totalArea: false,
+  });
   const [refreshKey, setRefreshKey] = useState(0);
   const [viewingDetailsId, setViewingDetailsId] = useState<string | null>(null);
   const [togglingId, setTogglingId] = useState<string | null>(null);
@@ -166,7 +202,12 @@ export default function PropertyList() {
     async function load() {
       setLoading(true);
       try {
-        const result = await getProperties({ page: pageIndex, pageSize, search: debouncedSearch, status: filterToStatus(filter) });
+        const result = await getProperties({
+          page: pageIndex,
+          pageSize,
+          search: debouncedSearch,
+          status: filterToStatus(filter),
+        });
         if (!cancelled) {
           setProperties(result.data);
           setPageCount(result.pageCount);
@@ -183,7 +224,9 @@ export default function PropertyList() {
     }
 
     load();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [pageIndex, pageSize, debouncedSearch, filter, refreshKey]);
 
   async function confirmToggleStatus() {
@@ -212,14 +255,15 @@ export default function PropertyList() {
 
   if (error) {
     return (
-      <ErrorPage message={"Não foi possível obter os dados do servidor."} onRetry={() => window.location.reload()} />
+      <ErrorPage
+        message={"Não foi possível obter os dados do servidor."}
+        onRetry={() => window.location.reload()}
+      />
     );
   }
 
   if (isFirstLoad) {
-    return (
-      <ListSkeleton columns={5} />
-    );
+    return <ListSkeleton columns={5} />;
   }
 
   return (
@@ -246,7 +290,10 @@ export default function PropertyList() {
 
         <SelectField
           value={filter}
-          onValueChange={(val) => { setFilter(val); setPageIndex(0); }}
+          onValueChange={(val) => {
+            setFilter(val);
+            setPageIndex(0);
+          }}
           items={[
             { value: STATUS_FILTER.ALL, label: "Todos" },
             { value: STATUS_FILTER.ACTIVE, label: "Ativo" },
@@ -279,7 +326,11 @@ export default function PropertyList() {
         </DropdownMenu>
       </div>
 
-      <div className={loading ? "opacity-60 transition-opacity" : "transition-opacity"}>
+      <div
+        className={
+          loading ? "opacity-60 transition-opacity" : "transition-opacity"
+        }
+      >
         {properties.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 gap-2 text-muted-foreground">
             <Tractor size={50} className="opacity-30" />
@@ -295,19 +346,30 @@ export default function PropertyList() {
             total={total}
             initialSorting={[{ id: "updatedAt", desc: true }]}
             onPageChange={setPageIndex}
-            onPageSizeChange={(size) => { setPageSize(size); setPageIndex(0); }}
+            onPageSizeChange={(size) => {
+              setPageSize(size);
+              setPageIndex(0);
+            }}
             columnVisibility={columnVisibility}
             onColumnVisibilityChange={setColumnVisibility}
           />
         )}
       </div>
 
-      <Dialog open={viewingDetailsId !== null} onOpenChange={(open) => { if (!open) setViewingDetailsId(null); }}>
+      <Dialog
+        open={viewingDetailsId !== null}
+        onOpenChange={(open) => {
+          if (!open) setViewingDetailsId(null);
+        }}
+      >
         <DialogContent className="p-8 sm:max-w-4xl max-h-[90vh] overflow-y-auto">
           {viewingDetailsId && (
             <PropertyDetails
               id={viewingDetailsId}
-              onClose={() => { setViewingDetailsId(null); setRefreshKey((k) => k + 1); }}
+              onClose={() => {
+                setViewingDetailsId(null);
+                setRefreshKey((k) => k + 1);
+              }}
             />
           )}
         </DialogContent>
@@ -317,7 +379,11 @@ export default function PropertyList() {
         open={togglingId !== null}
         onOpenChange={(open) => !open && !isToggling && setTogglingId(null)}
         onConfirm={confirmToggleStatus}
-        title={togglingProperty?.deactivatedAt ? "Confirmar ativação" : "Confirmar inativação"}
+        title={
+          togglingProperty?.deactivatedAt
+            ? "Confirmar ativação"
+            : "Confirmar inativação"
+        }
         description={
           togglingProperty?.deactivatedAt
             ? "Tem certeza que deseja ativar esta propriedade?"

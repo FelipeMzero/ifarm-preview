@@ -30,9 +30,16 @@ type LocationPickerBodyProps = {
 
 // Componente próprio só pra desmontar/remontar a cada abertura do dialog — assim o
 // estado "picked" nasce sincronizado com lat/long atuais sem precisar de um efeito.
-function LocationPickerBody({ latitude, longitude, onConfirm, onCancel }: LocationPickerBodyProps) {
+function LocationPickerBody({
+  latitude,
+  longitude,
+  onConfirm,
+  onCancel,
+}: LocationPickerBodyProps) {
   const [picked, setPicked] = useState<{ lat: number; lon: number } | null>(
-    latitude != null && longitude != null ? { lat: latitude, lon: longitude } : null
+    latitude != null && longitude != null
+      ? { lat: latitude, lon: longitude }
+      : null,
   );
 
   return (
@@ -55,7 +62,11 @@ function LocationPickerBody({ latitude, longitude, onConfirm, onCancel }: Locati
         <Button type="button" variant="secondary" onClick={onCancel}>
           Cancelar
         </Button>
-        <Button type="button" onClick={() => picked && onConfirm(picked.lat, picked.lon)} disabled={!picked}>
+        <Button
+          type="button"
+          onClick={() => picked && onConfirm(picked.lat, picked.lon)}
+          disabled={!picked}
+        >
           <MapPin className="size-4" /> Confirmar
         </Button>
       </DialogFooter>
@@ -71,7 +82,13 @@ type LocationPickerDialogProps = {
   onConfirm: (lat: number, lon: number) => void;
 };
 
-export function LocationPickerDialog({ open, onOpenChange, latitude, longitude, onConfirm }: LocationPickerDialogProps) {
+export function LocationPickerDialog({
+  open,
+  onOpenChange,
+  latitude,
+  longitude,
+  onConfirm,
+}: LocationPickerDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="flex h-[80vh] flex-col sm:max-w-3xl">

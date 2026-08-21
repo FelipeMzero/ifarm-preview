@@ -3,7 +3,16 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { ArrowLeft, Beef, Compass, LandPlot, MapPin, Trash2, Tractor, User } from "lucide-react";
+import {
+  ArrowLeft,
+  Beef,
+  Compass,
+  LandPlot,
+  MapPin,
+  Trash2,
+  Tractor,
+  User,
+} from "lucide-react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -28,7 +37,13 @@ function DetailsSkeleton() {
   );
 }
 
-export default function PropertyDetails({ id, onClose }: { id: string; onClose?: () => void }) {
+export default function PropertyDetails({
+  id,
+  onClose,
+}: {
+  id: string;
+  onClose?: () => void;
+}) {
   const router = useRouter();
   const { refresh: refreshCurrentProperty } = useCurrentProperty();
   const [property, setProperty] = useState<PropertyFormData | null>(null);
@@ -52,7 +67,9 @@ export default function PropertyDetails({ id, onClose }: { id: string; onClose?:
     }
 
     load();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [id]);
 
   async function handleDelete() {
@@ -60,9 +77,12 @@ export default function PropertyDetails({ id, onClose }: { id: string; onClose?:
       await deleteProperty(id);
       toast.success("Registro excluído com sucesso!");
       refreshCurrentProperty();
-      if (onClose) onClose(); else router.push("/propriedades");
+      if (onClose) onClose();
+      else router.push("/propriedades");
     } catch (e) {
-      toast.error((e as Error).message || "Não foi possível excluir o registro.");
+      toast.error(
+        (e as Error).message || "Não foi possível excluir o registro.",
+      );
     } finally {
       setConfirmingDelete(false);
     }
@@ -70,7 +90,10 @@ export default function PropertyDetails({ id, onClose }: { id: string; onClose?:
 
   if (error) {
     return (
-      <ErrorPage message="Não foi possível obter os dados da propriedade." onRetry={() => window.location.reload()} />
+      <ErrorPage
+        message="Não foi possível obter os dados da propriedade."
+        onRetry={() => window.location.reload()}
+      />
     );
   }
 
@@ -79,16 +102,28 @@ export default function PropertyDetails({ id, onClose }: { id: string; onClose?:
   }
 
   const address = [
-    property.street && property.number ? `${property.street}, ${property.number}` : property.street,
+    property.street && property.number
+      ? `${property.street}, ${property.number}`
+      : property.street,
     property.complement,
     property.neighborhood,
-    property.city && property.state ? `${property.city}/${property.state}` : property.city,
+    property.city && property.state
+      ? `${property.city}/${property.state}`
+      : property.city,
     property.zipCode,
-  ].filter(Boolean).join(" — ");
+  ]
+    .filter(Boolean)
+    .join(" — ");
 
   return (
     <div className="w-full max-w-4xl space-y-4">
-      <div className={onClose ? "flex items-center justify-end" : "flex items-center justify-between"}>
+      <div
+        className={
+          onClose
+            ? "flex items-center justify-end"
+            : "flex items-center justify-between"
+        }
+      >
         {!onClose && (
           <Button variant="ghost" size="sm" onClick={() => router.back()}>
             <ArrowLeft className="size-4" /> Voltar
@@ -135,7 +170,11 @@ export default function PropertyDetails({ id, onClose }: { id: string; onClose?:
             </div>
             <div>
               <p className="text-muted-foreground">Área Produtiva</p>
-              <p>{property.productiveArea ? `${property.productiveArea} ha` : "—"}</p>
+              <p>
+                {property.productiveArea
+                  ? `${property.productiveArea} ha`
+                  : "—"}
+              </p>
             </div>
             <div>
               <p className="text-muted-foreground">CIB</p>
@@ -174,7 +213,8 @@ export default function PropertyDetails({ id, onClose }: { id: string; onClose?:
       <Separator />
 
       <p className="text-xs text-muted-foreground">
-        As seções abaixo dependem dos módulos MOD-LOTE/MOD-ANIMAL, ainda não implementados.
+        As seções abaixo dependem dos módulos MOD-LOTE/MOD-ANIMAL, ainda não
+        implementados.
       </p>
 
       <Card>
@@ -186,7 +226,9 @@ export default function PropertyDetails({ id, onClose }: { id: string; onClose?:
         <CardContent>
           <div className="flex flex-col items-center justify-center py-8 gap-2 text-muted-foreground">
             <Badge variant="outline">Sem histórico</Badge>
-            <p className="text-sm">Não há lotes ou animais vinculados a esta propriedade.</p>
+            <p className="text-sm">
+              Não há lotes ou animais vinculados a esta propriedade.
+            </p>
           </div>
         </CardContent>
       </Card>

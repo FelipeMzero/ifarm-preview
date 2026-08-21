@@ -1,4 +1,4 @@
-import { Skeleton } from "../ui/skeleton"
+import { Skeleton } from "../ui/skeleton";
 
 export default function FormSkeleton() {
   return (
@@ -26,9 +26,8 @@ export default function FormSkeleton() {
         </div>
       </div>
     </div>
-  )
+  );
 }
-
 
 function SkeletonField({ height = "h-8" }: { height?: string }) {
   return (
@@ -36,5 +35,5 @@ function SkeletonField({ height = "h-8" }: { height?: string }) {
       <Skeleton className="h-4 w-20" />
       <Skeleton className={`${height} w-full`} />
     </div>
-  )
+  );
 }

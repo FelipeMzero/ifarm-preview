@@ -4,9 +4,9 @@ App mobile (Expo / React Native) do iFarm. Não tem banco de dados nem backend p
 
 ## 🚀 Pré-requisitos
 
-* [apps/web](../web/README.md) configurado e **rodando** (`pnpm --filter web dev`).
-* App **Expo Go** instalado no celular ([Android](https://play.google.com/store/apps/details?id=host.exp.exponent) / [iOS](https://apps.apple.com/app/expo-go/id982107779)) — ou um emulador Android/simulador iOS configurado.
-* Celular e computador na **mesma rede Wi-Fi**, se for testar em dispositivo físico.
+- [apps/web](../web/README.md) configurado e **rodando** (`pnpm --filter web dev`).
+- App **Expo Go** instalado no celular ([Android](https://play.google.com/store/apps/details?id=host.exp.exponent) / [iOS](https://apps.apple.com/app/expo-go/id982107779)) — ou um emulador Android/simulador iOS configurado.
+- Celular e computador na **mesma rede Wi-Fi**, se for testar em dispositivo físico.
 
 ## 🛠️ Configuração
 
@@ -49,10 +49,10 @@ pnpm start
 
 No terminal vai aparecer um QR code e um menu de atalhos:
 
-| Atalho | Ação |
-| :--- | :--- |
-| Escanear o QR code | Abre no app Expo Go do celular |
-| `a` | Abre num emulador Android (exige Android SDK configurado) |
-| `i` | Abre num simulador iOS (exige macOS) |
-| `w` | Abre no navegador |
-| `r` | Recarrega o app |
+| Atalho             | Ação                                                      |
+| :----------------- | :-------------------------------------------------------- |
+| Escanear o QR code | Abre no app Expo Go do celular                            |
+| `a`                | Abre num emulador Android (exige Android SDK configurado) |
+| `i`                | Abre num simulador iOS (exige macOS)                      |
+| `w`                | Abre no navegador                                         |
+| `r`                | Recarrega o app                                           |

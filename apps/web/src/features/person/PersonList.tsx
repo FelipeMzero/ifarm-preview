@@ -1,7 +1,17 @@
 "use client";
 
 import { ColumnDef, VisibilityState } from "@tanstack/react-table";
-import { Building2, IdCard, Pencil, Plus, Power, Search, Settings2, User, Users } from "lucide-react";
+import {
+  Building2,
+  IdCard,
+  Pencil,
+  Plus,
+  Power,
+  Search,
+  Settings2,
+  User,
+  Users,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 
 import React, { useEffect, useState } from "react";
@@ -12,10 +22,7 @@ import { ConfirmDialog } from "@/components/our/ConfirmDialog";
 import PersonDetails from "./PersonDetails";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -33,19 +40,26 @@ import { formatTaxId } from "@/lib/tax-id";
 
 const DEFAULT_PAGE_SIZE = 10;
 
-const STATUS_FILTER = { ALL: "todos", ACTIVE: "ativo", INACTIVE: "inativo" } as const;
+const STATUS_FILTER = {
+  ALL: "todos",
+  ACTIVE: "ativo",
+  INACTIVE: "inativo",
+} as const;
 
 function filterToParams(filter: string): { type?: string; status?: string } {
   if (filter === STATUS_FILTER.ACTIVE) return { status: "active" };
   if (filter === STATUS_FILTER.INACTIVE) return { status: "inactive" };
-  if (filter === EnumPersonType.INDIVIDUAL || filter === EnumPersonType.COMPANY) return { type: filter };
+  if (filter === EnumPersonType.INDIVIDUAL || filter === EnumPersonType.COMPANY)
+    return { type: filter };
   return {};
 }
 
 function formatPhone(value: string): string {
   const digits = value.replace(/\D/g, "");
-  if (digits.length === 11) return digits.replace(/(\d{2})(\d{5})(\d{4})/, "($1) $2-$3");
-  if (digits.length === 10) return digits.replace(/(\d{2})(\d{4})(\d{4})/, "($1) $2-$3");
+  if (digits.length === 11)
+    return digits.replace(/(\d{2})(\d{5})(\d{4})/, "($1) $2-$3");
+  if (digits.length === 10)
+    return digits.replace(/(\d{2})(\d{4})(\d{4})/, "($1) $2-$3");
   return value;
 }
 
@@ -64,8 +78,12 @@ const TYPE_LABEL: Record<string, string> = {
 };
 
 const TYPE_ICON: Record<string, React.ReactNode> = {
-  [EnumPersonType.INDIVIDUAL]: <User className="size-4 text-muted-foreground" />,
-  [EnumPersonType.COMPANY]: <Building2 className="size-4 text-muted-foreground" />,
+  [EnumPersonType.INDIVIDUAL]: (
+    <User className="size-4 text-muted-foreground" />
+  ),
+  [EnumPersonType.COMPANY]: (
+    <Building2 className="size-4 text-muted-foreground" />
+  ),
 };
 
 function buildColumns(
@@ -78,9 +96,16 @@ function buildColumns(
       header: "Documento",
       accessorKey: "taxId",
       cell: ({ row }) => (
-        <div className="flex items-center gap-2" title={TYPE_LABEL[row.original.type] ?? row.original.type}>
+        <div
+          className="flex items-center gap-2"
+          title={TYPE_LABEL[row.original.type] ?? row.original.type}
+        >
           {TYPE_ICON[row.original.type]}
-          <span>{row.original.taxId ? formatTaxId(row.original.type, row.original.taxId) : "—"}</span>
+          <span>
+            {row.original.taxId
+              ? formatTaxId(row.original.type, row.original.taxId)
+              : "—"}
+          </span>
         </div>
       ),
     },
@@ -92,7 +117,8 @@ function buildColumns(
     {
       header: "Telefone",
       accessorKey: "phone",
-      cell: ({ row }) => row.original.phone ? formatPhone(row.original.phone) : "—",
+      cell: ({ row }) =>
+        row.original.phone ? formatPhone(row.original.phone) : "—",
     },
     {
       header: "E-mail",
@@ -115,8 +141,11 @@ function buildColumns(
         const iso = row.original.updatedAt;
         if (!iso) return "—";
         return new Date(iso).toLocaleString("pt-BR", {
-          day: "2-digit", month: "2-digit", year: "numeric",
-          hour: "2-digit", minute: "2-digit",
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
         });
       },
     },
@@ -125,17 +154,31 @@ function buildColumns(
       enableSorting: false,
       cell: ({ row }) => (
         <div className="flex items-center gap-1">
-          <Button variant="ghost" size="icon-sm" title="Editar" onClick={() => onRequestEdit(row.original.id)}>
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            title="Editar"
+            onClick={() => onRequestEdit(row.original.id)}
+          >
             <Pencil className="size-4" />
           </Button>
-          <Button variant="ghost" size="icon-sm" title="Detalhes" onClick={() => onRequestViewDetails(row.original.id)}>
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            title="Detalhes"
+            onClick={() => onRequestViewDetails(row.original.id)}
+          >
             <IdCard className="size-4" />
           </Button>
           <Button
             variant="ghost"
             size="icon-sm"
             title={row.original.deactivatedAt ? "Ativar" : "Desativar"}
-            className={row.original.deactivatedAt ? undefined : "text-destructive hover:text-destructive"}
+            className={
+              row.original.deactivatedAt
+                ? undefined
+                : "text-destructive hover:text-destructive"
+            }
             onClick={() => onRequestToggleStatus(row.original.id)}
           >
             <Power className="size-4" />
@@ -159,7 +202,10 @@ export default function PersonList() {
   const [loading, setLoading] = useState(true);
   const [isFirstLoad, setIsFirstLoad] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({ phone: false, email: false });
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({
+    phone: false,
+    email: false,
+  });
   const [refreshKey, setRefreshKey] = useState(0);
   const [viewingDetailsId, setViewingProfileId] = useState<string | null>(null);
   const [togglingId, setTogglingId] = useState<string | null>(null);
@@ -179,7 +225,12 @@ export default function PersonList() {
     async function load() {
       setLoading(true);
       try {
-        const result = await getPeople({ page: pageIndex, pageSize, search: debouncedSearch, ...filterToParams(filter) });
+        const result = await getPeople({
+          page: pageIndex,
+          pageSize,
+          search: debouncedSearch,
+          ...filterToParams(filter),
+        });
         if (!cancelled) {
           setPeople(result.data);
           setPageCount(result.pageCount);
@@ -196,7 +247,9 @@ export default function PersonList() {
     }
 
     load();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [pageIndex, pageSize, debouncedSearch, filter, refreshKey]);
 
   async function confirmToggleStatus() {
@@ -224,14 +277,15 @@ export default function PersonList() {
 
   if (error) {
     return (
-      <ErrorPage message={"Não foi possível obter os dados do servidor."} onRetry={() => window.location.reload()} />
+      <ErrorPage
+        message={"Não foi possível obter os dados do servidor."}
+        onRetry={() => window.location.reload()}
+      />
     );
   }
 
   if (isFirstLoad) {
-    return (
-      <ListSkeleton columns={7} />
-    );
+    return <ListSkeleton columns={7} />;
   }
 
   return (
@@ -258,7 +312,10 @@ export default function PersonList() {
 
         <SelectField
           value={filter}
-          onValueChange={(val) => { setFilter(val); setPageIndex(0); }}
+          onValueChange={(val) => {
+            setFilter(val);
+            setPageIndex(0);
+          }}
           items={[
             { value: STATUS_FILTER.ALL, label: "Todos" },
             { value: STATUS_FILTER.ACTIVE, label: "Ativo" },
@@ -293,7 +350,11 @@ export default function PersonList() {
         </DropdownMenu>
       </div>
 
-      <div className={loading ? "opacity-60 transition-opacity" : "transition-opacity"}>
+      <div
+        className={
+          loading ? "opacity-60 transition-opacity" : "transition-opacity"
+        }
+      >
         {people.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 gap-2 text-muted-foreground">
             <Users size={50} className="opacity-30" />
@@ -309,20 +370,30 @@ export default function PersonList() {
             total={total}
             initialSorting={[{ id: "updatedAt", desc: true }]}
             onPageChange={setPageIndex}
-            onPageSizeChange={(size) => { setPageSize(size); setPageIndex(0); }}
+            onPageSizeChange={(size) => {
+              setPageSize(size);
+              setPageIndex(0);
+            }}
             columnVisibility={columnVisibility}
             onColumnVisibilityChange={setColumnVisibility}
           />
         )}
       </div>
 
-
-      <Dialog open={viewingDetailsId !== null} onOpenChange={(open) => { if (!open) setViewingProfileId(null); }}>
+      <Dialog
+        open={viewingDetailsId !== null}
+        onOpenChange={(open) => {
+          if (!open) setViewingProfileId(null);
+        }}
+      >
         <DialogContent className="p-8 sm:max-w-4xl max-h-[90vh] overflow-y-auto">
           {viewingDetailsId && (
             <PersonDetails
               id={viewingDetailsId}
-              onClose={() => { setViewingProfileId(null); setRefreshKey((k) => k + 1); }}
+              onClose={() => {
+                setViewingProfileId(null);
+                setRefreshKey((k) => k + 1);
+              }}
             />
           )}
         </DialogContent>
@@ -332,7 +403,11 @@ export default function PersonList() {
         open={togglingId !== null}
         onOpenChange={(open) => !open && !isToggling && setTogglingId(null)}
         onConfirm={confirmToggleStatus}
-        title={togglingPerson?.deactivatedAt ? "Confirmar ativação" : "Confirmar inativação"}
+        title={
+          togglingPerson?.deactivatedAt
+            ? "Confirmar ativação"
+            : "Confirmar inativação"
+        }
         description={
           togglingPerson?.deactivatedAt
             ? "Tem certeza que deseja ativar esta pessoa?"

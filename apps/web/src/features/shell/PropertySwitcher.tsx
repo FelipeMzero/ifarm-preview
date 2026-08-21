@@ -15,7 +15,8 @@ import {
 import { useCurrentProperty } from "./CurrentPropertyProvider";
 
 export function PropertySwitcher() {
-  const { property, options, isLoading, select, refresh } = useCurrentProperty();
+  const { property, options, isLoading, select, refresh } =
+    useCurrentProperty();
   const [isSelecting, setIsSelecting] = useState(false);
 
   async function handleSelect(propertyId: string) {
@@ -57,14 +58,21 @@ export function PropertySwitcher() {
           className="text-muted-foreground data-open:bg-sidebar-accent data-open:text-sidebar-accent-foreground"
         >
           <Tractor className="size-3.5" />
-          <span className="truncate text-xs">{property?.name ?? "Selecionar propriedade"}</span>
+          <span className="truncate text-xs">
+            {property?.name ?? "Selecionar propriedade"}
+          </span>
           <ChevronsUpDown className="ml-auto size-3.5" />
         </SidebarMenuButton>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="w-56">
-        <DropdownMenuLabel className="text-xs text-muted-foreground">Propriedade atual</DropdownMenuLabel>
+        <DropdownMenuLabel className="text-xs text-muted-foreground">
+          Propriedade atual
+        </DropdownMenuLabel>
         {options.map((option) => (
-          <DropdownMenuItem key={option.id} onSelect={() => handleSelect(option.id)}>
+          <DropdownMenuItem
+            key={option.id}
+            onSelect={() => handleSelect(option.id)}
+          >
             <span className="flex-1 truncate">{option.name}</span>
             {option.id === property?.id && <CheckIcon className="size-4" />}
           </DropdownMenuItem>

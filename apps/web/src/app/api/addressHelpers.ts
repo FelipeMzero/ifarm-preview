@@ -9,9 +9,14 @@ type AddressData = Omit<Prisma.AddressCreateInput, "person" | "property">;
  * já existia um vinculado, ou não toca na relação quando não há nada
  * a fazer (evita erro do Prisma ao tentar apagar uma relação inexistente).
  */
-export function buildAddressWrite(addressData: AddressData | null, currentAddressId: number | null) {
+export function buildAddressWrite(
+  addressData: AddressData | null,
+  currentAddressId: number | null,
+) {
   if (addressData) {
-    return { address: { upsert: { create: addressData, update: addressData } } };
+    return {
+      address: { upsert: { create: addressData, update: addressData } },
+    };
   }
 
   if (currentAddressId) {

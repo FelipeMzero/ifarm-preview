@@ -1,6 +1,7 @@
 # Relatório de Implementação - Injeção de Ações, Modais e Correção de Contexto de Empilhamento (Z-Index)
 
 ## Visão Geral
+
 Este documento relata as alterações realizadas para permitir a criação de novos registros a partir de um campo de busca (`SearchCombobox`), delegando o controle de exibição (renderização da janela modal) ao componente pai da página (`PropertyForm`). Em seguida, detalha a correção de uma anomalia visual (Focus Trap e Stacking Context) que ocultava as listas suspensas (Dropdowns e Comboboxes) quando instanciadas dentro desta nova Janela Modal, normalizando a arquitetura de camadas da interface.
 
 ---
@@ -8,7 +9,9 @@ Este documento relata as alterações realizadas para permitir a criação de no
 ## 1. Implementação Estrutural (Modais e Estado)
 
 ### 1.1. Modificações em `SearchCombobox.tsx`
-A responsabilidade deste componente é estritamente visual (Apresentação). A alteração focou em abrir uma porta (via *props*) para que o componente pai pudesse injetar comportamentos.
+
+A responsabilidade deste componente é estritamente visual (Apresentação). A alteração focou em abrir uma porta (via _props_) para que o componente pai pudesse injetar comportamentos.
+
 - **Inclusão de Imports:** Foram importados os componentes de UI correspondentes (`Button` e o ícone `Plus`) para a renderização da ação.
 
 - **Extensão da Tipagem (Props):** As propriedades do componente foram expandidas com a inclusão de `allowCreate?: boolean` e o callback `onCreateClick?: () => void`.
@@ -16,7 +19,9 @@ A responsabilidade deste componente é estritamente visual (Apresentação). A a
 - **Renderização Condicional no DOM:** A área `ComboboxEmpty` foi modificada para montar o botão no DOM virtual apenas se `allowCreate` for verdadeiro. A prevenção de eventos (`e.stopPropagation()` e `e.preventDefault()`) foi aplicada no botão para não conflitar com o dropdown nativo do combobox.
 
 ### 1.2. Modificações em `PropertyForm.tsx`
+
 Sendo o componente inteligente ("Smart Component"), assumiu a responsabilidade por gerenciar a regra de negócio da janela modal, aplicando a Elevação de Estado (State Lifting).
+
 - **Gestão de Estado:** Criação da variável `isPersonModalOpen` para controlar de forma reativa a visibilidade da janela modal.
 
 - **Configuração do Componente:** O atributo `allowCreate={true}` foi passado ao `SearchCombobox` do Titular, juntamente com a injeção da ação `onCreateClick={() => setIsPersonModalOpen(true)}`.
@@ -30,14 +35,18 @@ Sendo o componente inteligente ("Smart Component"), assumiu a responsabilidade p
 ## 2. Resolução da Anomalia de Sobreposição (Z-Index)
 
 ### 2.1. Componentes de UI Base (`dialog.tsx`)
-Após a criação do modal, foi detectada uma colisão de *React Portals*. A causa raiz foi identificada na sobreposição não padronizada do componente base do Radix UI. Os valores extremos foram rebaixados para a escala padrão do sistema.
+
+Após a criação do modal, foi detectada uma colisão de _React Portals_. A causa raiz foi identificada na sobreposição não padronizada do componente base do Radix UI. Os valores extremos foram rebaixados para a escala padrão do sistema.
+
 - **`apps/web/src/components/ui/dialog.tsx`** [MODIFICADO]:
   - `DialogOverlay`: Elevação rebaixada de `z-[1000]` para o padrão `z-50`.
 
   - `DialogContent`: Elevação rebaixada de `z-[1000]` para o padrão `z-50`.
 
 ### 2.2. Arquivos Analisados (Sem Alteração Final)
+
 Para garantir a integridade da Engenharia de Ferramentas e evitar o mascaramento de sintomas com soluções de força bruta, as tentativas de elevar o z-index das listas individualmente foram descartadas.
+
 - **`apps/web/src/components/ui/combobox.tsx`** [MANTIDO]
 
 - **`apps/web/src/components/ui/select.tsx`** [MANTIDO]

@@ -35,11 +35,15 @@ export function AreaDetails({
           <div className="space-y-4 py-2">
             <div className="grid grid-cols-2 gap-4 border-b border-border pb-3 text-sm">
               <div>
-                <span className="text-xs text-muted-foreground block">NOME</span>
+                <span className="text-xs text-muted-foreground block">
+                  NOME
+                </span>
                 <span className="font-semibold">{area.name}</span>
               </div>
               <div>
-                <span className="text-xs text-muted-foreground block">STATUS</span>
+                <span className="text-xs text-muted-foreground block">
+                  STATUS
+                </span>
                 <span className="font-semibold">
                   {area.closedAt ? "Inativa" : "Ativa"}
                 </span>
@@ -48,17 +52,23 @@ export function AreaDetails({
 
             <div className="grid grid-cols-2 gap-4 border-b border-border pb-3 text-sm">
               <div>
-                <span className="text-xs text-muted-foreground block">ÁREA</span>
+                <span className="text-xs text-muted-foreground block">
+                  ÁREA
+                </span>
                 <span>{area.hectares} ha</span>
               </div>
               <div>
-                <span className="text-xs text-muted-foreground block">TAXA DE LOTAÇÃO</span>
+                <span className="text-xs text-muted-foreground block">
+                  TAXA DE LOTAÇÃO
+                </span>
                 <span>{area.stockingRate} UA/ha</span>
               </div>
             </div>
 
             <div className="text-sm">
-              <span className="text-xs text-muted-foreground block">OBSERVAÇÃO</span>
+              <span className="text-xs text-muted-foreground block">
+                OBSERVAÇÃO
+              </span>
               <p className="mt-1 text-muted-foreground italic">
                 {area.notes || "Nenhuma observação cadastrada."}
               </p>
@@ -77,7 +87,11 @@ export function AreaDetails({
               <Trash2 className="size-4 mr-2" /> Excluir
             </Button>
           )}
-          <Button type="button" variant="secondary" onClick={() => onOpenChange(false)}>
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => onOpenChange(false)}
+          >
             Fechar
           </Button>
         </DialogFooter>

@@ -3,7 +3,7 @@ packages:
   - "packages/*"
 
 allowBuilds:
-  '@prisma/engines': false
+  "@prisma/engines": false
   core-js-pure: false
   esbuild: false
   prisma: false
@@ -14,6 +14,6 @@ ignoredBuiltDependencies:
   - sharp
   - unrs-resolver
 onlyBuiltDependencies:
-  - '@prisma/engines'
+  - "@prisma/engines"
   - esbuild
   - prisma

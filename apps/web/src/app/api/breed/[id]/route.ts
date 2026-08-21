@@ -2,12 +2,16 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma, Prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/api-auth";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
-import { uniqueConstraintErrors, referencedElsewhereMessage } from "../../dbErrors";
+import {
+  uniqueConstraintErrors,
+  referencedElsewhereMessage,
+} from "../../dbErrors";
 import { breedApiSchema } from "../../schemas";
 
-
-
-export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
   const { response } = await requireSession(RESOURCE_ACCESS.racas);
   if (response) return response;
 
@@ -26,13 +30,21 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       return NextResponse.json({ success: false, errors }, { status: 400 });
     }
 
-    const breed = await prisma.breed.update({ where: { id }, data: validation.data });
+    const breed = await prisma.breed.update({
+      where: { id },
+      data: validation.data,
+    });
 
     return NextResponse.json({ success: true, data: breed });
-
   } catch (error) {
-    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2025") {
-      return NextResponse.json({ success: false, message: "Raça não encontrada." }, { status: 404 });
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2025"
+    ) {
+      return NextResponse.json(
+        { success: false, message: "Raça não encontrada." },
+        { status: 404 },
+      );
     }
 
     const errors = uniqueConstraintErrors(error);
@@ -41,14 +53,18 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     }
 
     console.error(error);
-    return NextResponse.json({ success: false, message: "Ocorreu um erro interno no servidor." }, { status: 500 });
+    return NextResponse.json(
+      { success: false, message: "Ocorreu um erro interno no servidor." },
+      { status: 500 },
+    );
   }
 }
 
-
-
 // Exclusão condicionada: bloqueada se houver animal vinculado (use PATCH para inativar).
-export async function DELETE(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function DELETE(
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
   const { response } = await requireSession(RESOURCE_ACCESS.racas);
   if (response) return response;
 
@@ -58,33 +74,52 @@ export async function DELETE(_request: NextRequest, { params }: { params: Promis
     await prisma.breed.delete({ where: { id } });
     return NextResponse.json({ success: true });
   } catch (error) {
-    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2025") {
-      return NextResponse.json({ success: false, message: "Raça não encontrada." }, { status: 404 });
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2025"
+    ) {
+      return NextResponse.json(
+        { success: false, message: "Raça não encontrada." },
+        { status: 404 },
+      );
     }
 
     const referencedMessage = referencedElsewhereMessage(error);
     if (referencedMessage) {
-      return NextResponse.json({ success: false, message: referencedMessage }, { status: 409 });
+      return NextResponse.json(
+        { success: false, message: referencedMessage },
+        { status: 409 },
+      );
     }
 
     console.error(error);
-    return NextResponse.json({ success: false, message: "Ocorreu um erro interno no servidor." }, { status: 500 });
+    return NextResponse.json(
+      { success: false, message: "Ocorreu um erro interno no servidor." },
+      { status: 500 },
+    );
   }
 }
 
-
-
-export async function PATCH(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function PATCH(
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
   const { response } = await requireSession(RESOURCE_ACCESS.racas);
   if (response) return response;
 
   const { id } = await params;
 
   try {
-    const breed = await prisma.breed.findUnique({ where: { id }, select: { deactivatedAt: true } });
+    const breed = await prisma.breed.findUnique({
+      where: { id },
+      select: { deactivatedAt: true },
+    });
 
     if (!breed) {
-      return NextResponse.json({ message: "Raça não encontrada." }, { status: 404 });
+      return NextResponse.json(
+        { message: "Raça não encontrada." },
+        { status: 404 },
+      );
     }
 
     const updated = await prisma.breed.update({
@@ -95,6 +130,9 @@ export async function PATCH(_request: NextRequest, { params }: { params: Promise
     return NextResponse.json({ success: true, data: updated });
   } catch (error) {
     console.error(error);
-    return NextResponse.json({ success: false, message: "Ocorreu um erro interno no servidor." }, { status: 500 });
+    return NextResponse.json(
+      { success: false, message: "Ocorreu um erro interno no servidor." },
+      { status: 500 },
+    );
   }
 }

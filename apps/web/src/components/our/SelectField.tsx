@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import {
   Combobox,
@@ -8,20 +8,20 @@ import {
   ComboboxList,
   ComboboxTrigger,
   ComboboxValue,
-} from "@/components/ui/combobox"
-import { cn } from "@/lib/utils"
+} from "@/components/ui/combobox";
+import { cn } from "@/lib/utils";
 
-export type SelectFieldItem = { value: string; label: string }
+export type SelectFieldItem = { value: string; label: string };
 
 type SelectFieldProps = {
-  value: string
-  onValueChange: (value: string) => void
-  items: SelectFieldItem[]
-  placeholder?: string
-  id?: string
-  className?: string
-  "aria-invalid"?: boolean
-}
+  value: string;
+  onValueChange: (value: string) => void;
+  items: SelectFieldItem[];
+  placeholder?: string;
+  id?: string;
+  className?: string;
+  "aria-invalid"?: boolean;
+};
 
 export function SelectField({
   value,
@@ -37,7 +37,9 @@ export function SelectField({
       items={items}
       value={value}
       onValueChange={(val) => onValueChange((val as string) ?? "")}
-      itemToStringLabel={(val: string) => items.find((item) => item.value === val)?.label ?? val}
+      itemToStringLabel={(val: string) =>
+        items.find((item) => item.value === val)?.label ?? val
+      }
       filter={null}
     >
       <ComboboxTrigger
@@ -47,7 +49,7 @@ export function SelectField({
           "focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50",
           "aria-invalid:border-destructive aria-invalid:focus:ring-3 aria-invalid:ring-destructive/20",
           "md:text-sm dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40",
-          className
+          className,
         )}
         {...props}
       >
@@ -57,10 +59,12 @@ export function SelectField({
         <ComboboxEmpty>Não há itens</ComboboxEmpty>
         <ComboboxList>
           {(item: SelectFieldItem) => (
-            <ComboboxItem key={item.value} value={item.value}>{item.label}</ComboboxItem>
+            <ComboboxItem key={item.value} value={item.value}>
+              {item.label}
+            </ComboboxItem>
           )}
         </ComboboxList>
       </ComboboxContent>
     </Combobox>
-  )
+  );
 }

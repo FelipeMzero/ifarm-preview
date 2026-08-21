@@ -5,15 +5,22 @@ import { Prisma } from "@/lib/prisma";
 //   rfid: "Este RFID já está em uso.",
 // };
 
-export function uniqueConstraintErrors(error: unknown): Record<string, string> | null {
-  if (!(error instanceof Prisma.PrismaClientKnownRequestError) || error.code !== "P2002") {
+export function uniqueConstraintErrors(
+  error: unknown,
+): Record<string, string> | null {
+  if (
+    !(error instanceof Prisma.PrismaClientKnownRequestError) ||
+    error.code !== "P2002"
+  ) {
     return null;
   }
 
   // Com o driver adapter (@prisma/adapter-pg), `error.meta.target` não é
   // preenchido; o nome do campo vem aninhado no erro original do driver.
-  const driverFields = (error.meta as any)?.driverAdapterError?.cause?.constraint?.fields as string[] | undefined;
-  const target = (error.meta?.target as string[] | undefined) ?? driverFields ?? [];
+  const driverFields = (error.meta as any)?.driverAdapterError?.cause
+    ?.constraint?.fields as string[] | undefined;
+  const target =
+    (error.meta?.target as string[] | undefined) ?? driverFields ?? [];
   const errors: Record<string, string> = {};
   target.forEach((field) => {
     errors[field] = "Este valor já está em uso."; //errors[field] = UNIQUE_FIELD_MESSAGES[field] ?? "Este valor já está em uso.";
@@ -36,12 +43,18 @@ const REFERENCING_CONSTRAINT_LABELS: Record<string, string> = {
 };
 
 export function referencedElsewhereMessage(error: unknown): string | null {
-  if (!(error instanceof Prisma.PrismaClientKnownRequestError) || error.code !== "P2003") {
+  if (
+    !(error instanceof Prisma.PrismaClientKnownRequestError) ||
+    error.code !== "P2003"
+  ) {
     return null;
   }
 
-  const constraintName = (error.meta as any)?.driverAdapterError?.cause?.constraint?.index as string | undefined;
-  const label = constraintName ? REFERENCING_CONSTRAINT_LABELS[constraintName] : undefined;
+  const constraintName = (error.meta as any)?.driverAdapterError?.cause
+    ?.constraint?.index as string | undefined;
+  const label = constraintName
+    ? REFERENCING_CONSTRAINT_LABELS[constraintName]
+    : undefined;
 
   return label
     ? `Não é possível excluir: existem ${label} a este registro.`

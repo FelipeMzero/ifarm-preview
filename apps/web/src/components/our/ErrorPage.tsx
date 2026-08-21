@@ -14,19 +14,14 @@ export function ErrorPage({
 }: ErrorPageProps) {
   return (
     <div className="flex min-h-100 flex-col items-center justify-center gap-6 p-8 text-center">
-
       <div className="rounded-full bg-destructive/10 p-4">
         <AlertCircle className="h-10 w-10 text-destructive" />
       </div>
 
       <div>
-        <h2 className="text-xl font-semibold">
-          {title}
-        </h2>
+        <h2 className="text-xl font-semibold">{title}</h2>
 
-        <p className="mt-2 text-muted-foreground">
-          {message}
-        </p>
+        <p className="mt-2 text-muted-foreground">{message}</p>
       </div>
 
       {onRetry && (

@@ -1,7 +1,17 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
-import { ArrowDownAZ, ArrowUpAZ, Check, Pencil, Plus, Power, Search, Trash2, X } from "lucide-react";
+import {
+  ArrowDownAZ,
+  ArrowUpAZ,
+  Check,
+  Pencil,
+  Plus,
+  Power,
+  Search,
+  Trash2,
+  X,
+} from "lucide-react";
 import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
@@ -50,7 +60,9 @@ export function InlineEditableList<T extends { id: string | number }>({
   const [isCreating, setIsCreating] = useState(false);
 
   const [editingId, setEditingId] = useState<T["id"] | null>(null);
-  const [editingValues, setEditingValues] = useState<Record<string, string>>({});
+  const [editingValues, setEditingValues] = useState<Record<string, string>>(
+    {},
+  );
   const [savingId, setSavingId] = useState<T["id"] | null>(null);
 
   const [deletingId, setDeletingId] = useState<T["id"] | null>(null);
@@ -64,27 +76,39 @@ export function InlineEditableList<T extends { id: string | number }>({
   const visibleItems = useMemo(() => {
     const filtered = search
       ? items.filter((item) =>
-          columns.some((column) => String(item[column.key] ?? "").toLowerCase().includes(search.toLowerCase()))
+          columns.some((column) =>
+            String(item[column.key] ?? "")
+              .toLowerCase()
+              .includes(search.toLowerCase()),
+          ),
         )
       : items;
 
     if (!sortKey) return filtered;
 
     return [...filtered].sort((a, b) => {
-      const result = String(a[sortKey] ?? "").localeCompare(String(b[sortKey] ?? ""));
+      const result = String(a[sortKey] ?? "").localeCompare(
+        String(b[sortKey] ?? ""),
+      );
       return sortAsc ? result : -result;
     });
   }, [items, columns, search, sortKey, sortAsc]);
 
   async function handleCreate() {
-    if (isCreating || editableColumns.some((column) => !newValues[column.key]?.trim())) return;
+    if (
+      isCreating ||
+      editableColumns.some((column) => !newValues[column.key]?.trim())
+    )
+      return;
 
     setIsCreating(true);
     try {
       await onCreate(newValues);
       setNewValues({});
     } catch (e) {
-      toast.error((e as Error).message || `Não foi possível criar ${itemLabel}.`);
+      toast.error(
+        (e as Error).message || `Não foi possível criar ${itemLabel}.`,
+      );
     } finally {
       setIsCreating(false);
     }
@@ -93,7 +117,12 @@ export function InlineEditableList<T extends { id: string | number }>({
   function startEditing(item: T) {
     setEditingId(item.id);
     setEditingValues(
-      Object.fromEntries(editableColumns.map((column) => [column.key, String(item[column.key] ?? "")]))
+      Object.fromEntries(
+        editableColumns.map((column) => [
+          column.key,
+          String(item[column.key] ?? ""),
+        ]),
+      ),
     );
     requestAnimationFrame(() => firstEditingInputRef.current?.select());
   }
@@ -104,7 +133,8 @@ export function InlineEditableList<T extends { id: string | number }>({
   }
 
   async function handleUpdate(id: T["id"]) {
-    if (editableColumns.some((column) => !editingValues[column.key]?.trim())) return;
+    if (editableColumns.some((column) => !editingValues[column.key]?.trim()))
+      return;
 
     setSavingId(id);
     try {
@@ -112,7 +142,9 @@ export function InlineEditableList<T extends { id: string | number }>({
       setEditingId(null);
       setEditingValues({});
     } catch (e) {
-      toast.error((e as Error).message || `Não foi possível salvar ${itemLabel}.`);
+      toast.error(
+        (e as Error).message || `Não foi possível salvar ${itemLabel}.`,
+      );
     } finally {
       setSavingId(null);
     }
@@ -126,7 +158,9 @@ export function InlineEditableList<T extends { id: string | number }>({
       await onDelete(deletingId);
       setDeletingId(null);
     } catch (e) {
-      toast.error((e as Error).message || `Não foi possível excluir ${itemLabel}.`);
+      toast.error(
+        (e as Error).message || `Não foi possível excluir ${itemLabel}.`,
+      );
     } finally {
       setIsDeleting(false);
     }
@@ -140,14 +174,17 @@ export function InlineEditableList<T extends { id: string | number }>({
       await onToggleActive(togglingId);
       setTogglingId(null);
     } catch (e) {
-      toast.error((e as Error).message || `Não foi possível atualizar ${itemLabel}.`);
+      toast.error(
+        (e as Error).message || `Não foi possível atualizar ${itemLabel}.`,
+      );
     } finally {
       setIsTogglingActive(false);
     }
   }
 
   const togglingItem = items.find((item) => item.id === togglingId);
-  const togglingItemIsActive = togglingItem && isActive ? isActive(togglingItem) : false;
+  const togglingItemIsActive =
+    togglingItem && isActive ? isActive(togglingItem) : false;
 
   return (
     <div className="w-full max-w-2xl space-y-3">
@@ -168,7 +205,11 @@ export function InlineEditableList<T extends { id: string | number }>({
           title={sortAsc ? "Ordenar Z-A" : "Ordenar A-Z"}
           onClick={() => setSortAsc((v) => !v)}
         >
-          {sortAsc ? <ArrowDownAZ className="size-4" /> : <ArrowUpAZ className="size-4" />}
+          {sortAsc ? (
+            <ArrowDownAZ className="size-4" />
+          ) : (
+            <ArrowUpAZ className="size-4" />
+          )}
         </Button>
       </div>
 
@@ -176,7 +217,9 @@ export function InlineEditableList<T extends { id: string | number }>({
         {columns.length > 1 && (
           <div className="flex items-center gap-2 border-b border-border bg-muted p-2 text-xs text-muted-foreground">
             {columns.map((column) => (
-              <span key={column.key} className="flex-1 truncate">{column.label}</span>
+              <span key={column.key} className="flex-1 truncate">
+                {column.label}
+              </span>
             ))}
             <span className="w-16 shrink-0" />
           </div>
@@ -190,14 +233,22 @@ export function InlineEditableList<T extends { id: string | number }>({
               value={newValues[column.key] ?? ""}
               disabled={isCreating}
               maxLength={column.maxLength}
-              onChange={(e) => setNewValues((prev) => ({ ...prev, [column.key]: e.target.value }))}
+              onChange={(e) =>
+                setNewValues((prev) => ({
+                  ...prev,
+                  [column.key]: e.target.value,
+                }))
+              }
               onKeyDown={(e) => e.key === "Enter" && handleCreate()}
             />
           ))}
           <Button
             type="button"
             size="icon"
-            disabled={isCreating || editableColumns.some((column) => !newValues[column.key]?.trim())}
+            disabled={
+              isCreating ||
+              editableColumns.some((column) => !newValues[column.key]?.trim())
+            }
             onClick={handleCreate}
           >
             <Plus className="size-4" />
@@ -227,37 +278,63 @@ export function InlineEditableList<T extends { id: string | number }>({
                         value={editingValues[column.key] ?? ""}
                         disabled={isSaving}
                         maxLength={column.maxLength}
-                        onChange={(e) => setEditingValues((prev) => ({ ...prev, [column.key]: e.target.value }))}
+                        onChange={(e) =>
+                          setEditingValues((prev) => ({
+                            ...prev,
+                            [column.key]: e.target.value,
+                          }))
+                        }
                         onKeyDown={(e) => {
                           if (e.key === "Enter") handleUpdate(item.id);
                           if (e.key === "Escape") cancelEditing();
                         }}
                       />
                     ) : (
-                      <span key={column.key} className="flex-1 truncate text-sm">
+                      <span
+                        key={column.key}
+                        className="flex-1 truncate text-sm"
+                      >
                         {String(item[column.key] ?? "—")}
                       </span>
-                    )
+                    ),
                   )}
 
                   {!isEditing && isActive && (
-                    <Badge variant={isActive(item) ? "default" : "outline"} className="shrink-0">
+                    <Badge
+                      variant={isActive(item) ? "default" : "outline"}
+                      className="shrink-0"
+                    >
                       {isActive(item) ? "Ativo" : "Inativo"}
                     </Badge>
                   )}
 
                   {isEditing ? (
                     <>
-                      <Button variant="ghost" size="icon-sm" disabled={isSaving} onClick={() => handleUpdate(item.id)}>
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        disabled={isSaving}
+                        onClick={() => handleUpdate(item.id)}
+                      >
                         <Check className="size-4" />
                       </Button>
-                      <Button variant="ghost" size="icon-sm" disabled={isSaving} onClick={cancelEditing}>
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        disabled={isSaving}
+                        onClick={cancelEditing}
+                      >
                         <X className="size-4" />
                       </Button>
                     </>
                   ) : (
                     <>
-                      <Button variant="ghost" size="icon-sm" title="Editar" onClick={() => startEditing(item)}>
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        title="Editar"
+                        onClick={() => startEditing(item)}
+                      >
                         <Pencil className="size-4" />
                       </Button>
                       {onToggleActive && isActive && (
@@ -297,9 +374,13 @@ export function InlineEditableList<T extends { id: string | number }>({
 
       <ConfirmDialog
         open={togglingId != null}
-        onOpenChange={(open) => !open && !isTogglingActive && setTogglingId(null)}
+        onOpenChange={(open) =>
+          !open && !isTogglingActive && setTogglingId(null)
+        }
         onConfirm={confirmToggleActive}
-        title={togglingItemIsActive ? "Confirmar inativação" : "Confirmar ativação"}
+        title={
+          togglingItemIsActive ? "Confirmar inativação" : "Confirmar ativação"
+        }
         description={
           togglingItemIsActive
             ? "Tem certeza que deseja desativar este registro? Ele deixará de aparecer nas listagens de novos cadastros."

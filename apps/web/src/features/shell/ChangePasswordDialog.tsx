@@ -36,13 +36,21 @@ type ChangePasswordDialogProps = {
   onOpenChange: (open: boolean) => void;
 };
 
-export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialogProps) {
+export function ChangePasswordDialog({
+  open,
+  onOpenChange,
+}: ChangePasswordDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { handleSubmit, control, reset, setError } = useForm<ChangePasswordData>({
-    resolver: zodResolver(changePasswordSchema),
-    defaultValues: { currentPassword: "", newPassword: "", confirmPassword: "" },
-  });
+  const { handleSubmit, control, reset, setError } =
+    useForm<ChangePasswordData>({
+      resolver: zodResolver(changePasswordSchema),
+      defaultValues: {
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
+      },
+    });
 
   async function onSubmit(data: ChangePasswordData) {
     setIsSubmitting(true);
@@ -54,7 +62,10 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
     setIsSubmitting(false);
 
     if (error) {
-      setError("currentPassword", { type: "server", message: "Senha atual incorreta" });
+      setError("currentPassword", {
+        type: "server",
+        message: "Senha atual incorreta",
+      });
       toast.error("Não foi possível alterar a senha.");
       return;
     }
@@ -65,7 +76,13 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
   }
 
   return (
-    <Dialog open={open} onOpenChange={(next) => { if (!next) reset(); onOpenChange(next); }}>
+    <Dialog
+      open={open}
+      onOpenChange={(next) => {
+        if (!next) reset();
+        onOpenChange(next);
+      }}
+    >
       <DialogContent className="p-8 sm:max-w-sm">
         <h2 className="text-xl font-semibold">Alterar senha</h2>
 
@@ -76,7 +93,12 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
             required
             control={control}
             render={({ id, field }) => (
-              <Input id={id} type="password" autoComplete="current-password" {...field} />
+              <Input
+                id={id}
+                type="password"
+                autoComplete="current-password"
+                {...field}
+              />
             )}
           />
           <FormField
@@ -85,7 +107,12 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
             required
             control={control}
             render={({ id, field }) => (
-              <Input id={id} type="password" autoComplete="new-password" {...field} />
+              <Input
+                id={id}
+                type="password"
+                autoComplete="new-password"
+                {...field}
+              />
             )}
           />
           <FormField
@@ -94,12 +121,24 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
             required
             control={control}
             render={({ id, field }) => (
-              <Input id={id} type="password" autoComplete="new-password" {...field} />
+              <Input
+                id={id}
+                type="password"
+                autoComplete="new-password"
+                {...field}
+              />
             )}
           />
 
           <div className="flex justify-end gap-2 mt-2">
-            <Button type="button" variant="outline" onClick={() => { onOpenChange(false); reset(); }}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                onOpenChange(false);
+                reset();
+              }}
+            >
               Cancelar
             </Button>
             <Button type="submit" disabled={isSubmitting}>

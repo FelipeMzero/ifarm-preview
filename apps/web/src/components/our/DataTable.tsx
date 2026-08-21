@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import {
   ColumnDef,
@@ -9,18 +9,25 @@ import {
   getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
-} from "@tanstack/react-table"
-import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ChevronsUpDown, MoreHorizontal } from "lucide-react"
-import { useState } from "react"
+} from "@tanstack/react-table";
+import {
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  ChevronUp,
+  ChevronsUpDown,
+  MoreHorizontal,
+} from "lucide-react";
+import { useState } from "react";
 
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -28,22 +35,22 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
+} from "@/components/ui/table";
 
-const PAGE_SIZE_OPTIONS = [5, 10, 20, 50]
+const PAGE_SIZE_OPTIONS = [5, 10, 20, 50];
 
 interface DataTableProps<TData, TValue> {
-  columns: ColumnDef<TData, TValue>[]
-  data: TData[]
-  pageSize?: number
-  pageCount?: number
-  pageIndex?: number
-  total?: number
-  onPageChange?: (page: number) => void
-  onPageSizeChange?: (size: number) => void
-  columnVisibility?: VisibilityState
-  onColumnVisibilityChange?: (visibility: VisibilityState) => void
-  initialSorting?: SortingState
+  columns: ColumnDef<TData, TValue>[];
+  data: TData[];
+  pageSize?: number;
+  pageCount?: number;
+  pageIndex?: number;
+  total?: number;
+  onPageChange?: (page: number) => void;
+  onPageSizeChange?: (size: number) => void;
+  columnVisibility?: VisibilityState;
+  onColumnVisibilityChange?: (visibility: VisibilityState) => void;
+  initialSorting?: SortingState;
 }
 
 export function DataTable<TData, TValue>({
@@ -59,72 +66,74 @@ export function DataTable<TData, TValue>({
   onColumnVisibilityChange,
   initialSorting = [],
 }: DataTableProps<TData, TValue>) {
-  "use no memo"
-  const [sorting, setSorting] = useState<SortingState>(initialSorting)
+  "use no memo";
+  const [sorting, setSorting] = useState<SortingState>(initialSorting);
 
-  const isServerSide = pageCount !== undefined
+  const isServerSide = pageCount !== undefined;
 
   const table = useReactTable({
     data,
     columns,
     ...(isServerSide
       ? { pageCount, manualPagination: true }
-      : { initialState: { pagination: { pageSize } } }
-    ),
+      : { initialState: { pagination: { pageSize } } }),
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     ...(!isServerSide && { getPaginationRowModel: getPaginationRowModel() }),
     onSortingChange: setSorting,
     onColumnVisibilityChange: (updater) => {
-      const next = typeof updater === "function"
-        ? updater(columnVisibility ?? {})
-        : updater
-      onColumnVisibilityChange?.(next)
+      const next =
+        typeof updater === "function"
+          ? updater(columnVisibility ?? {})
+          : updater;
+      onColumnVisibilityChange?.(next);
     },
     state: {
       sorting,
       ...(columnVisibility !== undefined && { columnVisibility }),
       ...(isServerSide && { pagination: { pageIndex, pageSize } }),
     },
-  })
+  });
 
-  const currentPage = isServerSide ? pageIndex : table.getState().pagination.pageIndex
-  const totalPages  = isServerSide ? pageCount : table.getPageCount()
-  const canPrevious = currentPage > 0
-  const canNext     = currentPage < totalPages - 1
+  const currentPage = isServerSide
+    ? pageIndex
+    : table.getState().pagination.pageIndex;
+  const totalPages = isServerSide ? pageCount : table.getPageCount();
+  const canPrevious = currentPage > 0;
+  const canNext = currentPage < totalPages - 1;
 
-  const from = total ? currentPage * pageSize + 1 : null
-  const to   = total ? Math.min((currentPage + 1) * pageSize, total) : null
+  const from = total ? currentPage * pageSize + 1 : null;
+  const to = total ? Math.min((currentPage + 1) * pageSize, total) : null;
 
   function handlePrevious() {
-    if (isServerSide) onPageChange?.(currentPage - 1)
-    else table.previousPage()
+    if (isServerSide) onPageChange?.(currentPage - 1);
+    else table.previousPage();
   }
 
   function handleNext() {
-    if (isServerSide) onPageChange?.(currentPage + 1)
-    else table.nextPage()
+    if (isServerSide) onPageChange?.(currentPage + 1);
+    else table.nextPage();
   }
 
   function handlePageClick(page: number) {
-    if (isServerSide) onPageChange?.(page)
-    else table.setPageIndex(page)
+    if (isServerSide) onPageChange?.(page);
+    else table.setPageIndex(page);
   }
 
   function getPageButtons() {
     if (totalPages <= 7) {
-      return Array.from({ length: totalPages }, (_, i) => i)
+      return Array.from({ length: totalPages }, (_, i) => i);
     }
-    const pages: (number | "...")[] = []
-    const firstInner = Math.max(1, currentPage - 1)
-    const lastInner  = Math.min(totalPages - 2, currentPage + 1)
+    const pages: (number | "...")[] = [];
+    const firstInner = Math.max(1, currentPage - 1);
+    const lastInner = Math.min(totalPages - 2, currentPage + 1);
 
-    pages.push(0)
-    if (firstInner > 1) pages.push("...")
-    for (let i = firstInner; i <= lastInner; i++) pages.push(i)
-    if (lastInner < totalPages - 2) pages.push("...")
-    pages.push(totalPages - 1)
-    return pages
+    pages.push(0);
+    if (firstInner > 1) pages.push("...");
+    for (let i = firstInner; i <= lastInner; i++) pages.push(i);
+    if (lastInner < totalPages - 2) pages.push("...");
+    pages.push(totalPages - 1);
+    return pages;
   }
 
   return (
@@ -141,7 +150,10 @@ export function DataTable<TData, TValue>({
                         onClick={header.column.getToggleSortingHandler()}
                         className="flex items-center gap-1 text-muted-foreground hover:text-accent-foreground transition-colors"
                       >
-                        {flexRender(header.column.columnDef.header, header.getContext())}
+                        {flexRender(
+                          header.column.columnDef.header,
+                          header.getContext(),
+                        )}
                         {header.column.getIsSorted() === "asc" ? (
                           <ChevronUp className="size-4" />
                         ) : header.column.getIsSorted() === "desc" ? (
@@ -152,7 +164,10 @@ export function DataTable<TData, TValue>({
                       </button>
                     ) : (
                       <span className="text-muted-foreground">
-                        {flexRender(header.column.columnDef.header, header.getContext())}
+                        {flexRender(
+                          header.column.columnDef.header,
+                          header.getContext(),
+                        )}
                       </span>
                     )}
                   </TableHead>
@@ -163,10 +178,17 @@ export function DataTable<TData, TValue>({
           <TableBody>
             {table.getRowModel().rows.length ? (
               table.getRowModel().rows.map((row) => (
-                <TableRow key={row.id} data-state={row.getIsSelected() && "selected"} className="hover:bg-accent/40">
+                <TableRow
+                  key={row.id}
+                  data-state={row.getIsSelected() && "selected"}
+                  className="hover:bg-accent/40"
+                >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext(),
+                      )}
                     </TableCell>
                   ))}
                 </TableRow>
@@ -201,8 +223,8 @@ export function DataTable<TData, TValue>({
               <Select
                 value={String(pageSize)}
                 onValueChange={(v) => {
-                  onPageSizeChange(Number(v))
-                  onPageChange?.(0)
+                  onPageSizeChange(Number(v));
+                  onPageChange?.(0);
                 }}
               >
                 <SelectTrigger className="h-8 w-16">
@@ -231,7 +253,10 @@ export function DataTable<TData, TValue>({
 
             {getPageButtons().map((page, i) =>
               page === "..." ? (
-                <span key={`ellipsis-${i}`} className="flex size-7 items-center justify-center">
+                <span
+                  key={`ellipsis-${i}`}
+                  className="flex size-7 items-center justify-center"
+                >
                   <MoreHorizontal className="size-4" />
                 </span>
               ) : (
@@ -243,7 +268,7 @@ export function DataTable<TData, TValue>({
                 >
                   {page + 1}
                 </Button>
-              )
+              ),
             )}
 
             <Button
@@ -258,5 +283,5 @@ export function DataTable<TData, TValue>({
         </div>
       </div>
     </div>
-  )
+  );
 }

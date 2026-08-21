@@ -2,54 +2,67 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/api-auth";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
-import { uniqueConstraintErrors, referencedElsewhereMessage } from "../../dbErrors";
+import {
+  uniqueConstraintErrors,
+  referencedElsewhereMessage,
+} from "../../dbErrors";
 import { propertyApiSchema } from "../../schemas";
 import { buildAddressWrite } from "../../addressHelpers";
 
-
-
-export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
   const { response } = await requireSession(RESOURCE_ACCESS.propriedades);
   if (response) return response;
 
   const { id } = await params;
 
   try {
-    const property = await prisma.property.findUnique({ where: { id }, include: { address: true, owner: true } });
+    const property = await prisma.property.findUnique({
+      where: { id },
+      include: { address: true, owner: true },
+    });
 
     if (!property) {
-      return NextResponse.json({ message: "Propriedade não encontrada." }, { status: 404 });
+      return NextResponse.json(
+        { message: "Propriedade não encontrada." },
+        { status: 404 },
+      );
     }
 
     return NextResponse.json({
-      name:           property.name,
-      ownerId:        property.ownerId,
-      ownerName:      property.owner.name,
-      totalArea:      property.totalArea?.toString() ?? "",
+      name: property.name,
+      ownerId: property.ownerId,
+      ownerName: property.owner.name,
+      totalArea: property.totalArea?.toString() ?? "",
       productiveArea: property.productiveArea?.toString() ?? "",
-      cib:            property.cib ?? "",
-      ccir:           property.ccir ?? "",
-      car:            property.car ?? "",
-      latitude:       property.latitude?.toString() ?? "",
-      longitude:      property.longitude?.toString() ?? "",
-      zipCode:        property.address?.zipCode ?? "",
-      street:         property.address?.street ?? "",
-      number:         property.address?.number ?? "",
-      complement:     property.address?.complement ?? "",
-      neighborhood:   property.address?.neighborhood ?? "",
-      city:           property.address?.city ?? "",
-      state:          property.address?.state ?? "",
+      cib: property.cib ?? "",
+      ccir: property.ccir ?? "",
+      car: property.car ?? "",
+      latitude: property.latitude?.toString() ?? "",
+      longitude: property.longitude?.toString() ?? "",
+      zipCode: property.address?.zipCode ?? "",
+      street: property.address?.street ?? "",
+      number: property.address?.number ?? "",
+      complement: property.address?.complement ?? "",
+      neighborhood: property.address?.neighborhood ?? "",
+      city: property.address?.city ?? "",
+      state: property.address?.state ?? "",
     });
-
   } catch (error) {
     console.error(error);
-    return NextResponse.json({ message: "Ocorreu um erro interno no servidor." }, { status: 500 });
+    return NextResponse.json(
+      { message: "Ocorreu um erro interno no servidor." },
+      { status: 500 },
+    );
   }
 }
 
-
-
-export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
   const { response } = await requireSession(RESOURCE_ACCESS.propriedades);
   if (response) return response;
 
@@ -69,36 +82,78 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     }
 
     const {
-      name, ownerId, totalArea, productiveArea, cib, ccir, car, latitude, longitude,
-      zipCode, street, number, complement, neighborhood, city, state,
+      name,
+      ownerId,
+      totalArea,
+      productiveArea,
+      cib,
+      ccir,
+      car,
+      latitude,
+      longitude,
+      zipCode,
+      street,
+      number,
+      complement,
+      neighborhood,
+      city,
+      state,
     } = validation.data;
 
-    const addressData = zipCode && street && city && state
-      ? { zipCode, street, number, complement, neighborhood, city, state, country: "Brasil" }
-      : null;
+    const addressData =
+      zipCode && street && city && state
+        ? {
+            zipCode,
+            street,
+            number,
+            complement,
+            neighborhood,
+            city,
+            state,
+            country: "Brasil",
+          }
+        : null;
 
-    const current = await prisma.property.findUnique({ where: { id }, select: { addressId: true } });
+    const current = await prisma.property.findUnique({
+      where: { id },
+      select: { addressId: true },
+    });
 
     if (!current) {
-      return NextResponse.json({ success: false, message: "Propriedade não encontrada." }, { status: 404 });
+      return NextResponse.json(
+        { success: false, message: "Propriedade não encontrada." },
+        { status: 404 },
+      );
     }
 
-    const owner = await prisma.person.findUnique({ where: { id: ownerId }, select: { id: true, deactivatedAt: true } });
+    const owner = await prisma.person.findUnique({
+      where: { id: ownerId },
+      select: { id: true, deactivatedAt: true },
+    });
     if (!owner || owner.deactivatedAt) {
-      return NextResponse.json({ success: false, errors: { ownerId: "Titular inválido." } }, { status: 400 });
+      return NextResponse.json(
+        { success: false, errors: { ownerId: "Titular inválido." } },
+        { status: 400 },
+      );
     }
 
     const property = await prisma.property.update({
       where: { id },
       data: {
-        name, totalArea, productiveArea, cib, ccir, car, latitude, longitude,
+        name,
+        totalArea,
+        productiveArea,
+        cib,
+        ccir,
+        car,
+        latitude,
+        longitude,
         owner: { connect: { id: ownerId } },
         ...buildAddressWrite(addressData, current.addressId),
       },
     });
 
     return NextResponse.json({ success: true, data: property });
-
   } catch (error) {
     const errors = uniqueConstraintErrors(error);
     if (errors) {
@@ -106,13 +161,17 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     }
 
     console.error(error);
-    return NextResponse.json({ success: false, message: "Ocorreu um erro interno no servidor." }, { status: 500 });
+    return NextResponse.json(
+      { success: false, message: "Ocorreu um erro interno no servidor." },
+      { status: 500 },
+    );
   }
 }
 
-
-
-export async function DELETE(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function DELETE(
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
   const { response } = await requireSession(RESOURCE_ACCESS.propriedades);
   if (response) return response;
 
@@ -125,27 +184,40 @@ export async function DELETE(_request: NextRequest, { params }: { params: Promis
   } catch (error) {
     const referencedMessage = referencedElsewhereMessage(error);
     if (referencedMessage) {
-      return NextResponse.json({ success: false, message: referencedMessage }, { status: 409 });
+      return NextResponse.json(
+        { success: false, message: referencedMessage },
+        { status: 409 },
+      );
     }
 
     console.error(error);
-    return NextResponse.json({ success: false, message: "Ocorreu um erro interno no servidor." }, { status: 500 });
+    return NextResponse.json(
+      { success: false, message: "Ocorreu um erro interno no servidor." },
+      { status: 500 },
+    );
   }
 }
 
-
-
-export async function PATCH(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function PATCH(
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
   const { response } = await requireSession(RESOURCE_ACCESS.propriedades);
   if (response) return response;
 
   const { id } = await params;
 
   try {
-    const property = await prisma.property.findUnique({ where: { id }, select: { deactivatedAt: true } });
+    const property = await prisma.property.findUnique({
+      where: { id },
+      select: { deactivatedAt: true },
+    });
 
     if (!property) {
-      return NextResponse.json({ message: "Propriedade não encontrada." }, { status: 404 });
+      return NextResponse.json(
+        { message: "Propriedade não encontrada." },
+        { status: 404 },
+      );
     }
 
     const updated = await prisma.property.update({
@@ -156,6 +228,9 @@ export async function PATCH(_request: NextRequest, { params }: { params: Promise
     return NextResponse.json({ success: true, data: updated });
   } catch (error) {
     console.error(error);
-    return NextResponse.json({ success: false, message: "Ocorreu um erro interno no servidor." }, { status: 500 });
+    return NextResponse.json(
+      { success: false, message: "Ocorreu um erro interno no servidor." },
+      { status: 500 },
+    );
   }
 }

@@ -10,7 +10,13 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { FormField } from "@/components/our/FormField";
 import { signIn } from "@/lib/auth-client";
 
@@ -32,7 +38,10 @@ export default function LoginPage() {
 
   async function onSubmit(data: LoginFormData) {
     setIsSubmitting(true);
-    const { error } = await signIn.email({ email: data.email, password: data.password });
+    const { error } = await signIn.email({
+      email: data.email,
+      password: data.password,
+    });
     setIsSubmitting(false);
 
     if (error) {
@@ -55,7 +64,10 @@ export default function LoginPage() {
           <CardDescription>Entre com sua conta para continuar</CardDescription>
         </CardHeader>
         <CardContent>
-          <form className="flex flex-col gap-4" onSubmit={handleSubmit(onSubmit)}>
+          <form
+            className="flex flex-col gap-4"
+            onSubmit={handleSubmit(onSubmit)}
+          >
             <FormField
               name="email"
               label="E-mail"
@@ -71,7 +83,12 @@ export default function LoginPage() {
               required
               control={control}
               render={({ id, field }) => (
-                <Input id={id} type="password" autoComplete="current-password" {...field} />
+                <Input
+                  id={id}
+                  type="password"
+                  autoComplete="current-password"
+                  {...field}
+                />
               )}
             />
             <Button type="submit" disabled={isSubmitting} className="mt-2">

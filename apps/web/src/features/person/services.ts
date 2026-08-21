@@ -36,13 +36,14 @@ export async function createPerson(data: PersonFormData) {
   const result = await response.json();
 
   if (!response.ok) {
-    throw new ApiError(result.message ?? "Não foi possível salvar a pessoa.", result.errors);
+    throw new ApiError(
+      result.message ?? "Não foi possível salvar a pessoa.",
+      result.errors,
+    );
   }
 
   return result;
 }
-
-
 
 export async function updatePerson(id: string, data: PersonFormData) {
   const response = await fetch(API_ENDPOINTS.PERSON_BY_ID(id), {
@@ -54,16 +55,19 @@ export async function updatePerson(id: string, data: PersonFormData) {
   const result = await response.json();
 
   if (!response.ok) {
-    throw new ApiError(result.message ?? "Não foi possível atualizar a pessoa.", result.errors);
+    throw new ApiError(
+      result.message ?? "Não foi possível atualizar a pessoa.",
+      result.errors,
+    );
   }
 
   return result;
 }
-
-
 
 export async function deletePerson(id: string) {
-  const response = await fetch(API_ENDPOINTS.PERSON_BY_ID(id), { method: "DELETE" });
+  const response = await fetch(API_ENDPOINTS.PERSON_BY_ID(id), {
+    method: "DELETE",
+  });
   const result = await response.json();
 
   if (!response.ok) {
@@ -72,11 +76,11 @@ export async function deletePerson(id: string) {
 
   return result;
 }
-
-
 
 export async function togglePersonStatus(id: string) {
-  const response = await fetch(API_ENDPOINTS.PERSON_BY_ID(id), { method: "PATCH" });
+  const response = await fetch(API_ENDPOINTS.PERSON_BY_ID(id), {
+    method: "PATCH",
+  });
   const result = await response.json();
 
   if (!response.ok) {
@@ -85,8 +89,6 @@ export async function togglePersonStatus(id: string) {
 
   return result;
 }
-
-
 
 export async function getPerson(id: string): Promise<PersonFormData> {
   const response = await fetch(API_ENDPOINTS.PERSON_BY_ID(id));
@@ -99,23 +101,32 @@ export async function getPerson(id: string): Promise<PersonFormData> {
   return result;
 }
 
-
-
 export type PersonListResult = {
   data: PersonRow[];
   total: number;
   pageCount: number;
 };
 
-export async function getPeople(params: {
-  page?: number;
-  pageSize?: number;
-  search?: string;
-  type?: string;
-  status?: string;
-} = {}): Promise<PersonListResult> {
-  const { page = 0, pageSize = 10, search = "", type = "", status = "" } = params;
-  const query = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
+export async function getPeople(
+  params: {
+    page?: number;
+    pageSize?: number;
+    search?: string;
+    type?: string;
+    status?: string;
+  } = {},
+): Promise<PersonListResult> {
+  const {
+    page = 0,
+    pageSize = 10,
+    search = "",
+    type = "",
+    status = "",
+  } = params;
+  const query = new URLSearchParams({
+    page: String(page),
+    pageSize: String(pageSize),
+  });
   if (search) query.set("search", search);
   if (type) query.set("type", type);
   if (status) query.set("status", status);

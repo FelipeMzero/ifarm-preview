@@ -34,7 +34,12 @@ const API_ENDPOINTS = {
 
 export type Breed = { id: string; name: string };
 export type Batch = { id: number; name: string };
-export type AnimalSummary = { id: string; earTag: string; rfid: string | null; sex: string };
+export type AnimalSummary = {
+  id: string;
+  earTag: string;
+  rfid: string | null;
+  sex: string;
+};
 
 export type Metadata = {
   breeds: Breed[];
@@ -54,8 +59,6 @@ export async function getMetadata(): Promise<Metadata> {
   return result;
 }
 
-
-
 export async function createAnimal(data: AnimalFormData) {
   const response = await fetch(API_ENDPOINTS.ANIMALS, {
     method: "POST",
@@ -66,13 +69,14 @@ export async function createAnimal(data: AnimalFormData) {
   const result = await response.json();
 
   if (!response.ok) {
-    throw new ApiError(result.message ?? "Não foi possível salvar o animal.", result.errors);
+    throw new ApiError(
+      result.message ?? "Não foi possível salvar o animal.",
+      result.errors,
+    );
   }
 
   return result;
 }
-
-
 
 export async function updateAnimal(id: string, data: AnimalFormData) {
   const response = await fetch(API_ENDPOINTS.ANIMAL_BY_ID(id), {
@@ -84,16 +88,19 @@ export async function updateAnimal(id: string, data: AnimalFormData) {
   const result = await response.json();
 
   if (!response.ok) {
-    throw new ApiError(result.message ?? "Não foi possível atualizar o animal.", result.errors);
+    throw new ApiError(
+      result.message ?? "Não foi possível atualizar o animal.",
+      result.errors,
+    );
   }
 
   return result;
 }
 
-
-
 export async function deleteAnimal(id: string) {
-  const response = await fetch(API_ENDPOINTS.ANIMAL_BY_ID(id), { method: "DELETE" });
+  const response = await fetch(API_ENDPOINTS.ANIMAL_BY_ID(id), {
+    method: "DELETE",
+  });
   const result = await response.json();
 
   if (!response.ok) {
@@ -102,8 +109,6 @@ export async function deleteAnimal(id: string) {
 
   return result;
 }
-
-
 
 export async function getAnimal(id: string): Promise<AnimalFormData> {
   const response = await fetch(API_ENDPOINTS.ANIMAL_BY_ID(id));
@@ -116,23 +121,32 @@ export async function getAnimal(id: string): Promise<AnimalFormData> {
   return result;
 }
 
-
-
 export type AnimalListResult = {
   data: AnimalRow[];
   total: number;
   pageCount: number;
 };
 
-export async function getAnimals(params: {
-  page?: number;
-  pageSize?: number;
-  search?: string;
-  status?: string;
-  sex?: string;
-} = {}): Promise<AnimalListResult> {
-  const { page = 0, pageSize = 10, search = "", status = "", sex = "" } = params;
-  const query = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
+export async function getAnimals(
+  params: {
+    page?: number;
+    pageSize?: number;
+    search?: string;
+    status?: string;
+    sex?: string;
+  } = {},
+): Promise<AnimalListResult> {
+  const {
+    page = 0,
+    pageSize = 10,
+    search = "",
+    status = "",
+    sex = "",
+  } = params;
+  const query = new URLSearchParams({
+    page: String(page),
+    pageSize: String(pageSize),
+  });
   if (search) query.set("search", search);
   if (status) query.set("status", status);
   if (sex) query.set("sex", sex);

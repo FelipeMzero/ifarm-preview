@@ -4,11 +4,32 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import L from "leaflet";
-import { MapContainer, TileLayer, Marker, Tooltip, Popup, useMap, Polygon } from "react-leaflet";
+import {
+  MapContainer,
+  TileLayer,
+  Marker,
+  Tooltip,
+  Popup,
+  useMap,
+  Polygon,
+} from "react-leaflet";
 import { polygon as turfPolygon } from "@turf/helpers";
 import turfArea from "@turf/area";
 import { toast } from "sonner";
-import { Loader2, Pencil, Plus, Trash2, Eye, EyeOff, Info, AlertTriangle, Landmark, Globe, Map as MapIcon, LocateFixed } from "lucide-react";
+import {
+  Loader2,
+  Pencil,
+  Plus,
+  Trash2,
+  Eye,
+  EyeOff,
+  Info,
+  AlertTriangle,
+  Landmark,
+  Globe,
+  Map as MapIcon,
+  LocateFixed,
+} from "lucide-react";
 
 import "@geoman-io/leaflet-geoman-free";
 
@@ -18,11 +39,25 @@ import markerShadow from "leaflet/dist/images/marker-shadow.png";
 
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/our/ConfirmDialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useCurrentProperty } from "@/features/shell/CurrentPropertyProvider";
 import { getProperty } from "@/features/property/services";
 import { areaFormSchema, AreaFormData } from "./schema";
-import { getAreas, createArea, updateArea, deleteArea, toggleAreaStatus, AreaRow, ApiError } from "./services";
+import {
+  getAreas,
+  createArea,
+  updateArea,
+  deleteArea,
+  toggleAreaStatus,
+  AreaRow,
+  ApiError,
+} from "./services";
 import { AreaForm } from "./AreaForm";
 import { AreaDetails } from "./AreaDetails";
 
@@ -41,8 +76,15 @@ if (typeof window !== "undefined" && L && L.Layer) {
   const patchLayerMethod = (methodName: string, checkProp: string) => {
     const orig = (L.Layer.prototype as any)[methodName];
     if (orig) {
-      (L.Layer.prototype as any)[methodName] = function (this: any, ...args: any[]) {
-        if (!this[checkProp] && !(args[0] instanceof L.Tooltip) && !(args[0] instanceof L.Popup)) {
+      (L.Layer.prototype as any)[methodName] = function (
+        this: any,
+        ...args: any[]
+      ) {
+        if (
+          !this[checkProp] &&
+          !(args[0] instanceof L.Tooltip) &&
+          !(args[0] instanceof L.Popup)
+        ) {
           return this;
         }
         try {
@@ -84,7 +126,7 @@ function calculateAreaHectares(points: { lat: number; lng: number }[]): number {
   if (points.length < 3) return 0;
   try {
     const coords = points.map((p) => [p.lng, p.lat]);
-    
+
     if (
       coords[0][0] !== coords[coords.length - 1][0] ||
       coords[0][1] !== coords[coords.length - 1][1]
@@ -110,7 +152,6 @@ function getCentroid(points: { lat: number; lng: number }[]): [number, number] {
   });
   return [sumLat / points.length, sumLng / points.length];
 }
-
 
 function MapTileLoadingOverlay() {
   const map = useMap();
@@ -149,7 +190,7 @@ function MapTileLoadingOverlay() {
   if (!isLoading) return null;
 
   return (
-    <div >
+    <div>
       <div>
         <Loader2 className="h-4 w-4 animate-spin text-primary" />
         <span className="text-xs font-medium">Carregando mapa...</span>
@@ -157,7 +198,6 @@ function MapTileLoadingOverlay() {
     </div>
   );
 }
-
 
 const DEFAULT_MAP_CENTER: [number, number] = [-14.235, -51.925];
 const DEFAULT_MAP_ZOOM = 4;
@@ -192,7 +232,11 @@ function MapBoundsController({
     if (allPoints.length > 0) {
       const bounds = L.latLngBounds(allPoints);
       if (bounds.isValid()) {
-        map.fitBounds(bounds, { padding: [50, 50], maxZoom: 16, animate: true });
+        map.fitBounds(bounds, {
+          padding: [50, 50],
+          maxZoom: 16,
+          animate: true,
+        });
         fittedRef.current = true;
         return;
       }
@@ -219,7 +263,6 @@ function MapBoundsController({
   return null;
 }
 
-
 function MapZoomController({ mapMode }: { mapMode: "padrao" | "satelite" }) {
   const map = useMap();
   const maxZoom = mapMode === "padrao" ? 19 : 16;
@@ -234,7 +277,11 @@ function MapZoomController({ mapMode }: { mapMode: "padrao" | "satelite" }) {
   return null;
 }
 
-function MapReferenceController({ onMapReady }: { onMapReady: (map: L.Map) => void }) {
+function MapReferenceController({
+  onMapReady,
+}: {
+  onMapReady: (map: L.Map) => void;
+}) {
   const map = useMap();
 
   useEffect(() => {
@@ -322,7 +369,10 @@ function GeomanController({
       }
 
       if ((layer as any).pm && typeof (layer as any).pm.enable === "function") {
-        (layer as any).pm.enable({ allowSelfIntersection: false, snappable: true });
+        (layer as any).pm.enable({
+          allowSelfIntersection: false,
+          snappable: true,
+        });
       }
 
       const handleEdit = () => {
@@ -332,7 +382,10 @@ function GeomanController({
         }
       };
 
-      layer.on("pm:edit pm:markerdragend pm:vertexchange pm:dragend pm:remove", handleEdit);
+      layer.on(
+        "pm:edit pm:markerdragend pm:vertexchange pm:dragend pm:remove",
+        handleEdit,
+      );
     };
 
     map.on("pm:create", handleCreate);
@@ -346,15 +399,24 @@ function GeomanController({
   return null;
 }
 
-function extractPointsFromLayer(layer: L.Polygon): { lat: number; lng: number }[] {
+function extractPointsFromLayer(
+  layer: L.Polygon,
+): { lat: number; lng: number }[] {
   try {
     let latlngs: any = layer.getLatLngs();
-    while (Array.isArray(latlngs) && latlngs.length > 0 && Array.isArray(latlngs[0])) {
+    while (
+      Array.isArray(latlngs) &&
+      latlngs.length > 0 &&
+      Array.isArray(latlngs[0])
+    ) {
       latlngs = latlngs[0];
     }
     if (!Array.isArray(latlngs)) return [];
     return latlngs
-      .filter((pt: any) => pt && typeof pt.lat === "number" && typeof pt.lng === "number")
+      .filter(
+        (pt: any) =>
+          pt && typeof pt.lat === "number" && typeof pt.lng === "number",
+      )
       .map((pt: any) => ({ lat: pt.lat, lng: pt.lng }));
   } catch {
     return [];
@@ -470,14 +532,18 @@ function EditablePolygon({
   );
 }
 
-async function geocodeAddress(zipCode?: string, city?: string, state?: string): Promise<[number, number] | null> {
+async function geocodeAddress(
+  zipCode?: string,
+  city?: string,
+  state?: string,
+): Promise<[number, number] | null> {
   const cleanZip = zipCode?.replace(/\D/g, "");
 
   if (cleanZip) {
     try {
       const res = await fetch(
         `https://nominatim.openstreetmap.org/search?format=json&postalcode=${cleanZip}&country=Brazil`,
-        { headers: { "User-Agent": "iFarm-App/1.0" } }
+        { headers: { "User-Agent": "iFarm-App/1.0" } },
       );
       const data = await res.json();
       if (data && data.length > 0) {
@@ -494,7 +560,7 @@ async function geocodeAddress(zipCode?: string, city?: string, state?: string): 
       const encodedState = encodeURIComponent(state);
       const res = await fetch(
         `https://nominatim.openstreetmap.org/search?format=json&city=${encodedCity}&state=${encodedState}&country=Brazil`,
-        { headers: { "User-Agent": "iFarm-App/1.0" } }
+        { headers: { "User-Agent": "iFarm-App/1.0" } },
       );
       const data = await res.json();
       if (data && data.length > 0) {
@@ -513,12 +579,18 @@ export default function AreaMap() {
 
   const [areas, setAreas] = useState<AreaRow[]>([]);
   const [areasPropertyId, setAreasPropertyId] = useState<string | null>(null);
-  const [statusFilter, setStatusFilter] = useState<"active" | "inactive">("active");
+  const [statusFilter, setStatusFilter] = useState<"active" | "inactive">(
+    "active",
+  );
   const [mapMode, setMapMode] = useState<"padrao" | "satelite">("padrao");
   const [loading, setLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
-  const [propertyCoords, setPropertyCoords] = useState<[number, number] | null>(null);
-  const [browserCoords, setBrowserCoords] = useState<[number, number] | null>(null);
+  const [propertyCoords, setPropertyCoords] = useState<[number, number] | null>(
+    null,
+  );
+  const [browserCoords, setBrowserCoords] = useState<[number, number] | null>(
+    null,
+  );
   const [locatingProperty, setLocatingProperty] = useState(false);
 
   useEffect(() => {
@@ -537,10 +609,18 @@ export default function AreaMap() {
       try {
         const details = await getProperty(currentProperty!.id);
         if (details.latitude && details.longitude) {
-          if (active) setPropertyCoords([Number(details.latitude), Number(details.longitude)]);
+          if (active)
+            setPropertyCoords([
+              Number(details.latitude),
+              Number(details.longitude),
+            ]);
           return;
         }
-        const coords = await geocodeAddress(details.zipCode, details.city, details.state);
+        const coords = await geocodeAddress(
+          details.zipCode,
+          details.city,
+          details.state,
+        );
         if (coords) {
           if (active) setPropertyCoords(coords);
           return;
@@ -553,11 +633,12 @@ export default function AreaMap() {
       await new Promise<void>((resolve) => {
         navigator.geolocation.getCurrentPosition(
           (pos) => {
-            if (active) setBrowserCoords([pos.coords.latitude, pos.coords.longitude]);
+            if (active)
+              setBrowserCoords([pos.coords.latitude, pos.coords.longitude]);
             resolve();
           },
           () => resolve(),
-          { timeout: 8000 }
+          { timeout: 8000 },
         );
       });
     }
@@ -575,7 +656,9 @@ export default function AreaMap() {
   const [mapAreaEl, setMapAreaEl] = useState<HTMLDivElement | null>(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [drawnLayer, setDrawnLayer] = useState<L.Polygon | null>(null);
-  const [polygonPoints, setPolygonPoints] = useState<{ lat: number; lng: number }[]>([]);
+  const [polygonPoints, setPolygonPoints] = useState<
+    { lat: number; lng: number }[]
+  >([]);
 
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editingArea, setEditingArea] = useState<AreaRow | null>(null);
@@ -604,20 +687,27 @@ export default function AreaMap() {
     async function fetchList() {
       setLoading(true);
       try {
-        const result = await getAreas({ propertyId: currentProperty?.id, status: statusFilter });
+        const result = await getAreas({
+          propertyId: currentProperty?.id,
+          status: statusFilter,
+        });
         if (active) {
           setAreas(result.data);
           setAreasPropertyId(currentProperty!.id);
         }
       } catch (err: any) {
-        toast.error(err.message ?? "Não foi possível carregar as áreas de pastagem.");
+        toast.error(
+          err.message ?? "Não foi possível carregar as áreas de pastagem.",
+        );
       } finally {
         if (active) setLoading(false);
       }
     }
 
     fetchList();
-    return () => { active = false; };
+    return () => {
+      active = false;
+    };
   }, [currentProperty, statusFilter, refreshKey]);
 
   useEffect(() => {
@@ -631,20 +721,25 @@ export default function AreaMap() {
     setIsDrawing(false);
   }, []);
 
-  const handlePolygonChange = useCallback((points: { lat: number; lng: number }[]) => {
-    setPolygonPoints(points);
-    form.setValue("polygon", points, { shouldValidate: true });
+  const handlePolygonChange = useCallback(
+    (points: { lat: number; lng: number }[]) => {
+      setPolygonPoints(points);
+      form.setValue("polygon", points, { shouldValidate: true });
 
-    const hasEnoughPoints = points.length >= 3;
-    if (hasEnoughPoints) {
-      const hectaresVal = calculateAreaHectares(points);
-      form.setValue("hectares", hectaresVal.toFixed(2), { shouldValidate: true });
-    } else {
-      form.setValue("hectares", "");
-    }
+      const hasEnoughPoints = points.length >= 3;
+      if (hasEnoughPoints) {
+        const hectaresVal = calculateAreaHectares(points);
+        form.setValue("hectares", hectaresVal.toFixed(2), {
+          shouldValidate: true,
+        });
+      } else {
+        form.setValue("hectares", "");
+      }
 
-    setSheetOpen(true);
-  }, [form]);
+      setSheetOpen(true);
+    },
+    [form],
+  );
 
   const handleCleanup = useCallback(() => {
     setIsDrawing(false);
@@ -693,7 +788,11 @@ export default function AreaMap() {
       const latLngs = pts.map((p) => [p.lat, p.lng] as [number, number]);
       const bounds = L.latLngBounds(latLngs);
       if (bounds.isValid()) {
-        mapInstance.fitBounds(bounds, { padding: [80, 80], maxZoom: 16, animate: true });
+        mapInstance.fitBounds(bounds, {
+          padding: [80, 80],
+          maxZoom: 16,
+          animate: true,
+        });
       }
     }
 
@@ -756,7 +855,10 @@ export default function AreaMap() {
       toast.success("Registro excluído com sucesso!");
       setRefreshKey((k) => k + 1);
     } catch (err: any) {
-      toast.error(err.message ?? "Este registro já possui vínculos e não pode ser excluído.");
+      toast.error(
+        err.message ??
+          "Este registro já possui vínculos e não pode ser excluído.",
+      );
     } finally {
       setDeletingAreaId(null);
       setDetailsArea(null);
@@ -766,7 +868,11 @@ export default function AreaMap() {
   const handleToggleStatus = async (id: string) => {
     try {
       await toggleAreaStatus(id);
-      toast.success(statusFilter === "active" ? "Área desativada com sucesso!" : "Área ativada com sucesso!");
+      toast.success(
+        statusFilter === "active"
+          ? "Área desativada com sucesso!"
+          : "Área ativada com sucesso!",
+      );
       setRefreshKey((k) => k + 1);
     } catch (err: any) {
       toast.error(err.message ?? "Erro ao alterar o status do registro.");
@@ -779,45 +885,66 @@ export default function AreaMap() {
 
   let hectaresWarning: string | null = null;
   if (!isNaN(parsedHectaresInput) && calculatedHectares > 0) {
-    const diffPct = Math.abs(parsedHectaresInput - calculatedHectares) / calculatedHectares;
+    const diffPct =
+      Math.abs(parsedHectaresInput - calculatedHectares) / calculatedHectares;
     if (diffPct > 0.25) {
-      hectaresWarning = "O valor informado está bem diferente da área desenhada no mapa";
+      hectaresWarning =
+        "O valor informado está bem diferente da área desenhada no mapa";
     }
   }
 
   // Só usa `areas` no mapa quando já pertencem à propriedade atual — evita mostrar
   // por um instante o polígono/centro da fazenda anterior enquanto a nova carrega.
-  const displayAreas = currentProperty && areasPropertyId === currentProperty.id ? areas : [];
+  const displayAreas =
+    currentProperty && areasPropertyId === currentProperty.id ? areas : [];
 
   // Calcula centro inicial baseado nas áreas cadastradas se houverem
-  const allAreaPoints = displayAreas.flatMap((a) => (Array.isArray(a.polygon) ? (a.polygon as { lat: number; lng: number }[]) : []));
-  const areasCentroid = allAreaPoints.length > 0 ? getCentroid(allAreaPoints) : null;
+  const allAreaPoints = displayAreas.flatMap((a) =>
+    Array.isArray(a.polygon)
+      ? (a.polygon as { lat: number; lng: number }[])
+      : [],
+  );
+  const areasCentroid =
+    allAreaPoints.length > 0 ? getCentroid(allAreaPoints) : null;
 
   const fallbackCoords = propertyCoords ?? browserCoords;
-  const center: [number, number] = areasCentroid ?? fallbackCoords ?? DEFAULT_MAP_CENTER;
+  const center: [number, number] =
+    areasCentroid ?? fallbackCoords ?? DEFAULT_MAP_CENTER;
   const zoom = areasCentroid || fallbackCoords ? 15 : DEFAULT_MAP_ZOOM;
 
   const handleRecenterMap = () => {
     if (!mapInstance) return;
 
     if (allAreaPoints.length > 0) {
-      const bounds = L.latLngBounds(allAreaPoints.map((p) => [p.lat, p.lng] as [number, number]));
+      const bounds = L.latLngBounds(
+        allAreaPoints.map((p) => [p.lat, p.lng] as [number, number]),
+      );
       if (bounds.isValid()) {
-        mapInstance.fitBounds(bounds, { padding: [50, 50], maxZoom: 16, animate: true });
+        mapInstance.fitBounds(bounds, {
+          padding: [50, 50],
+          maxZoom: 16,
+          animate: true,
+        });
         return;
       }
     }
 
-    mapInstance.setView(fallbackCoords ?? DEFAULT_MAP_CENTER, fallbackCoords ? 16 : DEFAULT_MAP_ZOOM, {
-      animate: true,
-    });
+    mapInstance.setView(
+      fallbackCoords ?? DEFAULT_MAP_CENTER,
+      fallbackCoords ? 16 : DEFAULT_MAP_ZOOM,
+      {
+        animate: true,
+      },
+    );
   };
 
   if (loading && areas.length === 0) {
     return (
       <div className="flex h-full items-center justify-center gap-2">
         <Loader2 className="h-6 w-6 animate-spin text-primary" />
-        <span className="text-sm text-muted-foreground">Carregando áreas de pastagem...</span>
+        <span className="text-sm text-muted-foreground">
+          Carregando áreas de pastagem...
+        </span>
       </div>
     );
   }
@@ -826,14 +953,17 @@ export default function AreaMap() {
     <div className="flex h-full flex-col">
       <div className="flex flex-col gap-4 border-b border-border bg-background/95 p-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-xl font-bold tracking-tight">Mapa de Áreas de Pastagem</h1>
+          <h1 className="text-xl font-bold tracking-tight">
+            Mapa de Áreas de Pastagem
+          </h1>
           <p className="text-sm text-muted-foreground">
-            {currentProperty ? `Propriedade: ${currentProperty.name}` : "Selecione uma propriedade na sidebar"}
+            {currentProperty
+              ? `Propriedade: ${currentProperty.name}`
+              : "Selecione uma propriedade na sidebar"}
           </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
-
           <Button
             type="button"
             variant="outline"
@@ -869,7 +999,9 @@ export default function AreaMap() {
             <div className="w-45">
               <Select
                 value={statusFilter}
-                onValueChange={(val) => setStatusFilter(val as "active" | "inactive")}
+                onValueChange={(val) =>
+                  setStatusFilter(val as "active" | "inactive")
+                }
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Filtro de Status" />
@@ -882,7 +1014,6 @@ export default function AreaMap() {
             </div>
           )}
 
-
           {statusFilter === "active" && !isDrawing && (
             <Button onClick={startDrawing} className="gap-2 w-40">
               <Plus className="size-4" /> Área
@@ -893,70 +1024,85 @@ export default function AreaMap() {
             <div className="flex items-center gap-2 rounded-lg border border-warning/30 bg-warning/10 px-3 py-1.5 text-xs font-medium text-warning-foreground">
               <AlertTriangle className="size-4 text-warning shrink-0" />
               <span>Desenhe o contorno da área no mapa </span>
-              <Button size="sm" variant="secondary" onClick={handleCleanup} className="h-7 text-xs px-2 hover:bg-warning/20">
+              <Button
+                size="sm"
+                variant="secondary"
+                onClick={handleCleanup}
+                className="h-7 text-xs px-2 hover:bg-warning/20"
+              >
                 Cancelar
               </Button>
             </div>
           )}
-
         </div>
-
       </div>
 
-      <div ref={setMapAreaEl} className="relative min-h-0 flex-1 overflow-hidden will-change-transform">
+      <div
+        ref={setMapAreaEl}
+        className="relative min-h-0 flex-1 overflow-hidden will-change-transform"
+      >
         {currentProperty ? (
           <>
-          <MapContainer
-            key={`${currentProperty.id}-${statusFilter}`}
-            center={center}
-            zoom={zoom}
-            maxZoom={19}
-            scrollWheelZoom
-            className="h-full w-full z-0"
-          >
-            <MapTileLoadingOverlay />
-            <MapReferenceController onMapReady={setMapInstance} />
-            <MapBoundsController areas={displayAreas} fallbackCoords={fallbackCoords} locating={locatingProperty} />
-            <MapZoomController mapMode={mapMode} />
-
-            <TileLayer
-              key={mapMode}
-              attribution={
-                mapMode === "padrao"
-                  ? '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                  : 'Tiles &copy; <a href="https://www.esri.com/">Esri</a>'
-              }
-              url={
-                mapMode === "padrao"
-                  ? "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                  : "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
-              }
-              maxNativeZoom={mapMode === "padrao" ? 19 : 16}
+            <MapContainer
+              key={`${currentProperty.id}-${statusFilter}`}
+              center={center}
+              zoom={zoom}
               maxZoom={19}
-            />
+              scrollWheelZoom
+              className="h-full w-full z-0"
+            >
+              <MapTileLoadingOverlay />
+              <MapReferenceController onMapReady={setMapInstance} />
+              <MapBoundsController
+                areas={displayAreas}
+                fallbackCoords={fallbackCoords}
+                locating={locatingProperty}
+              />
+              <MapZoomController mapMode={mapMode} />
 
-            <GeomanController
-              isDrawing={isDrawing}
-              isEditingSingle={sheetOpen}
-              onPolygonCreated={handlePolygonCreated}
-              onPolygonChange={handlePolygonChange}
-              onCancelEditing={handleCleanup}
-            />
+              <TileLayer
+                key={mapMode}
+                attribution={
+                  mapMode === "padrao"
+                    ? '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                    : 'Tiles &copy; <a href="https://www.esri.com/">Esri</a>'
+                }
+                url={
+                  mapMode === "padrao"
+                    ? "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                    : "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+                }
+                maxNativeZoom={mapMode === "padrao" ? 19 : 16}
+                maxZoom={19}
+              />
 
-            {displayAreas.map((area) => {
-              const rawPoints = area.polygon as { lat: number; lng: number }[];
-              const centroid = getCentroid(rawPoints);
-              const isSelectedForEdit = editingArea?.id === area.id;
+              <GeomanController
+                isDrawing={isDrawing}
+                isEditingSingle={sheetOpen}
+                onPolygonCreated={handlePolygonCreated}
+                onPolygonChange={handlePolygonChange}
+                onCancelEditing={handleCleanup}
+              />
 
-              return (
-                <div key={area.id}>
-                  <EditablePolygon
-                    area={area}
-                    isEditing={isSelectedForEdit}
-                    editingPoints={isSelectedForEdit ? polygonPoints : undefined}
-                    onPolygonChange={handlePolygonChange}
-                  >
-                    {/* {!isSelectedForEdit && (
+              {displayAreas.map((area) => {
+                const rawPoints = area.polygon as {
+                  lat: number;
+                  lng: number;
+                }[];
+                const centroid = getCentroid(rawPoints);
+                const isSelectedForEdit = editingArea?.id === area.id;
+
+                return (
+                  <div key={area.id}>
+                    <EditablePolygon
+                      area={area}
+                      isEditing={isSelectedForEdit}
+                      editingPoints={
+                        isSelectedForEdit ? polygonPoints : undefined
+                      }
+                      onPolygonChange={handlePolygonChange}
+                    >
+                      {/* {!isSelectedForEdit && (
                       <Tooltip sticky>
                         <div className="p-1 text-xs space-y-0.5">
                           <p className="font-semibold text-sm border-b pb-0.5 mb-1">{area.name}</p>
@@ -967,98 +1113,109 @@ export default function AreaMap() {
                       </Tooltip>
                     )} */}
 
-                    {!isSelectedForEdit && (
-                      <Popup>
-                        <div className="min-w-40 p-1 text-foreground ">
-                          <h4 className="font-semibold text-sm border-b border-border pb-1 mb-2">{area.name}</h4>
-                          <div className="flex flex-col gap-1.5">
-                            {statusFilter === "active" ? (
-                              <>
-                                <Button
-                                  size="sm"
-                                  className="h-8 justify-start text-xs font-normal"
-                                  onClick={() => startEditing(area)}
-                                >
-                                  <Pencil className="size-3.5 mr-2 text-muted-foreground" /> Editar
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  className="h-8 justify-start text-xs font-normal"
-                                  onClick={() => setDetailsArea(area)}
-                                >
-                                  <Info className="size-3.5 mr-2 text-muted-foreground" /> Detalhes
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="secondary"
-                                  className="h-8 justify-start text-xs font-normal text-muted-foreground hover:bg-accent"
-                                  onClick={() => handleToggleStatus(area.id)}
-                                >
-                                  <EyeOff className="size-3.5 mr-2" /> Desativar
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="destructive"
-                                  className="h-8 justify-start text-xs font-normal text-destructive hover:text-destructive hover:bg-destructive/10"
-                                  onClick={() => handleDeleteArea(area.id)}
-                                >
-                                  <Trash2 className="size-3.5 mr-2" /> Excluir
-                                </Button>
-                              </>
-                            ) : (
-                              <>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  className="h-8 justify-start text-xs font-normal"
-                                  onClick={() => handleToggleStatus(area.id)}
-                                >
-                                  <Eye className="size-3.5 mr-2 text-muted-foreground" /> Reativar
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  className="h-8 justify-start text-xs font-normal text-destructive hover:text-destructive hover:bg-destructive/10"
-                                  onClick={() => handleDeleteArea(area.id)}
-                                >
-                                  <Trash2 className="size-3.5 mr-2" /> Excluir
-                                </Button>
-                              </>
-                            )}
+                      {!isSelectedForEdit && (
+                        <Popup>
+                          <div className="min-w-40 p-1 text-foreground ">
+                            <h4 className="font-semibold text-sm border-b border-border pb-1 mb-2">
+                              {area.name}
+                            </h4>
+                            <div className="flex flex-col gap-1.5">
+                              {statusFilter === "active" ? (
+                                <>
+                                  <Button
+                                    size="sm"
+                                    className="h-8 justify-start text-xs font-normal"
+                                    onClick={() => startEditing(area)}
+                                  >
+                                    <Pencil className="size-3.5 mr-2 text-muted-foreground" />{" "}
+                                    Editar
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    className="h-8 justify-start text-xs font-normal"
+                                    onClick={() => setDetailsArea(area)}
+                                  >
+                                    <Info className="size-3.5 mr-2 text-muted-foreground" />{" "}
+                                    Detalhes
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="secondary"
+                                    className="h-8 justify-start text-xs font-normal text-muted-foreground hover:bg-accent"
+                                    onClick={() => handleToggleStatus(area.id)}
+                                  >
+                                    <EyeOff className="size-3.5 mr-2" />{" "}
+                                    Desativar
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="destructive"
+                                    className="h-8 justify-start text-xs font-normal text-destructive hover:text-destructive hover:bg-destructive/10"
+                                    onClick={() => handleDeleteArea(area.id)}
+                                  >
+                                    <Trash2 className="size-3.5 mr-2" /> Excluir
+                                  </Button>
+                                </>
+                              ) : (
+                                <>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="h-8 justify-start text-xs font-normal"
+                                    onClick={() => handleToggleStatus(area.id)}
+                                  >
+                                    <Eye className="size-3.5 mr-2 text-muted-foreground" />{" "}
+                                    Reativar
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    className="h-8 justify-start text-xs font-normal text-destructive hover:text-destructive hover:bg-destructive/10"
+                                    onClick={() => handleDeleteArea(area.id)}
+                                  >
+                                    <Trash2 className="size-3.5 mr-2" /> Excluir
+                                  </Button>
+                                </>
+                              )}
+                            </div>
                           </div>
-                        </div>
-                      </Popup>
-                    )}
-                  </EditablePolygon>
+                        </Popup>
+                      )}
+                    </EditablePolygon>
 
-                  {!isSelectedForEdit && rawPoints.length > 0 && (
-                    <Marker position={centroid} icon={invisibleIcon}>
-                      <Tooltip
-                        permanent
-                        direction="center"
-                        className="bg-transparent border-none shadow-none font-bold text-foreground drop-shadow-[0_1.5px_1.5px_rgba(255,255,255,0.85)] dark:drop-shadow-[0_1.5px_1.5px_rgba(0,0,0,0.855)] text-xs select-none"
-                      >
-                        {area.name}
-                      </Tooltip>
-                    </Marker>
-                  )}
-                </div>
-              );
-            })}
-          </MapContainer>
-          {locatingProperty && !areasCentroid && !fallbackCoords && (
-            <div className="pointer-events-none absolute inset-0 z-1000 flex flex-col items-center justify-center gap-2 bg-background/70 backdrop-blur-sm">
-              <Loader2 className="h-6 w-6 animate-spin text-primary" />
-              <span className="text-sm font-medium text-foreground">Localizando propriedade...</span>
-            </div>
-          )}
+                    {!isSelectedForEdit && rawPoints.length > 0 && (
+                      <Marker position={centroid} icon={invisibleIcon}>
+                        <Tooltip
+                          permanent
+                          direction="center"
+                          className="bg-transparent border-none shadow-none font-bold text-foreground drop-shadow-[0_1.5px_1.5px_rgba(255,255,255,0.85)] dark:drop-shadow-[0_1.5px_1.5px_rgba(0,0,0,0.855)] text-xs select-none"
+                        >
+                          {area.name}
+                        </Tooltip>
+                      </Marker>
+                    )}
+                  </div>
+                );
+              })}
+            </MapContainer>
+            {locatingProperty && !areasCentroid && !fallbackCoords && (
+              <div className="pointer-events-none absolute inset-0 z-1000 flex flex-col items-center justify-center gap-2 bg-background/70 backdrop-blur-sm">
+                <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                <span className="text-sm font-medium text-foreground">
+                  Localizando propriedade...
+                </span>
+              </div>
+            )}
           </>
         ) : (
           <div className="flex h-full flex-col items-center justify-center gap-3 bg-muted/30 p-8 text-center">
             <Landmark className="h-12 w-12 text-muted-foreground/60" />
-            <h3 className="text-lg font-semibold">Nenhuma Propriedade Selecionada</h3>
+            <h3 className="text-lg font-semibold">
+              Nenhuma Propriedade Selecionada
+            </h3>
             <p className="max-w-md text-sm text-muted-foreground">
-              Selecione uma propriedade no menu suspenso no topo da barra lateral para visualizar e gerenciar suas áreas de pastagem.
+              Selecione uma propriedade no menu suspenso no topo da barra
+              lateral para visualizar e gerenciar suas áreas de pastagem.
             </p>
           </div>
         )}

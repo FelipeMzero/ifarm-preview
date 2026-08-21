@@ -12,10 +12,15 @@ export async function GET(request: NextRequest) {
 
   try {
     const { searchParams } = new URL(request.url);
-    const validation = areaQuerySchema.safeParse(Object.fromEntries(searchParams));
+    const validation = areaQuerySchema.safeParse(
+      Object.fromEntries(searchParams),
+    );
 
     if (!validation.success) {
-      return NextResponse.json({ message: "Parâmetros inválidos." }, { status: 400 });
+      return NextResponse.json(
+        { message: "Parâmetros inválidos." },
+        { status: 400 },
+      );
     }
 
     let { propertyId, status } = validation.data;
@@ -54,7 +59,10 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error(error);
-    return NextResponse.json({ message: "Ocorreu um erro interno no servidor." }, { status: 500 });
+    return NextResponse.json(
+      { message: "Ocorreu um erro interno no servidor." },
+      { status: 500 },
+    );
   }
 }
 
@@ -75,7 +83,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, errors }, { status: 400 });
     }
 
-    const { name, polygon, hectares, stockingRate, notes, propertyId } = validation.data;
+    const { name, polygon, hectares, stockingRate, notes, propertyId } =
+      validation.data;
 
     const property = await prisma.property.findUnique({
       where: { id: propertyId },
@@ -83,7 +92,13 @@ export async function POST(request: NextRequest) {
     });
 
     if (!property || property.deactivatedAt) {
-      return NextResponse.json({ success: false, errors: { propertyId: "Propriedade inválida ou inativa." } }, { status: 400 });
+      return NextResponse.json(
+        {
+          success: false,
+          errors: { propertyId: "Propriedade inválida ou inativa." },
+        },
+        { status: 400 },
+      );
     }
 
     const area = await prisma.area.create({
@@ -105,6 +120,9 @@ export async function POST(request: NextRequest) {
     }
 
     console.error(error);
-    return NextResponse.json({ success: false, message: "Ocorreu um erro interno no servidor." }, { status: 500 });
+    return NextResponse.json(
+      { success: false, message: "Ocorreu um erro interno no servidor." },
+      { status: 500 },
+    );
   }
 }

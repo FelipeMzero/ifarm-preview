@@ -14,12 +14,20 @@ const paddingClasses = {
 
 /** Barra de ações fixa no rodapé da página, usada em formulários de página cheia
  * para manter o botão de salvar sempre visível durante a rolagem. */
-export function FormActionBar({ children, className, padding = 8 }: FormActionBarProps) {
+export function FormActionBar({
+  children,
+  className,
+  padding = 8,
+}: FormActionBarProps) {
   return (
-    <div className={cn("border-border sticky bottom-0 border-t bg-background/80 py-4", paddingClasses[padding], className)}>
-      <div className="flex justify-end gap-2">
-        {children}
-      </div>
+    <div
+      className={cn(
+        "border-border sticky bottom-0 border-t bg-background/80 py-4",
+        paddingClasses[padding],
+        className,
+      )}
+    >
+      <div className="flex justify-end gap-2">{children}</div>
     </div>
   );
 }

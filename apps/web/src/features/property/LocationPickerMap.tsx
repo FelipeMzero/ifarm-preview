@@ -22,12 +22,15 @@ console.log("typeof =", typeof markerIcon);
 console.log("keys =", Object.keys(markerIcon));
 console.log("src =", markerIcon.src);
 
-
 const DEFAULT_CENTER: [number, number] = [-14.235, -51.925]; // centro aproximado do Brasil
 const DEFAULT_ZOOM = 4;
 const SELECTED_ZOOM = 14;
 
-function ClickHandler({ onPick }: { onPick: (lat: number, lon: number) => void }) {
+function ClickHandler({
+  onPick,
+}: {
+  onPick: (lat: number, lon: number) => void;
+}) {
   useMapEvents({
     click(e) {
       onPick(e.latlng.lat, e.latlng.lng);
@@ -42,13 +45,24 @@ type LocationPickerMapProps = {
   onPick: (lat: number, lon: number) => void;
 };
 
-export default function LocationPickerMap({ latitude, longitude, onPick }: LocationPickerMapProps) {
+export default function LocationPickerMap({
+  latitude,
+  longitude,
+  onPick,
+}: LocationPickerMapProps) {
   const hasPosition = latitude != null && longitude != null;
-  const center: [number, number] = hasPosition ? [latitude, longitude] : DEFAULT_CENTER;
+  const center: [number, number] = hasPosition
+    ? [latitude, longitude]
+    : DEFAULT_CENTER;
   const zoom = hasPosition ? SELECTED_ZOOM : DEFAULT_ZOOM;
 
   return (
-    <MapContainer center={center} zoom={zoom} scrollWheelZoom className="size-full">
+    <MapContainer
+      center={center}
+      zoom={zoom}
+      scrollWheelZoom
+      className="size-full"
+    >
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"

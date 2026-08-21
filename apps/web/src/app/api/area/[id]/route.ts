@@ -2,10 +2,16 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/api-auth";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
-import { uniqueConstraintErrors, referencedElsewhereMessage } from "../../dbErrors";
+import {
+  uniqueConstraintErrors,
+  referencedElsewhereMessage,
+} from "../../dbErrors";
 import { areaApiSchema } from "../../schemas";
 
-export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
   const { response } = await requireSession(RESOURCE_ACCESS.areas);
   if (response) return response;
 
@@ -17,7 +23,10 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
     });
 
     if (!area) {
-      return NextResponse.json({ message: "Área não encontrada." }, { status: 404 });
+      return NextResponse.json(
+        { message: "Área não encontrada." },
+        { status: 404 },
+      );
     }
 
     return NextResponse.json({
@@ -33,11 +42,17 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
     });
   } catch (error) {
     console.error(error);
-    return NextResponse.json({ message: "Ocorreu um erro interno no servidor." }, { status: 500 });
+    return NextResponse.json(
+      { message: "Ocorreu um erro interno no servidor." },
+      { status: 500 },
+    );
   }
 }
 
-export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
   const { response } = await requireSession(RESOURCE_ACCESS.areas);
   if (response) return response;
 
@@ -58,9 +73,15 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 
     const { name, polygon, hectares, stockingRate, notes } = validation.data;
 
-    const current = await prisma.area.findUnique({ where: { id }, select: { id: true } });
+    const current = await prisma.area.findUnique({
+      where: { id },
+      select: { id: true },
+    });
     if (!current) {
-      return NextResponse.json({ success: false, message: "Área não encontrada." }, { status: 404 });
+      return NextResponse.json(
+        { success: false, message: "Área não encontrada." },
+        { status: 404 },
+      );
     }
 
     const updated = await prisma.area.update({
@@ -82,11 +103,17 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     }
 
     console.error(error);
-    return NextResponse.json({ success: false, message: "Ocorreu um erro interno no servidor." }, { status: 500 });
+    return NextResponse.json(
+      { success: false, message: "Ocorreu um erro interno no servidor." },
+      { status: 500 },
+    );
   }
 }
 
-export async function DELETE(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function DELETE(
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
   const { response } = await requireSession(RESOURCE_ACCESS.areas);
   if (response) return response;
 
@@ -98,25 +125,40 @@ export async function DELETE(_request: NextRequest, { params }: { params: Promis
   } catch (error) {
     const referencedMessage = referencedElsewhereMessage(error);
     if (referencedMessage) {
-      return NextResponse.json({ success: false, message: referencedMessage }, { status: 409 });
+      return NextResponse.json(
+        { success: false, message: referencedMessage },
+        { status: 409 },
+      );
     }
 
     console.error(error);
-    return NextResponse.json({ success: false, message: "Ocorreu um erro interno no servidor." }, { status: 500 });
+    return NextResponse.json(
+      { success: false, message: "Ocorreu um erro interno no servidor." },
+      { status: 500 },
+    );
   }
 }
 
-export async function PATCH(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function PATCH(
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
   const { response } = await requireSession(RESOURCE_ACCESS.areas);
   if (response) return response;
 
   const { id } = await params;
 
   try {
-    const area = await prisma.area.findUnique({ where: { id }, select: { closedAt: true } });
+    const area = await prisma.area.findUnique({
+      where: { id },
+      select: { closedAt: true },
+    });
 
     if (!area) {
-      return NextResponse.json({ message: "Área não encontrada." }, { status: 404 });
+      return NextResponse.json(
+        { message: "Área não encontrada." },
+        { status: 404 },
+      );
     }
 
     const updated = await prisma.area.update({
@@ -127,6 +169,9 @@ export async function PATCH(_request: NextRequest, { params }: { params: Promise
     return NextResponse.json({ success: true, data: updated });
   } catch (error) {
     console.error(error);
-    return NextResponse.json({ success: false, message: "Ocorreu um erro interno no servidor." }, { status: 500 });
+    return NextResponse.json(
+      { success: false, message: "Ocorreu um erro interno no servidor." },
+      { status: 500 },
+    );
   }
 }

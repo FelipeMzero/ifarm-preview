@@ -1,7 +1,16 @@
 "use client";
 
 import { ColumnDef, VisibilityState } from "@tanstack/react-table";
-import { Beef, Mars, Pencil, Plus, Search, Settings2, Trash2, Venus } from "lucide-react";
+import {
+  Beef,
+  Mars,
+  Pencil,
+  Plus,
+  Search,
+  Settings2,
+  Trash2,
+  Venus,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 
 import React, { useEffect, useState } from "react";
@@ -37,13 +46,19 @@ const COLUMN_LABELS: Record<string, string> = {
   updatedAt: "Atualizado em",
 };
 
-const ORIGIN_VARIANT: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
+const ORIGIN_VARIANT: Record<
+  string,
+  "default" | "secondary" | "destructive" | "outline"
+> = {
   [EnumAnimalOrigin.BIRTH]: "default",
   [EnumAnimalOrigin.PURCHASE]: "secondary",
   [EnumAnimalOrigin.TRANSFER]: "outline",
 };
 
-const STATUS_VARIANT: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
+const STATUS_VARIANT: Record<
+  string,
+  "default" | "secondary" | "destructive" | "outline"
+> = {
   [EnumAnimalStatus.ACTIVE]: "default",
   [EnumAnimalStatus.SOLD]: "secondary",
   [EnumAnimalStatus.DEAD]: "destructive",
@@ -81,13 +96,17 @@ function buildColumns(
       header: "Peso Atual",
       accessorKey: "currentWeightKg",
       cell: ({ row }) =>
-        row.original.currentWeightKg != null ? `${row.original.currentWeightKg} kg` : "—",
+        row.original.currentWeightKg != null
+          ? `${row.original.currentWeightKg} kg`
+          : "—",
     },
     {
       header: "Origem",
       accessorKey: "origin",
       cell: ({ row }) => (
-        <Badge variant={ORIGIN_VARIANT[row.original.origin] ?? "outline"}>{row.original.origin}</Badge>
+        <Badge variant={ORIGIN_VARIANT[row.original.origin] ?? "outline"}>
+          {row.original.origin}
+        </Badge>
       ),
     },
     {
@@ -106,8 +125,11 @@ function buildColumns(
         const iso = row.original.updatedAt;
         if (!iso) return "—";
         return new Date(iso).toLocaleString("pt-BR", {
-          day: "2-digit", month: "2-digit", year: "numeric",
-          hour: "2-digit", minute: "2-digit",
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
         });
       },
     },
@@ -116,7 +138,11 @@ function buildColumns(
       enableSorting: false,
       cell: ({ row }) => (
         <div className="flex items-center gap-1">
-          <Button variant="ghost" size="icon-sm" onClick={() => onRequestEdit(row.original.id)}>
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            onClick={() => onRequestEdit(row.original.id)}
+          >
             <Pencil className="size-4" />
           </Button>
           <Button
@@ -163,7 +189,12 @@ export default function AnimalList() {
     async function load() {
       setLoading(true);
       try {
-        const result = await getAnimals({ page: pageIndex, pageSize, search: debouncedSearch, status });
+        const result = await getAnimals({
+          page: pageIndex,
+          pageSize,
+          search: debouncedSearch,
+          status,
+        });
         if (!cancelled) {
           setAnimals(result.data);
           setPageCount(result.pageCount);
@@ -177,7 +208,9 @@ export default function AnimalList() {
     }
 
     load();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [pageIndex, pageSize, debouncedSearch, status, refreshKey]);
 
   async function confirmDelete() {
@@ -192,18 +225,22 @@ export default function AnimalList() {
     }
   }
 
-  const columns = buildColumns((id) => router.push(`/animais/${id}`), setPendingDeleteId);
+  const columns = buildColumns(
+    (id) => router.push(`/animais/${id}`),
+    setPendingDeleteId,
+  );
 
   if (error) {
     return (
-      <ErrorPage message={"Não foi possível obter os dados do servidor."} onRetry={() => window.location.reload()} />
+      <ErrorPage
+        message={"Não foi possível obter os dados do servidor."}
+        onRetry={() => window.location.reload()}
+      />
     );
   }
 
   if (loading) {
-    return (
-      <ListSkeleton columns={6} />
-    );
+    return <ListSkeleton columns={6} />;
   }
 
   return (
@@ -230,7 +267,10 @@ export default function AnimalList() {
 
         <SelectField
           value={status}
-          onValueChange={(val) => { setStatus(val); setPageIndex(0); }}
+          onValueChange={(val) => {
+            setStatus(val);
+            setPageIndex(0);
+          }}
           items={[
             { value: "", label: "Todos" },
             { value: EnumAnimalStatus.ACTIVE, label: "Ativos" },
@@ -282,7 +322,10 @@ export default function AnimalList() {
           total={total}
           initialSorting={[{ id: "updatedAt", desc: true }]}
           onPageChange={setPageIndex}
-          onPageSizeChange={(size) => { setPageSize(size); setPageIndex(0); }}
+          onPageSizeChange={(size) => {
+            setPageSize(size);
+            setPageIndex(0);
+          }}
           columnVisibility={columnVisibility}
           onColumnVisibilityChange={setColumnVisibility}
         />
@@ -290,7 +333,9 @@ export default function AnimalList() {
 
       <ConfirmDialog
         open={pendingDeleteId !== null}
-        onOpenChange={(open) => { if (!open) setPendingDeleteId(null); }}
+        onOpenChange={(open) => {
+          if (!open) setPendingDeleteId(null);
+        }}
         onConfirm={confirmDelete}
         description="Esta ação não pode ser desfeita. O registro será removido permanentemente."
       />

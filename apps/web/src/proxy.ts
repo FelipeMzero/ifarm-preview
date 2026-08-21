@@ -29,19 +29,27 @@ function isLocalDevOrigin(origin: string) {
 
 function withCors(request: NextRequest) {
   const origin = request.headers.get("origin") ?? "";
-  const isAllowedOrigin = process.env.NODE_ENV !== "production" && isLocalDevOrigin(origin);
+  const isAllowedOrigin =
+    process.env.NODE_ENV !== "production" && isLocalDevOrigin(origin);
 
   if (request.method === "OPTIONS") {
     return NextResponse.json(
       {},
-      { headers: { ...(isAllowedOrigin && { "Access-Control-Allow-Origin": origin }), ...CORS_HEADERS } },
+      {
+        headers: {
+          ...(isAllowedOrigin && { "Access-Control-Allow-Origin": origin }),
+          ...CORS_HEADERS,
+        },
+      },
     );
   }
 
   const response = NextResponse.next();
   if (isAllowedOrigin) {
     response.headers.set("Access-Control-Allow-Origin", origin);
-    Object.entries(CORS_HEADERS).forEach(([key, value]) => response.headers.set(key, value));
+    Object.entries(CORS_HEADERS).forEach(([key, value]) =>
+      response.headers.set(key, value),
+    );
   }
   return response;
 }
@@ -53,7 +61,9 @@ export async function proxy(request: NextRequest) {
     return withCors(request);
   }
 
-  const isPublicRoute = pathname === "/" || PUBLIC_ROUTES.some((route) => pathname.startsWith(route));
+  const isPublicRoute =
+    pathname === "/" ||
+    PUBLIC_ROUTES.some((route) => pathname.startsWith(route));
   const sessionCookie = getSessionCookie(request);
 
   if (!sessionCookie && !isPublicRoute) {
@@ -70,8 +80,13 @@ export async function proxy(request: NextRequest) {
     const cache = await getCookieCache(request);
     const role = cache?.user?.role ?? "";
 
-    for (const [resource, { forbiddenRoles }] of Object.entries(RESOURCE_ACCESS)) {
-      if (pathname.startsWith(`/${resource}`) && (forbiddenRoles as readonly string[]).includes(role)) {
+    for (const [resource, { forbiddenRoles }] of Object.entries(
+      RESOURCE_ACCESS,
+    )) {
+      if (
+        pathname.startsWith(`/${resource}`) &&
+        (forbiddenRoles as readonly string[]).includes(role)
+      ) {
         return NextResponse.redirect(new URL("/painel", request.url));
       }
     }

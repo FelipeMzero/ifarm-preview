@@ -37,13 +37,14 @@ export async function createProperty(data: PropertyFormData) {
   const result = await response.json();
 
   if (!response.ok) {
-    throw new ApiError(result.message ?? "Não foi possível salvar a propriedade.", result.errors);
+    throw new ApiError(
+      result.message ?? "Não foi possível salvar a propriedade.",
+      result.errors,
+    );
   }
 
   return result;
 }
-
-
 
 export async function updateProperty(id: string, data: PropertyFormData) {
   const response = await fetch(API_ENDPOINTS.PROPERTY_BY_ID(id), {
@@ -55,16 +56,19 @@ export async function updateProperty(id: string, data: PropertyFormData) {
   const result = await response.json();
 
   if (!response.ok) {
-    throw new ApiError(result.message ?? "Não foi possível atualizar a propriedade.", result.errors);
+    throw new ApiError(
+      result.message ?? "Não foi possível atualizar a propriedade.",
+      result.errors,
+    );
   }
 
   return result;
 }
-
-
 
 export async function deleteProperty(id: string) {
-  const response = await fetch(API_ENDPOINTS.PROPERTY_BY_ID(id), { method: "DELETE" });
+  const response = await fetch(API_ENDPOINTS.PROPERTY_BY_ID(id), {
+    method: "DELETE",
+  });
   const result = await response.json();
 
   if (!response.ok) {
@@ -73,11 +77,11 @@ export async function deleteProperty(id: string) {
 
   return result;
 }
-
-
 
 export async function togglePropertyStatus(id: string) {
-  const response = await fetch(API_ENDPOINTS.PROPERTY_BY_ID(id), { method: "PATCH" });
+  const response = await fetch(API_ENDPOINTS.PROPERTY_BY_ID(id), {
+    method: "PATCH",
+  });
   const result = await response.json();
 
   if (!response.ok) {
@@ -86,8 +90,6 @@ export async function togglePropertyStatus(id: string) {
 
   return result;
 }
-
-
 
 export async function getProperty(id: string): Promise<PropertyFormData> {
   const response = await fetch(API_ENDPOINTS.PROPERTY_BY_ID(id));
@@ -100,22 +102,25 @@ export async function getProperty(id: string): Promise<PropertyFormData> {
   return result;
 }
 
-
-
 export type PropertyListResult = {
   data: PropertyRow[];
   total: number;
   pageCount: number;
 };
 
-export async function getProperties(params: {
-  page?: number;
-  pageSize?: number;
-  search?: string;
-  status?: string;
-} = {}): Promise<PropertyListResult> {
+export async function getProperties(
+  params: {
+    page?: number;
+    pageSize?: number;
+    search?: string;
+    status?: string;
+  } = {},
+): Promise<PropertyListResult> {
   const { page = 0, pageSize = 10, search = "", status = "" } = params;
-  const query = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
+  const query = new URLSearchParams({
+    page: String(page),
+    pageSize: String(pageSize),
+  });
   if (search) query.set("search", search);
   if (status) query.set("status", status);
 
@@ -128,8 +133,6 @@ export async function getProperties(params: {
 
   return result;
 }
-
-
 
 export type PropertyOption = {
   id: string;

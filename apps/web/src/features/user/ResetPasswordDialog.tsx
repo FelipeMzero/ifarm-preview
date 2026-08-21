@@ -34,8 +34,16 @@ type ResetPasswordDialogProps = {
   onOpenChange: (open: boolean) => void;
 };
 
-export function ResetPasswordDialog({ userId, onOpenChange }: ResetPasswordDialogProps) {
-  const { handleSubmit, control, reset, formState: { isSubmitting } } = useForm<ResetPasswordData>({
+export function ResetPasswordDialog({
+  userId,
+  onOpenChange,
+}: ResetPasswordDialogProps) {
+  const {
+    handleSubmit,
+    control,
+    reset,
+    formState: { isSubmitting },
+  } = useForm<ResetPasswordData>({
     resolver: zodResolver(resetPasswordSchema),
     defaultValues: { newPassword: "", confirmPassword: "" },
   });
@@ -63,7 +71,12 @@ export function ResetPasswordDialog({ userId, onOpenChange }: ResetPasswordDialo
   }
 
   return (
-    <Dialog open={userId !== null} onOpenChange={(open) => { if (!open) close(); }}>
+    <Dialog
+      open={userId !== null}
+      onOpenChange={(open) => {
+        if (!open) close();
+      }}
+    >
       <DialogContent className="p-8 sm:max-w-sm">
         <h2 className="text-xl font-semibold">Redefinir senha</h2>
 
@@ -74,7 +87,12 @@ export function ResetPasswordDialog({ userId, onOpenChange }: ResetPasswordDialo
             required
             control={control}
             render={({ id, field }) => (
-              <Input id={id} type="password" autoComplete="new-password" {...field} />
+              <Input
+                id={id}
+                type="password"
+                autoComplete="new-password"
+                {...field}
+              />
             )}
           />
           <FormField
@@ -83,7 +101,12 @@ export function ResetPasswordDialog({ userId, onOpenChange }: ResetPasswordDialo
             required
             control={control}
             render={({ id, field }) => (
-              <Input id={id} type="password" autoComplete="new-password" {...field} />
+              <Input
+                id={id}
+                type="password"
+                autoComplete="new-password"
+                {...field}
+              />
             )}
           />
 

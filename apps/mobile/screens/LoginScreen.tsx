@@ -67,7 +67,11 @@ export function LoginScreen() {
       {isSubmitting ? (
         <ActivityIndicator />
       ) : (
-        <Button title="Entrar" onPress={handleSubmit} disabled={!email || !password} />
+        <Button
+          title="Entrar"
+          onPress={handleSubmit}
+          disabled={!email || !password}
+        />
       )}
     </KeyboardAvoidingView>
   );

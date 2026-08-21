@@ -12,10 +12,16 @@ export type CurrentPropertyOption = {
 // reatribui sozinho: trocar de propriedade sem ação direta do usuário é arriscado
 // (pode levar a cadastros/consultas na fazenda errada). Fica sem seleção até o
 // usuário escolher manualmente entre as opções ainda disponíveis.
-export async function getOrAssignCurrentProperty(userId: string): Promise<CurrentPropertyOption | null> {
+export async function getOrAssignCurrentProperty(
+  userId: string,
+): Promise<CurrentPropertyOption | null> {
   const settings = await prisma.userSettings.findUnique({
     where: { userId },
-    select: { currentProperty: { select: { id: true, name: true, deactivatedAt: true } } },
+    select: {
+      currentProperty: {
+        select: { id: true, name: true, deactivatedAt: true },
+      },
+    },
   });
 
   // A linha de settings só existe se o usuário já teve uma seleção (manual ou
@@ -26,7 +32,10 @@ export async function getOrAssignCurrentProperty(userId: string): Promise<Curren
     }
 
     if (settings.currentProperty?.deactivatedAt) {
-      await prisma.userSettings.update({ where: { userId }, data: { currentPropertyId: null } });
+      await prisma.userSettings.update({
+        where: { userId },
+        data: { currentPropertyId: null },
+      });
     }
 
     return null;
@@ -42,7 +51,9 @@ export async function getOrAssignCurrentProperty(userId: string): Promise<Curren
 
   if (!oldest) return null;
 
-  await prisma.userSettings.create({ data: { userId, currentPropertyId: oldest.id } });
+  await prisma.userSettings.create({
+    data: { userId, currentPropertyId: oldest.id },
+  });
 
   return oldest;
 }

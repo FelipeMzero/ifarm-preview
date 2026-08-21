@@ -2,20 +2,36 @@ import { z } from "zod";
 import { FIELD_LIMITS } from "@/lib/field-limits";
 import { numericField } from "@/lib/zod-utils";
 
-export const hectaresSchema = z.coerce.number()
+export const hectaresSchema = z.coerce
+  .number()
   .positive("Valor inválido.")
   .max(FIELD_LIMITS.area.area, "Limite ultrapassado.");
 
-export const stockingRateSchema = z.coerce.number()
+export const stockingRateSchema = z.coerce
+  .number()
   .positive("Valor inválido.")
   .max(FIELD_LIMITS.area.stockingRate, "Limite ultrapassado");
 
 export const areaFormSchema = z.object({
-  name: z.string().min(1, "Este campo é obrigatório").max(FIELD_LIMITS.area.name, `Máximo de ${FIELD_LIMITS.area.name} caracteres`),
-  polygon: z.any().refine(val => val != null, "Você deve desenhar o contorno no mapa."),
+  name: z
+    .string()
+    .min(1, "Este campo é obrigatório")
+    .max(
+      FIELD_LIMITS.area.name,
+      `Máximo de ${FIELD_LIMITS.area.name} caracteres`,
+    ),
+  polygon: z
+    .any()
+    .refine((val) => val != null, "Você deve desenhar o contorno no mapa."),
   hectares: numericField(hectaresSchema, "Este campo é obrigatório"),
   stockingRate: numericField(stockingRateSchema, "Este campo é obrigatório"),
-  notes: z.string().max(FIELD_LIMITS.area.notes, `Máximo de ${FIELD_LIMITS.area.notes} caracteres`).optional(),
+  notes: z
+    .string()
+    .max(
+      FIELD_LIMITS.area.notes,
+      `Máximo de ${FIELD_LIMITS.area.notes} caracteres`,
+    )
+    .optional(),
   propertyId: z.uuid("Propriedade inválida."),
 });
 

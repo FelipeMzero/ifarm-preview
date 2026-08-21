@@ -1,6 +1,7 @@
 "use client";
 
-import { FIELD_LIMITS } from "@/lib/field-limits";import { UseFormReturn } from "react-hook-form";
+import { FIELD_LIMITS } from "@/lib/field-limits";
+import { UseFormReturn } from "react-hook-form";
 import { Hexagon, Loader2, MapPin, Pencil, Ruler } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -65,9 +66,11 @@ export function AreaForm({
           </SheetDescription>
         </SheetHeader>
 
-        <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col flex-1 min-h-0">
+        <form
+          onSubmit={form.handleSubmit(onSubmit)}
+          className="flex flex-col flex-1 min-h-0"
+        >
           <div className="flex flex-1 flex-col gap-6 overflow-y-auto px-6 pt-1">
-
             <Card className="bg-muted/50 shrink-0">
               <CardHeader className="flex flex-row items-center justify-center gap-2 pb-2">
                 <MapPin className="size-4 text-primary" />
@@ -78,11 +81,15 @@ export function AreaForm({
               <CardContent className="flex items-center justify-center gap-4 text-sm">
                 <div className="flex items-center gap-1.5">
                   <Ruler className="size-3.5 text-muted-foreground" />
-                  <span className="font-medium text-foreground">{calculatedHectares.toFixed(2)} ha</span>
+                  <span className="font-medium text-foreground">
+                    {calculatedHectares.toFixed(2)} ha
+                  </span>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <Hexagon className="size-3.5 text-muted-foreground" />
-                  <span className="font-medium text-foreground">{polygonPointsCount} vértices</span>
+                  <span className="font-medium text-foreground">
+                    {polygonPointsCount} vértices
+                  </span>
                 </div>
               </CardContent>
             </Card>
@@ -94,7 +101,11 @@ export function AreaForm({
                 label="Nome da Área"
                 required
                 render={({ field }) => (
-                  <Input {...field} maxLength={FIELD_LIMITS.area.name} placeholder="Ex: Piquete 01, Invernada Grande" />
+                  <Input
+                    {...field}
+                    maxLength={FIELD_LIMITS.area.name}
+                    placeholder="Ex: Piquete 01, Invernada Grande"
+                  />
                 )}
               />
             </FieldRow>
@@ -107,7 +118,12 @@ export function AreaForm({
                 required
                 warning={hectaresWarning}
                 render={({ field }) => (
-                  <Input {...field} type="number" step="any" placeholder="Ex: 12.50" />
+                  <Input
+                    {...field}
+                    type="number"
+                    step="any"
+                    placeholder="Ex: 12.50"
+                  />
                 )}
               />
 
@@ -117,7 +133,12 @@ export function AreaForm({
                 label="Lotação (UA/ha)"
                 required
                 render={({ field }) => (
-                  <Input {...field} type="number" step="any" placeholder="Ex: 1.80" />
+                  <Input
+                    {...field}
+                    type="number"
+                    step="any"
+                    placeholder="Ex: 1.80"
+                  />
                 )}
               />
             </FieldRow>
@@ -144,12 +165,12 @@ export function AreaForm({
                 Cancelar
               </Button>
               <Button type="submit" disabled={form.formState.isSubmitting}>
-                {form.formState.isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {form.formState.isSubmitting && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                )}
                 Salvar
               </Button>
             </FormActionBar>
-
-            
           </div>
         </form>
       </SheetContent>

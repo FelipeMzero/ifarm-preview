@@ -7,19 +7,23 @@ export async function GET(_request: NextRequest) {
   if (response) return response;
 
   try {
-    const [breeds, batches, properties, availableFarmAnimals] = await Promise.all([
-      prisma.breed.findMany({ where: { deactivatedAt: null }, orderBy: { name: "asc" } }),
-      prisma.batch.findMany({ orderBy: { name: "asc" } }),
-      prisma.property.findMany({
-        where: { deactivatedAt: null },
-        select: { id: true, name: true },
-        orderBy: { name: "asc" },
-      }),
-      prisma.animal.findMany({
-        select: { id: true, earTag: true, rfid: true, sex: true },
-        orderBy: { earTag: "asc" }
-      }),
-    ]);
+    const [breeds, batches, properties, availableFarmAnimals] =
+      await Promise.all([
+        prisma.breed.findMany({
+          where: { deactivatedAt: null },
+          orderBy: { name: "asc" },
+        }),
+        prisma.batch.findMany({ orderBy: { name: "asc" } }),
+        prisma.property.findMany({
+          where: { deactivatedAt: null },
+          select: { id: true, name: true },
+          orderBy: { name: "asc" },
+        }),
+        prisma.animal.findMany({
+          select: { id: true, earTag: true, rfid: true, sex: true },
+          orderBy: { earTag: "asc" },
+        }),
+      ]);
 
     return NextResponse.json({
       breeds,

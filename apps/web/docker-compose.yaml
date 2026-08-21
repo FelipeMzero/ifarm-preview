@@ -4,7 +4,7 @@ services:
     container_name: container_postgres_ifarm
     restart: always
     ports:
-      - '${DB_PORT}:5432'
+      - "${DB_PORT}:5432"
     environment:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}

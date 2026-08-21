@@ -19,6 +19,9 @@ export async function GET() {
     return NextResponse.json({ data: properties });
   } catch (error) {
     console.error(error);
-    return NextResponse.json({ message: "Ocorreu um erro interno no servidor." }, { status: 500 });
+    return NextResponse.json(
+      { message: "Ocorreu um erro interno no servidor." },
+      { status: 500 },
+    );
   }
 }

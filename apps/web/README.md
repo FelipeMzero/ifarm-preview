@@ -7,9 +7,10 @@ Este é um projeto desenvolvido com Next.js, utilizando Prisma ORM para persist�
 ## 🚀 Pré-requisitos
 
 Antes de começar, você precisará ter instalado em sua máquina:
-* [Node.js](https://nodejs.org/) (recomendado v22+)
-* [pnpm](https://pnpm.io/) (gerenciador de pacotes)
-* [Docker](https://www.docker.com/) com suporte ao Docker Compose V2
+
+- [Node.js](https://nodejs.org/) (recomendado v22+)
+- [pnpm](https://pnpm.io/) (gerenciador de pacotes)
+- [Docker](https://www.docker.com/) com suporte ao Docker Compose V2
 
 ---
 
@@ -17,10 +18,10 @@ Antes de começar, você precisará ter instalado em sua máquina:
 
 As dependências já devem ter sido instaladas com `pnpm install` na raiz do repositório (veja o [README raiz](../../README.md)).
 
-
 Agora dentro da pasta `apps/web` siga os passos abaixo para configurar app web:
 
 ### 1. Configurar Variáveis de Ambiente
+
 O projeto utiliza um arquivo `.env` para gerenciar credenciais e configurações de conexão, copie o modelo de exemplo e preencha com seus dados locais:
 
 ```bash
@@ -33,8 +34,8 @@ Depois, gere um valor para `BETTER_AUTH_SECRET` (usado para assinar sessões/coo
 openssl rand -base64 32
 ```
 
-
 ### 2. Iniciar o Banco de Dados
+
 Suba o container do PostgreSQL utilizando o Docker:
 
 ```bash
@@ -42,6 +43,7 @@ docker compose up -d
 ```
 
 ### 3. Sincronizar o Prisma ORM
+
 Gere o cliente do Prisma e sincronize o banco de dados com o schema atual:
 
 ```bash
@@ -54,6 +56,7 @@ Depois, rode o seed para criar o usuário admin (credenciais definidas em `SEED_
 ```bash
 pnpm prisma db seed
 ```
+
 ---
 
 ## 💻 Executando o Projeto
@@ -76,16 +79,17 @@ O projeto estará disponível em: http://localhost:3000
 
 ## 🔍 Comandos Úteis
 
-| Comando | Descrição |
-| :--- | :--- |
-| pnpm prisma studio | Abre uma interface gráfica para visualizar e editar os dados do banco. |
-| pnpm exec prisma db seed | Roda novamente o seed (cria admin e dados de exemplo). |
-| docker compose logs -f | Visualiza os logs do banco de dados em tempo real. |
-| docker compose down | Para e remove os containers do projeto. |
+| Comando                  | Descrição                                                              |
+| :----------------------- | :--------------------------------------------------------------------- |
+| pnpm prisma studio       | Abre uma interface gráfica para visualizar e editar os dados do banco. |
+| pnpm exec prisma db seed | Roda novamente o seed (cria admin e dados de exemplo).                 |
+| docker compose logs -f   | Visualiza os logs do banco de dados em tempo real.                     |
+| docker compose down      | Para e remove os containers do projeto.                                |
 
 ---
 
 ## 📂 Estrutura do Banco de Dados
+
 O projeto utiliza o PostgreSQL. O esquema de dados é definido no arquivo prisma/schema.prisma. Sempre que realizar alterações neste arquivo, lembre-se de rodar o comando abaixo para sincronizar o banco.
 
 ```bash

@@ -10,13 +10,15 @@ export default function Page() {
             <Beef size={48} strokeWidth={1.5} />
           </div>
         </div>
-        
+
         <div className="space-y-4">
           <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight text-slate-900 dark:text-white">
-            Bem-vindo ao <span className="text-emerald-600">Pecuária Inteligente</span>.
+            Bem-vindo ao{" "}
+            <span className="text-emerald-600">Pecuária Inteligente</span>.
           </h1>
           <p className="text-lg text-slate-600 dark:text-slate-400 max-w-xl mx-auto">
-            O futuro da gestão pecuária. Gerencie o seu rebanho com inteligência, dados em tempo real e precisão absoluta.
+            O futuro da gestão pecuária. Gerencie o seu rebanho com
+            inteligência, dados em tempo real e precisão absoluta.
           </p>
         </div>
 
@@ -27,19 +29,38 @@ export default function Page() {
           >
             <LogIn size={20} />
             <span>Entrar</span>
-            <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+            <ArrowRight
+              size={18}
+              className="group-hover:translate-x-1 transition-transform"
+            />
           </Link>
         </div>
 
         <div className="pt-12 grid grid-cols-1 sm:grid-cols-3 gap-4 text-left">
           {[
-            { title: "Conexão com Balança", desc: "Leitura automatizada via RFIDs." },
-            { title: "Histórico Completo", desc: "Pesagens, vacinas e transferências." },
-            { title: "Rastreabilidade", desc: "Saiba tudo sobre a origem e destino." }
+            {
+              title: "Conexão com Balança",
+              desc: "Leitura automatizada via RFIDs.",
+            },
+            {
+              title: "Histórico Completo",
+              desc: "Pesagens, vacinas e transferências.",
+            },
+            {
+              title: "Rastreabilidade",
+              desc: "Saiba tudo sobre a origem e destino.",
+            },
           ].map((feature, idx) => (
-            <div key={idx} className="p-5 rounded-xl bg-white/50 dark:bg-neutral-900/50 backdrop-blur-sm border border-slate-200/60 dark:border-neutral-800">
-              <h3 className="font-bold text-slate-900 dark:text-slate-100 mb-1">{feature.title}</h3>
-              <p className="text-sm text-slate-600 dark:text-slate-400">{feature.desc}</p>
+            <div
+              key={idx}
+              className="p-5 rounded-xl bg-white/50 dark:bg-neutral-900/50 backdrop-blur-sm border border-slate-200/60 dark:border-neutral-800"
+            >
+              <h3 className="font-bold text-slate-900 dark:text-slate-100 mb-1">
+                {feature.title}
+              </h3>
+              <p className="text-sm text-slate-600 dark:text-slate-400">
+                {feature.desc}
+              </p>
             </div>
           ))}
         </div>

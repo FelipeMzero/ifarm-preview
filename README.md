@@ -13,8 +13,6 @@ packages/
 docs/       → requisitos, arquitetura e visão do produto
 ```
 
-
-
 ## 🚀 Setup
 
 Pré-requisitos: [Node.js](https://nodejs.org/) 22+, [pnpm](https://pnpm.io/), [Docker](https://www.docker.com/) (só para o `apps/web`).
@@ -34,10 +32,10 @@ O `apps/mobile` **depende do `apps/web` estar rodando**, pois consome a API do w
 
 ## 🔍 Comandos úteis na raiz
 
-| Comando | Descrição |
-| :--- | :--- |
-| `pnpm dev` | Atalho para `pnpm --filter web dev` |
-| `pnpm --filter web <script>` | Roda um script definido em `apps/web/package.json` |
+| Comando                         | Descrição                                             |
+| :------------------------------ | :---------------------------------------------------- |
+| `pnpm dev`                      | Atalho para `pnpm --filter web dev`                   |
+| `pnpm --filter web <script>`    | Roda um script definido em `apps/web/package.json`    |
 | `pnpm --filter mobile <script>` | Roda um script definido em `apps/mobile/package.json` |
 
 ## 📖 Documentação do produto

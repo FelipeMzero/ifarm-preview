@@ -59,7 +59,9 @@ async function seedPeople() {
   ];
 
   for (const person of people) {
-    const existing = await prisma.person.findUnique({ where: { taxId: person.taxId } });
+    const existing = await prisma.person.findUnique({
+      where: { taxId: person.taxId },
+    });
     if (existing) {
       console.log(`- pessoa ${person.name} já existe, pulando`);
       continue;
@@ -107,20 +109,30 @@ async function seedProperties() {
   ];
 
   for (const { ownerTaxId, address, ...property } of properties) {
-    const existing = await prisma.property.findFirst({ where: { name: property.name } });
+    const existing = await prisma.property.findFirst({
+      where: { name: property.name },
+    });
     if (existing) {
       console.log(`- propriedade ${property.name} já existe, pulando`);
       continue;
     }
 
-    const owner = await prisma.person.findUnique({ where: { taxId: ownerTaxId } });
+    const owner = await prisma.person.findUnique({
+      where: { taxId: ownerTaxId },
+    });
     if (!owner) {
-      console.log(`- titular (taxId ${ownerTaxId}) não encontrado, pulando propriedade ${property.name}`);
+      console.log(
+        `- titular (taxId ${ownerTaxId}) não encontrado, pulando propriedade ${property.name}`,
+      );
       continue;
     }
 
     await prisma.property.create({
-      data: { ...property, owner: { connect: { id: owner.id } }, address: { create: address } },
+      data: {
+        ...property,
+        owner: { connect: { id: owner.id } },
+        address: { create: address },
+      },
     });
     console.log(`- propriedade ${property.name} criada`);
   }
@@ -209,14 +221,20 @@ async function seedAreas() {
   ];
 
   for (const { propertyName, items } of areasByProperty) {
-    const property = await prisma.property.findFirst({ where: { name: propertyName } });
+    const property = await prisma.property.findFirst({
+      where: { name: propertyName },
+    });
     if (!property) {
-      console.log(`- propriedade ${propertyName} não encontrada, pulando áreas`);
+      console.log(
+        `- propriedade ${propertyName} não encontrada, pulando áreas`,
+      );
       continue;
     }
 
     for (const area of items) {
-      const existing = await prisma.area.findFirst({ where: { name: area.name, propertyId: property.id } });
+      const existing = await prisma.area.findFirst({
+        where: { name: area.name, propertyId: property.id },
+      });
       if (existing) {
         console.log(`- área ${area.name} (${propertyName}) já existe, pulando`);
         continue;

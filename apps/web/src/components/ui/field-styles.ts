@@ -12,8 +12,7 @@ const className = `
   aria-invalid:focus-visible:ring-2
 `;
 
-
-export const fieldStyles = className
+export const fieldStyles = className;
 
 /*export const fieldStyles = `
 

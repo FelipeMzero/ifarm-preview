@@ -40,7 +40,10 @@ export async function createBreed(name: string): Promise<Breed> {
   const result = await response.json();
 
   if (!response.ok) {
-    throw new ApiError(result.errors?.name ?? result.message ?? "Não foi possível criar a raça.", result.errors);
+    throw new ApiError(
+      result.errors?.name ?? result.message ?? "Não foi possível criar a raça.",
+      result.errors,
+    );
   }
 
   return result.data;
@@ -56,14 +59,21 @@ export async function updateBreed(id: string, name: string): Promise<Breed> {
   const result = await response.json();
 
   if (!response.ok) {
-    throw new ApiError(result.errors?.name ?? result.message ?? "Não foi possível salvar a raça.", result.errors);
+    throw new ApiError(
+      result.errors?.name ??
+        result.message ??
+        "Não foi possível salvar a raça.",
+      result.errors,
+    );
   }
 
   return result.data;
 }
 
 export async function deleteBreed(id: string): Promise<void> {
-  const response = await fetch(API_ENDPOINTS.BREED_BY_ID(id), { method: "DELETE" });
+  const response = await fetch(API_ENDPOINTS.BREED_BY_ID(id), {
+    method: "DELETE",
+  });
   const result = await response.json();
 
   if (!response.ok) {
@@ -72,7 +82,9 @@ export async function deleteBreed(id: string): Promise<void> {
 }
 
 export async function toggleBreedStatus(id: string): Promise<Breed> {
-  const response = await fetch(API_ENDPOINTS.BREED_BY_ID(id), { method: "PATCH" });
+  const response = await fetch(API_ENDPOINTS.BREED_BY_ID(id), {
+    method: "PATCH",
+  });
   const result = await response.json();
 
   if (!response.ok) {

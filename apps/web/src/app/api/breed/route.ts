@@ -5,8 +5,6 @@ import { RESOURCE_ACCESS } from "@/lib/permissions";
 import { uniqueConstraintErrors } from "../dbErrors";
 import { breedApiSchema } from "../schemas";
 
-
-
 export async function GET() {
   const { response } = await requireSession(RESOURCE_ACCESS.racas);
   if (response) return response;
@@ -16,11 +14,12 @@ export async function GET() {
     return NextResponse.json({ data: breeds });
   } catch (error) {
     console.error(error);
-    return NextResponse.json({ message: "Ocorreu um erro interno no servidor." }, { status: 500 });
+    return NextResponse.json(
+      { message: "Ocorreu um erro interno no servidor." },
+      { status: 500 },
+    );
   }
 }
-
-
 
 export async function POST(request: NextRequest) {
   const { response } = await requireSession(RESOURCE_ACCESS.racas);
@@ -42,7 +41,6 @@ export async function POST(request: NextRequest) {
     const breed = await prisma.breed.create({ data: validation.data });
 
     return NextResponse.json({ success: true, data: breed }, { status: 201 });
-
   } catch (error) {
     const errors = uniqueConstraintErrors(error);
     if (errors) {
@@ -50,6 +48,9 @@ export async function POST(request: NextRequest) {
     }
 
     console.error(error);
-    return NextResponse.json({ success: false, message: "Ocorreu um erro interno no servidor." }, { status: 500 });
+    return NextResponse.json(
+      { success: false, message: "Ocorreu um erro interno no servidor." },
+      { status: 500 },
+    );
   }
 }

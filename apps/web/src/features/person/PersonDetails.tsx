@@ -3,7 +3,18 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { ArrowLeft, Building2, Mail, MapPin, Package, Phone, ShoppingCart, Trash2, Tractor, User } from "lucide-react";
+import {
+  ArrowLeft,
+  Building2,
+  Mail,
+  MapPin,
+  Package,
+  Phone,
+  ShoppingCart,
+  Trash2,
+  Tractor,
+  User,
+} from "lucide-react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -11,7 +22,14 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { ConfirmDialog } from "@/components/our/ConfirmDialog";
 import { ErrorPage } from "@/components/our/ErrorPage";
 import { deletePerson, getPerson } from "./services";
@@ -28,8 +46,10 @@ const MARITAL_STATUS_LABEL: Record<string, string> = {
 
 function formatPhone(value: string): string {
   const digits = value.replace(/\D/g, "");
-  if (digits.length === 11) return digits.replace(/(\d{2})(\d{5})(\d{4})/, "($1) $2-$3");
-  if (digits.length === 10) return digits.replace(/(\d{2})(\d{4})(\d{4})/, "($1) $2-$3");
+  if (digits.length === 11)
+    return digits.replace(/(\d{2})(\d{5})(\d{4})/, "($1) $2-$3");
+  if (digits.length === 10)
+    return digits.replace(/(\d{2})(\d{4})(\d{4})/, "($1) $2-$3");
   return value;
 }
 
@@ -40,18 +60,48 @@ function formatDate(iso: string): string {
 
 // Dados ilustrativos: essas informações ainda não existem no sistema (RF-PESSOA-04 em construção).
 const FICTITIOUS_PROPERTIES = [
-  { name: "Fazenda Santa Rita", role: "Titular", area: "120 ha", city: "Uberlândia/MG" },
+  {
+    name: "Fazenda Santa Rita",
+    role: "Titular",
+    area: "120 ha",
+    city: "Uberlândia/MG",
+  },
 ];
 
 const FICTITIOUS_PURCHASES = [
-  { date: "2026-05-12", product: "Ração bovina", quantity: "40 sacos", value: "R$ 3.200,00" },
-  { date: "2026-04-03", product: "Vermífugo", quantity: "12 frascos", value: "R$ 780,00" },
-  { date: "2026-02-20", product: "Sal mineral", quantity: "8 sacos", value: "R$ 640,00" },
+  {
+    date: "2026-05-12",
+    product: "Ração bovina",
+    quantity: "40 sacos",
+    value: "R$ 3.200,00",
+  },
+  {
+    date: "2026-04-03",
+    product: "Vermífugo",
+    quantity: "12 frascos",
+    value: "R$ 780,00",
+  },
+  {
+    date: "2026-02-20",
+    product: "Sal mineral",
+    quantity: "8 sacos",
+    value: "R$ 640,00",
+  },
 ];
 
 const FICTITIOUS_SUPPLIED_PRODUCTS = [
-  { date: "2026-06-01", product: "Leite in natura", quantity: "1.200 L", value: "R$ 4.800,00" },
-  { date: "2026-05-01", product: "Leite in natura", quantity: "1.150 L", value: "R$ 4.600,00" },
+  {
+    date: "2026-06-01",
+    product: "Leite in natura",
+    quantity: "1.200 L",
+    value: "R$ 4.800,00",
+  },
+  {
+    date: "2026-05-01",
+    product: "Leite in natura",
+    quantity: "1.150 L",
+    value: "R$ 4.600,00",
+  },
 ];
 
 function DetailsSkeleton() {
@@ -65,7 +115,13 @@ function DetailsSkeleton() {
   );
 }
 
-export default function PersonDetails({ id, onClose }: { id: string; onClose?: () => void }) {
+export default function PersonDetails({
+  id,
+  onClose,
+}: {
+  id: string;
+  onClose?: () => void;
+}) {
   const router = useRouter();
   const [person, setPerson] = useState<PersonFormData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -88,16 +144,21 @@ export default function PersonDetails({ id, onClose }: { id: string; onClose?: (
     }
 
     load();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [id]);
 
   async function handleDelete() {
     try {
       await deletePerson(id);
       toast.success("Registro excluído com sucesso!");
-      if (onClose) onClose(); else router.push("/pessoas");
+      if (onClose) onClose();
+      else router.push("/pessoas");
     } catch (e) {
-      toast.error((e as Error).message || "Não foi possível excluir o registro.");
+      toast.error(
+        (e as Error).message || "Não foi possível excluir o registro.",
+      );
     } finally {
       setConfirmingDelete(false);
     }
@@ -105,7 +166,10 @@ export default function PersonDetails({ id, onClose }: { id: string; onClose?: (
 
   if (error) {
     return (
-      <ErrorPage message="Não foi possível obter os dados da pessoa." onRetry={() => window.location.reload()} />
+      <ErrorPage
+        message="Não foi possível obter os dados da pessoa."
+        onRetry={() => window.location.reload()}
+      />
     );
   }
 
@@ -115,16 +179,28 @@ export default function PersonDetails({ id, onClose }: { id: string; onClose?: (
 
   const isIndividual = person.type === EnumPersonType.INDIVIDUAL;
   const address = [
-    person.street && person.number ? `${person.street}, ${person.number}` : person.street,
+    person.street && person.number
+      ? `${person.street}, ${person.number}`
+      : person.street,
     person.complement,
     person.neighborhood,
-    person.city && person.state ? `${person.city}/${person.state}` : person.city,
+    person.city && person.state
+      ? `${person.city}/${person.state}`
+      : person.city,
     person.zipCode,
-  ].filter(Boolean).join(" — ");
+  ]
+    .filter(Boolean)
+    .join(" — ");
 
   return (
     <div className="w-full max-w-4xl space-y-4">
-      <div className={onClose ? "flex items-center justify-end" : "flex items-center justify-between"}>
+      <div
+        className={
+          onClose
+            ? "flex items-center justify-end"
+            : "flex items-center justify-between"
+        }
+      >
         {!onClose && (
           <Button variant="ghost" size="sm" onClick={() => router.back()}>
             <ArrowLeft className="size-4" /> Voltar
@@ -144,17 +220,24 @@ export default function PersonDetails({ id, onClose }: { id: string; onClose?: (
         <CardContent className="flex items-center gap-4">
           <Avatar size="lg">
             <AvatarFallback>
-              {isIndividual ? <User className="size-5" /> : <Building2 className="size-5" />}
+              {isIndividual ? (
+                <User className="size-5" />
+              ) : (
+                <Building2 className="size-5" />
+              )}
             </AvatarFallback>
           </Avatar>
 
           <div className="flex-1 space-y-1">
             <div className="flex items-center gap-2">
               <h1 className="text-xl font-semibold">{person.name}</h1>
-              <Badge variant="outline">{isIndividual ? "Física" : "Jurídica"}</Badge>
+              <Badge variant="outline">
+                {isIndividual ? "Física" : "Jurídica"}
+              </Badge>
             </div>
             <p className="text-sm text-muted-foreground">
-              {isIndividual ? "CPF" : "CNPJ"}: {formatTaxId(person.type, person.taxId)}
+              {isIndividual ? "CPF" : "CNPJ"}:{" "}
+              {formatTaxId(person.type, person.taxId)}
             </p>
           </div>
         </CardContent>
@@ -182,7 +265,9 @@ export default function PersonDetails({ id, onClose }: { id: string; onClose?: (
 
       <Card>
         <CardHeader>
-          <CardTitle>{isIndividual ? "Dados Pessoais" : "Dados da Empresa"}</CardTitle>
+          <CardTitle>
+            {isIndividual ? "Dados Pessoais" : "Dados da Empresa"}
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 gap-4 text-sm sm:grid-cols-3">
@@ -198,7 +283,12 @@ export default function PersonDetails({ id, onClose }: { id: string; onClose?: (
                 </div>
                 <div>
                   <p className="text-muted-foreground">Estado Civil</p>
-                  <p>{person.maritalStatus ? MARITAL_STATUS_LABEL[person.maritalStatus] ?? person.maritalStatus : "—"}</p>
+                  <p>
+                    {person.maritalStatus
+                      ? (MARITAL_STATUS_LABEL[person.maritalStatus] ??
+                        person.maritalStatus)
+                      : "—"}
+                  </p>
                 </div>
               </>
             ) : (
@@ -220,7 +310,8 @@ export default function PersonDetails({ id, onClose }: { id: string; onClose?: (
       <Separator />
 
       <p className="text-xs text-muted-foreground">
-        As seções abaixo exibem dados ilustrativos — os módulos correspondentes ainda não foram implementados.
+        As seções abaixo exibem dados ilustrativos — os módulos correspondentes
+        ainda não foram implementados.
       </p>
 
       <Card>
@@ -243,7 +334,9 @@ export default function PersonDetails({ id, onClose }: { id: string; onClose?: (
               {FICTITIOUS_PROPERTIES.map((p) => (
                 <TableRow key={p.name}>
                   <TableCell>{p.name}</TableCell>
-                  <TableCell><Badge variant="secondary">{p.role}</Badge></TableCell>
+                  <TableCell>
+                    <Badge variant="secondary">{p.role}</Badge>
+                  </TableCell>
                   <TableCell>{p.area}</TableCell>
                   <TableCell>{p.city}</TableCell>
                 </TableRow>

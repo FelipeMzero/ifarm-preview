@@ -1,11 +1,14 @@
-import { Skeleton } from "../ui/skeleton"
+import { Skeleton } from "../ui/skeleton";
 
 interface ListSkeletonProps {
-  rows?: number
-  columns?: number
+  rows?: number;
+  columns?: number;
 }
 
-export default function ListSkeleton({ rows = 5, columns = 5 }: ListSkeletonProps) {
+export default function ListSkeleton({
+  rows = 5,
+  columns = 5,
+}: ListSkeletonProps) {
   return (
     <div className="w-full space-y-4">
       {/* Cabeçalho: título + botão */}
@@ -34,7 +37,10 @@ export default function ListSkeleton({ rows = 5, columns = 5 }: ListSkeletonProp
 
         {/* Linhas */}
         {Array.from({ length: rows }).map((_, i) => (
-          <div key={i} className="flex gap-4 px-4 py-3 border-b border-border last:border-0">
+          <div
+            key={i}
+            className="flex gap-4 px-4 py-3 border-b border-border last:border-0"
+          >
             {Array.from({ length: columns }).map((_, j) => (
               <Skeleton key={j} className="h-4 flex-1" />
             ))}
@@ -52,5 +58,5 @@ export default function ListSkeleton({ rows = 5, columns = 5 }: ListSkeletonProp
         </div>
       </div>
     </div>
-  )
+  );
 }

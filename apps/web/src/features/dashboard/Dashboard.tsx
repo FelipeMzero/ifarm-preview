@@ -23,7 +23,11 @@ function DashboardSkeleton() {
 }
 
 export default function Dashboard() {
-  const { property: currentProperty, options: propertyOptions, isLoading: isCurrentPropertyLoading } = useCurrentProperty();
+  const {
+    property: currentProperty,
+    options: propertyOptions,
+    isLoading: isCurrentPropertyLoading,
+  } = useCurrentProperty();
   const [property, setProperty] = useState<CurrentPropertyDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -46,12 +50,19 @@ export default function Dashboard() {
     }
 
     load();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
     // Refaz a busca sempre que a propriedade selecionada mudar (trocada no seletor da sidebar).
   }, [currentProperty?.id, isCurrentPropertyLoading]);
 
   if (error) {
-    return <ErrorPage message="Não foi possível obter os dados da propriedade." onRetry={() => window.location.reload()} />;
+    return (
+      <ErrorPage
+        message="Não foi possível obter os dados da propriedade."
+        onRetry={() => window.location.reload()}
+      />
+    );
   }
 
   if (loading) {
@@ -75,7 +86,9 @@ export default function Dashboard() {
       <div className="flex flex-col items-center justify-center gap-3 py-16 text-center text-muted-foreground">
         <Tractor className="size-8" />
         <p>Nenhuma propriedade selecionada.</p>
-        <p className="text-sm">Escolha uma propriedade no menu lateral para continuar.</p>
+        <p className="text-sm">
+          Escolha uma propriedade no menu lateral para continuar.
+        </p>
       </div>
     );
   }
@@ -115,7 +128,9 @@ export default function Dashboard() {
           </div>
           <div>
             <p className="text-muted-foreground">Área Produtiva</p>
-            <p>{property.productiveArea ? `${property.productiveArea} ha` : "—"}</p>
+            <p>
+              {property.productiveArea ? `${property.productiveArea} ha` : "—"}
+            </p>
           </div>
           <div className="col-span-2 sm:col-span-1">
             <p className="flex items-center gap-1 text-muted-foreground">

@@ -2,14 +2,29 @@
 
 import { useEffect, useState } from "react";
 
-import { InlineEditableList, InlineEditableColumn } from "@/components/our/InlineEditableList";
+import {
+  InlineEditableList,
+  InlineEditableColumn,
+} from "@/components/our/InlineEditableList";
 import { ErrorPage } from "@/components/our/ErrorPage";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Breed, getBreeds, createBreed, updateBreed, deleteBreed, toggleBreedStatus } from "./services";
+import {
+  Breed,
+  getBreeds,
+  createBreed,
+  updateBreed,
+  deleteBreed,
+  toggleBreedStatus,
+} from "./services";
 import { FIELD_LIMITS } from "@/lib/field-limits";
 
 const COLUMNS: InlineEditableColumn<Breed>[] = [
-  { key: "name", label: "Nome", placeholder: "Nome da raça", maxLength: FIELD_LIMITS.breed.name },
+  {
+    key: "name",
+    label: "Nome",
+    placeholder: "Nome da raça",
+    maxLength: FIELD_LIMITS.breed.name,
+  },
 ];
 
 function BreedListSkeleton() {
@@ -43,7 +58,9 @@ export default function BreedList() {
     }
 
     load();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   async function handleCreate(values: Record<string, string>) {
@@ -53,7 +70,9 @@ export default function BreedList() {
 
   async function handleUpdate(id: string, values: Record<string, string>) {
     const updated = await updateBreed(id, values.name);
-    setBreeds((prev) => prev.map((breed) => (breed.id === id ? updated : breed)));
+    setBreeds((prev) =>
+      prev.map((breed) => (breed.id === id ? updated : breed)),
+    );
   }
 
   async function handleDelete(id: string) {
@@ -63,11 +82,18 @@ export default function BreedList() {
 
   async function handleToggleActive(id: string) {
     const updated = await toggleBreedStatus(id);
-    setBreeds((prev) => prev.map((breed) => (breed.id === id ? updated : breed)));
+    setBreeds((prev) =>
+      prev.map((breed) => (breed.id === id ? updated : breed)),
+    );
   }
 
   if (error) {
-    return <ErrorPage message="Não foi possível obter as raças." onRetry={() => window.location.reload()} />;
+    return (
+      <ErrorPage
+        message="Não foi possível obter as raças."
+        onRetry={() => window.location.reload()}
+      />
+    );
   }
 
   if (loading) {

@@ -28,7 +28,10 @@ export async function PUT(request: NextRequest) {
   const validation = bodySchema.safeParse(body);
 
   if (!validation.success) {
-    return NextResponse.json({ message: "Parâmetros inválidos." }, { status: 400 });
+    return NextResponse.json(
+      { message: "Parâmetros inválidos." },
+      { status: 400 },
+    );
   }
 
   const { propertyId } = validation.data;
@@ -39,7 +42,10 @@ export async function PUT(request: NextRequest) {
   });
 
   if (!property) {
-    return NextResponse.json({ message: "Propriedade não encontrada." }, { status: 404 });
+    return NextResponse.json(
+      { message: "Propriedade não encontrada." },
+      { status: 404 },
+    );
   }
 
   await prisma.userSettings.upsert({
