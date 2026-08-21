@@ -301,7 +301,6 @@ export default function PropertyForm({ id, title, onCancel, onSuccess }: Propert
                   fieldState={fieldState}
                   items={ownerItems}
                   onInputValueChange={(val) => searchOwners(val)}
-                  allowCreate={true}
                   onCreateClick={() => setIsPersonModalOpen(true)}
                 />
               )}

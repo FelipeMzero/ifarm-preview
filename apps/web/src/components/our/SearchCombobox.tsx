@@ -1,5 +1,6 @@
 "use client"
 
+import { useRef, useState } from "react"
 import { ControllerFieldState, ControllerRenderProps, FieldPath, FieldValues } from "react-hook-form"
 import {
   Combobox,
@@ -8,8 +9,9 @@ import {
   ComboboxInput,
   ComboboxItem,
   ComboboxList,
+  useComboboxAnchor,
 } from "@/components/ui/combobox"
-import { Button } from "@/components/ui/button"
+import { InputGroupButton } from "@/components/ui/input-group"
 import { Plus } from "lucide-react"
 
 export type SearchComboboxItem = { value: string; label: string }
@@ -24,9 +26,7 @@ type SearchComboboxProps<T extends FieldValues, TName extends FieldPath<T>> = {
   id?: string
   /** Se o campo ficar vazio ao perder o foco, volta a selecionar items[0]. Use em campos sem opção "vazio" válida (ex: enums). */
   keepSelection?: boolean
-  /** Permite a exibição do botão para criação de um novo registro (padrão: false) */
-  allowCreate?: boolean
-  /** Callback disparado ao clicar no botão "Novo" */
+  /** Se informado, exibe um botão "Novo" para criar um registro quando o texto digitado não bate com nenhum item */
   onCreateClick?: () => void
 }
 
@@ -39,18 +39,34 @@ export function SearchCombobox<T extends FieldValues, TName extends FieldPath<T>
   emptyMessage = "Não há itens",
   id,
   keepSelection = false,
-  allowCreate = false,
   onCreateClick,
 }: SearchComboboxProps<T, TName>) {
+  const anchorRef = useComboboxAnchor()
+
+  // items pode ser substituído a cada busca (ex: onInputValueChange refazendo a lista).
+  // Guarda o label de todo item já visto para não perder o do item selecionado
+  // quando ele sair da lista atual (ex: usuário digita algo sem resultado e aperta Esc).
+  const labelCacheRef = useRef(new Map<string, string>())
+  for (const item of items) labelCacheRef.current.set(item.value, item.label)
+
+  // Rastreia o texto digitado para saber se ele bate exatamente com algum item
+  // existente (usado para decidir quando oferecer a criação de um novo registro).
+  const [query, setQuery] = useState("")
+  const hasExactMatch = items.some((item) => item.label.trim().toLowerCase() === query.trim().toLowerCase())
+
   return (
     <Combobox
     items={items}
     filter={onInputValueChange ? null : undefined}
     value={field.value || null}
     onValueChange={(val) => field.onChange(val ?? "")}
-    onInputValueChange={onInputValueChange}
-    itemToStringLabel={(val: string) => items.find((item) => item.value === val)?.label ?? val}
+    onInputValueChange={(val) => {
+      setQuery(val)
+      onInputValueChange?.(val)
+    }}
+    itemToStringLabel={(val: string) => items.find((item) => item.value === val)?.label ?? labelCacheRef.current.get(val) ?? val}
     >
+    <div ref={anchorRef} className="w-full">
     <ComboboxInput
     id={id}
     placeholder={placeholder}
@@ -60,28 +76,28 @@ export function SearchCombobox<T extends FieldValues, TName extends FieldPath<T>
       field.onBlur()
       if (keepSelection && !field.value && items[0]) field.onChange(items[0].value)
     }}
-    />
-    <ComboboxContent>
-    <ComboboxEmpty>
-    <div className="flex flex-col items-center justify-center gap-2 p-2 text-sm">
-    <span>{emptyMessage}</span>
-    {allowCreate && onCreateClick && (
-      <Button
+    >
+    {onCreateClick && query.trim() !== "" && !hasExactMatch && (
+      <InputGroupButton
       type="button"
-      variant="outline"
-      size="sm"
-      className="mt-1 w-full flex items-center justify-center gap-1 text-xs"
+      variant="ghost"
+      size="icon-xs"
+      title="Novo"
+      aria-label="Novo"
       onClick={(e) => {
         e.preventDefault()
         e.stopPropagation()
         onCreateClick()
       }}
       >
-      <Plus className="h-3 w-3" />
-      Novo
-      </Button>
+      <Plus />
+      </InputGroupButton>
     )}
+    </ComboboxInput>
     </div>
+    <ComboboxContent anchor={anchorRef}>
+    <ComboboxEmpty>
+    <div className="p-2 text-center text-sm">{emptyMessage}</div>
     </ComboboxEmpty>
     <ComboboxList>
     {(item) => (
