@@ -1,5 +1,18 @@
 import { z } from "zod";
 import { FIELD_LIMITS } from "@/lib/field-limits";
+import { optionalNumericField } from "@/lib/zod-utils";
+
+export const latitudeSchema = z.coerce.number()
+  .min(-90, "Latitude deve estar entre -90 e 90.")
+  .max(90, "Latitude deve estar entre -90 e 90.");
+
+export const longitudeSchema = z.coerce.number()
+  .min(-180, "Longitude deve estar entre -180 e 180.")
+  .max(180, "Longitude deve estar entre -180 e 180.");
+
+export const areaSchema = z.coerce.number()
+  .positive("Valor inválido.")
+  .max(FIELD_LIMITS.property.area, "Limite ultrapassado");
 
 export const propertyFormSchema = z
   .object({
@@ -7,15 +20,14 @@ export const propertyFormSchema = z
     ownerId:        z.string().min(1, "Este campo não pode ser vazio"),
     ownerName:      z.string().optional(),
 
-    totalArea:      z.string().optional(),
-    productiveArea: z.string().optional(),
+    totalArea:      optionalNumericField(areaSchema),
+    productiveArea: optionalNumericField(areaSchema),
+
     cib:            z.string().max(FIELD_LIMITS.property.cib, `Máximo de ${FIELD_LIMITS.property.cib} caracteres`).optional(),
     ccir:           z.string().optional(),
     car:            z.string().optional(),
-    latitude:       z.string().optional()
-      .refine(v => !v || z.coerce.number().min(-90).max(90).safeParse(v).success, "Latitude deve estar entre -90 e 90."),
-    longitude:      z.string().optional()
-      .refine(v => !v || z.coerce.number().min(-180).max(180).safeParse(v).success, "Longitude deve estar entre -180 e 180."),
+    latitude:       optionalNumericField(latitudeSchema),
+    longitude:      optionalNumericField(longitudeSchema),
 
     // Endereço
     zipCode:        z.string().optional(),

@@ -170,17 +170,17 @@ export type BreedApiData = z.infer<typeof breedApiSchema>;
 export const areaApiSchema = z.object({
   name: z.string().min(1, "Este campo é obrigatório").max(FIELD_LIMITS.area.name, `Máximo de ${FIELD_LIMITS.area.name} caracteres`),
   polygon: z.any(),
-  hectares: z.preprocess(v => v === "" ? undefined : v, z.coerce.number().min(0, "Hectares não pode ser negativo")),
-  stockingRate: z.preprocess(v => v === "" ? undefined : v, z.coerce.number().min(0, "Taxa de lotação não pode ser negativa")),
+  hectares: z.preprocess(v => v === "" ? undefined : v, z.coerce.number().positive("Hectares deve ser maior que 0").max(FIELD_LIMITS.area.area, `Hectares não pode ultrapassar ${FIELD_LIMITS.area.area} ha`)),
+  stockingRate: z.preprocess(v => v === "" ? undefined : v, z.coerce.number().positive("Taxa de lotação deve ser maior que 0").max(FIELD_LIMITS.area.stockingRate, `Taxa de lotação não pode ultrapassar ${FIELD_LIMITS.area.stockingRate} UA/ha`)),
   notes: z.string().max(FIELD_LIMITS.area.notes, `Máximo de ${FIELD_LIMITS.area.notes} caracteres`).optional().nullable().transform(v => v || null),
-  propertyId: z.string().uuid("Propriedade inválida"),
+  propertyId: z.uuid("Propriedade inválida"),
 });
 
 export type AreaApiData = z.infer<typeof areaApiSchema>;
 
 export const areaQuerySchema = z.object({
-  propertyId: z.string().uuid().optional(),
+  propertyId: z.uuid().optional(),
   status: z.enum(["active", "inactive"]).optional().default("active"),
 });
 
-export type AreaQueryData = z.infer<typeof areaQuerySchema>;
+export type AreaQueryData = z.infer<typeof areaQuerySchema>;
