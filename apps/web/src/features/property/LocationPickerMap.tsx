@@ -1,11 +1,11 @@
 "use client";
 
-import { MapContainer, Marker, TileLayer, useMapEvents } from "react-leaflet";
+import { useEffect } from "react";
+import { MapContainer, Marker, TileLayer, useMap, useMapEvents } from "react-leaflet";
 import L from "leaflet";
 import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
 import markerIcon from "leaflet/dist/images/marker-icon.png";
 import markerShadow from "leaflet/dist/images/marker-shadow.png";
-import { StaticImageData } from "next/image";
 
 const markerIconDefault = L.icon({
   iconUrl: markerIcon as unknown as string,
@@ -16,11 +16,6 @@ const markerIconDefault = L.icon({
   popupAnchor: [1, -34],
   shadowSize: [41, 41],
 });
-
-console.log("markerIcon =", markerIcon);
-console.log("typeof =", typeof markerIcon);
-console.log("keys =", Object.keys(markerIcon));
-console.log("src =", markerIcon.src);
 
 const DEFAULT_CENTER: [number, number] = [-14.235, -51.925]; // centro aproximado do Brasil
 const DEFAULT_ZOOM = 4;
@@ -39,16 +34,45 @@ function ClickHandler({
   return null;
 }
 
+// MapContainer só aplica `center`/`zoom` na montagem inicial; em modo somente-leitura
+// o componente permanece montado enquanto os campos de lat/long mudam, então recentraliza
+// manualmente sempre que a posição de destino muda.
+function Recenter({ center, zoom }: { center: [number, number]; zoom: number }) {
+  const map = useMap();
+  useEffect(() => {
+    map.setView(center, zoom);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [center[0], center[1], zoom]);
+  return null;
+}
+
+// O Leaflet mede o container na montagem; se o layout (grid/flex, import dinâmico) ainda
+// não tiver resolvido o tamanho final nesse instante, o tile grid fica com dimensões erradas
+// mesmo que a caixa em volta esteja do tamanho certo. Reavalia sempre que o container mudar.
+function SyncSize() {
+  const map = useMap();
+  useEffect(() => {
+    const container = map.getContainer();
+    map.invalidateSize();
+    const observer = new ResizeObserver(() => map.invalidateSize());
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, [map]);
+  return null;
+}
+
 type LocationPickerMapProps = {
   latitude: number | null;
   longitude: number | null;
   onPick: (lat: number, lon: number) => void;
+  readOnly?: boolean;
 };
 
 export default function LocationPickerMap({
   latitude,
   longitude,
   onPick,
+  readOnly = false,
 }: LocationPickerMapProps) {
   const hasPosition = latitude != null && longitude != null;
   const center: [number, number] = hasPosition
@@ -60,25 +84,39 @@ export default function LocationPickerMap({
     <MapContainer
       center={center}
       zoom={zoom}
-      scrollWheelZoom
-      className="size-full"
+      scrollWheelZoom={!readOnly}
+      dragging={!readOnly}
+      zoomControl={!readOnly}
+      doubleClickZoom={!readOnly}
+      touchZoom={!readOnly}
+      attributionControl={!readOnly}
+      className="isolate size-full"
     >
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
-      <ClickHandler onPick={onPick} />
+      <SyncSize />
+      {readOnly ? (
+        <Recenter center={center} zoom={zoom} />
+      ) : (
+        <ClickHandler onPick={onPick} />
+      )}
       {hasPosition && (
         <Marker
           position={[latitude, longitude]}
           icon={markerIconDefault}
-          draggable
-          eventHandlers={{
-            dragend: (e: any) => {
-              const { lat, lng } = e.target.getLatLng();
-              onPick(lat, lng);
-            },
-          }}
+          draggable={!readOnly}
+          eventHandlers={
+            readOnly
+              ? undefined
+              : {
+                  dragend: (e: any) => {
+                    const { lat, lng } = e.target.getLatLng();
+                    onPick(lat, lng);
+                  },
+                }
+          }
         />
       )}
     </MapContainer>

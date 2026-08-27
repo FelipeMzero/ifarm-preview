@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { IMaskInput } from "react-imask";
+import dynamic from "next/dynamic";
 
 import {
   getProperty,
@@ -48,8 +49,14 @@ import PersonForm from "../person/PersonForm";
 const MASKED_INPUT_CLASSNAME =
   "h-10 w-full min-w-0 rounded-lg border border-input bg-input/40 px-2.5 py-1 text-base transition-colors outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 aria-invalid:border-destructive aria-invalid:focus:ring-3 aria-invalid:ring-destructive/20 md:text-sm dark:bg-input/30 dark:disabled:bg-input/80 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40";
 
-const MAP_TILE_ZOOM = 14;
-const MAP_TILE_SIZE = 128;
+const LocationPickerMap = dynamic(() => import("./LocationPickerMap"), {
+  ssr: false,
+  loading: () => (
+    <div className="flex size-full items-center justify-center text-muted-foreground">
+      Carregando mapa...
+    </div>
+  ),
+});
 
 function isValidCoordinate(latitude: string, longitude: string) {
   const lat = Number(latitude);
@@ -62,25 +69,6 @@ function isValidCoordinate(latitude: string, longitude: string) {
     lon >= -180 &&
     lon <= 180
   );
-}
-
-function getTilePosition(lat: number, lon: number, zoom: number) {
-  const pixelX = ((lon + 180) / 360) * 2 ** zoom * MAP_TILE_SIZE;
-  const latRad = (lat * Math.PI) / 180;
-  const pixelY =
-    ((1 - Math.log(Math.tan(latRad) + 1 / Math.cos(latRad)) / Math.PI) / 2) *
-    2 ** zoom *
-    MAP_TILE_SIZE;
-
-  const tileX = Math.floor(pixelX / MAP_TILE_SIZE);
-  const tileY = Math.floor(pixelY / MAP_TILE_SIZE);
-
-  return {
-    tileX,
-    tileY,
-    markerLeftPct: ((pixelX - tileX * MAP_TILE_SIZE) / MAP_TILE_SIZE) * 100,
-    markerTopPct: ((pixelY - tileY * MAP_TILE_SIZE) / MAP_TILE_SIZE) * 100,
-  };
 }
 
 function MapPreview({
@@ -99,48 +87,19 @@ function MapPreview({
     !!latitude && !!longitude && isValidCoordinate(latitude, longitude);
 
   return (
-    <div className={cn("flex min-w-0 flex-col gap-2", className)}>
-      <span className="text-muted-foreground text-xs">LOCALIZAÇÃO NO MAPA</span>
+    <div className={cn("flex min-h-0 min-w-0 flex-col gap-2", className)}>
       <div
-        className="relative w-full flex-1 cursor-pointer overflow-hidden rounded-lg border border-input bg-input/40"
+        className="relative min-h-0 w-full flex-1 cursor-pointer overflow-hidden rounded-lg border border-input bg-input/40"
         onDoubleClick={onDoubleClick}
         title="Clique duas vezes para escolher no mapa"
       >
         {isValid ? (
-          (() => {
-            const { tileX, tileY, markerLeftPct, markerTopPct } =
-              getTilePosition(
-                Number(latitude),
-                Number(longitude),
-                MAP_TILE_ZOOM,
-              );
-            return (
-              <>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={`https://tile.openstreetmap.org/${MAP_TILE_ZOOM}/${tileX}/${tileY}.png`}
-                  alt="Localização da propriedade"
-                  className="size-full object-fill"
-                />
-                <MapPin
-                  className="absolute size-5 fill-destructive text-destructive-foreground drop-shadow"
-                  style={{
-                    left: `${markerLeftPct}%`,
-                    top: `${markerTopPct}%`,
-                    transform: "translate(-50%, -100%)",
-                  }}
-                />
-                <a
-                  href="https://www.openstreetmap.org/copyright"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="absolute right-0 bottom-0 bg-background/70 px-1 text-[9px] leading-tight text-muted-foreground hover:underline"
-                >
-                  © OpenStreetMap
-                </a>
-              </>
-            );
-          })()
+          <LocationPickerMap
+            latitude={Number(latitude)}
+            longitude={Number(longitude)}
+            onPick={() => {}}
+            readOnly
+          />
         ) : (
           <div className="flex h-full flex-col items-center justify-center gap-1 text-muted-foreground">
             {hasInput ? (
@@ -652,43 +611,47 @@ export default function PropertyForm({
 
           <Separator orientation="vertical" className="hidden md:block" />
 
-          <FieldRow cols={1}>
+          <div className="flex min-h-0 flex-col gap-4">
             <FieldLegend> Localização </FieldLegend>
 
-            <FormField
-              name="latitude"
-              label="Latitude"
-              control={control}
-              render={({ field, id: fieldId }) => (
-                <Input
-                  {...field}
-                  id={fieldId}
-                  type="number"
-                  step="any"
-                  placeholder="Ex: -15.6014"
-                />
-              )}
-            />
-            <FormField
-              name="longitude"
-              label="Longitude"
-              control={control}
-              render={({ field, id: fieldId }) => (
-                <Input
-                  {...field}
-                  id={fieldId}
-                  type="number"
-                  step="any"
-                  placeholder="Ex: -56.0979"
-                />
-              )}
-            />
+            <FieldRow cols={2}>
+              <FormField
+                name="latitude"
+                label="Latitude"
+                control={control}
+                render={({ field, id: fieldId }) => (
+                  <Input
+                    {...field}
+                    id={fieldId}
+                    type="number"
+                    step="any"
+                    placeholder="Ex: -15.6014"
+                  />
+                )}
+              />
+              <FormField
+                name="longitude"
+                label="Longitude"
+                control={control}
+                render={({ field, id: fieldId }) => (
+                  <Input
+                    {...field}
+                    id={fieldId}
+                    type="number"
+                    step="any"
+                    placeholder="Ex: -56.0979"
+                  />
+                )}
+              />
+            </FieldRow>
+
             <MapPreview
               latitude={latitude ?? ""}
               longitude={longitude ?? ""}
               onDoubleClick={() => setIsPickerOpen(true)}
+              className="min-h-0 flex-1"
             />
-          </FieldRow>
+          </div>
         </div>
 
         <FormActionBar>
