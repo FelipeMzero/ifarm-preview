@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   Beef,
+  Boxes,
   ChevronRight,
   KeyRound,
   LayoutDashboard,
@@ -62,6 +63,7 @@ const DIRECT_LINKS = [
   { href: "/pessoas", label: "Pessoas", icon: Users },
   { href: "/propriedades", label: "Propriedades", icon: Tractor },
   { href: "/areas", label: "Áreas", icon: Map },
+  { href: "/lotes", label: "Lotes", icon: Boxes },
   { href: "/usuarios", label: "Usuários", icon: UserCog },
 ];
 

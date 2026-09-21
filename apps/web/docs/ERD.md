@@ -36,10 +36,33 @@ erDiagram
   "batch" {
     String id "🗝️"
     String name 
+    String notes "❓"
     DateTime closed_at "❓"
     DateTime created_at 
     DateTime updated_at 
     String property_id 
+    }
+  
+
+  "batch_sale_goal" {
+    Int id "🗝️"
+    DateTime target_date "❓"
+    Decimal target_weight "❓"
+    String batch_id 
+    DateTime created_at 
+    DateTime updated_at 
+    }
+  
+
+  "batch_area_history" {
+    Int id "🗝️"
+    DateTime entered_at 
+    DateTime exited_at "❓"
+    String notes "❓"
+    DateTime created_at 
+    DateTime updated_at 
+    String batch_id 
+    String area_id 
     }
   
 
@@ -87,17 +110,6 @@ erDiagram
     DateTime birth_date "❓"
     MaritalStatus marital_status "❓"
     Int address_id "❓"
-    DateTime created_at 
-    DateTime updated_at 
-    }
-  
-
-  "batch_sale_goal" {
-    Int id "🗝️"
-    Decimal target_weight "❓"
-    Decimal target_value "❓"
-    DateTime target_date "❓"
-    String batch_id 
     DateTime created_at 
     DateTime updated_at 
     }
@@ -308,22 +320,13 @@ erDiagram
     String batch_id "❓"
     }
   
-
-  "batch_area_history" {
-    Int id "🗝️"
-    DateTime entered_at 
-    DateTime exited_at "❓"
-    String notes "❓"
-    DateTime created_at 
-    DateTime updated_at 
-    String batch_id 
-    String area_id 
-    }
-  
     "property" |o--|o address : "address"
     "property" }o--|| person : "owner"
     "area" }o--|| property : "property"
     "batch" }o--|| property : "property"
+    "batch_sale_goal" |o--|| batch : "batch"
+    "batch_area_history" }o--|| batch : "batch"
+    "batch_area_history" }o--|| area : "area"
     "animal" }o--|o breed : "breed"
     "animal" |o--|o animal : "dam"
     "animal" |o--|o animal : "sire"
@@ -332,7 +335,6 @@ erDiagram
     "user_settings" |o--|| "User" : "user"
     "user_settings" }o--|o property : "currentProperty"
     "person" |o--|o address : "address"
-    "batch_sale_goal" |o--|| batch : "batch"
     "management_session" }o--|o batch : "batch"
     "management_session" }o--|| property : "property"
     "management_participant" }o--|| management_session : "managementSession"
@@ -366,6 +368,4 @@ erDiagram
     "animal_batch_transfer_item" }o--|| animal : "animal"
     "animal_batch_history" }o--|| animal : "batch_id"
     "animal_batch_history" }o--|o batch : "batch"
-    "batch_area_history" }o--|| batch : "batch"
-    "batch_area_history" }o--|| area : "area"
 ```

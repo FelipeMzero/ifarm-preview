@@ -158,6 +158,10 @@
   --shadow-lg: var(--shadow-lg);
   --shadow-xl: var(--shadow-xl);
   --shadow-2xl: var(--shadow-2xl);
+
+  --z-index-overlay: 50;
+  --z-index-popover: 100;
+  --z-index-toast: 200;
 }
 
 .leaflet-popup-content-wrapper {

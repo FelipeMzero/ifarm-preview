@@ -20,4 +20,5 @@ export const RESOURCE_ACCESS = {
   propriedades: { forbiddenRoles: ["technician", "worker"] },
   usuarios: { forbiddenRoles: ["manager", "technician", "worker"] },
   areas: { forbiddenRoles: ["technician"] },
+  lotes: { forbiddenRoles: ["technician"] },
 } as const;

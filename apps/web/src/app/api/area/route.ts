@@ -18,12 +18,15 @@ export async function GET(request: NextRequest) {
 
     if (!validation.success) {
       return NextResponse.json(
-        { message: "Parâmetros inválidos." },
+        {
+          message: "Parâmetros inválidos.",
+          errors: validation.error.flatten(),
+        },
         { status: 400 },
       );
     }
 
-    let { propertyId, status } = validation.data;
+    let { propertyId, status, search, availableOnly } = validation.data;
 
     if (!propertyId) {
       const currentProp = await getOrAssignCurrentProperty(session.user.id);
@@ -33,11 +36,26 @@ export async function GET(request: NextRequest) {
       propertyId = currentProp.id;
     }
 
-    const where = {
+    const where: Record<string, unknown> = {
       propertyId,
       ...(status === "active" ? { closedAt: null } : {}),
       ...(status === "inactive" ? { closedAt: { not: null } } : {}),
     };
+
+    if (search) {
+      where.name = { contains: search, mode: "insensitive" as const };
+    }
+
+    if (availableOnly) {
+      where.batchAreaHistories = {
+        none: {
+          exitedAt: null,
+          batch: {
+            closedAt: null,
+          },
+        },
+      };
+    }
 
     const areas = await prisma.area.findMany({
       where,

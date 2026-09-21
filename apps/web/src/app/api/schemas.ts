@@ -514,8 +514,90 @@ export const areaApiSchema = z.object({
 export type AreaApiData = z.infer<typeof areaApiSchema>;
 
 export const areaQuerySchema = z.object({
-  propertyId: z.uuid().optional(),
-  status: z.enum(["active", "inactive"]).optional().default("active"),
+  propertyId: z.preprocess(
+    (v) =>
+      typeof v === "string" &&
+      (v.trim() === "" || v === "undefined" || v === "null")
+        ? undefined
+        : v,
+    z.uuid().optional(),
+  ),
+  status: z.preprocess(
+    (v) => (v === "" ? undefined : v),
+    z.enum(["active", "inactive"]).optional().default("active"),
+  ),
+  search: z.string().trim().optional().default(""),
+  availableOnly: z.preprocess(
+    (v) => v === "true" || v === true,
+    z.boolean().optional(),
+  ),
 });
 
 export type AreaQueryData = z.infer<typeof areaQuerySchema>;
+
+export const batchQuerySchema = z.object({
+  propertyId: z.uuid().optional(),
+  page: z.coerce.number().int().min(0).optional().default(0),
+  pageSize: z.coerce.number().int().min(1).optional().default(10),
+  search: z.string().trim().optional().default(""),
+  status: z.preprocess(
+    (v) => (v === "" ? undefined : v),
+    z.enum(["active", "inactive"]).optional(),
+  ),
+});
+
+export type BatchQueryData = z.infer<typeof batchQuerySchema>;
+
+export const batchCreateApiSchema = z.object({
+  name: z
+    .string()
+    .min(1, "Este campo é obrigatório")
+    .max(100, "Máximo de 100 caracteres"),
+  notes: z
+    .string()
+    .max(500, "Máximo de 500 caracteres")
+    .optional()
+    .transform((v) => v || null),
+  areaId: z.uuid("Área inválida"),
+  propertyId: z.uuid().optional(),
+  hasMeta: z.boolean().optional().default(false),
+  targetDate: z
+    .string()
+    .optional()
+    .transform((v) => (v ? new Date(`${v}T00:00:00`) : null)),
+  targetWeight: z
+    .string()
+    .optional()
+    .transform((v) => (v ? parseFloat(v) : null)),
+});
+
+export type BatchCreateApiData = z.infer<typeof batchCreateApiSchema>;
+
+export const batchUpdateApiSchema = z.object({
+  name: z
+    .string()
+    .min(1, "Este campo é obrigatório")
+    .max(100, "Máximo de 100 caracteres"),
+  notes: z
+    .string()
+    .max(500, "Máximo de 500 caracteres")
+    .optional()
+    .transform((v) => v || null),
+  hasMeta: z.boolean().optional().default(false),
+  targetDate: z
+    .string()
+    .optional()
+    .transform((v) => (v ? new Date(`${v}T00:00:00`) : null)),
+  targetWeight: z
+    .string()
+    .optional()
+    .transform((v) => (v ? parseFloat(v) : null)),
+  newAreaId: z.uuid("Área inválida").optional(),
+  areaChangeDescription: z
+    .string()
+    .max(500, "Máximo de 500 caracteres")
+    .optional()
+    .transform((v) => v || null),
+});
+
+export type BatchUpdateApiData = z.infer<typeof batchUpdateApiSchema>;
