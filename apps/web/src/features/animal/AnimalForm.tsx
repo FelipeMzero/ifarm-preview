@@ -287,6 +287,15 @@ export default function AnimalForm({
           />
 
           <FormField
+            name="propertyEntryDate"
+            label="Data de Entrada"
+            control={control}
+            render={({ field, id }) => <Input {...field} id={id} type="date" />}
+          />
+        </FieldRow>
+
+        <FieldRow cols={3}>
+          <FormField
             name="breedId"
             label="Raça"
             control={control}
@@ -302,15 +311,6 @@ export default function AnimalForm({
                 }))}
               />
             )}
-          />
-        </FieldRow>
-
-        <FieldRow cols={3}>
-          <FormField
-            name="propertyEntryDate"
-            label="Data de Entrada na Propriedade"
-            control={control}
-            render={({ field, id }) => <Input {...field} id={id} type="date" />}
           />
           <FormField
             name="birthWeightKg"
@@ -330,6 +330,7 @@ export default function AnimalForm({
           <FormField
             name="batchId"
             label="Lote"
+            required
             control={control}
             render={({ id, field, fieldState }) => (
               <SearchCombobox
@@ -383,44 +384,7 @@ export default function AnimalForm({
           </FieldRow>
         )}
       </FieldSet>
-      <Separator />
 
-      <FieldSet className="border-0">
-        <FieldLegend>Filiação</FieldLegend>
-        <FieldRow cols={2}>
-          <FormField
-            name="motherId"
-            label="Mãe"
-            control={control}
-            render={({ id, field, fieldState }) => (
-              <SearchCombobox
-                placeholder="buscar..."
-                id={id}
-                field={field}
-                fieldState={fieldState}
-                items={animals
-                  .filter((a) => a.sex === EnumSex.FEMALE)
-                  .map((a) => ({ value: a.id, label: a.earTag }))}
-              />
-            )}
-          />
-          <FormField
-            name="fatherId"
-            label="Pai (Touro)"
-            control={control}
-            render={({ id, field, fieldState }) => (
-              <SearchCombobox
-                placeholder="buscar..."
-                id={id}
-                field={field}
-                fieldState={fieldState}
-                items={fatherItems}
-                onInputValueChange={(val) => searchFather(val)}
-              />
-            )}
-          />
-        </FieldRow>
-      </FieldSet>
       <Separator />
 
       <FieldSet className="border-0">

@@ -52,6 +52,7 @@ model Property {
   batchTransfers AnimalBatchTransfer[]
   animalPropertyHistories AnimalPropertyHistory[]
   managementSessions ManagementSession[]
+  purchaseEvents PurchaseEvent[]
 
 
   @@index([name])
@@ -105,6 +106,7 @@ model Batch {
   destinationAnimalTransfers AnimalBatchTransfer[]    @relation("AnimalBatchTransferDestination")
   originPropertyTransfers      AnimalPropertyTransfer[] @relation("AnimalPropertyTransferOriginBatch")
   destinationPropertyTransfers AnimalPropertyTransfer[] @relation("AnimalPropertyTransferDestinationBatch")
+  purchaseEvents PurchaseEvent[]
 
   @@index([propertyId])
   @@map("batch")
@@ -162,13 +164,13 @@ model Animal {
   breedId String? @db.Uuid @map("breed_id")
   breed   Breed?  @relation(fields: [breedId], references: [id], onDelete: Restrict)
 
-  damId       String?  @db.Uuid @map("dam_id") //Matriz (mãe)
-  dam         Animal?  @relation("AnimalDam", fields: [damId], references: [id], onDelete: Restrict)
-  damProgeny  Animal[] @relation("AnimalDam")
+  // damId       String?  @db.Uuid @map("dam_id") //Matriz (mãe)
+  // dam         Animal?  @relation("AnimalDam", fields: [damId], references: [id], onDelete: Restrict)
+  // damProgeny  Animal[] @relation("AnimalDam")
 
-  sireId       String?  @db.Uuid @map("sire_id") //Reprodutor (pai)
-  sire         Animal?  @relation("AnimalSire", fields: [sireId], references: [id], onDelete: Restrict)
-  sireProgeny  Animal[] @relation("AnimalSire")
+  // sireId       String?  @db.Uuid @map("sire_id") //Reprodutor (pai)
+  // sire         Animal?  @relation("AnimalSire", fields: [sireId], references: [id], onDelete: Restrict)
+  // sireProgeny  Animal[] @relation("AnimalSire")
 
 
   // desnormalizado/sincronizado para lote
@@ -186,9 +188,9 @@ model Animal {
   neutered          Boolean      @default(false)    // Indica se está castrado ou não
 
   // Manejos
-  neuteringManagementItems NeuteringManagementItem[]
-  weighingManagementItems WeighingManagementItem[]
-  identificationManagementItems IdentificationManagementItem[]
+  animalNeuterings AnimalNeutering[]
+  animalWeighings AnimalWeighing[]
+  animalIdentifications AnimalIdentification[]
   healthManagementItems HealthManagementItem[]
   managementParticipants ManagementParticipant[]
 
@@ -197,12 +199,13 @@ model Animal {
   batchTransferItems AnimalBatchTransferItem[]
   animalPropertyHistories AnimalPropertyHistory[]
   animalBatchHistories AnimalBatchHistory[]
+  purchaseEventItems PurchaseEventItem[]
 
 
   @@index([status])
   @@index([breedId])
-  @@index([damId])
-  @@index([sireId])
+  //@@index([damId])
+  //@@index([sireId])
   @@index([currentPropertyId])
   @@unique([currentPropertyId, currentTag], where: { status: "PRESENT", currentTag: { not: null } })
   @@unique([currentPropertyId, currentRfid], where: { status: "PRESENT", currentRfid: { not: null } })
@@ -250,6 +253,7 @@ model Person {
 
   properties Property[]
   healthManagements HealthManagement[]
+  purchaseEvents PurchaseEvent[]
 
 
   @@index([type])
@@ -283,6 +287,7 @@ model Breed {
   updatedAt     DateTime  @updatedAt @map("updated_at")
 
   animals Animal[]
+  purchaseEventItems PurchaseEventItem[]
 
   @@map("breed")
 }
@@ -308,10 +313,10 @@ model ManagementSession {
 
   participants ManagementParticipant[]
 
-  weighingManagement        WeighingManagement?
-  neuteringManagement       NeuteringManagement?
-  identificationManagement  IdentificationManagement?
-  healthManagements         HealthManagement[]
+  animalWeighings       AnimalWeighing[]
+  animalNeuterings      AnimalNeutering[]
+  animalIdentifications AnimalIdentification[]
+  healthManagements     HealthManagement[]
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -319,6 +324,8 @@ model ManagementSession {
   @@index([propertyId, managementDate])
   @@index([batchId])
   @@map("management_session")
+  animalBatchTransfers AnimalBatchTransfer[]
+  animalPropertyTransfers AnimalPropertyTransfer[]
 }
 
 model ManagementParticipant {
@@ -339,20 +346,7 @@ model ManagementParticipant {
   @@map("management_participant")
 }
 
-model IdentificationManagement {
-  id     String  @id @default(uuid()) @db.Uuid
-  items IdentificationManagementItem[]
-
-  managementSessionId String            @unique @db.Uuid @map("management_session_id")
-  managementSession   ManagementSession @relation(fields: [managementSessionId], references: [id], onDelete: Restrict)
-
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  @@map("identification_management")
-}
-
-model IdentificationManagementItem {
+model AnimalIdentification {
   id Int @id @default(autoincrement())
   notes String? // observação específica desse animal
 
@@ -362,98 +356,83 @@ model IdentificationManagementItem {
   rfidChanged Boolean @default(false) @map("rfid_changed")
   rfid        String? // preenchido quando rfidChanged=true; null com rfidChanged=true = rfid removido
 
-  managementId String                    @db.Uuid @map("management_id")
-  management   IdentificationManagement  @relation(fields: [managementId], references: [id], onDelete: Restrict)
+  identifiedAt DateTime? @map("identified_at")
 
   animalId String @db.Uuid @map("animal_id")
   animal   Animal @relation(fields: [animalId], references: [id], onDelete: Restrict)
 
+  managementSessionId String?            @db.Uuid @map("management_session_id") // null = registro avulso, sempre válido
+  managementSession   ManagementSession? @relation(fields: [managementSessionId], references: [id], onDelete: Restrict)
+
   createdAt DateTime @default(now()) @map("created_at")
 
+  @@unique([animalId, managementSessionId])
   @@index([animalId])
-  @@index([managementId])
-  @@map("identification_management_item")
+  @@index([managementSessionId])
+  @@map("animal_identification")
 }
 
 
-model NeuteringManagement {
-  id     String  @id @default(uuid()) @db.Uuid
+model AnimalNeutering {
+  id     Int     @id @default(autoincrement())
   method String?
-  items NeuteringManagementItem[]
+  notes  String? // observação específica desse animal (ex.: complicação, sangramento, recastração)
 
-  managementSessionId String            @unique @db.Uuid @map("management_session_id")
-  managementSession   ManagementSession @relation(fields: [managementSessionId], references: [id], onDelete: Restrict)
-
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  @@map("neutering_management")
-}
-
-model NeuteringManagementItem {
-  id    Int     @id @default(autoincrement())
-  notes String? // observação específica desse animal (ex.: complicação, sangramento, recastração)
-
-  managementId String              @db.Uuid @map("management_id")
-  management   NeuteringManagement @relation(fields: [managementId], references: [id], onDelete: Restrict)
+  neuteredAt DateTime? @map("neutered_at")
 
   animalId String @db.Uuid @map("animal_id")
   animal   Animal @relation(fields: [animalId], references: [id], onDelete: Restrict)
 
+  managementSessionId String?            @db.Uuid @map("management_session_id") // null = registro avulso, sempre válido
+  managementSession   ManagementSession? @relation(fields: [managementSessionId], references: [id], onDelete: Restrict)
+
   createdAt DateTime @default(now()) @map("created_at")
 
+  @@unique([animalId, managementSessionId])
   @@index([animalId])
-  @@index([managementId])
-  @@map("neutering_management_item")
+  @@index([managementSessionId])
+  @@map("animal_neutering")
 }
 
-model WeighingManagement {
-  id    String  @id @default(uuid()) @db.Uuid
-  items WeighingManagementItem[]
-
-  managementSessionId String            @unique @db.Uuid @map("management_session_id")
-  managementSession   ManagementSession @relation(fields: [managementSessionId], references: [id], onDelete: Restrict)
-
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  @@map("weighing_management")
-}
-
-model WeighingManagementItem {
+model AnimalWeighing {
   id     Int     @id @default(autoincrement())
   weight Decimal @db.Decimal(10, 2) // valor da pesagem (kg), sempre individual
   notes  String?
 
-  managementId String             @db.Uuid @map("management_id")
-  management   WeighingManagement @relation(fields: [managementId], references: [id], onDelete: Restrict)
+  weighedAt DateTime? @map("weighed_at")
 
   animalId String @db.Uuid @map("animal_id")
   animal   Animal @relation(fields: [animalId], references: [id], onDelete: Restrict)
 
+  managementSessionId String?            @db.Uuid @map("management_session_id") // null = registro avulso, sempre válido
+  managementSession   ManagementSession? @relation(fields: [managementSessionId], references: [id], onDelete: Restrict)
+
   createdAt DateTime @default(now()) @map("created_at")
 
+  @@unique([animalId, managementSessionId])
   @@index([animalId])
-  @@index([managementId])
-  @@map("weighing_management_item")
+  @@index([managementSessionId])
+  @@map("animal_weighing")
 }
 
 
 model HealthManagement {
   id                String                       @id @default(uuid()) @db.Uuid
   title             String?
-  withdrawalUntil   DateTime?                    @db.Date @map("withdrawal_until")          // data até quando o animal não pode ser comercializado/abatido
-  nextDueDate       DateTime?                    @db.Date @map("next_due_date")             // data recomendada para repetir o procedimento deste mesmo tipo de manejo
-  pricingType       HealthManagementPricingType?  @map("pricing_type")                        // null = custo não rastreado
-  unitPrice         Decimal?                     @db.Decimal(10, 2) @map("unit_price")       // valor fixo por animal OU valor por kg, conforme pricingType (null se não rastreado)
+  withdrawalUntil   DateTime?                    @db.Date @map("withdrawal_until")
+  nextDueDate       DateTime?                    @db.Date @map("next_due_date")
+  pricingType       HealthManagementPricingType?  @map("pricing_type")
+  unitPrice         Decimal?                     @db.Decimal(10, 2) @map("unit_price")
+
+  performedAt DateTime? @map("performed_at")
 
   items HealthManagementItem[]
 
   typeId String                @db.Uuid @map("type_id")
   type   HealthManagementType  @relation(fields: [typeId], references: [id], onDelete: Restrict)
 
-  managementSessionId String            @db.Uuid @map("management_session_id") // sem @unique — múltiplos procedimentos sanitários podem existir na mesma sessão
-  managementSession   ManagementSession @relation(fields: [managementSessionId], references: [id], onDelete: Restrict)
+  managementSessionId String?            @db.Uuid @map("management_session_id") // null = registro avulso, sempre válido
+  managementSession   ManagementSession? @relation(fields: [managementSessionId], references: [id], onDelete: Restrict)
 
   veterinarianId String? @db.Uuid @map("veterinarian_id")
   veterinarian   Person? @relation(fields: [veterinarianId], references: [id], onDelete: Restrict)
@@ -520,7 +499,8 @@ model AnimalPropertyTransfer {
   notes          String?
   gtaNumber      String?   @map("gta_number")
 
-  confirmedAt    DateTime? @map("confirmed_at")
+  confirmedAt    DateTime? @map("confirmed_at") // origem confirma o envio
+  receivedAt  DateTime? @map("received_at")  // destino confirma o recebimento
   cancelledAt    DateTime? @map("cancelled_at")
 
   items AnimalPropertyTransferItem[]
@@ -534,8 +514,11 @@ model AnimalPropertyTransfer {
   originBatchId String? @db.Uuid @map("origin_batch_id") // null = animais vinham sem lote
   originBatch   Batch?  @relation("AnimalPropertyTransferOriginBatch", fields: [originBatchId], references: [id], onDelete: Restrict)
 
-  destinationBatchId String? @db.Uuid @map("destination_batch_id") // null = animais chegam sem lote
+  destinationBatchId String? @db.Uuid @map("destination_batch_id") // preenchido só no recebimento, pelo destino
   destinationBatch   Batch?  @relation("AnimalPropertyTransferDestinationBatch", fields: [destinationBatchId], references: [id], onDelete: Restrict)
+
+  managementSessionId String?            @db.Uuid @map("management_session_id") // null = transferência isolada
+  managementSession   ManagementSession? @relation(fields: [managementSessionId], references: [id], onDelete: Restrict)
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -603,12 +586,16 @@ model AnimalBatchTransfer {
   propertyId String   @db.Uuid @map("property_id")
   property   Property @relation(fields: [propertyId], references: [id], onDelete: Restrict)
 
+  managementSessionId String?            @db.Uuid @map("management_session_id") // null = transferência isolada
+  managementSession   ManagementSession? @relation(fields: [managementSessionId], references: [id], onDelete: Restrict)
+
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
   @@index([originBatchId])
   @@index([destinationBatchId])
   @@index([propertyId])
+  @@index([managementSessionId])
   @@map("animal_batch_transfer")
 }
 
@@ -651,15 +638,17 @@ model AnimalBatchHistory {
 }
 
 
-/*
 model PurchaseEvent {
-  id             String    @id @default(uuid()) @db.Uuid
-  purchaseDate   DateTime  @map("purchase_date")
-  pricePerArroba Decimal?  @db.Decimal(10, 2) @map("price_per_arroba")
-  gtaNumber      String?   @map("gta_number")
-  notes          String?
-  confirmedAt    DateTime? @map("confirmed_at")
-  cancelledAt    DateTime? @map("cancelled_at")
+  id           String    @id @default(uuid()) @db.Uuid
+  purchaseDate DateTime  @map("purchase_date")
+  gtaNumber    String?   @map("gta_number")
+  notes        String?
+  confirmedAt  DateTime? @map("confirmed_at")
+  cancelledAt  DateTime? @map("cancelled_at")
+
+  pricingType    PurchasePricingType @map("pricing_type")
+  pricePerArroba Decimal?            @db.Decimal(10, 2) @map("price_per_arroba") // usado se pricingType = PER_ARROBA
+  totalPrice     Decimal?            @db.Decimal(12, 2) @map("total_price")      // usado se pricingType = LUMP_SUM
 
   items PurchaseEventItem[]
 
@@ -669,7 +658,7 @@ model PurchaseEvent {
   destinationPropertyId String   @db.Uuid @map("destination_property_id")
   destinationProperty   Property @relation(fields: [destinationPropertyId], references: [id], onDelete: Restrict)
 
-  destinationBatchId String? @db.Uuid @map("destination_batch_id") // mesmo padrão de AnimalPropertyTransfer
+  destinationBatchId String? @db.Uuid @map("destination_batch_id")
   destinationBatch   Batch?  @relation(fields: [destinationBatchId], references: [id], onDelete: Restrict)
 
   createdAt DateTime @default(now()) @map("created_at")
@@ -682,14 +671,17 @@ model PurchaseEvent {
 }
 
 model PurchaseEventItem {
-  id     Int      @id @default(autoincrement())
-  weight Decimal? @db.Decimal(10, 2) // peso de entrada — base do preço por arroba
-  tag    String?
-  rfid   String?
-  sex    Sex?
+  id        Int      @id @default(autoincrement())
+  weight    Decimal? @db.Decimal(10, 2) // peso de entrada — base do cálculo por arroba, quando aplicável
+  cost      Decimal? @db.Decimal(10, 2) // custo individual calculado e congelado na confirmação
+  tag       String?
+  rfid      String?
+  sex       Sex?
+  birthDate DateTime? @db.Date    @map("birth_date")
+  notes     String?
+
   breedId String? @db.Uuid @map("breed_id")
   breed   Breed?  @relation(fields: [breedId], references: [id], onDelete: Restrict)
-  notes  String?
 
   eventId String        @db.Uuid @map("event_id")
   event   PurchaseEvent @relation(fields: [eventId], references: [id], onDelete: Restrict)
@@ -702,11 +694,15 @@ model PurchaseEventItem {
   @@index([eventId])
   @@map("purchase_event_item")
 }
-*/
-
-
 
 // Enums
+
+enum PurchasePricingType {
+  PER_ARROBA
+  LUMP_SUM
+  @@map("purchase_pricing_type")
+}
+
 
 enum Sex {
   MALE   // Macho

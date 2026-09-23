@@ -61,7 +61,7 @@ export const animalFormSchema = z.object({
   birthWeightKg: z.string().optional(),
   propertyEntryDate: z.string().optional(),
   breedId: z.string().optional(),
-  batchId: z.string().optional(),
+  batchId: z.string().min(1, "Este campo não pode ser vazio"),
   originPropertyId: z.string().optional(),
   acquisitionDate: z.string().optional(),
   purchasePrice: z.string().optional(),

@@ -77,8 +77,6 @@ erDiagram
     DateTime created_at 
     DateTime updated_at 
     String breed_id "❓"
-    String dam_id "❓"
-    String sire_id "❓"
     String current_batch_id "❓"
     String current_property_id 
     String current_tag "❓"
@@ -158,59 +156,38 @@ erDiagram
     }
   
 
-  "identification_management" {
-    String id "🗝️"
-    String management_session_id 
-    DateTime created_at 
-    DateTime updated_at 
-    }
-  
-
-  "identification_management_item" {
-    Int id "🗝️"
+  "animal_identification" {
+    Int management_session_id "🗝️"
     String notes "❓"
     Boolean tag_changed 
     String tag "❓"
     Boolean rfid_changed 
     String rfid "❓"
-    String management_id 
+    DateTime identified_at "❓"
     String animal_id 
+    String management_session_id "❓"
     DateTime created_at 
     }
   
 
-  "neutering_management" {
-    String id "🗝️"
+  "animal_neutering" {
+    Int management_session_id "🗝️"
     String method "❓"
-    String management_session_id 
-    DateTime created_at 
-    DateTime updated_at 
-    }
-  
-
-  "neutering_management_item" {
-    Int id "🗝️"
     String notes "❓"
-    String management_id 
+    DateTime neutered_at "❓"
     String animal_id 
+    String management_session_id "❓"
     DateTime created_at 
     }
   
 
-  "weighing_management" {
-    String id "🗝️"
-    String management_session_id 
-    DateTime created_at 
-    DateTime updated_at 
-    }
-  
-
-  "weighing_management_item" {
-    Int id "🗝️"
+  "animal_weighing" {
+    Int management_session_id "🗝️"
     Decimal weight 
     String notes "❓"
-    String management_id 
+    DateTime weighed_at "❓"
     String animal_id 
+    String management_session_id "❓"
     DateTime created_at 
     }
   
@@ -222,8 +199,9 @@ erDiagram
     DateTime next_due_date "❓"
     HealthManagementPricingType pricing_type "❓"
     Decimal unit_price "❓"
+    DateTime performed_at "❓"
     String type_id 
-    String management_session_id 
+    String management_session_id "❓"
     String veterinarian_id "❓"
     DateTime created_at 
     DateTime updated_at 
@@ -255,11 +233,13 @@ erDiagram
     String notes "❓"
     String gta_number "❓"
     DateTime confirmed_at "❓"
+    DateTime received_at "❓"
     DateTime cancelled_at "❓"
     String origin_property_id 
     String destination_property_id 
     String origin_batch_id "❓"
     String destination_batch_id "❓"
+    String management_session_id "❓"
     DateTime created_at 
     DateTime updated_at 
     }
@@ -295,6 +275,7 @@ erDiagram
     String origin_batch_id "❓"
     String destination_batch_id 
     String property_id 
+    String management_session_id "❓"
     DateTime created_at 
     DateTime updated_at 
     }
@@ -320,6 +301,40 @@ erDiagram
     String batch_id "❓"
     }
   
+
+  "purchase_event" {
+    String id "🗝️"
+    DateTime purchase_date 
+    String gta_number "❓"
+    String notes "❓"
+    DateTime confirmed_at "❓"
+    DateTime cancelled_at "❓"
+    PurchasePricingType pricing_type 
+    Decimal price_per_arroba "❓"
+    Decimal total_price "❓"
+    String seller_id 
+    String destination_property_id 
+    String destination_batch_id "❓"
+    DateTime created_at 
+    DateTime updated_at 
+    }
+  
+
+  "purchase_event_item" {
+    Int animal_id "🗝️"
+    Decimal weight "❓"
+    Decimal cost "❓"
+    String tag "❓"
+    String rfid "❓"
+    Sex sex "❓"
+    DateTime birth_date "❓"
+    String notes "❓"
+    String breed_id "❓"
+    String event_id 
+    String animal_id "❓"
+    DateTime created_at 
+    }
+  
     "property" |o--|o address : "address"
     "property" }o--|| person : "owner"
     "area" }o--|| property : "property"
@@ -328,8 +343,6 @@ erDiagram
     "batch_area_history" }o--|| batch : "batch"
     "batch_area_history" }o--|| area : "area"
     "animal" }o--|o breed : "breed"
-    "animal" |o--|o animal : "dam"
-    "animal" |o--|o animal : "sire"
     "animal" }o--|o batch : "currentBatch"
     "animal" }o--|| property : "currentProperty"
     "user_settings" |o--|| "User" : "user"
@@ -339,17 +352,14 @@ erDiagram
     "management_session" }o--|| property : "property"
     "management_participant" }o--|| management_session : "managementSession"
     "management_participant" }o--|| animal : "batch_id"
-    "identification_management" |o--|| management_session : "managementSession"
-    "identification_management_item" }o--|| identification_management : "management"
-    "identification_management_item" }o--|| animal : "animal"
-    "neutering_management" |o--|| management_session : "managementSession"
-    "neutering_management_item" }o--|| neutering_management : "management"
-    "neutering_management_item" }o--|| animal : "animal"
-    "weighing_management" |o--|| management_session : "managementSession"
-    "weighing_management_item" }o--|| weighing_management : "management"
-    "weighing_management_item" }o--|| animal : "animal"
+    "animal_identification" }o--|| animal : "animal"
+    "animal_identification" }o--|o management_session : "managementSession"
+    "animal_neutering" }o--|| animal : "animal"
+    "animal_neutering" }o--|o management_session : "managementSession"
+    "animal_weighing" }o--|| animal : "animal"
+    "animal_weighing" }o--|o management_session : "managementSession"
     "health_management" }o--|| health_management_type : "type"
-    "health_management" }o--|| management_session : "managementSession"
+    "health_management" }o--|o management_session : "managementSession"
     "health_management" }o--|o person : "veterinarian"
     "health_management_item" }o--|| health_management : "management"
     "health_management_item" }o--|| animal : "animal"
@@ -357,6 +367,7 @@ erDiagram
     "animal_property_transfer" }o--|| property : "destinationProperty"
     "animal_property_transfer" }o--|o batch : "originBatch"
     "animal_property_transfer" }o--|o batch : "destinationBatch"
+    "animal_property_transfer" }o--|o management_session : "managementSession"
     "animal_property_transfer_item" }o--|| animal_property_transfer : "transfer"
     "animal_property_transfer_item" }o--|| animal : "animal"
     "animal_property_history" }o--|| animal : "animal"
@@ -364,8 +375,15 @@ erDiagram
     "animal_batch_transfer" }o--|o batch : "originBatch"
     "animal_batch_transfer" }o--|| batch : "destinationBatch"
     "animal_batch_transfer" }o--|| property : "property"
+    "animal_batch_transfer" }o--|o management_session : "managementSession"
     "animal_batch_transfer_item" }o--|| animal_batch_transfer : "transfer"
     "animal_batch_transfer_item" }o--|| animal : "animal"
     "animal_batch_history" }o--|| animal : "batch_id"
     "animal_batch_history" }o--|o batch : "batch"
+    "purchase_event" }o--|| person : "seller"
+    "purchase_event" }o--|| property : "destinationProperty"
+    "purchase_event" }o--|o batch : "destinationBatch"
+    "purchase_event_item" }o--|o breed : "breed"
+    "purchase_event_item" }o--|| purchase_event : "event"
+    "purchase_event_item" }o--|o animal : "animal"
 ```
