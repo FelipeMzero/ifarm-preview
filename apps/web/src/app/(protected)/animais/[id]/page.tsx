@@ -1,28 +1,21 @@
 "use client";
 
-import { Construction } from "lucide-react";
+import { use } from "react";
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
+import { AnimalEditForm } from "@/features/animal/AnimalEditForm";
 
-export default function Page() {
+export default function Page({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
   const router = useRouter();
 
   return (
-    <div className="flex min-h-100 flex-col items-center justify-center gap-6 p-8 text-center">
-      <div className="rounded-full bg-muted p-4">
-        <Construction className="h-10 w-10 text-muted-foreground" />
-      </div>
-
-      <div>
-        <h2 className="text-xl font-semibold">Em construção</h2>
-        <p className="mt-2 text-muted-foreground">
-          A edição de animais ainda está sendo desenvolvida.
-        </p>
-      </div>
-
-      <Button onClick={() => router.push("/animais")} className="w-40">
-        Voltar para a lista
-      </Button>
+    <div className="flex justify-center p-8">
+      <AnimalEditForm
+        id={id}
+        title="Editar Animal"
+        onCancel={() => router.back()}
+        onSuccess={() => {}}
+      />
     </div>
   );
 }

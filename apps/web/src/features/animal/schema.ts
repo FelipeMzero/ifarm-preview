@@ -79,3 +79,58 @@ export const animalFormSchema = z
   });
 
 export type AnimalFormData = z.infer<typeof animalFormSchema>;
+
+export const animalEditFormSchema = z.object({
+  name: z
+    .string()
+    .max(
+      FIELD_LIMITS.animal.name,
+      `Máximo de ${FIELD_LIMITS.animal.name} caracteres`,
+    )
+    .optional(),
+  sex: z.enum(enumValues(EnumSex), "Este campo não pode ser vazio"),
+  birthDate: z.string().optional(),
+  breedId: z.string().optional(),
+});
+
+export type AnimalEditFormData = z.infer<typeof animalEditFormSchema>;
+
+export const animalTagChangeSchema = z.object({
+  value: z
+    .string()
+    .min(1, "Este campo não pode ser vazio")
+    .max(
+      FIELD_LIMITS.animal.earTag,
+      `Máximo de ${FIELD_LIMITS.animal.earTag} caracteres`,
+    ),
+  notes: z.string().optional(),
+});
+
+export type AnimalTagChangeData = z.infer<typeof animalTagChangeSchema>;
+
+export const animalRfidChangeSchema = z.object({
+  value: z
+    .string()
+    .max(
+      FIELD_LIMITS.animal.rfid,
+      `Máximo de ${FIELD_LIMITS.animal.rfid} caracteres`,
+    )
+    .optional(),
+  notes: z.string().optional(),
+});
+
+export type AnimalRfidChangeData = z.infer<typeof animalRfidChangeSchema>;
+
+export const animalWeightChangeSchema = z.object({
+  value: z.string().min(1, "Este campo não pode ser vazio"),
+  notes: z.string().optional(),
+});
+
+export type AnimalWeightChangeData = z.infer<typeof animalWeightChangeSchema>;
+
+export const animalBatchChangeSchema = z.object({
+  newBatchId: z.string().min(1, "Este campo não pode ser vazio"),
+  notes: z.string().optional(),
+});
+
+export type AnimalBatchChangeData = z.infer<typeof animalBatchChangeSchema>;

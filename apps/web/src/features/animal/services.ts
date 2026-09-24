@@ -51,7 +51,22 @@ export async function createAnimal(
   return result;
 }
 
-export async function updateAnimal(id: string, data: AnimalFormData) {
+export type AnimalUpdateData = {
+  name?: string;
+  breedId?: string;
+  birthDate?: string;
+  sex: string;
+  newTag?: string;
+  tagChangeNotes?: string;
+  newRfid?: string;
+  rfidChangeNotes?: string;
+  newBatchId?: string;
+  batchChangeNotes?: string;
+  newWeightKg?: string;
+  weightChangeNotes?: string;
+};
+
+export async function updateAnimal(id: string, data: AnimalUpdateData) {
   const response = await fetch(API_ENDPOINTS.ANIMAL_BY_ID(id), {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
@@ -83,7 +98,26 @@ export async function deleteAnimal(id: string) {
   return result;
 }
 
-export async function getAnimal(id: string): Promise<AnimalFormData> {
+export type AnimalDetail = {
+  id: string;
+  currentTag: string;
+  currentRfid: string | null;
+  name: string | null;
+  sex: string;
+  birthDate: string | null;
+  breedId: string | null;
+  breedName: string | null;
+  origin: string;
+  status: string;
+  neutered: boolean;
+  currentBatchId: string | null;
+  currentBatchName: string | null;
+  currentPropertyId: string;
+  currentWeightKg: number | null;
+  updatedAt: string;
+};
+
+export async function getAnimal(id: string): Promise<AnimalDetail> {
   const response = await fetch(API_ENDPOINTS.ANIMAL_BY_ID(id));
   const result = await response.json();
 

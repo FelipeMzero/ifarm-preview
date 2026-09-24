@@ -53,7 +53,8 @@ function toFormValues(detail: BatchDetail): BatchFormData {
     notes: detail.notes ?? "",
     hasMeta: detail.hasMeta,
     targetDate: detail.targetDate ?? "",
-    targetWeight: detail.targetWeight != null ? String(detail.targetWeight) : "",
+    targetWeight:
+      detail.targetWeight != null ? String(detail.targetWeight) : "",
   };
 }
 
@@ -270,21 +271,27 @@ export function BatchForm({ id, title, onCancel, onSuccess }: BatchFormProps) {
 
           {isEditing ? (
             <div className="space-y-2">
-              <label className="text-sm font-medium uppercase text-muted-foreground">
+              <label
+                htmlFor="currentAreaDisplay"
+                className="text-sm font-medium uppercase text-muted-foreground"
+              >
                 Área Atual
               </label>
               <div className="flex items-center gap-2">
-                <div className="flex-1 rounded-lg border border-input bg-input/30 px-2.5 py-2 text-sm">
-                  {displayAreaName ?? "Nenhuma área"}
-                </div>
+                <Input
+                  id="currentAreaDisplay"
+                  readOnly
+                  value={displayAreaName ?? "Nenhuma área"}
+                  className="flex-1"
+                />
                 <Button
                   type="button"
                   variant="outline"
-                  size="sm"
+                  size="icon-sm"
+                  title="Trocar área"
                   onClick={() => setAreaChangeOpen(true)}
                 >
-                  <ArrowRightLeft className="size-4 mr-1" />
-                  Trocar Área
+                  <ArrowRightLeft className="size-4" />
                 </Button>
               </div>
               {editingBatch && editingBatch.areaHistory.length > 0 && (

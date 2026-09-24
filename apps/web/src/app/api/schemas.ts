@@ -116,6 +116,72 @@ export const animalCreateApiSchema = z
 
 export type AnimalCreateApiData = z.infer<typeof animalCreateApiSchema>;
 
+export const animalUpdateApiSchema = z.object({
+  name: z
+    .string()
+    .max(
+      FIELD_LIMITS.animal.name,
+      `Máximo de ${FIELD_LIMITS.animal.name} caracteres`,
+    )
+    .optional()
+    .transform((v) => v || null),
+  breedId: z
+    .string()
+    .optional()
+    .transform((v) => v || null),
+  birthDate: z
+    .string()
+    .optional()
+    .transform((v) => (v ? new Date(`${v}T00:00:00`) : null)),
+  sex: z.enum(Sex, "Este campo não pode ser vazio"),
+
+  newTag: z
+    .string()
+    .max(
+      FIELD_LIMITS.animal.earTag,
+      `Máximo de ${FIELD_LIMITS.animal.earTag} caracteres`,
+    )
+    .optional()
+    .transform((v) => v || undefined),
+  tagChangeNotes: z
+    .string()
+    .optional()
+    .transform((v) => v || null),
+
+  newRfid: z
+    .string()
+    .max(
+      FIELD_LIMITS.animal.rfid,
+      `Máximo de ${FIELD_LIMITS.animal.rfid} caracteres`,
+    )
+    .optional()
+    .transform((v) => v || undefined),
+  rfidChangeNotes: z
+    .string()
+    .optional()
+    .transform((v) => v || null),
+
+  newBatchId: z
+    .string()
+    .optional()
+    .transform((v) => v || undefined),
+  batchChangeNotes: z
+    .string()
+    .optional()
+    .transform((v) => v || null),
+
+  newWeightKg: z
+    .string()
+    .optional()
+    .transform((v) => (v ? parseFloat(v) : undefined)),
+  weightChangeNotes: z
+    .string()
+    .optional()
+    .transform((v) => v || null),
+});
+
+export type AnimalUpdateApiData = z.infer<typeof animalUpdateApiSchema>;
+
 export const animalQuerySchema = z.object({
   propertyId: z.uuid().optional(),
   page: z.coerce.number().int().min(0).optional().default(0),
