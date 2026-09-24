@@ -3,10 +3,11 @@ import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/api-auth";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
 import { uniqueConstraintErrors } from "../dbErrors";
-import { animalApiSchema, animalQuerySchema } from "../schemas";
+import { animalCreateApiSchema, animalQuerySchema } from "../schemas";
+import { getOrAssignCurrentProperty } from "../user/current-property/currentProperty";
 
 export async function GET(request: NextRequest) {
-  const { response } = await requireSession(RESOURCE_ACCESS.animais);
+  const { response, session } = await requireSession(RESOURCE_ACCESS.animais);
   if (response) return response;
 
   try {
@@ -24,12 +25,26 @@ export async function GET(request: NextRequest) {
 
     const { page, pageSize, search, status, sex } = validation.data;
 
+    let propertyId = validation.data.propertyId;
+    if (!propertyId) {
+      propertyId = (await getOrAssignCurrentProperty(session.user.id))?.id;
+    }
+
+    if (!propertyId) {
+      return NextResponse.json({ data: [], total: 0, pageCount: 0 });
+    }
+
     const where = {
+      currentPropertyId: propertyId,
       ...(search
         ? {
             OR: [
-              { earTag: { contains: search, mode: "insensitive" as const } },
-              { rfid: { contains: search, mode: "insensitive" as const } },
+              {
+                currentTag: { contains: search, mode: "insensitive" as const },
+              },
+              {
+                currentRfid: { contains: search, mode: "insensitive" as const },
+              },
               { name: { contains: search, mode: "insensitive" as const } },
             ],
           }
@@ -51,15 +66,14 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       data: animals.map((a) => ({
         id: a.id,
-        earTag: a.earTag,
-        rfid: a.rfid,
+        earTag: a.currentTag,
+        rfid: a.currentRfid,
         name: a.name,
         sex: a.sex,
         birthDate: a.birthDate?.toISOString().slice(0, 10) ?? null,
-        birthWeightKg: a.birthWeightKg?.toNumber() ?? null,
         origin: a.origin,
         status: a.status,
-        currentWeightKg: a.currentWeightKg?.toNumber() ?? null,
+        currentWeightKg: a.currentWeight?.toNumber() ?? null,
         updatedAt: a.updatedAt.toISOString(),
       })),
       total,
@@ -75,13 +89,12 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const { response } = await requireSession(RESOURCE_ACCESS.animais);
+  const { response, session } = await requireSession(RESOURCE_ACCESS.animais);
   if (response) return response;
 
   try {
     const body = await request.json();
-
-    const validation = animalApiSchema.safeParse(body);
+    const validation = animalCreateApiSchema.safeParse(body);
 
     if (!validation.success) {
       const errors: Record<string, string> = {};
@@ -92,9 +105,147 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, errors }, { status: 400 });
     }
 
-    const animal = await prisma.animal.create({ data: validation.data });
+    const data = validation.data;
 
-    return NextResponse.json({ success: true, data: animal }, { status: 201 });
+    let propertyId = data.propertyId;
+    if (!propertyId) {
+      propertyId =
+        (await getOrAssignCurrentProperty(session.user.id))?.id ?? null;
+    }
+
+    if (!propertyId) {
+      return NextResponse.json(
+        { success: false, message: "Nenhuma propriedade selecionada." },
+        { status: 400 },
+      );
+    }
+
+    const batch = await prisma.batch.findFirst({
+      where: { id: data.batchId, propertyId, closedAt: null },
+      select: { id: true },
+    });
+
+    if (!batch) {
+      return NextResponse.json(
+        {
+          success: false,
+          errors: {
+            batchId: "Lote inválido ou inativo para a propriedade selecionada.",
+          },
+        },
+        { status: 400 },
+      );
+    }
+
+    const entryDate = data.propertyEntryDate ?? new Date();
+
+    const animal = await prisma.$transaction(async (tx) => {
+      const created = await tx.animal.create({
+        data: {
+          currentTag: data.currentTag,
+          currentRfid: data.currentRfid,
+          name: data.name,
+          sex: data.sex,
+          origin: data.origin,
+          status: "ACTIVE",
+          birthDate: data.birthDate,
+          breedId: data.breedId,
+          currentBatchId: data.batchId,
+          currentPropertyId: propertyId,
+          currentWeight: data.currentWeightKg,
+          neutered: data.neutered,
+        },
+      });
+
+      await tx.animalPropertyHistory.create({
+        data: {
+          animalId: created.id,
+          propertyId,
+          enteredAt: entryDate,
+        },
+      });
+
+      await tx.animalBatchHistory.create({
+        data: {
+          animalId: created.id,
+          batchId: data.batchId,
+          enteredAt: entryDate,
+        },
+      });
+
+      if (data.currentWeightKg != null) {
+        await tx.weighingManagementItem.create({
+          data: {
+            animalId: created.id,
+            weight: data.currentWeightKg,
+            weighedAt: entryDate,
+          },
+        });
+      }
+
+      await tx.tagManagementItem.create({
+        data: {
+          animalId: created.id,
+          tag: data.currentTag,
+          identifiedAt: entryDate,
+        },
+      });
+
+      if (data.currentRfid != null) {
+        await tx.rfidManagementItem.create({
+          data: {
+            animalId: created.id,
+            rfid: data.currentRfid,
+            identifiedAt: entryDate,
+          },
+        });
+      }
+
+      if (data.neutered) {
+        await tx.neuteringManagementItem.create({
+          data: {
+            animalId: created.id,
+            notes: data.neuteringMethod,
+            neuteredAt: data.neuteringDate ?? entryDate,
+          },
+        });
+      }
+
+      if (data.origin === "PURCHASE") {
+        const purchaseEvent = await tx.purchaseEvent.create({
+          data: {
+            purchaseDate: data.acquisitionDate ?? entryDate,
+            notes: data.purchaseNotes,
+            confirmedAt: new Date(),
+            pricingType: "LUMP_SUM",
+            totalPrice: data.purchasePrice,
+            sellerId: data.sellerId!,
+            destinationPropertyId: propertyId,
+            destinationBatchId: data.batchId,
+          },
+        });
+
+        await tx.purchaseEventItem.create({
+          data: {
+            eventId: purchaseEvent.id,
+            animalId: created.id,
+            weight: data.currentWeightKg,
+            tag: data.currentTag,
+            rfid: data.currentRfid,
+            sex: data.sex,
+            birthDate: data.birthDate,
+            breedId: data.breedId,
+          },
+        });
+      }
+
+      return created;
+    });
+
+    return NextResponse.json(
+      { success: true, data: { id: animal.id } },
+      { status: 201 },
+    );
   } catch (error) {
     const errors = uniqueConstraintErrors(error);
     if (errors) {

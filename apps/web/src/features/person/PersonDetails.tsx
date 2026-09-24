@@ -33,16 +33,9 @@ import {
 import { ConfirmDialog } from "@/components/our/ConfirmDialog";
 import { ErrorPage } from "@/components/our/ErrorPage";
 import { deletePerson, getPerson } from "./services";
-import { PersonFormData, EnumPersonType, EnumMaritalStatus } from "./schema";
+import { PersonFormData, EnumPersonType } from "./schema";
+import { MARITAL_STATUS_LABELS as MARITAL_STATUS_LABEL } from "@/lib/enum-labels";
 import { formatTaxId } from "@/lib/tax-id";
-
-const MARITAL_STATUS_LABEL: Record<string, string> = {
-  [EnumMaritalStatus.SINGLE]: "Solteiro(a)",
-  [EnumMaritalStatus.MARRIED]: "Casado(a)",
-  [EnumMaritalStatus.STABLE_UNION]: "União Estável",
-  [EnumMaritalStatus.DIVORCED]: "Divorciado(a)",
-  [EnumMaritalStatus.WIDOWED]: "Viúvo(a)",
-};
 
 function formatPhone(value: string): string {
   const digits = value.replace(/\D/g, "");
@@ -285,8 +278,9 @@ export default function PersonDetails({
                   <p className="text-muted-foreground">Estado Civil</p>
                   <p>
                     {person.maritalStatus
-                      ? (MARITAL_STATUS_LABEL[person.maritalStatus] ??
-                        person.maritalStatus)
+                      ? (MARITAL_STATUS_LABEL[
+                          person.maritalStatus as keyof typeof MARITAL_STATUS_LABEL
+                        ] ?? person.maritalStatus)
                       : "—"}
                   </p>
                 </div>

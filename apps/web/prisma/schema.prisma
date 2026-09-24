@@ -155,7 +155,7 @@ model Animal {
   birthDate         DateTime? @db.Date    @map("birth_date")
   origin            AnimalOrigin          @default(UNDEFINED)
   sex               Sex                   @default(MALE)
-  status            AnimalStatus          @default(PRESENT)
+  status            AnimalStatus          @default(ACTIVE)
 
   createdAt         DateTime @default(now())  @map("created_at")
   updatedAt         DateTime @updatedAt       @map("updated_at")
@@ -189,7 +189,8 @@ model Animal {
   // Manejos
   neuteringManagementItems NeuteringManagementItem[]
   weighingManagementItems WeighingManagementItem[]
-  identificationManagementItems IdentificationManagementItem[]
+  tagManagementItems  TagManagementItem[]
+  rfidManagementItems RfidManagementItem[]
   healthManagementItems HealthManagementItem[]
   managementParticipants ManagementParticipant[]
 
@@ -206,8 +207,8 @@ model Animal {
   //@@index([damId])
   //@@index([sireId])
   @@index([currentPropertyId])
-  @@unique([currentPropertyId, currentTag], where: { status: "PRESENT", currentTag: { not: null } })
-  @@unique([currentPropertyId, currentRfid], where: { status: "PRESENT", currentRfid: { not: null } })
+  @@unique([currentPropertyId, currentTag], where: { status: "ACTIVE", currentTag: { not: null } })
+  @@unique([currentPropertyId, currentRfid], where: { status: "ACTIVE", currentRfid: { not: null } })
   @@map("animal")
 }
 
@@ -312,7 +313,8 @@ model ManagementSession {
 
   weighingManagement        WeighingManagement?
   neuteringManagement       NeuteringManagement?
-  identificationManagement  IdentificationManagement?
+  tagManagement  TagManagement?
+  rfidManagement RfidManagement?
   healthManagements         HealthManagement[]
 
   animalBatchTransfers    AnimalBatchTransfer[]
@@ -343,32 +345,27 @@ model ManagementParticipant {
   @@map("management_participant")
 }
 
-model IdentificationManagement {
-  id     String  @id @default(uuid()) @db.Uuid
-  items IdentificationManagementItem[]
+model TagManagement {
+  id    String  @id @default(uuid()) @db.Uuid
+  items TagManagementItem[]
 
   managementSessionId String            @unique @db.Uuid @map("management_session_id")
   managementSession   ManagementSession @relation(fields: [managementSessionId], references: [id], onDelete: Restrict)
 
   createdAt DateTime @default(now()) @map("created_at")
 
-  @@map("identification_management")
+  @@map("tag_management")
 }
 
-model IdentificationManagementItem {
-  id Int @id @default(autoincrement())
-  notes String? // observação específica desse animal
-
-  tagChanged  Boolean @default(false) @map("tag_changed")
-  tag         String? // preenchido quando tagChanged=true; null com tagChanged=true = tag removida
-
-  rfidChanged Boolean @default(false) @map("rfid_changed")
-  rfid        String? // preenchido quando rfidChanged=true; null com rfidChanged=true = rfid removido
+model TagManagementItem {
+  id    Int     @id @default(autoincrement())
+  tag   String? // null = tag removida
+  notes String?
 
   identifiedAt DateTime? @map("identified_at") // preenchido só quando managementId = null (avulso)
 
-  managementId String?                    @db.Uuid @map("management_id") // null = avulso
-  management   IdentificationManagement?  @relation(fields: [managementId], references: [id], onDelete: Restrict)
+  managementId String?         @db.Uuid @map("management_id") // null = avulso
+  management   TagManagement?  @relation(fields: [managementId], references: [id], onDelete: Restrict)
 
   animalId String @db.Uuid @map("animal_id")
   animal   Animal @relation(fields: [animalId], references: [id], onDelete: Restrict)
@@ -377,9 +374,41 @@ model IdentificationManagementItem {
 
   @@index([animalId])
   @@index([managementId])
-  @@map("identification_management_item")
+  @@map("tag_management_item")
 }
 
+
+model RfidManagement {
+  id    String  @id @default(uuid()) @db.Uuid
+  items RfidManagementItem[]
+
+  managementSessionId String            @unique @db.Uuid @map("management_session_id")
+  managementSession   ManagementSession @relation(fields: [managementSessionId], references: [id], onDelete: Restrict)
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("rfid_management")
+}
+
+model RfidManagementItem {
+  id    Int     @id @default(autoincrement())
+  rfid  String? // null = rfid removido
+  notes String?
+
+  identifiedAt DateTime? @map("identified_at") // preenchido só quando managementId = null (avulso)
+
+  managementId String?          @db.Uuid @map("management_id") // null = avulso
+  management   RfidManagement?  @relation(fields: [managementId], references: [id], onDelete: Restrict)
+
+  animalId String @db.Uuid @map("animal_id")
+  animal   Animal @relation(fields: [animalId], references: [id], onDelete: Restrict)
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([animalId])
+  @@index([managementId])
+  @@map("rfid_management_item")
+}
 
 model NeuteringManagement {
   id     String  @id @default(uuid()) @db.Uuid
@@ -751,7 +780,7 @@ enum AnimalOrigin {
 }
 
 enum AnimalStatus {
-  PRESENT     // Presente na propriedade
+  ACTIVE      // Ativo na propriedade
   SOLD        // Vendido
   DONATED     // Doado
   DEAD        // Morto

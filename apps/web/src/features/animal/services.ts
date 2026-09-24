@@ -1,5 +1,4 @@
 import { AnimalFormData } from "./schema";
-import { PropertyOption } from "@/features/property/services";
 
 export class ApiError extends Error {
   errors?: Record<string, string>;
@@ -29,37 +28,11 @@ export type AnimalRow = {
 const API_ENDPOINTS = {
   ANIMALS: "/api/animal",
   ANIMAL_BY_ID: (id: string) => `/api/animal/${id}`,
-  METADATA: "/api/metadata",
 } as const;
 
-export type Breed = { id: string; name: string };
-export type Batch = { id: number; name: string };
-export type AnimalSummary = {
-  id: string;
-  earTag: string;
-  rfid: string | null;
-  sex: string;
-};
-
-export type Metadata = {
-  breeds: Breed[];
-  batches: Batch[];
-  properties: PropertyOption[];
-  farmAnimals: AnimalSummary[];
-};
-
-export async function getMetadata(): Promise<Metadata> {
-  const response = await fetch(API_ENDPOINTS.METADATA);
-  const result = await response.json();
-
-  if (!response.ok) {
-    throw new Error(result.message);
-  }
-
-  return result;
-}
-
-export async function createAnimal(data: AnimalFormData) {
+export async function createAnimal(
+  data: AnimalFormData & { propertyId?: string },
+) {
   const response = await fetch(API_ENDPOINTS.ANIMALS, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -129,6 +102,7 @@ export type AnimalListResult = {
 
 export async function getAnimals(
   params: {
+    propertyId?: string;
     page?: number;
     pageSize?: number;
     search?: string;
@@ -137,6 +111,7 @@ export async function getAnimals(
   } = {},
 ): Promise<AnimalListResult> {
   const {
+    propertyId,
     page = 0,
     pageSize = 10,
     search = "",
@@ -147,6 +122,7 @@ export async function getAnimals(
     page: String(page),
     pageSize: String(pageSize),
   });
+  if (propertyId) query.set("propertyId", propertyId);
   if (search) query.set("search", search);
   if (status) query.set("status", status);
   if (sex) query.set("sex", sex);

@@ -32,7 +32,13 @@ import { Input } from "@/components/ui/input";
 import { SelectField } from "@/components/our/SelectField";
 import { AnimalRow, deleteAnimal, getAnimals } from "./services";
 import { EnumAnimalOrigin, EnumAnimalStatus, EnumSex } from "./schema";
+import {
+  ANIMAL_ORIGIN_LABELS,
+  ANIMAL_STATUS_LABELS,
+  ANIMAL_STATUS_ITEMS,
+} from "@/lib/enum-labels";
 import { ErrorPage } from "@/components/our/ErrorPage";
+import { useCurrentProperty } from "@/features/shell/CurrentPropertyProvider";
 
 const DEFAULT_PAGE_SIZE = 10;
 
@@ -52,7 +58,8 @@ const ORIGIN_VARIANT: Record<
 > = {
   [EnumAnimalOrigin.BIRTH]: "default",
   [EnumAnimalOrigin.PURCHASE]: "secondary",
-  [EnumAnimalOrigin.TRANSFER]: "outline",
+  [EnumAnimalOrigin.DONATION]: "outline",
+  [EnumAnimalOrigin.REFERENCE]: "outline",
 };
 
 const STATUS_VARIANT: Record<
@@ -61,10 +68,11 @@ const STATUS_VARIANT: Record<
 > = {
   [EnumAnimalStatus.ACTIVE]: "default",
   [EnumAnimalStatus.SOLD]: "secondary",
+  [EnumAnimalStatus.DONATED]: "secondary",
   [EnumAnimalStatus.DEAD]: "destructive",
-  [EnumAnimalStatus.TRANSFERRED]: "outline",
   [EnumAnimalStatus.DISCARDED]: "outline",
   [EnumAnimalStatus.SLAUGHTERED]: "destructive",
+  [EnumAnimalStatus.REFERENCE]: "outline",
 };
 
 const SEX_ICON: Record<string, React.ReactNode> = {
@@ -105,7 +113,9 @@ function buildColumns(
       accessorKey: "origin",
       cell: ({ row }) => (
         <Badge variant={ORIGIN_VARIANT[row.original.origin] ?? "outline"}>
-          {row.original.origin}
+          {ANIMAL_ORIGIN_LABELS[
+            row.original.origin as keyof typeof ANIMAL_ORIGIN_LABELS
+          ] ?? row.original.origin}
         </Badge>
       ),
     },
@@ -114,7 +124,9 @@ function buildColumns(
       accessorKey: "status",
       cell: ({ row }) => (
         <Badge variant={STATUS_VARIANT[row.original.status] ?? "outline"}>
-          {row.original.status}
+          {ANIMAL_STATUS_LABELS[
+            row.original.status as keyof typeof ANIMAL_STATUS_LABELS
+          ] ?? row.original.status}
         </Badge>
       ),
     },
@@ -161,6 +173,7 @@ function buildColumns(
 
 export default function AnimalList() {
   const router = useRouter();
+  const { property: currentProperty } = useCurrentProperty();
   const [animals, setAnimals] = useState<AnimalRow[]>([]);
   const [pageIndex, setPageIndex] = useState(0);
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
@@ -168,10 +181,13 @@ export default function AnimalList() {
   const [total, setTotal] = useState(0);
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [status, setStatus] = useState<string>(EnumAnimalStatus.PRESENT);
+  const [status, setStatus] = useState<string>(EnumAnimalStatus.ACTIVE);
   const [loading, setLoading] = useState(true);
+  const [isFirstLoad, setIsFirstLoad] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({
+    origin: false,
+  });
   const [refreshKey, setRefreshKey] = useState(0);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 
@@ -190,6 +206,7 @@ export default function AnimalList() {
       setLoading(true);
       try {
         const result = await getAnimals({
+          propertyId: currentProperty?.id,
           page: pageIndex,
           pageSize,
           search: debouncedSearch,
@@ -203,7 +220,10 @@ export default function AnimalList() {
       } catch (e) {
         if (!cancelled) setError((e as Error).message);
       } finally {
-        if (!cancelled) setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+          setIsFirstLoad(false);
+        }
       }
     }
 
@@ -211,7 +231,14 @@ export default function AnimalList() {
     return () => {
       cancelled = true;
     };
-  }, [pageIndex, pageSize, debouncedSearch, status, refreshKey]);
+  }, [
+    pageIndex,
+    pageSize,
+    debouncedSearch,
+    status,
+    refreshKey,
+    currentProperty?.id,
+  ]);
 
   async function confirmDelete() {
     if (pendingDeleteId === null) return;
@@ -239,7 +266,7 @@ export default function AnimalList() {
     );
   }
 
-  if (loading) {
+  if (isFirstLoad) {
     return <ListSkeleton columns={6} />;
   }
 
@@ -271,15 +298,7 @@ export default function AnimalList() {
             setStatus(val);
             setPageIndex(0);
           }}
-          items={[
-            { value: "", label: "Todos" },
-            { value: EnumAnimalStatus.ACTIVE, label: "Ativos" },
-            { value: EnumAnimalStatus.SOLD, label: "Vendidos" },
-            { value: EnumAnimalStatus.DEAD, label: "Mortos" },
-            { value: EnumAnimalStatus.TRANSFERRED, label: "Transferidos" },
-            { value: EnumAnimalStatus.SLAUGHTERED, label: "Abatidos" },
-            { value: EnumAnimalStatus.DISCARDED, label: "Descarte" },
-          ]}
+          items={[{ value: "", label: "Todos" }, ...ANIMAL_STATUS_ITEMS]}
         />
 
         <DropdownMenu>
@@ -307,29 +326,35 @@ export default function AnimalList() {
         </DropdownMenu>
       </div>
 
-      {animals.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-16 gap-2 text-muted-foreground">
-          <Beef size={50} className="opacity-30" />
-          <p className="text-2xl">Nenhum animal encontrado.</p>
-        </div>
-      ) : (
-        <DataTable
-          columns={columns}
-          data={animals}
-          pageCount={pageCount}
-          pageIndex={pageIndex}
-          pageSize={pageSize}
-          total={total}
-          initialSorting={[{ id: "updatedAt", desc: true }]}
-          onPageChange={setPageIndex}
-          onPageSizeChange={(size) => {
-            setPageSize(size);
-            setPageIndex(0);
-          }}
-          columnVisibility={columnVisibility}
-          onColumnVisibilityChange={setColumnVisibility}
-        />
-      )}
+      <div
+        className={
+          loading ? "opacity-60 transition-opacity" : "transition-opacity"
+        }
+      >
+        {animals.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-16 gap-2 text-muted-foreground">
+            <Beef size={50} className="opacity-30" />
+            <p className="text-2xl">Nenhum animal encontrado.</p>
+          </div>
+        ) : (
+          <DataTable
+            columns={columns}
+            data={animals}
+            pageCount={pageCount}
+            pageIndex={pageIndex}
+            pageSize={pageSize}
+            total={total}
+            initialSorting={[{ id: "updatedAt", desc: true }]}
+            onPageChange={setPageIndex}
+            onPageSizeChange={(size) => {
+              setPageSize(size);
+              setPageIndex(0);
+            }}
+            columnVisibility={columnVisibility}
+            onColumnVisibilityChange={setColumnVisibility}
+          />
+        )}
+      </div>
 
       <ConfirmDialog
         open={pendingDeleteId !== null}

@@ -7,9 +7,7 @@ import {
   batchQuerySchema,
   type BatchQueryData,
 } from "@/app/api/schemas";
-import {
-  uniqueConstraintErrors,
-} from "@/app/api/dbErrors";
+import { uniqueConstraintErrors } from "@/app/api/dbErrors";
 import { getOrAssignCurrentProperty } from "../user/current-property/currentProperty";
 
 function buildWhere(query: BatchQueryData) {
@@ -36,9 +34,7 @@ export async function GET(request: NextRequest) {
 
   try {
     const { searchParams } = new URL(request.url);
-    const query = batchQuerySchema.safeParse(
-      Object.fromEntries(searchParams),
-    );
+    const query = batchQuerySchema.safeParse(Object.fromEntries(searchParams));
 
     if (!query.success) {
       return NextResponse.json(
@@ -75,7 +71,7 @@ export async function GET(request: NextRequest) {
           _count: {
             select: {
               animals: {
-                where: { status: { in: ["PRESENT"] } },
+                where: { status: { in: ["ACTIVE"] } },
               },
             },
           },
@@ -147,7 +143,8 @@ export async function POST(request: NextRequest) {
     let propertyId = validation.data.propertyId;
 
     if (!propertyId) {
-      propertyId = (await getOrAssignCurrentProperty(session.user.id))?.id ?? "";
+      propertyId =
+        (await getOrAssignCurrentProperty(session.user.id))?.id ?? "";
     }
 
     const area = await prisma.area.findFirst({
@@ -159,7 +156,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           success: false,
-          errors: { areaId: "Área inválida ou inativa para a propriedade selecionada." },
+          errors: {
+            areaId: "Área inválida ou inativa para a propriedade selecionada.",
+          },
         },
         { status: 400 },
       );
@@ -180,7 +179,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           success: false,
-          errors: { areaId: `A área selecionada já está ocupada pelo lote "${occupied.batch.name}".` },
+          errors: {
+            areaId: `A área selecionada já está ocupada pelo lote "${occupied.batch.name}".`,
+          },
         },
         { status: 400 },
       );
@@ -217,7 +218,10 @@ export async function POST(request: NextRequest) {
       return created;
     });
 
-    return NextResponse.json({ success: true, data: { id: batch.id } }, { status: 201 });
+    return NextResponse.json(
+      { success: true, data: { id: batch.id } },
+      { status: 201 },
+    );
   } catch (error) {
     const errors = uniqueConstraintErrors(error);
     if (errors) {

@@ -9,97 +9,115 @@ import {
 import { isValidTaxId } from "@/lib/tax-id";
 import { FIELD_LIMITS } from "@/lib/field-limits";
 
-export const animalApiSchema = z.object({
-  earTag: z
-    .string()
-    .min(1, "Este campo não pode ser vazio")
-    .max(
-      FIELD_LIMITS.animal.earTag,
-      `Máximo de ${FIELD_LIMITS.animal.earTag} caracteres`,
-    ),
+export const animalCreateApiSchema = z
+  .object({
+    currentTag: z
+      .string()
+      .min(1, "Este campo não pode ser vazio")
+      .max(
+        FIELD_LIMITS.animal.earTag,
+        `Máximo de ${FIELD_LIMITS.animal.earTag} caracteres`,
+      ),
+    currentRfid: z
+      .string()
+      .max(
+        FIELD_LIMITS.animal.rfid,
+        `Máximo de ${FIELD_LIMITS.animal.rfid} caracteres`,
+      )
+      .optional()
+      .transform((v) => v || null),
+    name: z
+      .string()
+      .max(
+        FIELD_LIMITS.animal.name,
+        `Máximo de ${FIELD_LIMITS.animal.name} caracteres`,
+      )
+      .optional()
+      .transform((v) => v || null),
+    breedId: z
+      .string()
+      .optional()
+      .transform((v) => v || null),
 
-  rfid: z
-    .string()
-    .max(
-      FIELD_LIMITS.animal.rfid,
-      `Máximo de ${FIELD_LIMITS.animal.rfid} caracteres`,
-    )
-    .optional()
-    .transform((v) => v || null),
-  name: z
-    .string()
-    .max(
-      FIELD_LIMITS.animal.name,
-      `Máximo de ${FIELD_LIMITS.animal.name} caracteres`,
-    )
-    .optional()
-    .transform((v) => v || null),
-  motherId: z
-    .string()
-    .optional()
-    .transform((v) => v || null),
-  fatherId: z
-    .string()
-    .optional()
-    .transform((v) => v || null),
-  breedId: z
-    .string()
-    .optional()
-    .transform((v) => v || null),
-  originPropertyId: z
-    .string()
-    .optional()
-    .transform((v) => v || null),
-  originPropertyName: z
-    .string()
-    .max(
-      FIELD_LIMITS.animal.originPropertyName,
-      `Máximo de ${FIELD_LIMITS.animal.originPropertyName} caracteres`,
-    )
-    .optional()
-    .transform((v) => v || null),
+    sex: z.enum(Sex, "Este campo não pode ser vazio"),
+    origin: z.enum(AnimalOrigin, "Este campo não pode ser vazio"),
 
-  sex: z.preprocess((v) => (v === "" ? undefined : v), z.enum(Sex).optional()),
-  origin: z.preprocess(
-    (v) => (v === "" ? undefined : v),
-    z.enum(AnimalOrigin).optional(),
-  ),
-  status: z.preprocess(
-    (v) => (v === "" ? undefined : v),
-    z.enum(AnimalStatus).optional(),
-  ),
+    birthDate: z
+      .string()
+      .optional()
+      .transform((v) => (v ? new Date(`${v}T00:00:00`) : null)),
+    propertyEntryDate: z
+      .string()
+      .optional()
+      .transform((v) => (v ? new Date(`${v}T00:00:00`) : null)),
 
-  birthDate: z
-    .string()
-    .optional()
-    .transform((v) => (v ? new Date(`${v}T00:00:00`) : null)),
-  birthWeightKg: z
-    .string()
-    .optional()
-    .transform((v) => (v ? parseFloat(v) : null)),
-  batchId: z
-    .string()
-    .optional()
-    .transform((v) => (v ? parseInt(v) : null)),
-  acquisitionDate: z
-    .string()
-    .optional()
-    .transform((v) => (v ? new Date(`${v}T00:00:00`) : null)),
-  purchasePrice: z
-    .string()
-    .optional()
-    .transform((v) => (v ? parseFloat(v) : null)),
-  entryAgeMonths: z
-    .string()
-    .optional()
-    .transform((v) => (v ? parseInt(v) : null)),
-  currentWeightKg: z
-    .string()
-    .optional()
-    .transform((v) => (v ? parseFloat(v) : null)),
-});
+    batchId: z.string().min(1, "Este campo não pode ser vazio"),
+    currentWeightKg: z
+      .string()
+      .optional()
+      .transform((v) => (v ? parseFloat(v) : null)),
+
+    neutered: z.boolean().optional().default(false),
+    neuteringDate: z
+      .string()
+      .optional()
+      .transform((v) => (v ? new Date(`${v}T00:00:00`) : null)),
+    neuteringMethod: z
+      .string()
+      .optional()
+      .transform((v) => v || null),
+
+    // Compra
+    sellerId: z
+      .string()
+      .optional()
+      .transform((v) => v || null),
+    purchasePrice: z
+      .string()
+      .optional()
+      .transform((v) => (v ? parseFloat(v) : null)),
+    purchaseNotes: z
+      .string()
+      .max(
+        FIELD_LIMITS.animal.purchaseNotes,
+        `Máximo de ${FIELD_LIMITS.animal.purchaseNotes} caracteres`,
+      )
+      .optional()
+      .transform((v) => v || null),
+
+    acquisitionDate: z
+      .string()
+      .optional()
+      .transform((v) => (v ? new Date(`${v}T00:00:00`) : null)),
+
+    propertyId: z
+      .string()
+      .optional()
+      .transform((v) => v || null),
+  })
+  .superRefine((data, ctx) => {
+    if (data.origin === "PURCHASE") {
+      if (!data.sellerId) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["sellerId"],
+          message: "Este campo é obrigatório para compra.",
+        });
+      }
+      if (!data.purchasePrice) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["purchasePrice"],
+          message: "Este campo é obrigatório para compra.",
+        });
+      }
+    }
+  });
+
+export type AnimalCreateApiData = z.infer<typeof animalCreateApiSchema>;
 
 export const animalQuerySchema = z.object({
+  propertyId: z.uuid().optional(),
   page: z.coerce.number().int().min(0).optional().default(0),
   pageSize: z.coerce.number().int().min(1).optional().default(10),
   search: z.string().trim().optional().default(""),

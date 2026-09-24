@@ -35,6 +35,7 @@ import { Input } from "@/components/ui/input";
 import { SelectField } from "@/components/our/SelectField";
 import { PersonRow, getPeople, togglePersonStatus } from "./services";
 import { EnumPersonType } from "./schema";
+import { PERSON_TYPE_ITEMS, PERSON_TYPE_LABELS } from "@/lib/enum-labels";
 import { ErrorPage } from "@/components/our/ErrorPage";
 import { formatTaxId } from "@/lib/tax-id";
 
@@ -72,10 +73,7 @@ const COLUMN_LABELS: Record<string, string> = {
   updatedAt: "Atualizado em",
 };
 
-const TYPE_LABEL: Record<string, string> = {
-  [EnumPersonType.INDIVIDUAL]: "Física",
-  [EnumPersonType.COMPANY]: "Jurídica",
-};
+const TYPE_LABEL: Record<string, string> = PERSON_TYPE_LABELS;
 
 const TYPE_ICON: Record<string, React.ReactNode> = {
   [EnumPersonType.INDIVIDUAL]: (
@@ -320,8 +318,7 @@ export default function PersonList() {
             { value: STATUS_FILTER.ALL, label: "Todos" },
             { value: STATUS_FILTER.ACTIVE, label: "Ativo" },
             { value: STATUS_FILTER.INACTIVE, label: "Inativo" },
-            { value: EnumPersonType.INDIVIDUAL, label: "Física" },
-            { value: EnumPersonType.COMPANY, label: "Jurídica" },
+            ...PERSON_TYPE_ITEMS,
           ]}
         />
 

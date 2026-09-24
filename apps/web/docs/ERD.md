@@ -136,12 +136,12 @@ erDiagram
   
 
   "management_session" {
-    String batch_id "🗝️"
-    DateTime management_date 
+    String id "🗝️"
     String notes "❓"
+    DateTime scheduled_date 
+    DateTime management_date "❓"
     DateTime confirmed_at "❓"
     DateTime cancelled_at "❓"
-    String batch_id "❓"
     String property_id 
     DateTime created_at 
     DateTime updated_at 
@@ -156,38 +156,74 @@ erDiagram
     }
   
 
-  "animal_identification" {
-    Int management_session_id "🗝️"
-    String notes "❓"
-    Boolean tag_changed 
-    String tag "❓"
-    Boolean rfid_changed 
-    String rfid "❓"
-    DateTime identified_at "❓"
-    String animal_id 
-    String management_session_id "❓"
+  "tag_management" {
+    String id "🗝️"
+    String management_session_id 
     DateTime created_at 
     }
   
 
-  "animal_neutering" {
-    Int management_session_id "🗝️"
+  "tag_management_item" {
+    Int management_id "🗝️"
+    String tag "❓"
+    String notes "❓"
+    DateTime identified_at "❓"
+    String identified_at "❓"
+    String animal_id 
+    DateTime created_at 
+    }
+  
+
+  "rfid_management" {
+    String id "🗝️"
+    String management_session_id 
+    DateTime created_at 
+    }
+  
+
+  "rfid_management_item" {
+    Int management_id "🗝️"
+    String rfid "❓"
+    String notes "❓"
+    DateTime identified_at "❓"
+    String identified_at "❓"
+    String animal_id 
+    DateTime created_at 
+    }
+  
+
+  "neutering_management" {
+    String id "🗝️"
     String method "❓"
+    String management_session_id 
+    DateTime created_at 
+    }
+  
+
+  "neutering_management_item" {
+    Int management_id "🗝️"
     String notes "❓"
     DateTime neutered_at "❓"
+    String neutered_at "❓"
     String animal_id 
-    String management_session_id "❓"
     DateTime created_at 
     }
   
 
-  "animal_weighing" {
-    Int management_session_id "🗝️"
+  "weighing_management" {
+    String id "🗝️"
+    String management_session_id 
+    DateTime created_at 
+    }
+  
+
+  "weighing_management_item" {
+    Int management_id "🗝️"
     Decimal weight 
     String notes "❓"
     DateTime weighed_at "❓"
+    String weighed_at "❓"
     String animal_id 
-    String management_session_id "❓"
     DateTime created_at 
     }
   
@@ -201,7 +237,7 @@ erDiagram
     Decimal unit_price "❓"
     DateTime performed_at "❓"
     String type_id 
-    String management_session_id "❓"
+    String performed_at "❓"
     String veterinarian_id "❓"
     DateTime created_at 
     DateTime updated_at 
@@ -348,16 +384,21 @@ erDiagram
     "user_settings" |o--|| "User" : "user"
     "user_settings" }o--|o property : "currentProperty"
     "person" |o--|o address : "address"
-    "management_session" }o--|o batch : "batch"
     "management_session" }o--|| property : "property"
     "management_participant" }o--|| management_session : "managementSession"
     "management_participant" }o--|| animal : "batch_id"
-    "animal_identification" }o--|| animal : "animal"
-    "animal_identification" }o--|o management_session : "managementSession"
-    "animal_neutering" }o--|| animal : "animal"
-    "animal_neutering" }o--|o management_session : "managementSession"
-    "animal_weighing" }o--|| animal : "animal"
-    "animal_weighing" }o--|o management_session : "managementSession"
+    "tag_management" |o--|| management_session : "managementSession"
+    "tag_management_item" }o--|o tag_management : "management"
+    "tag_management_item" }o--|| animal : "animal"
+    "rfid_management" |o--|| management_session : "managementSession"
+    "rfid_management_item" }o--|o rfid_management : "management"
+    "rfid_management_item" }o--|| animal : "animal"
+    "neutering_management" |o--|| management_session : "managementSession"
+    "neutering_management_item" }o--|o neutering_management : "management"
+    "neutering_management_item" }o--|| animal : "animal"
+    "weighing_management" |o--|| management_session : "managementSession"
+    "weighing_management_item" }o--|o weighing_management : "management"
+    "weighing_management_item" }o--|| animal : "animal"
     "health_management" }o--|| health_management_type : "type"
     "health_management" }o--|o management_session : "managementSession"
     "health_management" }o--|o person : "veterinarian"

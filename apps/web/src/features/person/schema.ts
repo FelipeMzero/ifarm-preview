@@ -1,21 +1,15 @@
 import { z } from "zod";
+import {
+  PersonType as EnumPersonType,
+  MaritalStatus as EnumMaritalStatus,
+} from "@/generated/prisma/enums";
 import { isValidTaxId } from "@/lib/tax-id";
 import { FIELD_LIMITS } from "@/lib/field-limits";
 
+export { EnumPersonType, EnumMaritalStatus };
+
 const enumValues = <T extends Record<string, string>>(e: T) =>
   Object.values(e) as [T[keyof T], ...T[keyof T][]];
-
-export const EnumPersonType = {
-  INDIVIDUAL: "INDIVIDUAL",
-  COMPANY: "COMPANY",
-} as const;
-export const EnumMaritalStatus = {
-  SINGLE: "SINGLE",
-  MARRIED: "MARRIED",
-  STABLE_UNION: "STABLE_UNION",
-  DIVORCED: "DIVORCED",
-  WIDOWED: "WIDOWED",
-} as const;
 
 export const personFormSchema = z
   .object({

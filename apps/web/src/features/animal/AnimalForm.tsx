@@ -4,176 +4,181 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
-import {
-  getAnimal,
-  updateAnimal,
-  createAnimal,
-  getAnimals,
-  getMetadata,
-  ApiError,
-  Breed,
-  Batch,
-  AnimalSummary,
-} from "./services";
-import { PropertyOption } from "@/features/property/services";
-import { ErrorPage } from "@/components/our/ErrorPage";
+import { createAnimal, ApiError } from "./services";
+import { Breed, getBreeds } from "@/features/breed/services";
+import { BatchRow, getBatches } from "@/features/batch/services";
+import { BatchForm } from "@/features/batch/BatchForm";
+import { getPeople } from "@/features/person/services";
+import PersonForm from "@/features/person/PersonForm";
+import { useCurrentProperty } from "@/features/shell/CurrentPropertyProvider";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { FieldLegend, FieldSet } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Textarea } from "@/components/ui/textarea";
 import { FormField } from "@/components/our/FormField";
 import FieldRow from "@/components/our/FieldRow";
 
-import { SearchCombobox } from "@/components/our/SearchCombobox";
+import {
+  SearchCombobox,
+  SearchComboboxItem,
+} from "@/components/our/SearchCombobox";
 import { ArrowLeft, Loader2 } from "lucide-react";
-import FormSkeleton from "@/components/our/FormSkeleton";
 import {
   AnimalFormData,
   animalFormSchema,
   EnumAnimalOrigin,
-  EnumAnimalStatus,
   EnumSex,
 } from "./schema";
 import { Separator } from "@/components/ui/separator";
 import { FormActionBar } from "@/components/our/FormActionBar";
+import { ANIMAL_ORIGIN_ITEMS, SEX_ITEMS } from "@/lib/enum-labels";
 
 type AnimalFormProps = {
-  id?: string;
   title?: string;
   onCancel?: () => void;
   onSuccess?: (newId?: string) => void;
 };
 
 export default function AnimalForm({
-  id,
   title,
   onCancel,
   onSuccess,
 }: AnimalFormProps) {
-  const ORIGIN_ITEMS = [
-    { value: EnumAnimalOrigin.UNDEFINED, label: "Indefinida" },
-    { value: EnumAnimalOrigin.BIRTH, label: "Nascimento" },
-    { value: EnumAnimalOrigin.PURCHASE, label: "Compra" },
-    { value: EnumAnimalOrigin.TRANSFER, label: "Transferência" },
-  ];
-  const SEX_ITEMS = [
-    { value: EnumSex.MALE, label: "Macho" },
-    { value: EnumSex.FEMALE, label: "Fêmea" },
-  ];
+  const { property: currentProperty } = useCurrentProperty();
+  const propertyId = currentProperty?.id;
 
-  const [isDataLoading, setIsDataLoading] = useState(true);
-  const [loadFailed, setLoadFailed] = useState(false);
   const [breeds, setBreeds] = useState<Breed[]>([]);
-  const [batches, setBatches] = useState<Batch[]>([]);
-  const [animals, setAnimals] = useState<AnimalSummary[]>([]);
-  const [properties, setProperties] = useState<PropertyOption[]>([]);
+  const [batchItems, setBatchItems] = useState<SearchComboboxItem[]>([]);
+  const [sellerItems, setSellerItems] = useState<SearchComboboxItem[]>([]);
+  const [isSellerModalOpen, setIsSellerModalOpen] = useState(false);
+  const [isBatchModalOpen, setIsBatchModalOpen] = useState(false);
 
-  type FatherItem = { value: string; label: string };
-  const [fatherItems, setFatherItems] = useState<FatherItem[]>([]);
-  const fatherDebounce = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const searchFather = useCallback((query: string) => {
-    if (fatherDebounce.current) clearTimeout(fatherDebounce.current);
-    fatherDebounce.current = setTimeout(async () => {
-      const result = await getAnimals({
-        search: query,
-        sex: EnumSex.MALE,
-        pageSize: query ? 20 : 2,
-      });
-      setFatherItems(
-        result.data.map((a) => ({ value: a.id, label: a.currentTag ?? "—" })),
-      );
-    }, 300);
-  }, []);
+  const batchDebounce = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const sellerDebounce = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const {
     handleSubmit,
     control,
-    reset,
     watch,
+    setValue,
     setError,
     formState: { isSubmitting },
   } = useForm<AnimalFormData>({
     resolver: zodResolver(animalFormSchema),
     defaultValues: {
-      earTag: "",
-      rfid: "",
+      currentTag: "",
+      currentRfid: "",
       name: "",
       sex: EnumSex.MALE,
       birthDate: "",
-      birthWeightKg: "",
       propertyEntryDate: "",
       origin: EnumAnimalOrigin.UNDEFINED,
-      status: EnumAnimalStatus.PRESENT,
       neutered: false,
       neuteringDate: "",
       neuteringMethod: "",
       breedId: "",
       batchId: "",
-      motherId: "",
-      fatherId: "",
-      originPropertyId: "",
-      originPropertyName: "",
-      acquisitionDate: "",
-      purchasePrice: "",
-      entryAgeMonths: "",
       currentWeightKg: "",
+      sellerId: "",
+      purchasePrice: "",
+      purchaseNotes: "",
+      acquisitionDate: "",
     },
   });
 
   const origin = watch("origin");
-  const isPurchaseOrTransfer =
-    origin === EnumAnimalOrigin.PURCHASE ||
-    origin === EnumAnimalOrigin.TRANSFER;
   const neutered = watch("neutered");
 
+  const loadBatches = useCallback(
+    async (q: string) => {
+      try {
+        const result = await getBatches({
+          propertyId,
+          status: "active",
+          search: q,
+          pageSize: q ? 20 : 10,
+        });
+        setBatchItems(
+          result.data.map((b: BatchRow) => ({ value: b.id, label: b.name })),
+        );
+      } catch {
+        setBatchItems([]);
+      }
+    },
+    [propertyId],
+  );
+
+  const searchBatches = useCallback(
+    (query: string) => {
+      if (batchDebounce.current) clearTimeout(batchDebounce.current);
+      batchDebounce.current = setTimeout(() => loadBatches(query), 300);
+    },
+    [loadBatches],
+  );
+
+  const loadSellers = useCallback(async (q: string) => {
+    try {
+      const result = await getPeople({
+        search: q,
+        pageSize: q ? 20 : 5,
+        status: "active",
+      });
+      setSellerItems(result.data.map((p) => ({ value: p.id, label: p.name })));
+    } catch {
+      setSellerItems([]);
+    }
+  }, []);
+
+  const searchSellers = useCallback(
+    (query: string) => {
+      if (sellerDebounce.current) clearTimeout(sellerDebounce.current);
+      sellerDebounce.current = setTimeout(() => loadSellers(query), 300);
+    },
+    [loadSellers],
+  );
+
   useEffect(() => {
-    // TODO: reativar após ajustar as leituras ao novo schema (earTag/motherId/fatherId etc mudaram de nome)
-    // async function loadData() {
-    //   try {
-    //     const [meta, fatherResult] = await Promise.all([
-    //       getMetadata(),
-    //       getAnimals({ sex: EnumSex.MALE, pageSize: 2 }),
-    //     ]);
-    //     setBreeds(meta.breeds);
-    //     setBatches(meta.batches);
-    //     setAnimals(meta.farmAnimals);
-    //     setProperties(meta.properties);
-    //     setFatherItems(fatherResult.data.map(a => ({ value: a.id, label: a.earTag })));
+    loadBatches("");
+  }, [loadBatches]);
 
-    //     if (id) {
-    //       const data = await getAnimal(id);
-    //       reset(data);
-    //     }
+  useEffect(() => {
+    loadSellers("");
+  }, [loadSellers]);
 
-    //   } catch {
-    //     setLoadFailed(true);
-    //   } finally {
-    //     setIsDataLoading(false);
-    //   }
-    // }
+  useEffect(() => {
+    async function loadStaticOptions() {
+      try {
+        const breedList = await getBreeds();
+        setBreeds(breedList.filter((b) => !b.deactivatedAt));
+      } catch {
+        setBreeds([]);
+      }
+    }
+    loadStaticOptions();
+  }, []);
 
-    // loadData();
-    setIsDataLoading(false);
-  }, [id, reset]);
+  useEffect(() => {
+    return () => {
+      if (batchDebounce.current) clearTimeout(batchDebounce.current);
+      if (sellerDebounce.current) clearTimeout(sellerDebounce.current);
+    };
+  }, []);
 
   async function onSubmit(data: AnimalFormData) {
     try {
-      if (id) {
-        await new Promise((resolve) => setTimeout(resolve, 1500)); //<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-        await updateAnimal(id, data);
-        const fresh = await getAnimal(id);
-        reset(fresh);
-        toast.success("Atualizado com sucesso!");
-        onSuccess?.();
-      } else {
-        await new Promise((resolve) => setTimeout(resolve, 1500)); //<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-        const response = await createAnimal(data);
-        toast.success("Salvo com sucesso!");
-        onSuccess?.(response.data.id);
-      }
+      const response = await createAnimal({ ...data, propertyId });
+      toast.success("Salvo com sucesso!");
+      onSuccess?.(response.data.id);
     } catch (error) {
       if (error instanceof ApiError && error.errors) {
         Object.entries(error.errors).forEach(([field, message]) => {
@@ -186,292 +191,130 @@ export default function AnimalForm({
     }
   }
 
-  if (loadFailed) {
-    return (
-      <ErrorPage
-        message={"Não foi possível obter os dados do servidor."}
-        onRetry={() => window.location.reload()}
-      />
-    );
-  }
-
-  if (isDataLoading) {
-    return <FormSkeleton />;
-  }
-
   return (
-    <form
-      className="mx-auto flex w-full max-w-300 flex-col gap-8"
-      onSubmit={handleSubmit(onSubmit)}
-    >
-      <Button
-        type="button"
-        variant="ghost"
-        size="sm"
-        className="w-fit"
-        onClick={() => onCancel?.()}
+    <>
+      <form
+        className="mx-auto flex w-full max-w-300 flex-col gap-8"
+        onSubmit={handleSubmit(onSubmit)}
       >
-        <ArrowLeft className="size-4" /> Voltar
-      </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="w-fit"
+          onClick={() => onCancel?.()}
+        >
+          <ArrowLeft className="size-4" /> Voltar
+        </Button>
 
-      {title && <h1 className="text-2xl font-semibold">{title}</h1>}
-      <Separator />
+        {title && <h1 className="text-2xl font-semibold">{title}</h1>}
+        <Separator />
 
-      <FieldSet className="border-0">
-        <FieldLegend> Identificação </FieldLegend>
+        <FieldSet className="border-0">
+          <FieldLegend> Identificação </FieldLegend>
 
-        <FieldRow cols={3}>
-          <FormField
-            name="earTag"
-            label="Brinco"
-            required
-            control={control}
-            render={({ field, id }) => (
-              <Input {...field} id={id} placeholder="Ex: MS-001234" />
-            )}
-          />
-
-          <FormField
-            name="rfid"
-            label="RFID / Chip"
-            control={control}
-            render={({ field, id }) => (
-              <Input {...field} id={id} placeholder="Ex: 900082000169813" />
-            )}
-          />
-
-          <FormField
-            name="name"
-            label="Apelido"
-            control={control}
-            render={({ field, id }) => (
-              <Input {...field} id={id} placeholder="Ex: Mimosa" />
-            )}
-          />
-        </FieldRow>
-
-        <FieldRow cols={3}>
-          <Controller
-            name="sex"
-            control={control}
-            render={({ field }) => (
-              <FieldSet className="w-full gap-2 py-2">
-                <FieldLegend variant="label" className="text-muted-foreground">
-                  SEXO
-                </FieldLegend>
-                <RadioGroup
-                  value={field.value}
-                  onValueChange={field.onChange}
-                  onBlur={field.onBlur}
-                  className="flex flex-row gap-6"
-                >
-                  {SEX_ITEMS.map((item) => (
-                    <label
-                      key={item.value}
-                      className="flex items-center gap-2 text-sm"
-                    >
-                      <RadioGroupItem value={item.value} />
-                      {item.label}
-                    </label>
-                  ))}
-                </RadioGroup>
-              </FieldSet>
-            )}
-          />
-
-          <FormField
-            name="birthDate"
-            label="Data de Nascimento"
-            control={control}
-            render={({ field, id }) => <Input {...field} id={id} type="date" />}
-          />
-
-          <FormField
-            name="propertyEntryDate"
-            label="Data de Entrada"
-            control={control}
-            render={({ field, id }) => <Input {...field} id={id} type="date" />}
-          />
-        </FieldRow>
-
-        <FieldRow cols={3}>
-          <FormField
-            name="breedId"
-            label="Raça"
-            control={control}
-            render={({ id, field, fieldState }) => (
-              <SearchCombobox
-                placeholder="buscar..."
-                id={id}
-                field={field}
-                fieldState={fieldState}
-                items={breeds.map((r) => ({
-                  value: r.id.toString(),
-                  label: r.name,
-                }))}
-              />
-            )}
-          />
-          <FormField
-            name="birthWeightKg"
-            label="Peso (kg)"
-            control={control}
-            render={({ field, id }) => (
-              <Input
-                {...field}
-                id={id}
-                type="number"
-                step="0.01"
-                min="0"
-                placeholder="Ex: 32.5"
-              />
-            )}
-          />
-          <FormField
-            name="batchId"
-            label="Lote"
-            required
-            control={control}
-            render={({ id, field, fieldState }) => (
-              <SearchCombobox
-                placeholder="buscar..."
-                id={id}
-                field={field}
-                fieldState={fieldState}
-                items={batches.map((l) => ({
-                  value: l.id.toString(),
-                  label: l.name,
-                }))}
-              />
-            )}
-          />
-        </FieldRow>
-
-        <FieldRow cols={1}>
-          <Controller
-            name="neutered"
-            control={control}
-            render={({ field }) => (
-              <label className="flex w-fit items-center gap-2 text-sm font-medium">
-                <Checkbox
-                  checked={field.value}
-                  onCheckedChange={field.onChange}
-                />
-                Castrado?
-              </label>
-            )}
-          />
-        </FieldRow>
-
-        {neutered && (
-          <FieldRow cols={2}>
+          <FieldRow cols={3}>
             <FormField
-              name="neuteringDate"
-              label="Data da Castração"
+              name="currentTag"
+              label="Brinco"
+              required
+              control={control}
+              render={({ field, id }) => (
+                <Input {...field} id={id} placeholder="Ex: MS-001234" />
+              )}
+            />
+
+            <FormField
+              name="currentRfid"
+              label="RFID / Chip"
+              control={control}
+              render={({ field, id }) => (
+                <Input {...field} id={id} placeholder="Ex: 900082000169813" />
+              )}
+            />
+
+            <FormField
+              name="name"
+              label="Apelido"
+              control={control}
+              render={({ field, id }) => (
+                <Input {...field} id={id} placeholder="Ex: Mimosa" />
+              )}
+            />
+          </FieldRow>
+
+          <FieldRow cols={3}>
+            <Controller
+              name="sex"
+              control={control}
+              render={({ field }) => (
+                <FieldSet className="w-full gap-2 py-2">
+                  <FieldLegend
+                    variant="label"
+                    className="text-muted-foreground"
+                  >
+                    SEXO
+                  </FieldLegend>
+                  <RadioGroup
+                    value={field.value}
+                    onValueChange={field.onChange}
+                    onBlur={field.onBlur}
+                    className="flex flex-row gap-6"
+                  >
+                    {SEX_ITEMS.map((item) => (
+                      <label
+                        key={item.value}
+                        className="flex items-center gap-2 text-sm"
+                      >
+                        <RadioGroupItem value={item.value} />
+                        {item.label}
+                      </label>
+                    ))}
+                  </RadioGroup>
+                </FieldSet>
+              )}
+            />
+
+            <FormField
+              name="birthDate"
+              label="Data de Nascimento"
               control={control}
               render={({ field, id }) => (
                 <Input {...field} id={id} type="date" />
               )}
             />
+
             <FormField
-              name="neuteringMethod"
-              label="Método"
+              name="propertyEntryDate"
+              label="Data de Entrada"
               control={control}
               render={({ field, id }) => (
-                <Input {...field} id={id} placeholder="Ex: Cirúrgico" />
+                <Input {...field} id={id} type="date" />
               )}
             />
           </FieldRow>
-        )}
-      </FieldSet>
 
-      <Separator />
-
-      <FieldSet className="border-0">
-        <FieldLegend>Origem</FieldLegend>
-        <FieldRow cols={2}>
-          <FormField
-            name="origin"
-            label="Origem"
-            control={control}
-            render={({ id, field, fieldState }) => (
-              <SearchCombobox
-                id={id}
-                field={field}
-                fieldState={fieldState}
-                items={ORIGIN_ITEMS}
-                keepSelection
-              />
-            )}
-          />
-        </FieldRow>
-
-        {isPurchaseOrTransfer && (
-          <>
-            <FieldRow cols={2}>
-              <FormField
-                name="acquisitionDate"
-                label="Data de Aquisição"
-                control={control}
-                render={({ field, id }) => (
-                  <Input {...field} id={id} type="date" />
-                )}
-              />
-              <FormField
-                name="entryAgeMonths"
-                label="Idade na Entrada (meses)"
-                control={control}
-                render={({ field, id }) => (
-                  <Input
-                    {...field}
-                    id={id}
-                    type="number"
-                    min="0"
-                    placeholder="Ex: 8"
-                  />
-                )}
-              />
-            </FieldRow>
-            <FieldRow cols={2}>
-              <FormField
-                name="originPropertyId"
-                label="Propriedade de Origem"
-                control={control}
-                render={({ id, field, fieldState }) => (
-                  <SearchCombobox
-                    placeholder="buscar..."
-                    id={id}
-                    field={field}
-                    fieldState={fieldState}
-                    items={properties.map((p) => ({
-                      value: p.id,
-                      label: p.name,
-                    }))}
-                  />
-                )}
-              />
-              <FormField
-                name="originPropertyName"
-                label="Nome da Fazenda (se externa)"
-                control={control}
-                render={({ field, id }) => (
-                  <Input
-                    {...field}
-                    id={id}
-                    placeholder="Ex: Fazenda Santa Fé"
-                  />
-                )}
-              />
-            </FieldRow>
-          </>
-        )}
-
-        {origin === EnumAnimalOrigin.PURCHASE && (
-          <FieldRow cols={2}>
+          <FieldRow cols={3}>
             <FormField
-              name="purchasePrice"
-              label="Valor da Compra (R$)"
-              required
+              name="breedId"
+              label="Raça"
+              control={control}
+              render={({ id, field, fieldState }) => (
+                <SearchCombobox
+                  placeholder="buscar..."
+                  id={id}
+                  field={field}
+                  fieldState={fieldState}
+                  items={breeds.map((r) => ({
+                    value: r.id.toString(),
+                    label: r.name,
+                  }))}
+                />
+              )}
+            />
+            <FormField
+              name="currentWeightKg"
+              label="Peso (kg)"
               control={control}
               render={({ field, id }) => (
                 <Input
@@ -480,20 +323,206 @@ export default function AnimalForm({
                   type="number"
                   step="0.01"
                   min="0"
-                  placeholder="Ex: 3500.00"
+                  placeholder="Ex: 32.5"
+                />
+              )}
+            />
+            <FormField
+              name="batchId"
+              label="Lote"
+              required
+              control={control}
+              render={({ id, field, fieldState }) => (
+                <SearchCombobox
+                  placeholder="buscar..."
+                  id={id}
+                  field={field}
+                  fieldState={fieldState}
+                  items={batchItems}
+                  onInputValueChange={searchBatches}
+                  onCreateClick={() => setIsBatchModalOpen(true)}
                 />
               )}
             />
           </FieldRow>
-        )}
-      </FieldSet>
 
-      <FormActionBar>
-        <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting && <Loader2 className="animate-spin" />}
-          Salvar
-        </Button>
-      </FormActionBar>
-    </form>
+          <FieldRow cols={1}>
+            <Controller
+              name="neutered"
+              control={control}
+              render={({ field }) => (
+                <label className="flex w-fit items-center gap-2 text-sm font-medium">
+                  <Checkbox
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                  Castrado?
+                </label>
+              )}
+            />
+          </FieldRow>
+
+          {neutered && (
+            <FieldRow cols={2}>
+              <FormField
+                name="neuteringDate"
+                label="Data da Castração"
+                control={control}
+                render={({ field, id }) => (
+                  <Input {...field} id={id} type="date" />
+                )}
+              />
+              <FormField
+                name="neuteringMethod"
+                label="Método"
+                control={control}
+                render={({ field, id }) => (
+                  <Input {...field} id={id} placeholder="Ex: Cirúrgico" />
+                )}
+              />
+            </FieldRow>
+          )}
+        </FieldSet>
+
+        <Separator />
+
+        <FieldSet className="border-0">
+          <FieldLegend>Origem</FieldLegend>
+          <FieldRow cols={2}>
+            <FormField
+              name="origin"
+              label="Origem"
+              control={control}
+              render={({ id, field, fieldState }) => (
+                <SearchCombobox
+                  id={id}
+                  field={field}
+                  fieldState={fieldState}
+                  items={ANIMAL_ORIGIN_ITEMS}
+                  keepSelection
+                />
+              )}
+            />
+          </FieldRow>
+
+          {origin === EnumAnimalOrigin.PURCHASE && (
+            <>
+              <FieldRow cols={3}>
+                <FormField
+                  name="sellerId"
+                  label="Vendedor"
+                  required
+                  control={control}
+                  render={({ id, field, fieldState }) => (
+                    <SearchCombobox
+                      placeholder="buscar..."
+                      id={id}
+                      field={field}
+                      fieldState={fieldState}
+                      items={sellerItems}
+                      onInputValueChange={searchSellers}
+                      onCreateClick={() => setIsSellerModalOpen(true)}
+                    />
+                  )}
+                />
+                <FormField
+                  name="acquisitionDate"
+                  label="Data de Aquisição"
+                  control={control}
+                  render={({ field, id }) => (
+                    <Input {...field} id={id} type="date" />
+                  )}
+                />
+                <FormField
+                  name="purchasePrice"
+                  label="Valor da Compra (R$)"
+                  required
+                  control={control}
+                  render={({ field, id }) => (
+                    <Input
+                      {...field}
+                      id={id}
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      placeholder="Ex: 3500.00"
+                    />
+                  )}
+                />
+              </FieldRow>
+              <FieldRow cols={1}>
+                <FormField
+                  name="purchaseNotes"
+                  label="Observação"
+                  control={control}
+                  render={({ field, id }) => (
+                    <Textarea
+                      {...field}
+                      id={id}
+                      placeholder="Observação sobre a compra..."
+                      className="resize-none"
+                      rows={3}
+                    />
+                  )}
+                />
+              </FieldRow>
+            </>
+          )}
+        </FieldSet>
+
+        <FormActionBar>
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting && <Loader2 className="animate-spin" />}
+            Salvar
+          </Button>
+        </FormActionBar>
+      </form>
+
+      <Dialog open={isSellerModalOpen} onOpenChange={setIsSellerModalOpen}>
+        <DialogContent className="max-h-[90vh] w-full max-w-2xl overflow-y-auto sm:max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Novo Vendedor</DialogTitle>
+            <DialogDescription className="sr-only">
+              Cadastre um novo vendedor diretamente por esta tela.
+            </DialogDescription>
+          </DialogHeader>
+
+          <PersonForm
+            onCancel={() => setIsSellerModalOpen(false)}
+            onSuccess={async (newId) => {
+              setIsSellerModalOpen(false);
+              if (newId) {
+                await loadSellers("");
+                setValue("sellerId", newId, { shouldValidate: true });
+                toast.success("Vendedor vinculado ao animal com sucesso.");
+              }
+            }}
+          />
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isBatchModalOpen} onOpenChange={setIsBatchModalOpen}>
+        <DialogContent className="max-h-[90vh] w-full max-w-2xl overflow-y-auto sm:max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Novo Lote</DialogTitle>
+            <DialogDescription className="sr-only">
+              Cadastre um novo lote diretamente por esta tela.
+            </DialogDescription>
+          </DialogHeader>
+
+          <BatchForm
+            onCancel={() => setIsBatchModalOpen(false)}
+            onSuccess={async (newId) => {
+              setIsBatchModalOpen(false);
+              if (newId) {
+                await loadBatches("");
+                setValue("batchId", newId, { shouldValidate: true });
+                toast.success("Lote vinculado ao animal com sucesso.");
+              }
+            }}
+          />
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

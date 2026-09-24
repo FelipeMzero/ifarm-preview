@@ -18,14 +18,10 @@ import FieldRow from "@/components/our/FieldRow";
 import { SearchCombobox } from "@/components/our/SearchCombobox";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import FormSkeleton from "@/components/our/FormSkeleton";
-import {
-  PersonFormData,
-  personFormSchema,
-  EnumPersonType,
-  EnumMaritalStatus,
-} from "./schema";
+import { PersonFormData, personFormSchema, EnumPersonType } from "./schema";
 import { Separator } from "@/components/ui/separator";
 import { BR_STATE_ITEMS } from "@/lib/br-states";
+import { PERSON_TYPE_ITEMS, MARITAL_STATUS_ITEMS } from "@/lib/enum-labels";
 import { FormActionBar } from "@/components/our/FormActionBar";
 import { cn } from "@/lib/utils";
 
@@ -47,17 +43,6 @@ export default function PersonForm({
   onCancel,
   onSuccess,
 }: PersonFormProps) {
-  const TYPE_ITEMS = [
-    { value: EnumPersonType.INDIVIDUAL, label: "Física" },
-    { value: EnumPersonType.COMPANY, label: "Jurídica" },
-  ];
-  const MARITAL_STATUS_ITEMS = [
-    { value: EnumMaritalStatus.SINGLE, label: "Solteiro" },
-    { value: EnumMaritalStatus.MARRIED, label: "Casado" },
-    { value: EnumMaritalStatus.STABLE_UNION, label: "União Estável" },
-    { value: EnumMaritalStatus.DIVORCED, label: "Divorciado" },
-    { value: EnumMaritalStatus.WIDOWED, label: "Viúvo" },
-  ];
   const [isDataLoading, setIsDataLoading] = useState(!!id);
   const [loadFailed, setLoadFailed] = useState(false);
   const [isZipLoading, setIsZipLoading] = useState(false);
@@ -209,8 +194,8 @@ export default function PersonForm({
                   id={fieldId}
                   disabled
                   value={
-                    TYPE_ITEMS.find((t) => t.value === field.value)?.label ??
-                    field.value
+                    PERSON_TYPE_ITEMS.find((t) => t.value === field.value)
+                      ?.label ?? field.value
                   }
                 />
               ) : (
@@ -218,7 +203,7 @@ export default function PersonForm({
                   id={fieldId}
                   field={field}
                   fieldState={fieldState}
-                  items={TYPE_ITEMS}
+                  items={PERSON_TYPE_ITEMS}
                   keepSelection
                 />
               )

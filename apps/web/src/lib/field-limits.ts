@@ -7,7 +7,7 @@ export const FIELD_LIMITS = {
     rg: 20,
   },
   property: { name: 200, cib: 20, area: 999999.9999 },
-  animal: { earTag: 30, rfid: 50, name: 50, originPropertyName: 200 },
+  animal: { earTag: 30, rfid: 50, name: 50, purchaseNotes: 500 },
   area: { name: 100, notes: 500, area: 999999.9999, stockingRate: 30 },
   batch: { name: 100, notes: 500 },
   breed: { name: 60 },
