@@ -21,11 +21,14 @@ import {
 } from "@/components/our/SearchCombobox";
 import { BatchAreaChangeData, batchAreaChangeSchema } from "./schema";
 import { getAreasForBatch } from "./services";
+import { StockingNotice } from "@/features/area/StockingNotice";
 
 interface BatchAreaChangeDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   currentAreaId: string | null;
+  /** Lote sendo movido; usado na prévia de lotação da área de destino. */
+  batchId?: string;
   onConfirm: (data: BatchAreaChangeData, areaName?: string) => void;
   propertyId?: string;
 }
@@ -34,6 +37,7 @@ export function BatchAreaChangeDialog({
   open,
   onOpenChange,
   currentAreaId,
+  batchId,
   onConfirm,
   propertyId,
 }: BatchAreaChangeDialogProps) {
@@ -44,6 +48,7 @@ export function BatchAreaChangeDialog({
     resolver: zodResolver(batchAreaChangeSchema),
     defaultValues: { newAreaId: "", description: "" },
   });
+  const newAreaId = form.watch("newAreaId");
 
   const loadAreas = useCallback(
     async (q: string) => {
@@ -95,7 +100,9 @@ export function BatchAreaChangeDialog({
   }
 
   function handleSubmit(data: BatchAreaChangeData) {
-    const selectedItem = areaItems.find((item) => item.value === data.newAreaId);
+    const selectedItem = areaItems.find(
+      (item) => item.value === data.newAreaId,
+    );
     onConfirm(data, selectedItem?.label);
     onOpenChange(false);
   }
@@ -127,6 +134,14 @@ export function BatchAreaChangeDialog({
                 emptyMessage="Nenhuma área disponível"
               />
             )}
+          />
+
+          <StockingNotice
+            request={
+              newAreaId && batchId
+                ? { areaId: newAreaId, batchIds: [batchId] }
+                : null
+            }
           />
 
           <FormField

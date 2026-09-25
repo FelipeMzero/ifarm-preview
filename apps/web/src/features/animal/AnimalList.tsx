@@ -1,16 +1,7 @@
 "use client";
 
 import { ColumnDef, VisibilityState } from "@tanstack/react-table";
-import {
-  IdCard,
-  Nfc,
-  Pencil,
-  Plus,
-  Search,
-  Settings2,
-  Tag,
-  Trash2,
-} from "lucide-react";
+import { IdCard, Pencil, Plus, Search, Settings2, Trash2 } from "lucide-react";
 import { CowHead } from "@/components/icons/cow-head";
 import { useRouter } from "next/navigation";
 
@@ -30,15 +21,15 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { SelectField } from "@/components/our/SelectField";
 import { AnimalRow, deleteAnimal, getAnimals } from "./services";
 import { EnumAnimalStatus } from "./schema";
-import { ORIGIN_VARIANT, SEX_ICON, STATUS_VARIANT } from "./display";
+import {
+  AnimalIdentification,
+  ORIGIN_VARIANT,
+  SEX_ICON,
+  STATUS_VARIANT,
+} from "./display";
 import AnimalDetails from "./AnimalDetails";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import {
@@ -58,55 +49,6 @@ const COLUMN_LABELS: Record<string, string> = {
   currentWeightKg: "Peso Atual",
   updatedAt: "Atualizado em",
 };
-
-// Destaca o identificador principal (brinco → RFID → ID) e mantém o ID sempre visível.
-function AnimalIdentification({ animal }: { animal: AnimalRow }) {
-  const { code, earTag, rfid } = animal;
-  const primary = earTag
-    ? { label: "Brinco", value: earTag, icon: Tag }
-    : rfid
-      ? { label: "RFID", value: rfid, icon: Nfc }
-      : null;
-
-  if (!primary) {
-    return <span className="font-medium tabular-nums">ID {code}</span>;
-  }
-
-  const Icon = primary.icon;
-
-  return (
-    <div className="flex flex-col leading-tight">
-      <div className="flex items-center gap-1.5">
-        <Icon
-          className="size-3.5 shrink-0 text-muted-foreground"
-          aria-label={primary.label}
-        />
-        <span className="max-w-40 truncate font-medium" title={primary.value}>
-          {primary.value}
-        </span>
-        {earTag && rfid && (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button
-                type="button"
-                className="text-muted-foreground hover:text-foreground"
-                aria-label={`RFID ${rfid}`}
-              >
-                <Nfc className="size-3.5" />
-              </button>
-            </TooltipTrigger>
-            <TooltipContent>
-              RFID <span className="font-mono">{rfid}</span>
-            </TooltipContent>
-          </Tooltip>
-        )}
-      </div>
-      <span className="text-xs text-muted-foreground tabular-nums">
-        ID {code}
-      </span>
-    </div>
-  );
-}
 
 function buildColumns(
   onRequestEdit: (id: string) => void,
@@ -225,9 +167,7 @@ export default function AnimalList() {
   });
   const [refreshKey, setRefreshKey] = useState(0);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
-  const [viewingDetailsId, setViewingDetailsId] = useState<string | null>(
-    null,
-  );
+  const [viewingDetailsId, setViewingDetailsId] = useState<string | null>(null);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -316,7 +256,7 @@ export default function AnimalList() {
           <h1 className="text-xl font-semibold">Animais</h1>
         </div>
         <Button onClick={() => router.push("/animais/novo")}>
-          <Plus className="size-4" /> Novo Animal
+          <Plus className="size-4" /> Adicionar
         </Button>
       </div>
 

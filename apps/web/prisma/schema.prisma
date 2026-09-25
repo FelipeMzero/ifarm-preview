@@ -101,8 +101,8 @@ model Batch {
   // Tramsferências e históricos
   batchAreaHistories           BatchAreaHistory[]
   animalBatchHistories         AnimalBatchHistory[]
-  originAnimalTransfers      AnimalBatchTransfer[]    @relation("AnimalBatchTransferOrigin")
   destinationAnimalTransfers AnimalBatchTransfer[]    @relation("AnimalBatchTransferDestination")
+  originAnimalTransferItems  AnimalBatchTransferItem[] @relation("AnimalBatchTransferItemOrigin")
   originPropertyTransfers      AnimalPropertyTransfer[] @relation("AnimalPropertyTransferOriginBatch")
   destinationPropertyTransfers AnimalPropertyTransfer[] @relation("AnimalPropertyTransferDestinationBatch")
   purchaseEvents PurchaseEvent[]
@@ -641,9 +641,6 @@ model AnimalBatchTransfer {
 
   items AnimalBatchTransferItem[]
 
-  originBatchId String? @db.Uuid @map("origin_batch_id") // null = animal não estava em lote nenhum
-  originBatch   Batch?  @relation("AnimalBatchTransferOrigin", fields: [originBatchId], references: [id], onDelete: Restrict)
-
   destinationBatchId String @db.Uuid @map("destination_batch_id")
   destinationBatch   Batch  @relation("AnimalBatchTransferDestination", fields: [destinationBatchId], references: [id], onDelete: Restrict)
 
@@ -656,7 +653,6 @@ model AnimalBatchTransfer {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  @@index([originBatchId])
   @@index([destinationBatchId])
   @@index([propertyId])
   @@index([managementSessionId])
@@ -673,10 +669,15 @@ model AnimalBatchTransferItem {
   animalId String @db.Uuid @map("animal_id")
   animal   Animal @relation(fields: [animalId], references: [id], onDelete: Restrict)
 
+  // Lote do animal no momento da confirmação (null enquanto pendente ou se o animal estava sem lote)
+  originBatchId String? @db.Uuid @map("origin_batch_id")
+  originBatch   Batch?  @relation("AnimalBatchTransferItemOrigin", fields: [originBatchId], references: [id], onDelete: Restrict)
+
   createdAt DateTime @default(now()) @map("created_at")
 
   @@index([animalId])
   @@index([transferId])
+  @@index([originBatchId])
   @@map("animal_batch_transfer_item")
 }
 

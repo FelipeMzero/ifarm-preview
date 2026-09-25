@@ -21,11 +21,14 @@ import {
 } from "@/components/our/SearchCombobox";
 import { AnimalBatchChangeData, animalBatchChangeSchema } from "./schema";
 import { getBatches } from "@/features/batch/services";
+import { StockingNotice } from "@/features/area/StockingNotice";
 
 interface AnimalBatchChangeDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   currentBatchId: string | null;
+  /** Animal sendo movido; usado na prévia de lotação da área de destino. */
+  animalId?: string;
   propertyId?: string;
   onConfirm: (
     batchId: string,
@@ -38,6 +41,7 @@ export function AnimalBatchChangeDialog({
   open,
   onOpenChange,
   currentBatchId,
+  animalId,
   propertyId,
   onConfirm,
 }: AnimalBatchChangeDialogProps) {
@@ -48,6 +52,7 @@ export function AnimalBatchChangeDialog({
     resolver: zodResolver(animalBatchChangeSchema),
     defaultValues: { newBatchId: "", notes: "" },
   });
+  const newBatchId = form.watch("newBatchId");
 
   const loadBatches = useCallback(
     async (q: string) => {
@@ -130,6 +135,14 @@ export function AnimalBatchChangeDialog({
                 emptyMessage="Nenhum lote disponível"
               />
             )}
+          />
+
+          <StockingNotice
+            request={
+              newBatchId && animalId
+                ? { batchId: newBatchId, animalIds: [animalId] }
+                : null
+            }
           />
 
           <FormField

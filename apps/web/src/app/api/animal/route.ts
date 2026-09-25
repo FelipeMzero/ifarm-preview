@@ -23,7 +23,17 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const { page, pageSize, search, status, sex } = validation.data;
+    const {
+      page,
+      pageSize,
+      search,
+      status,
+      sex,
+      batchId,
+      excludeBatchId,
+      minWeight,
+      maxWeight,
+    } = validation.data;
 
     let propertyId = validation.data.propertyId;
     if (!propertyId) {
@@ -55,11 +65,34 @@ export async function GET(request: NextRequest) {
         : {}),
       ...(status ? { status } : {}),
       ...(sex ? { sex } : {}),
+      ...(batchId ? { currentBatchId: batchId } : {}),
+      // "<>" no SQL descarta NULL, então os animais sem lote precisam ser incluídos à parte.
+      ...(excludeBatchId
+        ? {
+            AND: [
+              {
+                OR: [
+                  { currentBatchId: null },
+                  { currentBatchId: { not: excludeBatchId } },
+                ],
+              },
+            ],
+          }
+        : {}),
+      ...(minWeight != null || maxWeight != null
+        ? {
+            currentWeight: {
+              ...(minWeight != null ? { gte: minWeight } : {}),
+              ...(maxWeight != null ? { lte: maxWeight } : {}),
+            },
+          }
+        : {}),
     };
 
     const [animals, total] = await Promise.all([
       prisma.animal.findMany({
         where,
+        include: { currentBatch: { select: { id: true, name: true } } },
         orderBy: { updatedAt: "desc" },
         skip: page * pageSize,
         take: pageSize,
@@ -79,6 +112,7 @@ export async function GET(request: NextRequest) {
         origin: a.origin,
         status: a.status,
         currentWeightKg: a.currentWeight?.toNumber() ?? null,
+        currentBatch: a.currentBatch,
         updatedAt: a.updatedAt.toISOString(),
       })),
       total,

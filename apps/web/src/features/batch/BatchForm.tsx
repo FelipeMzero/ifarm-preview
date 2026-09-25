@@ -429,6 +429,7 @@ export function BatchForm({ id, title, onCancel, onSuccess }: BatchFormProps) {
         open={areaChangeOpen}
         onOpenChange={setAreaChangeOpen}
         currentAreaId={editingBatch?.currentArea?.id ?? null}
+        batchId={id}
         propertyId={propertyId}
         onConfirm={handleAreaChangeConfirm}
       />

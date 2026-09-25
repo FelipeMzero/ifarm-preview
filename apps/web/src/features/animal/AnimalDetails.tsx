@@ -34,7 +34,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -56,55 +55,25 @@ import { AnimalFullDetails, deleteAnimal, getAnimalDetails } from "./services";
 import { ORIGIN_VARIANT, SEX_ICON, STATUS_VARIANT } from "./display";
 import { AnimalWeightChart } from "./AnimalWeightChart";
 import {
+  daysBetween,
+  formatAge,
   formatCurrency,
   formatDate,
   formatDateOnly,
+  formatDuration,
   formatKg,
   formatSignedKg,
 } from "./format";
+import {
+  CountBadge,
+  DetailsSkeleton,
+  EmptyState,
+  InfoItem,
+  StatTile,
+} from "@/components/our/DetailParts";
 import { WeighingCorrectionNote } from "./WeighingCorrectionNote";
 
-const DAY_MS = 24 * 60 * 60 * 1000;
 const ARROBA_KG = 15;
-
-function daysBetween(from: string, to: string | Date = new Date()): number {
-  const end = typeof to === "string" ? new Date(to) : to;
-  return Math.max(
-    0,
-    Math.round((end.getTime() - new Date(from).getTime()) / DAY_MS),
-  );
-}
-
-function formatDuration(days: number): string {
-  if (days < 1) return "menos de 1 dia";
-  if (days < 60) return days === 1 ? "1 dia" : `${days} dias`;
-  const months = Math.floor(days / 30.44);
-  if (months < 24) return `${months} meses`;
-  const years = Math.floor(months / 12);
-  const rest = months % 12;
-  return rest ? `${years} anos e ${rest} m` : `${years} anos`;
-}
-
-function formatAge(birthDate: string): string {
-  const birth = new Date(`${birthDate}T00:00:00`);
-  const now = new Date();
-  let months =
-    (now.getFullYear() - birth.getFullYear()) * 12 +
-    (now.getMonth() - birth.getMonth());
-  if (now.getDate() < birth.getDate()) months -= 1;
-
-  if (months < 1) {
-    const days = daysBetween(birth.toISOString(), now);
-    return days === 1 ? "1 dia" : `${days} dias`;
-  }
-  if (months < 12) return months === 1 ? "1 mês" : `${months} meses`;
-
-  const years = Math.floor(months / 12);
-  const rest = months % 12;
-  const yearsLabel = years === 1 ? "1 ano" : `${years} anos`;
-  if (!rest) return yearsLabel;
-  return `${yearsLabel} e ${rest === 1 ? "1 mês" : `${rest} meses`}`;
-}
 
 type TimelineEvent = {
   key: string;
@@ -179,86 +148,6 @@ function buildRecentActivity(animal: AnimalFullDetails): TimelineEvent[] {
   }
 
   return events.sort((a, b) => b.date.localeCompare(a.date));
-}
-
-function DetailsSkeleton() {
-  return (
-    <div className="w-full max-w-5xl space-y-4">
-      <Skeleton className="h-9 w-24" />
-      <Skeleton className="h-28 w-full rounded-xl" />
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <Skeleton key={i} className="h-24 rounded-xl" />
-        ))}
-      </div>
-      <Skeleton className="h-8 w-96" />
-      <Skeleton className="h-72 w-full rounded-xl" />
-    </div>
-  );
-}
-
-function StatTile({
-  icon,
-  label,
-  value,
-  hint,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: React.ReactNode;
-  hint?: React.ReactNode;
-}) {
-  return (
-    <Card className="gap-1 py-4">
-      <CardContent className="space-y-1 px-4">
-        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          {icon}
-          <span>{label}</span>
-        </div>
-        <p className="truncate text-xl font-semibold tabular-nums">{value}</p>
-        <div className="min-h-4 text-xs text-muted-foreground">{hint}</div>
-      </CardContent>
-    </Card>
-  );
-}
-
-function InfoItem({
-  label,
-  children,
-}: {
-  label: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="space-y-0.5">
-      <dt className="text-xs text-muted-foreground">{label}</dt>
-      <dd className="text-sm font-medium">{children}</dd>
-    </div>
-  );
-}
-
-function EmptyState({
-  icon,
-  message,
-}: {
-  icon: React.ReactNode;
-  message: string;
-}) {
-  return (
-    <div className="flex flex-col items-center justify-center gap-2 py-10 text-muted-foreground [&_svg]:size-10 [&_svg]:opacity-30">
-      {icon}
-      <p className="text-sm">{message}</p>
-    </div>
-  );
-}
-
-function CountBadge({ count }: { count: number }) {
-  if (!count) return null;
-  return (
-    <span className="rounded-full bg-muted-foreground/15 px-1.5 text-[10px] font-semibold tabular-nums">
-      {count}
-    </span>
-  );
 }
 
 export default function AnimalDetails({

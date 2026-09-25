@@ -8,6 +8,7 @@ import { createAnimal, ApiError } from "./services";
 import { Breed, getBreeds } from "@/features/breed/services";
 import { BatchRow, getBatches } from "@/features/batch/services";
 import { BatchForm } from "@/features/batch/BatchForm";
+import { StockingNotice } from "@/features/area/StockingNotice";
 import { getPeople } from "@/features/person/services";
 import PersonForm from "@/features/person/PersonForm";
 import { useCurrentProperty } from "@/features/shell/CurrentPropertyProvider";
@@ -98,6 +99,12 @@ export default function AnimalForm({
 
   const origin = watch("origin");
   const neutered = watch("neutered");
+  const [batchId, currentWeightKg, birthDate, sex] = watch([
+    "batchId",
+    "currentWeightKg",
+    "birthDate",
+    "sex",
+  ]);
 
   const loadBatches = useCallback(
     async (q: string) => {
@@ -344,6 +351,26 @@ export default function AnimalForm({
               )}
             />
           </FieldRow>
+
+          <StockingNotice
+            request={
+              batchId
+                ? {
+                    batchId,
+                    newAnimals: [
+                      {
+                        weightKg: currentWeightKg
+                          ? parseFloat(currentWeightKg)
+                          : null,
+                        birthDate: birthDate || undefined,
+                        sex,
+                        neutered,
+                      },
+                    ],
+                  }
+                : null
+            }
+          />
 
           <FieldRow cols={1}>
             <Controller

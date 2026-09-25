@@ -206,6 +206,19 @@ export const animalQuerySchema = z.object({
     z.enum(AnimalStatus).optional(),
   ),
   sex: z.preprocess((v) => (v === "" ? undefined : v), z.enum(Sex).optional()),
+  batchId: z.preprocess((v) => (v === "" ? undefined : v), z.uuid().optional()),
+  excludeBatchId: z.preprocess(
+    (v) => (v === "" ? undefined : v),
+    z.uuid().optional(),
+  ),
+  minWeight: z.preprocess(
+    (v) => (v === "" ? undefined : v),
+    z.coerce.number().min(0).optional(),
+  ),
+  maxWeight: z.preprocess(
+    (v) => (v === "" ? undefined : v),
+    z.coerce.number().min(0).optional(),
+  ),
 });
 
 export type AnimalQueryData = z.infer<typeof animalQuerySchema>;
@@ -716,3 +729,74 @@ export const weighingCorrectionApiSchema = z.object({
 export type WeighingCorrectionApiData = z.infer<
   typeof weighingCorrectionApiSchema
 >;
+
+export const batchTransferQuerySchema = z.object({
+  propertyId: z.uuid().optional(),
+  page: z.coerce.number().int().min(0).optional().default(0),
+  pageSize: z.coerce.number().int().min(1).optional().default(10),
+  search: z.string().trim().optional().default(""),
+  status: z.preprocess(
+    (v) => (v === "" ? undefined : v),
+    z.enum(["pending", "confirmed", "cancelled"]).optional(),
+  ),
+});
+
+export type BatchTransferQueryData = z.infer<typeof batchTransferQuerySchema>;
+
+export const batchTransferApiSchema = z.object({
+  destinationBatchId: z.uuid("Selecione o lote de destino."),
+  transferDate: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "Informe uma data válida.")
+    .transform((v) => new Date(`${v}T00:00:00`)),
+  notes: z
+    .string()
+    .max(
+      FIELD_LIMITS.batchTransfer.notes,
+      `Máximo de ${FIELD_LIMITS.batchTransfer.notes} caracteres`,
+    )
+    .optional()
+    .transform((v) => v || null),
+  animalIds: z.array(z.uuid()).default([]),
+  propertyId: z.uuid().optional(),
+});
+
+export type BatchTransferApiData = z.infer<typeof batchTransferApiSchema>;
+
+export const stockingPreviewApiSchema = z.object({
+  areaId: z.uuid().optional(),
+  batchId: z.uuid().optional(),
+  transferId: z.uuid().optional(),
+  animalIds: z.array(z.uuid()).optional().default([]),
+  batchIds: z.array(z.uuid()).optional().default([]),
+  newAnimals: z
+    .array(
+      z.object({
+        weightKg: z.number().positive().nullable().optional(),
+        birthDate: z
+          .string()
+          .optional()
+          .transform((v) => (v ? new Date(`${v}T00:00:00`) : null)),
+        sex: z.enum(Sex),
+        neutered: z.boolean().optional().default(false),
+      }),
+    )
+    .optional()
+    .default([]),
+});
+
+export type StockingPreviewApiData = z.infer<typeof stockingPreviewApiSchema>;
+
+export const batchReopenApiSchema = z.object({
+  areaId: z.uuid("Selecione a área do lote."),
+  notes: z
+    .string()
+    .max(
+      FIELD_LIMITS.batch.notes,
+      `Máximo de ${FIELD_LIMITS.batch.notes} caracteres`,
+    )
+    .optional()
+    .transform((v) => v || null),
+});
+
+export type BatchReopenApiData = z.infer<typeof batchReopenApiSchema>;

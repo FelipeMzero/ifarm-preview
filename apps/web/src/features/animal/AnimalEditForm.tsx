@@ -525,6 +525,7 @@ export function AnimalEditForm({
         open={batchDialogOpen}
         onOpenChange={setBatchDialogOpen}
         currentBatchId={animal.currentBatchId}
+        animalId={animal.id}
         propertyId={animal.currentPropertyId}
         onConfirm={(batchId, batchName, notes) => {
           setPendingBatchId(batchId);

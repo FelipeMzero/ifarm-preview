@@ -56,6 +56,14 @@ const NAV = [
       { href: "/racas", label: "Raças" },
     ],
   },
+  {
+    label: "Lotes",
+    icon: Boxes,
+    items: [
+      { href: "/lotes", label: "Lotes" },
+      { href: "/lotes/transferencias", label: "Transferências" },
+    ],
+  },
 ];
 
 // Links diretos (sem submenu) — criar um novo registro fica a cargo do botão
@@ -64,7 +72,6 @@ const DIRECT_LINKS = [
   { href: "/pessoas", label: "Pessoas", icon: Users },
   { href: "/propriedades", label: "Propriedades", icon: Fence },
   { href: "/areas", label: "Áreas", icon: Map },
-  { href: "/lotes", label: "Lotes", icon: Boxes },
   { href: "/usuarios", label: "Usuários", icon: UserCog },
 ];
 
@@ -140,9 +147,13 @@ export function Sidebar() {
           </SidebarMenuItem>
 
           {visibleNav.map(({ label, icon: Icon, items }) => {
-            const isGroupActive = items.some((item) =>
-              pathname.startsWith(item.href),
-            );
+            // O item mais específico que casa com a rota fica ativo
+            // (ex: /lotes/transferencias/nova → "Transferências", não "Lotes").
+            const activeHref = items
+              .map((item) => item.href)
+              .filter((href) => pathname === href || pathname.startsWith(`${href}/`))
+              .sort((a, b) => b.length - a.length)[0];
+            const isGroupActive = activeHref !== undefined;
 
             return (
               <Collapsible
@@ -164,7 +175,7 @@ export function Sidebar() {
                         <SidebarMenuSubItem key={item.href}>
                           <SidebarMenuSubButton
                             asChild
-                            isActive={pathname === item.href}
+                            isActive={item.href === activeHref}
                           >
                             <Link href={item.href}>
                               <span>{item.label}</span>

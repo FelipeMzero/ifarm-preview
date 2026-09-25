@@ -2,14 +2,19 @@
 
 import { ColumnDef, VisibilityState } from "@tanstack/react-table";
 import {
+  ArrowRightLeft,
+  Archive,
+  IdCard,
   Pencil,
   Plus,
   Search,
   Settings2,
   PackageOpen,
+  RotateCcw,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 import { DataTable } from "@/components/our/DataTable";
 import ListSkeleton from "@/components/our/ListSkeleton";
@@ -24,9 +29,23 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { SelectField } from "@/components/our/SelectField";
-import { BatchRow, getBatches } from "./services";
+import { BatchCloseError, BatchRow, closeBatch, getBatches } from "./services";
+import { ConfirmDialog } from "@/components/our/ConfirmDialog";
 import { ErrorPage } from "@/components/our/ErrorPage";
 import { useCurrentProperty } from "@/features/shell/CurrentPropertyProvider";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import BatchDetails from "./BatchDetails";
+import { BatchReopenDialog } from "./BatchReopenDialog";
 
 const DEFAULT_PAGE_SIZE = 10;
 
@@ -51,6 +70,9 @@ const COLUMN_LABELS: Record<string, string> = {
 
 function buildColumns(
   onRequestEdit: (id: string) => void,
+  onRequestViewDetails: (id: string) => void,
+  onRequestClose: (row: BatchRow) => void,
+  onRequestReopen: (row: BatchRow) => void,
 ): ColumnDef<BatchRow>[] {
   return [
     {
@@ -104,6 +126,33 @@ function buildColumns(
           >
             <Pencil className="size-4" />
           </Button>
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            title="Detalhes"
+            onClick={() => onRequestViewDetails(row.original.id)}
+          >
+            <IdCard className="size-4" />
+          </Button>
+          {row.original.closedAt ? (
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              title="Reativar lote"
+              onClick={() => onRequestReopen(row.original)}
+            >
+              <RotateCcw className="size-4" />
+            </Button>
+          ) : (
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              title="Encerrar lote"
+              onClick={() => onRequestClose(row.original)}
+            >
+              <Archive className="size-4" />
+            </Button>
+          )}
         </div>
       ),
     },
@@ -126,6 +175,15 @@ export default function BatchList() {
   const [isFirstLoad, setIsFirstLoad] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
+  const [viewingDetailsId, setViewingDetailsId] = useState<string | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [closingBatch, setClosingBatch] = useState<BatchRow | null>(null);
+  const [reopeningBatch, setReopeningBatch] = useState<BatchRow | null>(null);
+  // Lote que não pôde ser encerrado por ainda ter animais.
+  const [batchWithAnimals, setBatchWithAnimals] = useState<{
+    row: BatchRow;
+    animalCount: number;
+  } | null>(null);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -167,9 +225,47 @@ export default function BatchList() {
     return () => {
       cancelled = true;
     };
-  }, [pageIndex, pageSize, debouncedSearch, filter, currentProperty?.id]);
+  }, [
+    pageIndex,
+    pageSize,
+    debouncedSearch,
+    filter,
+    refreshKey,
+    currentProperty?.id,
+  ]);
 
-  const columns = buildColumns((id) => router.push(`/lotes/${id}`));
+  function requestClose(row: BatchRow) {
+    // A contagem da listagem já indica animais; o servidor confirma na hora de encerrar.
+    if (row.animalCount > 0) {
+      setBatchWithAnimals({ row, animalCount: row.animalCount });
+    } else {
+      setClosingBatch(row);
+    }
+  }
+
+  async function confirmClose() {
+    const row = closingBatch;
+    if (!row) return;
+    setClosingBatch(null);
+    try {
+      await closeBatch(row.id);
+      toast.success(`Lote "${row.name}" encerrado.`);
+      setRefreshKey((k) => k + 1);
+    } catch (e) {
+      if (e instanceof BatchCloseError && e.code === "HAS_ANIMALS") {
+        setBatchWithAnimals({ row, animalCount: e.animalCount ?? 0 });
+      } else {
+        toast.error((e as Error).message);
+      }
+    }
+  }
+
+  const columns = buildColumns(
+    (id) => router.push(`/lotes/${id}`),
+    setViewingDetailsId,
+    requestClose,
+    setReopeningBatch,
+  );
 
   if (error) {
     return (
@@ -273,6 +369,83 @@ export default function BatchList() {
           />
         )}
       </div>
+
+      <Dialog
+        open={viewingDetailsId !== null}
+        onOpenChange={(open) => {
+          if (!open) setViewingDetailsId(null);
+        }}
+      >
+        <DialogContent className="h-[90vh] content-start overflow-y-auto p-8 sm:max-w-5xl">
+          {viewingDetailsId && (
+            <BatchDetails
+              id={viewingDetailsId}
+              onClose={() => setViewingDetailsId(null)}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+
+      <ConfirmDialog
+        open={closingBatch !== null}
+        onOpenChange={(open) => {
+          if (!open) setClosingBatch(null);
+        }}
+        onConfirm={confirmClose}
+        variant="default"
+        title="Encerrar lote"
+        description={
+          closingBatch
+            ? `O lote "${closingBatch.name}" será encerrado${
+                closingBatch.area
+                  ? ` e a área "${closingBatch.area.name}" ficará livre para outro lote`
+                  : ""
+              }. O histórico do lote continua disponível no filtro de encerrados.`
+            : undefined
+        }
+        confirmLabel="Encerrar"
+        cancelLabel="Voltar"
+      />
+
+      <BatchReopenDialog
+        batch={reopeningBatch}
+        propertyId={currentProperty?.id}
+        onOpenChange={(open) => {
+          if (!open) setReopeningBatch(null);
+        }}
+        onReopened={() => setRefreshKey((k) => k + 1)}
+      />
+
+      <AlertDialog
+        open={batchWithAnimals !== null}
+        onOpenChange={(open) => {
+          if (!open) setBatchWithAnimals(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>O lote ainda tem animais</AlertDialogTitle>
+            <AlertDialogDescription>
+              {batchWithAnimals
+                ? `O lote "${batchWithAnimals.row.name}" tem ${batchWithAnimals.animalCount} animal(is) ativo(s). Transfira-os para outro lote e, depois de confirmar a transferência, encerre o lote.`
+                : null}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="border-border">
+            <AlertDialogCancel variant="secondary">Voltar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() =>
+                batchWithAnimals &&
+                router.push(
+                  `/lotes/transferencias/nova?origem=${batchWithAnimals.row.id}`,
+                )
+              }
+            >
+              <ArrowRightLeft className="size-4" /> Transferir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

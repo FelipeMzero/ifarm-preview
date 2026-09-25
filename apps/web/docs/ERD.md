@@ -306,12 +306,11 @@ erDiagram
   
 
   "animal_batch_transfer" {
-    String origin_batch_id "🗝️"
+    String management_session_id "🗝️"
     DateTime transfer_date 
     String notes "❓"
     DateTime confirmed_at "❓"
     DateTime cancelled_at "❓"
-    String origin_batch_id "❓"
     String destination_batch_id 
     String property_id 
     String management_session_id "❓"
@@ -325,6 +324,7 @@ erDiagram
     String notes "❓"
     String transfer_id 
     String animal_id 
+    String origin_batch_id "❓"
     DateTime created_at 
     }
   
@@ -416,12 +416,12 @@ erDiagram
     "animal_property_transfer_item" }o--|| animal : "animal"
     "animal_property_history" }o--|| animal : "animal"
     "animal_property_history" }o--|| property : "property"
-    "animal_batch_transfer" }o--|o batch : "originBatch"
     "animal_batch_transfer" }o--|| batch : "destinationBatch"
     "animal_batch_transfer" }o--|| property : "property"
     "animal_batch_transfer" }o--|o management_session : "managementSession"
     "animal_batch_transfer_item" }o--|| animal_batch_transfer : "transfer"
     "animal_batch_transfer_item" }o--|| animal : "animal"
+    "animal_batch_transfer_item" }o--|o batch : "originBatch"
     "animal_batch_history" }o--|| animal : "batch_id"
     "animal_batch_history" }o--|o batch : "batch"
     "purchase_event" }o--|| person : "seller"

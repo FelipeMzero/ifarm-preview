@@ -16,10 +16,12 @@ import {
   ComboboxList,
   useComboboxAnchor,
 } from "@/components/ui/combobox";
-import { InputGroupButton } from "@/components/ui/input-group";
 import { Plus } from "lucide-react";
 
 export type SearchComboboxItem = { value: string; label: string };
+
+// Valor sentinela da opção "Adicionar" na lista; nunca é gravado no campo.
+const CREATE_VALUE = "__search-combobox-create__";
 
 type SearchComboboxProps<T extends FieldValues, TName extends FieldPath<T>> = {
   field: ControllerRenderProps<T, TName>;
@@ -31,7 +33,7 @@ type SearchComboboxProps<T extends FieldValues, TName extends FieldPath<T>> = {
   id?: string;
   /** Se o campo ficar vazio ao perder o foco, volta a selecionar items[0]. Use em campos sem opção "vazio" válida (ex: enums). */
   keepSelection?: boolean;
-  /** Se informado, exibe um botão "Novo" para criar um registro quando o texto digitado não bate com nenhum item */
+  /** Se informado, a lista ganha a opção "Adicionar" quando o texto digitado não bate com nenhum item */
   onCreateClick?: () => void;
 };
 
@@ -63,19 +65,33 @@ export function SearchCombobox<
   const hasExactMatch = items.some(
     (item) => item.label.trim().toLowerCase() === query.trim().toLowerCase(),
   );
+  const canCreate = !!onCreateClick && query.trim() !== "" && !hasExactMatch;
+
+  // A criação é uma opção da própria lista, alcançável pelo mouse e pelo teclado
+  // (↓ + Enter). Um botão fora da lista não funcionaria pelo teclado: ao sair do
+  // campo com Tab o combobox fecha e limpa o texto digitado.
+  const listItems: readonly SearchComboboxItem[] = canCreate
+    ? [...items, { value: CREATE_VALUE, label: `Adicionar "${query.trim()}"` }]
+    : items;
 
   return (
     <Combobox
-      items={items}
+      items={listItems}
       filter={onInputValueChange ? null : undefined}
       value={field.value || null}
-      onValueChange={(val) => field.onChange(val ?? "")}
+      onValueChange={(val) => {
+        if (val === CREATE_VALUE) {
+          onCreateClick?.();
+          return;
+        }
+        field.onChange(val ?? "");
+      }}
       onInputValueChange={(val) => {
         setQuery(val);
         onInputValueChange?.(val);
       }}
       itemToStringLabel={(val: string) =>
-        items.find((item) => item.value === val)?.label ??
+        listItems.find((item) => item.value === val)?.label ??
         labelCacheRef.current.get(val) ??
         val
       }
@@ -91,36 +107,29 @@ export function SearchCombobox<
             if (keepSelection && !field.value && items[0])
               field.onChange(items[0].value);
           }}
-        >
-          {onCreateClick && query.trim() !== "" && !hasExactMatch && (
-            <InputGroupButton
-              type="button"
-              variant="ghost"
-              size="icon-xs"
-              className="text-muted-foreground hover:text-foreground"
-              title="Novo"
-              aria-label="Novo"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                onCreateClick();
-              }}
-            >
-              <Plus />
-            </InputGroupButton>
-          )}
-        </ComboboxInput>
+        />
       </div>
       <ComboboxContent anchor={anchorRef}>
         <ComboboxEmpty>
           <div className="p-2 text-center text-sm">{emptyMessage}</div>
         </ComboboxEmpty>
         <ComboboxList>
-          {(item) => (
-            <ComboboxItem key={item.value} value={item.value}>
-              {item.label}
-            </ComboboxItem>
-          )}
+          {(item: SearchComboboxItem) =>
+            item.value === CREATE_VALUE ? (
+              <ComboboxItem
+                key={item.value}
+                value={item.value}
+                className="text-primary"
+              >
+                <Plus />
+                {item.label}
+              </ComboboxItem>
+            ) : (
+              <ComboboxItem key={item.value} value={item.value}>
+                {item.label}
+              </ComboboxItem>
+            )
+          }
         </ComboboxList>
       </ComboboxContent>
     </Combobox>

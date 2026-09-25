@@ -23,6 +23,7 @@ export type AnimalRow = {
   origin: string;
   status: string;
   currentWeightKg: number | null;
+  currentBatch: { id: string; name: string } | null;
   updatedAt: string;
 };
 
@@ -151,6 +152,10 @@ export async function getAnimals(
     search?: string;
     status?: string;
     sex?: string;
+    batchId?: string;
+    excludeBatchId?: string;
+    minWeight?: string;
+    maxWeight?: string;
   } = {},
 ): Promise<AnimalListResult> {
   const {
@@ -160,6 +165,10 @@ export async function getAnimals(
     search = "",
     status = "",
     sex = "",
+    batchId = "",
+    excludeBatchId = "",
+    minWeight = "",
+    maxWeight = "",
   } = params;
   const query = new URLSearchParams({
     page: String(page),
@@ -169,6 +178,10 @@ export async function getAnimals(
   if (search) query.set("search", search);
   if (status) query.set("status", status);
   if (sex) query.set("sex", sex);
+  if (batchId) query.set("batchId", batchId);
+  if (excludeBatchId) query.set("excludeBatchId", excludeBatchId);
+  if (minWeight) query.set("minWeight", minWeight);
+  if (maxWeight) query.set("maxWeight", maxWeight);
 
   const response = await fetch(`${API_ENDPOINTS.ANIMALS}?${query}`);
   const result = await response.json();
@@ -274,9 +287,7 @@ export type AnimalFullDetails = {
   purchase: AnimalPurchase | null;
 };
 
-export async function getAnimalDetails(
-  id: string,
-): Promise<AnimalFullDetails> {
+export async function getAnimalDetails(id: string): Promise<AnimalFullDetails> {
   const response = await fetch(API_ENDPOINTS.ANIMAL_DETAILS(id));
   const result = await response.json();
 
@@ -332,7 +343,9 @@ export async function cancelWeighing(animalId: string, weighingId: number) {
   return result;
 }
 
-export async function getWeighings(animalId: string): Promise<AnimalWeighing[]> {
+export async function getWeighings(
+  animalId: string,
+): Promise<AnimalWeighing[]> {
   const response = await fetch(API_ENDPOINTS.ANIMAL_WEIGHINGS(animalId));
   const result = await response.json();
 
