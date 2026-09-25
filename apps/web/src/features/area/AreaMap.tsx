@@ -29,7 +29,12 @@ import {
   Globe,
   Map as MapIcon,
   LocateFixed,
+  Boxes,
+  Clock,
+  Hourglass,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { cn } from "@/lib/utils";
 
 import "@geoman-io/leaflet-geoman-free";
 
@@ -60,6 +65,18 @@ import {
 } from "./services";
 import { AreaForm } from "./AreaForm";
 import { AreaDetails } from "./AreaDetails";
+import {
+  AREA_STATUS_FILL_OPACITY,
+  AREA_STATUS_LABELS,
+  AREA_STATUS_PATH_CLASS,
+  AREA_STATUS_SWATCH,
+  AreaStatus,
+  OccupancySummary,
+  areaRotation,
+  areaStatus,
+  restStateLabel,
+  rotationDaysLabel,
+} from "./occupancy";
 
 const markerIconDefault = L.icon({
   iconUrl: markerIcon as unknown as string,
@@ -112,15 +129,6 @@ const invisibleIcon = L.divIcon({
   html: "",
   iconSize: [0, 0],
 });
-
-function getDeterministicColor(id: string) {
-  let hash = 0;
-  for (let i = 0; i < id.length; i++) {
-    hash = id.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  const h = Math.abs(hash % 360);
-  return `hsl(${h}, 75%, 45%)`;
-}
 
 function calculateAreaHectares(points: { lat: number; lng: number }[]): number {
   if (points.length < 3) return 0;
@@ -515,17 +523,33 @@ function EditablePolygon({
     };
   }, [leafletLayer, activeEditing, onPolygonChange, area.id]);
 
+  // A cor indica a situação da área (ocupada, livre, lotação excedida). O Leaflet só
+  // aplica className na criação, por isso o componente é remontado (key) quando a
+  // situação ou o modo de edição mudam.
+  const status = areaStatus(area);
+  // Áreas sem lote (livres, descansadas, inativas) têm contorno tracejado.
+  const isOpen = !area.occupancy;
+
   return (
     <Polygon
       ref={refCallback as any}
       positions={positions}
-      pathOptions={{
-        color: activeEditing ? "#f59e0b" : getDeterministicColor(area.id),
-        fillColor: activeEditing ? "#f59e0b" : getDeterministicColor(area.id),
-        fillOpacity: activeEditing ? 0.4 : 0.3,
-        weight: activeEditing ? 3 : 2,
-        dashArray: activeEditing ? "6, 6" : undefined,
-      }}
+      pathOptions={
+        activeEditing
+          ? {
+              color: "#f59e0b",
+              fillColor: "#f59e0b",
+              fillOpacity: 0.4,
+              weight: 3,
+              dashArray: "6, 6",
+            }
+          : {
+              className: AREA_STATUS_PATH_CLASS[status],
+              fillOpacity: AREA_STATUS_FILL_OPACITY[status],
+              weight: 2,
+              dashArray: isOpen ? "6, 6" : undefined,
+            }
+      }
     >
       {children}
     </Polygon>
@@ -575,6 +599,7 @@ async function geocodeAddress(
 }
 
 export default function AreaMap() {
+  const router = useRouter();
   const { property: currentProperty } = useCurrentProperty();
 
   const [areas, setAreas] = useState<AreaRow[]>([]);
@@ -672,6 +697,8 @@ export default function AreaMap() {
       polygon: null,
       hectares: "",
       stockingRate: "",
+      defaultOccupationDays: "",
+      defaultRestDays: "",
       notes: "",
       propertyId: "",
     },
@@ -755,6 +782,8 @@ export default function AreaMap() {
       polygon: null,
       hectares: "",
       stockingRate: "",
+      defaultOccupationDays: "",
+      defaultRestDays: "",
       notes: "",
       propertyId: currentProperty?.id ?? "",
     });
@@ -801,6 +830,8 @@ export default function AreaMap() {
       polygon: area.polygon,
       hectares: String(area.hectares),
       stockingRate: String(area.stockingRate),
+      defaultOccupationDays: area.defaultOccupationDays?.toString() ?? "",
+      defaultRestDays: area.defaultRestDays?.toString() ?? "",
       notes: area.notes ?? "",
       propertyId: area.propertyId,
     });
@@ -1095,6 +1126,7 @@ export default function AreaMap() {
                 return (
                   <div key={area.id}>
                     <EditablePolygon
+                      key={`${areaStatus(area)}-${isSelectedForEdit}`}
                       area={area}
                       isEditing={isSelectedForEdit}
                       editingPoints={
@@ -1119,7 +1151,22 @@ export default function AreaMap() {
                             <h4 className="font-semibold text-sm border-b border-border pb-1 mb-2">
                               {area.name}
                             </h4>
+                            <OccupancySummary area={area} className="mb-2" />
                             <div className="flex flex-col gap-1.5">
+                              {area.occupancy && (
+                                <Button
+                                  size="sm"
+                                  className="h-8 justify-start text-xs font-normal"
+                                  onClick={() =>
+                                    router.push(
+                                      `/lotes/${area.occupancy!.batch.id}/detalhes`,
+                                    )
+                                  }
+                                >
+                                  <Boxes className="size-3.5 mr-2 text-muted-foreground" />{" "}
+                                  Ver lote
+                                </Button>
+                              )}
                               {statusFilter === "active" ? (
                                 <>
                                   <Button
@@ -1190,7 +1237,41 @@ export default function AreaMap() {
                           direction="center"
                           className="bg-transparent border-none shadow-none font-bold text-foreground drop-shadow-[0_1.5px_1.5px_rgba(255,255,255,0.85)] dark:drop-shadow-[0_1.5px_1.5px_rgba(0,0,0,0.855)] text-xs select-none"
                         >
-                          {area.name}
+                          <div className="text-center leading-tight">
+                            <div>{area.name}</div>
+                            {!area.closedAt &&
+                              (() => {
+                                const rotation = areaRotation(area);
+                                const days = rotationDaysLabel(rotation);
+                                const overdue =
+                                  rotation?.kind === "occupation" &&
+                                  rotation.overdue;
+                                const DaysIcon = area.occupancy
+                                  ? Clock
+                                  : Hourglass;
+                                return (
+                                  <>
+                                    <div className="max-w-20 truncate text-[10px] font-normal text-muted-foreground">
+                                      {area.occupancy?.batch.name ??
+                                        restStateLabel(rotation)}
+                                    </div>
+                                    {days && (
+                                      <div
+                                        className={cn(
+                                          "flex items-center justify-center gap-0.5 text-[10px]",
+                                          overdue
+                                            ? "font-bold text-destructive"
+                                            : "font-normal text-muted-foreground",
+                                        )}
+                                      >
+                                        <DaysIcon className="size-2.5" />
+                                        {days}
+                                      </div>
+                                    )}
+                                  </>
+                                );
+                              })()}
+                          </div>
                         </Tooltip>
                       </Marker>
                     )}
@@ -1198,6 +1279,29 @@ export default function AreaMap() {
                 );
               })}
             </MapContainer>
+            {statusFilter === "active" && displayAreas.length > 0 && (
+              <div className="pointer-events-none absolute bottom-6 left-3 z-1000 space-y-1 rounded-md border border-border bg-background/90 px-3 py-2 text-xs shadow-sm">
+                {(
+                  [
+                    "occupied",
+                    "near",
+                    "exceeded",
+                    "free",
+                    "ready",
+                  ] as AreaStatus[]
+                ).map((status) => (
+                  <div key={status} className="flex items-center gap-2">
+                    <span
+                      className={cn(
+                        "size-3 rounded-sm border-2",
+                        AREA_STATUS_SWATCH[status],
+                      )}
+                    />
+                    {AREA_STATUS_LABELS[status]}
+                  </div>
+                ))}
+              </div>
+            )}
             {locatingProperty && !areasCentroid && !fallbackCoords && (
               <div className="pointer-events-none absolute inset-0 z-1000 flex flex-col items-center justify-center gap-2 bg-background/70 backdrop-blur-sm">
                 <Loader2 className="h-6 w-6 animate-spin text-primary" />

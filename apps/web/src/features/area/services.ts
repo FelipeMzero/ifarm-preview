@@ -16,15 +16,38 @@ export type AreaRow = {
   polygon: any;
   hectares: number;
   stockingRate: number;
+  defaultOccupationDays: number | null;
+  defaultRestDays: number | null;
   notes: string | null;
   propertyId: string;
   closedAt: string | null;
   updatedAt: string;
+  /** Lote que ocupa a área hoje; null quando livre. */
+  occupancy: {
+    batch: { id: string; name: string };
+    occupiedSince: string;
+    animalCount: number;
+    currentUa: number;
+    estimatedCount: number;
+    capacityUa: number;
+    exceeds: boolean;
+  } | null;
+  /** Saída do último lote (início do descanso); null se nunca foi ocupada. */
+  lastExitAt: string | null;
+};
+
+export type AreaOccupancyHistoryEntry = {
+  id: number;
+  batch: { id: string; name: string };
+  enteredAt: string;
+  exitedAt: string | null;
+  notes: string | null;
 };
 
 const API_ENDPOINTS = {
   AREAS: "/api/area",
   AREA_BY_ID: (id: string) => `/api/area/${id}`,
+  AREA_HISTORY: (id: string) => `/api/area/${id}/history`,
 } as const;
 
 export async function getAreas(
@@ -59,6 +82,8 @@ export async function getArea(id: string): Promise<AreaFormData> {
     polygon: result.polygon,
     hectares: String(result.hectares),
     stockingRate: String(result.stockingRate),
+    defaultOccupationDays: result.defaultOccupationDays?.toString() ?? "",
+    defaultRestDays: result.defaultRestDays?.toString() ?? "",
     notes: result.notes ?? "",
     propertyId: result.propertyId,
   };
@@ -128,4 +153,19 @@ export async function toggleAreaStatus(id: string) {
   }
 
   return result;
+}
+
+export async function getAreaOccupancyHistory(
+  id: string,
+): Promise<AreaOccupancyHistoryEntry[]> {
+  const response = await fetch(API_ENDPOINTS.AREA_HISTORY(id));
+  const result = await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      result.message ?? "Não foi possível buscar o histórico da área.",
+    );
+  }
+
+  return result.data;
 }

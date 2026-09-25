@@ -35,6 +35,8 @@ export async function GET(
       polygon: area.polygon,
       hectares: area.hectares.toNumber(),
       stockingRate: area.stockingRate.toNumber(),
+      defaultOccupationDays: area.defaultOccupationDays,
+      defaultRestDays: area.defaultRestDays,
       notes: area.notes ?? "",
       propertyId: area.propertyId,
       closedAt: area.closedAt?.toISOString() ?? null,
@@ -71,7 +73,15 @@ export async function PUT(
       return NextResponse.json({ success: false, errors }, { status: 400 });
     }
 
-    const { name, polygon, hectares, stockingRate, notes } = validation.data;
+    const {
+      name,
+      polygon,
+      hectares,
+      stockingRate,
+      defaultOccupationDays,
+      defaultRestDays,
+      notes,
+    } = validation.data;
 
     const current = await prisma.area.findUnique({
       where: { id },
@@ -91,6 +101,8 @@ export async function PUT(
         polygon,
         hectares,
         stockingRate,
+        defaultOccupationDays,
+        defaultRestDays,
         notes,
       },
     });

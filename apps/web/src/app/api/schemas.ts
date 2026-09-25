@@ -581,6 +581,16 @@ export const breedApiSchema = z.object({
 
 export type BreedApiData = z.infer<typeof breedApiSchema>;
 
+const areaDaysApiField = z.preprocess(
+  (v) => (v === "" || v === undefined ? null : v),
+  z.coerce
+    .number()
+    .int("Informe um número inteiro de dias.")
+    .positive("Valor inválido.")
+    .max(FIELD_LIMITS.area.days, `Máximo de ${FIELD_LIMITS.area.days} dias.`)
+    .nullable(),
+);
+
 export const areaApiSchema = z.object({
   name: z
     .string()
@@ -610,6 +620,8 @@ export const areaApiSchema = z.object({
         `Taxa de lotação não pode ultrapassar ${FIELD_LIMITS.area.stockingRate} UA/ha`,
       ),
   ),
+  defaultOccupationDays: areaDaysApiField,
+  defaultRestDays: areaDaysApiField,
   notes: z
     .string()
     .max(

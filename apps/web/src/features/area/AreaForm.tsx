@@ -143,6 +143,42 @@ export function AreaForm({
               />
             </FieldRow>
 
+            <FieldRow cols={2}>
+              <FormField
+                name="defaultOccupationDays"
+                control={form.control}
+                label="Dias de ocupação"
+                helperText="Referência de quantos dias um lote costuma permanecer na área."
+                render={({ field }) => (
+                  <Input
+                    {...field}
+                    type="number"
+                    step="1"
+                    min="1"
+                    max={FIELD_LIMITS.area.days}
+                    placeholder="Ex: 7"
+                  />
+                )}
+              />
+
+              <FormField
+                name="defaultRestDays"
+                control={form.control}
+                label="Dias de descanso"
+                helperText="Referência de quantos dias a área fica sem animais para o pasto se recuperar."
+                render={({ field }) => (
+                  <Input
+                    {...field}
+                    type="number"
+                    step="1"
+                    min="1"
+                    max={FIELD_LIMITS.area.days}
+                    placeholder="Ex: 30"
+                  />
+                )}
+              />
+            </FieldRow>
+
             <FieldRow>
               <FormField
                 name="notes"

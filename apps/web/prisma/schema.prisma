@@ -66,6 +66,8 @@ model Area {
   polygon      Json                                   // Contorno desenhado no mapa
   hectares     Decimal  @db.Decimal(10, 4)             // Área total (ha)
   stockingRate Decimal  @db.Decimal(10, 4) @map("stocking_rate") // Taxa de lotação (UA/ha)
+  defaultOccupationDays Int? @map("default_occupation_days") // referência geral, usada quando não há plano ativo
+  defaultRestDays       Int? @map("default_rest_days")       // idem
   notes        String?                                // Observação
   closedAt DateTime? @map("closed_at")            // No caso da Área e Fazenda acho que vai se tornar closedAt (fechar uma área não é o mesmo que desativar uma pessoa)
 

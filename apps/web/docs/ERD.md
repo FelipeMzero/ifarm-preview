@@ -25,6 +25,8 @@ erDiagram
     Json polygon 
     Decimal hectares 
     Decimal stocking_rate 
+    Int default_occupation_days "❓"
+    Int default_rest_days "❓"
     String notes "❓"
     DateTime closed_at "❓"
     String property_id 

@@ -1,6 +1,8 @@
 "use client";
 
-import { Trash2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { Boxes, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -9,7 +11,16 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { AreaRow } from "./services";
+import {
+  AreaOccupancyHistoryEntry,
+  AreaRow,
+  getAreaOccupancyHistory,
+} from "./services";
+import { OccupancySummary } from "./occupancy";
+
+function formatDate(iso: string) {
+  return new Date(iso).toLocaleDateString("pt-BR");
+}
 
 interface AreaDetailsProps {
   area: AreaRow | null;
@@ -24,6 +35,32 @@ export function AreaDetails({
   onOpenChange,
   onDelete,
 }: AreaDetailsProps) {
+  const router = useRouter();
+  const [history, setHistory] = useState<{
+    areaId: string;
+    entries: AreaOccupancyHistoryEntry[];
+  } | null>(null);
+
+  const areaId = open ? area?.id : undefined;
+
+  useEffect(() => {
+    if (!areaId) return;
+    let cancelled = false;
+    getAreaOccupancyHistory(areaId)
+      .then((entries) => {
+        if (!cancelled) setHistory({ areaId, entries });
+      })
+      .catch(() => {
+        if (!cancelled) setHistory({ areaId, entries: [] });
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [areaId]);
+
+  // Evita mostrar o histórico de outra área enquanto o desta carrega.
+  const entries = history && history.areaId === areaId ? history.entries : null;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
@@ -63,6 +100,78 @@ export function AreaDetails({
                 </span>
                 <span>{area.stockingRate} UA/ha</span>
               </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 border-b border-border pb-3 text-sm">
+              <div>
+                <span className="text-xs text-muted-foreground block">
+                  DIAS DE OCUPAÇÃO
+                </span>
+                <span>
+                  {area.defaultOccupationDays != null
+                    ? `${area.defaultOccupationDays} dias`
+                    : "—"}
+                </span>
+              </div>
+              <div>
+                <span className="text-xs text-muted-foreground block">
+                  DIAS DE DESCANSO
+                </span>
+                <span>
+                  {area.defaultRestDays != null
+                    ? `${area.defaultRestDays} dias`
+                    : "—"}
+                </span>
+              </div>
+            </div>
+
+            <div className="border-b border-border pb-3 text-sm">
+              <div className="mb-1 flex items-center justify-between">
+                <span className="text-xs text-muted-foreground">OCUPAÇÃO</span>
+                {area.occupancy && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() =>
+                      router.push(`/lotes/${area.occupancy!.batch.id}/detalhes`)
+                    }
+                  >
+                    <Boxes className="size-3.5" /> Ver lote
+                  </Button>
+                )}
+              </div>
+              <OccupancySummary area={area} className="text-sm" />
+            </div>
+
+            <div className="border-b border-border pb-3 text-sm">
+              <span className="mb-1 block text-xs text-muted-foreground">
+                HISTÓRICO DE LOTES
+              </span>
+              {entries === null ? (
+                <p className="text-xs text-muted-foreground">Carregando...</p>
+              ) : entries.length === 0 ? (
+                <p className="text-xs text-muted-foreground">
+                  Nenhum lote ocupou esta área.
+                </p>
+              ) : (
+                <ul className="max-h-40 space-y-1 overflow-y-auto">
+                  {entries.map((h) => (
+                    <li
+                      key={h.id}
+                      className="flex items-center justify-between gap-2 text-xs"
+                    >
+                      <span className="truncate font-medium">
+                        {h.batch.name}
+                      </span>
+                      <span className="shrink-0 tabular-nums text-muted-foreground">
+                        {formatDate(h.enteredAt)} —{" "}
+                        {h.exitedAt ? formatDate(h.exitedAt) : "atual"}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
 
             <div className="text-sm">

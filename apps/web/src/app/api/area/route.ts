@@ -5,6 +5,7 @@ import { RESOURCE_ACCESS } from "@/lib/permissions";
 import { uniqueConstraintErrors } from "../dbErrors";
 import { areaApiSchema, areaQuerySchema } from "../schemas";
 import { getOrAssignCurrentProperty } from "../user/current-property/currentProperty";
+import { areasLastExit, areasOccupancy } from "../stocking";
 
 export async function GET(request: NextRequest) {
   const { session, response } = await requireSession(RESOURCE_ACCESS.areas);
@@ -62,6 +63,15 @@ export async function GET(request: NextRequest) {
       orderBy: { name: "asc" },
     });
 
+    const lastExit = await areasLastExit(areas.map((a) => a.id));
+    const occupancy = await areasOccupancy(
+      areas.map((a) => ({
+        id: a.id,
+        hectares: a.hectares.toNumber(),
+        stockingRate: a.stockingRate.toNumber(),
+      })),
+    );
+
     return NextResponse.json({
       data: areas.map((a) => ({
         id: a.id,
@@ -69,10 +79,14 @@ export async function GET(request: NextRequest) {
         polygon: a.polygon,
         hectares: a.hectares.toNumber(),
         stockingRate: a.stockingRate.toNumber(),
+        defaultOccupationDays: a.defaultOccupationDays,
+        defaultRestDays: a.defaultRestDays,
         notes: a.notes,
         propertyId: a.propertyId,
         closedAt: a.closedAt?.toISOString() ?? null,
         updatedAt: a.updatedAt.toISOString(),
+        occupancy: occupancy.get(a.id) ?? null,
+        lastExitAt: lastExit.get(a.id) ?? null,
       })),
     });
   } catch (error) {
@@ -101,8 +115,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, errors }, { status: 400 });
     }
 
-    const { name, polygon, hectares, stockingRate, notes, propertyId } =
-      validation.data;
+    const {
+      name,
+      polygon,
+      hectares,
+      stockingRate,
+      defaultOccupationDays,
+      defaultRestDays,
+      notes,
+      propertyId,
+    } = validation.data;
 
     const property = await prisma.property.findUnique({
       where: { id: propertyId },
@@ -125,6 +147,8 @@ export async function POST(request: NextRequest) {
         polygon,
         hectares,
         stockingRate,
+        defaultOccupationDays,
+        defaultRestDays,
         notes,
         propertyId,
       },

@@ -176,3 +176,89 @@ export async function stockingPreview(params: {
     exceeds: projectedUa > capacityUa,
   };
 }
+
+export type AreaOccupancy = {
+  batch: { id: string; name: string };
+  /** Entrada do lote atual na área (início do período de ocupação). */
+  occupiedSince: string;
+  animalCount: number;
+  currentUa: number;
+  estimatedCount: number;
+  capacityUa: number;
+  exceeds: boolean;
+};
+
+// Ocupação atual de várias áreas de uma vez (para o mapa): lote aberto em cada área,
+// quantidade de animais e UA. Áreas livres ficam fora do mapa retornado.
+export async function areasOccupancy(
+  areas: { id: string; hectares: number; stockingRate: number }[],
+): Promise<Map<string, AreaOccupancy>> {
+  const result = new Map<string, AreaOccupancy>();
+  if (!areas.length) return result;
+
+  const histories = await prisma.batchAreaHistory.findMany({
+    where: {
+      areaId: { in: areas.map((a) => a.id) },
+      exitedAt: null,
+      batch: { closedAt: null },
+    },
+    select: {
+      areaId: true,
+      enteredAt: true,
+      batch: { select: { id: true, name: true } },
+    },
+  });
+  if (!histories.length) return result;
+
+  const animals = await prisma.animal.findMany({
+    where: {
+      status: "ACTIVE",
+      currentBatchId: { in: histories.map((h) => h.batch.id) },
+    },
+    select: { ...UA_SELECT, currentBatchId: true },
+  });
+
+  const now = new Date();
+  const byBatch = new Map<string, UaAnimal[]>();
+  for (const a of animals) {
+    const list = byBatch.get(a.currentBatchId!) ?? [];
+    list.push(toUaAnimal(a));
+    byBatch.set(a.currentBatchId!, list);
+  }
+
+  const areaById = new Map(areas.map((a) => [a.id, a]));
+  for (const h of histories) {
+    const area = areaById.get(h.areaId)!;
+    const total = sumUnits(byBatch.get(h.batch.id) ?? [], now);
+    const capacityUa = area.hectares * area.stockingRate;
+    result.set(h.areaId, {
+      batch: h.batch,
+      occupiedSince: h.enteredAt.toISOString(),
+      animalCount: total.count,
+      currentUa: total.ua,
+      estimatedCount: total.estimatedCount,
+      capacityUa,
+      exceeds: total.ua > capacityUa,
+    });
+  }
+
+  return result;
+}
+
+// Última saída de lote de cada área (início do período de descanso). Áreas que
+// nunca foram ocupadas ficam fora do mapa retornado.
+export async function areasLastExit(
+  areaIds: string[],
+): Promise<Map<string, string>> {
+  if (!areaIds.length) return new Map();
+  const rows = await prisma.batchAreaHistory.groupBy({
+    by: ["areaId"],
+    where: { areaId: { in: areaIds }, exitedAt: { not: null } },
+    _max: { exitedAt: true },
+  });
+  return new Map(
+    rows
+      .filter((r) => r._max.exitedAt)
+      .map((r) => [r.areaId, r._max.exitedAt!.toISOString()]),
+  );
+}
