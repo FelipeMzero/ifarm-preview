@@ -217,7 +217,6 @@ export default function AnimalForm({
             <FormField
               name="currentTag"
               label="Brinco"
-              required
               control={control}
               render={({ field, id }) => (
                 <Input {...field} id={id} placeholder="Ex: MS-001234" />

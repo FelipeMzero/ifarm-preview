@@ -445,8 +445,8 @@ const ANIMAL_TEMPLATE: AnimalTemplate[] = [
     sex: "MALE",
     neutered: false,
     origin: "BIRTH",
-    weightKg: 38,
-    birthDate: "2025-06-20",
+    weightKg: 38, // peso ao nascer
+    birthDate: "2025-04-01", // nascido na fazenda: coincide com a entrada (entryDate)
   },
 ];
 
@@ -549,7 +549,7 @@ async function seedAnimals() {
             await tx.neuteringManagementItem.create({
               data: {
                 animalId: animal.id,
-                notes: "Cirúrgico",
+                method: "Cirúrgico",
                 neuteredAt: entryDate,
               },
             });

@@ -411,8 +411,7 @@ model RfidManagementItem {
 }
 
 model NeuteringManagement {
-  id     String  @id @default(uuid()) @db.Uuid
-  method String?
+  id    String  @id @default(uuid()) @db.Uuid
   items NeuteringManagementItem[]
 
   managementSessionId String            @unique @db.Uuid @map("management_session_id")
@@ -424,8 +423,9 @@ model NeuteringManagement {
 }
 
 model NeuteringManagementItem {
-  id    Int     @id @default(autoincrement())
-  notes String? // observação específica desse animal (ex.: complicação, sangramento, recastração)
+  id     Int     @id @default(autoincrement())
+  method String? // método usado neste animal (ex.: burdizzo, cirúrgica, elástico)
+  notes  String? // observação específica desse animal (ex.: complicação, sangramento, recastração)
 
   neuteredAt DateTime? @map("neutered_at") // preenchido só quando managementId = null (avulso)
 
@@ -457,10 +457,14 @@ model WeighingManagement {
 model WeighingManagementItem {
   id     Int     @id @default(autoincrement())
   weight Decimal @db.Decimal(10, 2) // valor da pesagem (kg), sempre individual
-
   notes  String?
-
   weighedAt DateTime? @map("weighed_at") // preenchido só quando managementId = null (avulso)
+
+  // Correções preservam o rastro: o peso lançado originalmente é guardado na primeira correção
+  // e a exclusão é lógica (cancelada = ignorada no histórico, gráficos e peso atual).
+  originalWeight Decimal?  @db.Decimal(10, 2) @map("original_weight")
+  correctedAt    DateTime? @map("corrected_at")
+  cancelledAt    DateTime? @map("cancelled_at")
 
   managementId String?             @db.Uuid @map("management_id") // null = avulso
   management   WeighingManagement? @relation(fields: [managementId], references: [id], onDelete: Restrict)

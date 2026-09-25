@@ -3,7 +3,14 @@
 import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowLeft, ArrowRightLeft, Loader2, Weight } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRightLeft,
+  History,
+  Loader2,
+  Scissors,
+  Weight,
+} from "lucide-react";
 import { toast } from "sonner";
 
 import { ApiError, AnimalDetail, getAnimal, updateAnimal } from "./services";
@@ -24,11 +31,17 @@ import {
   ANIMAL_STATUS_LABELS,
   SEX_ITEMS,
 } from "@/lib/enum-labels";
-import { AnimalEditFormData, animalEditFormSchema } from "./schema";
+import {
+  AnimalEditFormData,
+  animalEditFormSchema,
+  AnimalNeuteringData,
+} from "./schema";
 import { Separator } from "@/components/ui/separator";
 import { AnimalIdentifierChangeDialog } from "./AnimalIdentifierChangeDialog";
 import { AnimalWeightChangeDialog } from "./AnimalWeightChangeDialog";
 import { AnimalBatchChangeDialog } from "./AnimalBatchChangeDialog";
+import { AnimalNeuteringDialog } from "./AnimalNeuteringDialog";
+import { AnimalWeighingHistoryDialog } from "./AnimalWeighingHistoryDialog";
 
 type AnimalEditFormProps = {
   id: string;
@@ -70,6 +83,12 @@ export function AnimalEditForm({
   const [pendingWeightNotes, setPendingWeightNotes] = useState<
     string | undefined
   >();
+
+  const [weighingHistoryOpen, setWeighingHistoryOpen] = useState(false);
+
+  const [neuteringDialogOpen, setNeuteringDialogOpen] = useState(false);
+  const [pendingNeutering, setPendingNeutering] =
+    useState<AnimalNeuteringData | null>(null);
 
   const {
     handleSubmit,
@@ -131,6 +150,9 @@ export function AnimalEditForm({
         batchChangeNotes: pendingBatchNotes,
         newWeightKg: pendingWeight ?? undefined,
         weightChangeNotes: pendingWeightNotes,
+        neuteredAt: pendingNeutering?.date,
+        neuteringMethod: pendingNeutering?.method,
+        neuteringNotes: pendingNeutering?.notes,
       });
 
       const fresh = await getAnimal(id);
@@ -150,6 +172,7 @@ export function AnimalEditForm({
       setPendingBatchNotes(undefined);
       setPendingWeight(null);
       setPendingWeightNotes(undefined);
+      setPendingNeutering(null);
 
       toast.success("Atualizado com sucesso!");
       onSuccess?.();
@@ -181,9 +204,19 @@ export function AnimalEditForm({
     return <FormSkeleton />;
   }
 
-  const displayTag = pendingTag ?? animal.currentTag;
-  const displayRfid = pendingRfid ?? animal.currentRfid;
+  // pendente "" = identificador removido; null = sem alteração
+  const displayTag = pendingTag !== null ? pendingTag : animal.currentTag;
+  const displayRfid = pendingRfid !== null ? pendingRfid : animal.currentRfid;
   const displayBatchName = pendingBatchName ?? animal.currentBatchName;
+  const displayNeutering = pendingNeutering
+    ? `Castrado em ${new Date(`${pendingNeutering.date}T00:00:00`).toLocaleDateString("pt-BR")}`
+    : animal.neutered
+      ? animal.neuteredAt
+        ? `Castrado em ${new Date(animal.neuteredAt).toLocaleDateString("pt-BR")}`
+        : "Castrado"
+      : "Não castrado";
+  const canRegisterNeutering = !pendingNeutering;
+
   const displayWeight =
     pendingWeight ??
     (animal.currentWeightKg != null ? String(animal.currentWeightKg) : null);
@@ -237,7 +270,7 @@ export function AnimalEditForm({
                 <Input
                   id="currentTagDisplay"
                   readOnly
-                  value={displayTag}
+                  value={displayTag || "Nenhum"}
                   className="flex-1"
                 />
                 <Button
@@ -263,7 +296,7 @@ export function AnimalEditForm({
                 <Input
                   id="currentRfidDisplay"
                   readOnly
-                  value={displayRfid ?? "Nenhum"}
+                  value={displayRfid || "Nenhum"}
                   className="flex-1"
                 />
                 <Button
@@ -354,7 +387,7 @@ export function AnimalEditForm({
         <Separator />
 
         <FieldSet className="border-0">
-          <FieldLegend>Lote e Peso</FieldLegend>
+          <FieldLegend>Manejo</FieldLegend>
 
           <FieldRow cols={2}>
             <div className="space-y-2">
@@ -408,6 +441,49 @@ export function AnimalEditForm({
                 >
                   <Weight className="size-4" />
                 </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon-sm"
+                  title="Histórico de pesagens"
+                  onClick={() => setWeighingHistoryOpen(true)}
+                >
+                  <History className="size-4" />
+                </Button>
+              </div>
+            </div>
+          </FieldRow>
+
+          <FieldRow cols={2}>
+            <div className="space-y-2">
+              <label
+                htmlFor="neuteringDisplay"
+                className="text-sm font-medium uppercase text-muted-foreground"
+              >
+                Castração
+              </label>
+              <div className="flex items-center gap-2">
+                <Input
+                  id="neuteringDisplay"
+                  readOnly
+                  value={displayNeutering}
+                  className="flex-1"
+                />
+                {canRegisterNeutering && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon-sm"
+                    title={
+                      animal.neutered
+                        ? "Registrar recastração"
+                        : "Registrar castração"
+                    }
+                    onClick={() => setNeuteringDialogOpen(true)}
+                  >
+                    <Scissors className="size-4" />
+                  </Button>
+                )}
               </div>
             </div>
           </FieldRow>
@@ -426,8 +502,10 @@ export function AnimalEditForm({
         open={tagDialogOpen}
         onOpenChange={setTagDialogOpen}
         onConfirm={(value, notes) => {
-          setPendingTag(value);
-          setPendingTagNotes(notes);
+          // Remover um identificador que o animal não tem não gera histórico.
+          const unchanged = !value && !animal.currentTag;
+          setPendingTag(unchanged ? null : value);
+          setPendingTagNotes(unchanged ? undefined : notes);
         }}
       />
 
@@ -436,8 +514,10 @@ export function AnimalEditForm({
         open={rfidDialogOpen}
         onOpenChange={setRfidDialogOpen}
         onConfirm={(value, notes) => {
-          setPendingRfid(value);
-          setPendingRfidNotes(notes);
+          // Remover um identificador que o animal não tem não gera histórico.
+          const unchanged = !value && !animal.currentRfid;
+          setPendingRfid(unchanged ? null : value);
+          setPendingRfidNotes(unchanged ? undefined : notes);
         }}
       />
 
@@ -451,6 +531,29 @@ export function AnimalEditForm({
           setPendingBatchName(batchName ?? "Lote selecionado");
           setPendingBatchNotes(notes);
         }}
+      />
+
+      <AnimalWeighingHistoryDialog
+        animalId={animal.id}
+        birthDate={animal.birthDate}
+        open={weighingHistoryOpen}
+        onOpenChange={setWeighingHistoryOpen}
+        onChanged={async () => {
+          // Só o peso atual muda; as alterações pendentes do formulário são preservadas.
+          try {
+            setAnimal(await getAnimal(id));
+          } catch {
+            toast.error("Não foi possível atualizar o peso atual.");
+          }
+        }}
+      />
+
+      <AnimalNeuteringDialog
+        open={neuteringDialogOpen}
+        isRecastration={animal.neutered}
+        lastNeuteredAt={animal.neuteredAt}
+        onOpenChange={setNeuteringDialogOpen}
+        onConfirm={setPendingNeutering}
       />
 
       <AnimalWeightChangeDialog

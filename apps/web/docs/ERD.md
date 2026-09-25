@@ -194,7 +194,6 @@ erDiagram
 
   "neutering_management" {
     String id "🗝️"
-    String method "❓"
     String management_session_id 
     DateTime created_at 
     }
@@ -202,6 +201,7 @@ erDiagram
 
   "neutering_management_item" {
     Int management_id "🗝️"
+    String method "❓"
     String notes "❓"
     DateTime neutered_at "❓"
     String neutered_at "❓"
@@ -222,6 +222,9 @@ erDiagram
     Decimal weight 
     String notes "❓"
     DateTime weighed_at "❓"
+    Decimal original_weight "❓"
+    DateTime corrected_at "❓"
+    DateTime cancelled_at "❓"
     String weighed_at "❓"
     String animal_id 
     DateTime created_at 

@@ -12,8 +12,9 @@ export class ApiError extends Error {
 
 export type AnimalRow = {
   id: string;
+  code: number;
   rfid: string | null;
-  earTag: string;
+  earTag: string | null;
   currentTag: string | null;
   name: string | null;
   sex: string;
@@ -28,6 +29,10 @@ export type AnimalRow = {
 const API_ENDPOINTS = {
   ANIMALS: "/api/animal",
   ANIMAL_BY_ID: (id: string) => `/api/animal/${id}`,
+  ANIMAL_DETAILS: (id: string) => `/api/animal/${id}/details`,
+  ANIMAL_WEIGHINGS: (id: string) => `/api/animal/${id}/weighings`,
+  ANIMAL_WEIGHING: (id: string, weighingId: number) =>
+    `/api/animal/${id}/weighings/${weighingId}`,
 } as const;
 
 export async function createAnimal(
@@ -64,6 +69,9 @@ export type AnimalUpdateData = {
   batchChangeNotes?: string;
   newWeightKg?: string;
   weightChangeNotes?: string;
+  neuteredAt?: string;
+  neuteringMethod?: string;
+  neuteringNotes?: string;
 };
 
 export async function updateAnimal(id: string, data: AnimalUpdateData) {
@@ -100,7 +108,7 @@ export async function deleteAnimal(id: string) {
 
 export type AnimalDetail = {
   id: string;
-  currentTag: string;
+  currentTag: string | null;
   currentRfid: string | null;
   name: string | null;
   sex: string;
@@ -110,6 +118,7 @@ export type AnimalDetail = {
   origin: string;
   status: string;
   neutered: boolean;
+  neuteredAt: string | null;
   currentBatchId: string | null;
   currentBatchName: string | null;
   currentPropertyId: string;
@@ -162,6 +171,169 @@ export async function getAnimals(
   if (sex) query.set("sex", sex);
 
   const response = await fetch(`${API_ENDPOINTS.ANIMALS}?${query}`);
+  const result = await response.json();
+
+  if (!response.ok) {
+    throw new Error(result.message);
+  }
+
+  return result;
+}
+
+export type AnimalWeighing = {
+  id: number;
+  date: string;
+  weightKg: number;
+  notes: string | null;
+  fromSession: boolean;
+  correctedAt: string | null;
+  originalWeightKg: number | null;
+};
+
+export type AnimalIdentifierHistory = {
+  id: number;
+  date: string;
+  value: string | null;
+  notes: string | null;
+};
+
+export type AnimalNeutering = {
+  id: number;
+  date: string;
+  method: string | null;
+  notes: string | null;
+};
+
+export type AnimalHealthRecord = {
+  id: number;
+  date: string;
+  typeName: string;
+  title: string | null;
+  veterinarianName: string | null;
+  withdrawalUntil: string | null;
+  nextDueDate: string | null;
+  cost: number | null;
+  notes: string | null;
+};
+
+export type AnimalBatchHistoryEntry = {
+  id: number;
+  batchId: string | null;
+  batchName: string | null;
+  enteredAt: string;
+  exitedAt: string | null;
+  notes: string | null;
+};
+
+export type AnimalPropertyHistoryEntry = {
+  id: number;
+  propertyId: string;
+  propertyName: string;
+  enteredAt: string;
+  exitedAt: string | null;
+  notes: string | null;
+};
+
+export type AnimalPurchase = {
+  date: string;
+  sellerId: string;
+  sellerName: string;
+  pricingType: string;
+  pricePerArroba: number | null;
+  totalPrice: number | null;
+  cost: number | null;
+  weightKg: number | null;
+  gtaNumber: string | null;
+  notes: string | null;
+};
+
+export type AnimalFullDetails = {
+  id: string;
+  code: number;
+  currentTag: string | null;
+  currentRfid: string | null;
+  name: string | null;
+  sex: string;
+  birthDate: string | null;
+  breedName: string | null;
+  origin: string;
+  status: string;
+  neutered: boolean;
+  currentBatch: { id: string; name: string } | null;
+  currentProperty: { id: string; name: string };
+  currentWeightKg: number | null;
+  createdAt: string;
+  updatedAt: string;
+  weighings: AnimalWeighing[];
+  tagHistory: AnimalIdentifierHistory[];
+  rfidHistory: AnimalIdentifierHistory[];
+  neutering: AnimalNeutering[];
+  health: AnimalHealthRecord[];
+  batchHistory: AnimalBatchHistoryEntry[];
+  propertyHistory: AnimalPropertyHistoryEntry[];
+  purchase: AnimalPurchase | null;
+};
+
+export async function getAnimalDetails(
+  id: string,
+): Promise<AnimalFullDetails> {
+  const response = await fetch(API_ENDPOINTS.ANIMAL_DETAILS(id));
+  const result = await response.json();
+
+  if (!response.ok) {
+    throw new Error(result.message);
+  }
+
+  return result;
+}
+
+export type WeighingCorrectionData = {
+  weightKg: string;
+  date?: string;
+  notes?: string;
+};
+
+export async function correctWeighing(
+  animalId: string,
+  weighingId: number,
+  data: WeighingCorrectionData,
+) {
+  const response = await fetch(
+    API_ENDPOINTS.ANIMAL_WEIGHING(animalId, weighingId),
+    {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    },
+  );
+  const result = await response.json();
+
+  if (!response.ok) {
+    throw new ApiError(
+      result.message ?? "Não foi possível corrigir a pesagem.",
+      result.errors,
+    );
+  }
+
+  return result;
+}
+
+export async function cancelWeighing(animalId: string, weighingId: number) {
+  const response = await fetch(
+    API_ENDPOINTS.ANIMAL_WEIGHING(animalId, weighingId),
+    { method: "DELETE" },
+  );
+  const result = await response.json();
+
+  if (!response.ok) {
+    throw new Error(result.message ?? "Não foi possível excluir a pesagem.");
+  }
+
+  return result;
+}
+
+export async function getWeighings(animalId: string): Promise<AnimalWeighing[]> {
+  const response = await fetch(API_ENDPOINTS.ANIMAL_WEIGHINGS(animalId));
   const result = await response.json();
 
   if (!response.ok) {

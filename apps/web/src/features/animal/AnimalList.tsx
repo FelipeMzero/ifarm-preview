@@ -3,13 +3,14 @@
 import { ColumnDef, VisibilityState } from "@tanstack/react-table";
 import {
   Beef,
-  Mars,
+  IdCard,
+  Nfc,
   Pencil,
   Plus,
   Search,
   Settings2,
+  Tag,
   Trash2,
-  Venus,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
@@ -29,9 +30,17 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { SelectField } from "@/components/our/SelectField";
 import { AnimalRow, deleteAnimal, getAnimals } from "./services";
-import { EnumAnimalOrigin, EnumAnimalStatus, EnumSex } from "./schema";
+import { EnumAnimalStatus } from "./schema";
+import { ORIGIN_VARIANT, SEX_ICON, STATUS_VARIANT } from "./display";
+import AnimalDetails from "./AnimalDetails";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import {
   ANIMAL_ORIGIN_LABELS,
   ANIMAL_STATUS_LABELS,
@@ -43,8 +52,6 @@ import { useCurrentProperty } from "@/features/shell/CurrentPropertyProvider";
 const DEFAULT_PAGE_SIZE = 10;
 
 const COLUMN_LABELS: Record<string, string> = {
-  earTag: "Brinco",
-  rfid: "RFID",
   sex: "Sexo",
   origin: "Origem",
   status: "Status",
@@ -52,48 +59,66 @@ const COLUMN_LABELS: Record<string, string> = {
   updatedAt: "Atualizado em",
 };
 
-const ORIGIN_VARIANT: Record<
-  string,
-  "default" | "secondary" | "destructive" | "outline"
-> = {
-  [EnumAnimalOrigin.BIRTH]: "default",
-  [EnumAnimalOrigin.PURCHASE]: "secondary",
-  [EnumAnimalOrigin.DONATION]: "outline",
-  [EnumAnimalOrigin.REFERENCE]: "outline",
-};
+// Destaca o identificador principal (brinco → RFID → ID) e mantém o ID sempre visível.
+function AnimalIdentification({ animal }: { animal: AnimalRow }) {
+  const { code, earTag, rfid } = animal;
+  const primary = earTag
+    ? { label: "Brinco", value: earTag, icon: Tag }
+    : rfid
+      ? { label: "RFID", value: rfid, icon: Nfc }
+      : null;
 
-const STATUS_VARIANT: Record<
-  string,
-  "default" | "secondary" | "destructive" | "outline"
-> = {
-  [EnumAnimalStatus.ACTIVE]: "default",
-  [EnumAnimalStatus.SOLD]: "secondary",
-  [EnumAnimalStatus.DONATED]: "secondary",
-  [EnumAnimalStatus.DEAD]: "destructive",
-  [EnumAnimalStatus.DISCARDED]: "outline",
-  [EnumAnimalStatus.SLAUGHTERED]: "destructive",
-  [EnumAnimalStatus.REFERENCE]: "outline",
-};
+  if (!primary) {
+    return <span className="font-medium tabular-nums">ID {code}</span>;
+  }
 
-const SEX_ICON: Record<string, React.ReactNode> = {
-  [EnumSex.MALE]: <Mars className="size-5 text-blue-700" />,
-  [EnumSex.FEMALE]: <Venus className="size-5 text-pink-700" />,
-};
+  const Icon = primary.icon;
+
+  return (
+    <div className="flex flex-col leading-tight">
+      <div className="flex items-center gap-1.5">
+        <Icon
+          className="size-3.5 shrink-0 text-muted-foreground"
+          aria-label={primary.label}
+        />
+        <span className="max-w-40 truncate font-medium" title={primary.value}>
+          {primary.value}
+        </span>
+        {earTag && rfid && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                type="button"
+                className="text-muted-foreground hover:text-foreground"
+                aria-label={`RFID ${rfid}`}
+              >
+                <Nfc className="size-3.5" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent>
+              RFID <span className="font-mono">{rfid}</span>
+            </TooltipContent>
+          </Tooltip>
+        )}
+      </div>
+      <span className="text-xs text-muted-foreground tabular-nums">
+        ID {code}
+      </span>
+    </div>
+  );
+}
 
 function buildColumns(
   onRequestEdit: (id: string) => void,
+  onRequestViewDetails: (id: string) => void,
   onRequestDelete: (id: string) => void,
 ): ColumnDef<AnimalRow>[] {
   return [
     {
-      header: "Brinco",
-      accessorKey: "earTag",
-      cell: ({ row }) => row.original.earTag ?? "—",
-    },
-    {
-      header: "RFID",
-      accessorKey: "rfid",
-      cell: ({ row }) => row.original.rfid ?? "—",
+      id: "identification",
+      header: "Identificação",
+      accessorFn: (row) => row.earTag ?? row.rfid ?? `ID ${row.code}`,
+      cell: ({ row }) => <AnimalIdentification animal={row.original} />,
     },
     {
       header: "Sexo",
@@ -153,6 +178,7 @@ function buildColumns(
           <Button
             variant="ghost"
             size="icon-sm"
+            title="Editar"
             onClick={() => onRequestEdit(row.original.id)}
           >
             <Pencil className="size-4" />
@@ -160,6 +186,15 @@ function buildColumns(
           <Button
             variant="ghost"
             size="icon-sm"
+            title="Detalhes"
+            onClick={() => onRequestViewDetails(row.original.id)}
+          >
+            <IdCard className="size-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            title="Excluir"
             className="text-destructive hover:text-destructive"
             onClick={() => onRequestDelete(row.original.id)}
           >
@@ -190,6 +225,9 @@ export default function AnimalList() {
   });
   const [refreshKey, setRefreshKey] = useState(0);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+  const [viewingDetailsId, setViewingDetailsId] = useState<string | null>(
+    null,
+  );
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -254,6 +292,7 @@ export default function AnimalList() {
 
   const columns = buildColumns(
     (id) => router.push(`/animais/${id}`),
+    setViewingDetailsId,
     setPendingDeleteId,
   );
 
@@ -285,7 +324,7 @@ export default function AnimalList() {
         <div className="relative flex-1">
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
           <Input
-            placeholder="Buscar por brinco, RFID ou apelido..."
+            placeholder="Buscar por ID, brinco, RFID ou apelido..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-8"
@@ -355,6 +394,25 @@ export default function AnimalList() {
           />
         )}
       </div>
+
+      <Dialog
+        open={viewingDetailsId !== null}
+        onOpenChange={(open) => {
+          if (!open) setViewingDetailsId(null);
+        }}
+      >
+        <DialogContent className="p-8 sm:max-w-5xl h-[90vh] content-start overflow-y-auto">
+          {viewingDetailsId && (
+            <AnimalDetails
+              id={viewingDetailsId}
+              onClose={() => {
+                setViewingDetailsId(null);
+                setRefreshKey((k) => k + 1);
+              }}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
 
       <ConfirmDialog
         open={pendingDeleteId !== null}

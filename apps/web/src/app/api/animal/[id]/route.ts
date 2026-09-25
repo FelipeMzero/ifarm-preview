@@ -5,6 +5,29 @@ import { RESOURCE_ACCESS } from "@/lib/permissions";
 import { uniqueConstraintErrors } from "../../dbErrors";
 import { animalUpdateApiSchema } from "../../schemas";
 
+type NeuteringDateSource = {
+  neuteredAt: Date | null;
+  createdAt: Date;
+  management: {
+    managementSession: { managementDate: Date | null; scheduledDate: Date };
+  } | null;
+};
+
+// Castração avulsa guarda a data no item; a de sessão usa a data da sessão.
+// Com recastração há mais de um registro: vale o mais recente.
+function latestNeuteringDate(items: NeuteringDateSource[]): string | null {
+  const dates = items.map((item) => {
+    const session = item.management?.managementSession;
+    return (
+      item.neuteredAt ??
+      session?.managementDate ??
+      session?.scheduledDate ??
+      item.createdAt
+    ).toISOString();
+  });
+  return dates.sort().at(-1) ?? null;
+}
+
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
@@ -20,6 +43,19 @@ export async function GET(
       include: {
         breed: { select: { id: true, name: true } },
         currentBatch: { select: { id: true, name: true } },
+        neuteringManagementItems: {
+          select: {
+            neuteredAt: true,
+            createdAt: true,
+            management: {
+              select: {
+                managementSession: {
+                  select: { managementDate: true, scheduledDate: true },
+                },
+              },
+            },
+          },
+        },
       },
     });
 
@@ -42,6 +78,7 @@ export async function GET(
       origin: animal.origin,
       status: animal.status,
       neutered: animal.neutered,
+      neuteredAt: latestNeuteringDate(animal.neuteringManagementItems),
       currentBatchId: animal.currentBatchId,
       currentBatchName: animal.currentBatch?.name ?? null,
       currentPropertyId: animal.currentPropertyId,
@@ -127,16 +164,17 @@ export async function PUT(
           breedId: data.breedId,
           birthDate: data.birthDate,
           sex: data.sex,
-          ...(data.newTag ? { currentTag: data.newTag } : {}),
+          ...(data.newTag !== undefined ? { currentTag: data.newTag } : {}),
           ...(data.newRfid !== undefined ? { currentRfid: data.newRfid } : {}),
           ...(data.newBatchId ? { currentBatchId: data.newBatchId } : {}),
           ...(data.newWeightKg != null
             ? { currentWeight: data.newWeightKg }
             : {}),
+          ...(data.neuteredAt ? { neutered: true } : {}),
         },
       });
 
-      if (data.newTag) {
+      if (data.newTag !== undefined) {
         await tx.tagManagementItem.create({
           data: {
             animalId: id,
@@ -176,6 +214,17 @@ export async function PUT(
             batchId: data.newBatchId,
             enteredAt: now,
             notes: data.batchChangeNotes,
+          },
+        });
+      }
+
+      if (data.neuteredAt) {
+        await tx.neuteringManagementItem.create({
+          data: {
+            animalId: id,
+            neuteredAt: data.neuteredAt,
+            method: data.neuteringMethod,
+            notes: data.neuteringNotes,
           },
         });
       }

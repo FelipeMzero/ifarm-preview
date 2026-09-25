@@ -34,6 +34,9 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ data: [], total: 0, pageCount: 0 });
     }
 
+    const codeMatch = search.match(/^#?(\d{1,9})$/);
+    const searchCode = codeMatch ? Number(codeMatch[1]) : null;
+
     const where = {
       currentPropertyId: propertyId,
       ...(search
@@ -46,6 +49,7 @@ export async function GET(request: NextRequest) {
                 currentRfid: { contains: search, mode: "insensitive" as const },
               },
               { name: { contains: search, mode: "insensitive" as const } },
+              ...(searchCode != null ? [{ code: searchCode }] : []),
             ],
           }
         : {}),
@@ -66,6 +70,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       data: animals.map((a) => ({
         id: a.id,
+        code: a.code,
         earTag: a.currentTag,
         rfid: a.currentRfid,
         name: a.name,
@@ -183,13 +188,15 @@ export async function POST(request: NextRequest) {
         });
       }
 
-      await tx.tagManagementItem.create({
-        data: {
-          animalId: created.id,
-          tag: data.currentTag,
-          identifiedAt: entryDate,
-        },
-      });
+      if (data.currentTag != null) {
+        await tx.tagManagementItem.create({
+          data: {
+            animalId: created.id,
+            tag: data.currentTag,
+            identifiedAt: entryDate,
+          },
+        });
+      }
 
       if (data.currentRfid != null) {
         await tx.rfidManagementItem.create({
@@ -205,7 +212,7 @@ export async function POST(request: NextRequest) {
         await tx.neuteringManagementItem.create({
           data: {
             animalId: created.id,
-            notes: data.neuteringMethod,
+            method: data.neuteringMethod,
             neuteredAt: data.neuteringDate ?? entryDate,
           },
         });

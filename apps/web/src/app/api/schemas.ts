@@ -13,11 +13,12 @@ export const animalCreateApiSchema = z
   .object({
     currentTag: z
       .string()
-      .min(1, "Este campo não pode ser vazio")
       .max(
         FIELD_LIMITS.animal.earTag,
         `Máximo de ${FIELD_LIMITS.animal.earTag} caracteres`,
-      ),
+      )
+      .optional()
+      .transform((v) => v || null),
     currentRfid: z
       .string()
       .max(
@@ -142,7 +143,7 @@ export const animalUpdateApiSchema = z.object({
       `Máximo de ${FIELD_LIMITS.animal.earTag} caracteres`,
     )
     .optional()
-    .transform((v) => v || undefined),
+    .transform((v) => (v === undefined ? undefined : v || null)),
   tagChangeNotes: z
     .string()
     .optional()
@@ -155,7 +156,7 @@ export const animalUpdateApiSchema = z.object({
       `Máximo de ${FIELD_LIMITS.animal.rfid} caracteres`,
     )
     .optional()
-    .transform((v) => v || undefined),
+    .transform((v) => (v === undefined ? undefined : v || null)),
   rfidChangeNotes: z
     .string()
     .optional()
@@ -175,6 +176,19 @@ export const animalUpdateApiSchema = z.object({
     .optional()
     .transform((v) => (v ? parseFloat(v) : undefined)),
   weightChangeNotes: z
+    .string()
+    .optional()
+    .transform((v) => v || null),
+
+  neuteredAt: z
+    .string()
+    .optional()
+    .transform((v) => (v ? new Date(`${v}T00:00:00`) : undefined)),
+  neuteringMethod: z
+    .string()
+    .optional()
+    .transform((v) => v || null),
+  neuteringNotes: z
     .string()
     .optional()
     .transform((v) => v || null),
@@ -685,3 +699,20 @@ export const batchUpdateApiSchema = z.object({
 });
 
 export type BatchUpdateApiData = z.infer<typeof batchUpdateApiSchema>;
+
+export const weighingCorrectionApiSchema = z.object({
+  weightKg: z.coerce
+    .number("Informe um peso válido")
+    .positive("O peso deve ser maior que zero"),
+  date: z
+    .string()
+    .optional()
+    .transform((v) => (v ? new Date(`${v}T00:00:00`) : undefined)),
+  notes: z
+    .string()
+    .optional()
+    .transform((v) => v || null),
+});
+export type WeighingCorrectionApiData = z.infer<
+  typeof weighingCorrectionApiSchema
+>;

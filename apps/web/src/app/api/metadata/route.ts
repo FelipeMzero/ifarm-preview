@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/api-auth";
 
-export async function GET(_request: NextRequest) {
+export async function GET() {
   const { response } = await requireSession();
   if (response) return response;
 
@@ -20,8 +20,8 @@ export async function GET(_request: NextRequest) {
           orderBy: { name: "asc" },
         }),
         prisma.animal.findMany({
-          select: { id: true, earTag: true, rfid: true, sex: true },
-          orderBy: { earTag: "asc" },
+          select: { id: true, currentTag: true, currentRfid: true, sex: true },
+          orderBy: { currentTag: "asc" },
         }),
       ]);
 
@@ -31,7 +31,7 @@ export async function GET(_request: NextRequest) {
       properties,
       farmAnimals: availableFarmAnimals,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error("Erro ao carregar metadados:", error);
     return NextResponse.json({ error: "Erro interno" }, { status: 500 });
   }

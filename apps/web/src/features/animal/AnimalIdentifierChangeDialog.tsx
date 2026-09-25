@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -38,13 +38,15 @@ const COPY: Record<
 > = {
   tag: {
     title: "Trocar Brinco",
-    description: "Informe o novo brinco do animal.",
+    description:
+      "Informe o novo brinco do animal ou deixe em branco para removê-lo.",
     label: "Novo Brinco",
     placeholder: "Ex: MS-001234",
   },
   rfid: {
     title: "Trocar RFID",
-    description: "Informe o novo RFID do animal.",
+    description:
+      "Informe o novo RFID do animal ou deixe em branco para removê-lo.",
     label: "Novo RFID",
     placeholder: "Ex: 900082000169813",
   },
@@ -69,6 +71,8 @@ export function AnimalIdentifierChangeDialog({
     if (open) form.reset({ value: "", notes: "" });
   }, [open, form]);
 
+  const isRemoval = !useWatch({ control: form.control, name: "value" });
+
   function handleSubmit(data: AnimalTagChangeData | AnimalRfidChangeData) {
     onConfirm(data.value ?? "", data.notes);
     onOpenChange(false);
@@ -87,7 +91,6 @@ export function AnimalIdentifierChangeDialog({
             name="value"
             control={form.control}
             label={copy.label}
-            required={kind === "tag"}
             render={({ field, id }) => (
               <Input {...field} id={id} placeholder={copy.placeholder} />
             )}
@@ -120,7 +123,7 @@ export function AnimalIdentifierChangeDialog({
               {form.formState.isSubmitting && (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               )}
-              Confirmar Troca
+              {isRemoval ? "Remover" : "Confirmar Troca"}
             </Button>
           </DialogFooter>
         </form>
