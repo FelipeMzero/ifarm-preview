@@ -328,7 +328,7 @@ export function AnimalFiltersPopover({
       <PopoverTrigger asChild>{children}</PopoverTrigger>
       <PopoverContent
         align="end"
-        className="w-96 max-w-[calc(100vw-2rem)] p-0"
+        className="w-96 max-w-[calc(100vw-2rem)] gap-0 p-0"
         onInteractOutside={(e) => {
           if (isInsideComboboxList(e.target)) e.preventDefault();
         }}
