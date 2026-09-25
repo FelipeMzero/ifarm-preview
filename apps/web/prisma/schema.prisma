@@ -31,6 +31,7 @@ model Property {
   ccir           String? @unique                  // Certificado de Cadastro de Imóvel Rural (INCRA)
   latitude       Float?
   longitude      Float?
+  registeredBrand String? @map("registered_brand") // desenho/código da marca de ferro registrada
   deactivatedAt DateTime? @map("deactivated_at")
 
   addressId Int?     @unique @map("address_id")
@@ -189,10 +190,11 @@ model Animal {
   neutered          Boolean      @default(false)    // Indica se está castrado ou não
 
   // Manejos
-  neuteringManagementItems NeuteringManagementItem[]
-  weighingManagementItems WeighingManagementItem[]
-  tagManagementItems  TagManagementItem[]
-  rfidManagementItems RfidManagementItem[]
+  animalNeuterings   AnimalNeutering[]
+  animalWeighings    AnimalWeighing[]
+  animalTaggings     AnimalTagging[]
+  animalRfidTaggings AnimalRfidTagging[]
+  animalBrandings    AnimalBranding[]
   healthManagementItems HealthManagementItem[]
   managementParticipants ManagementParticipant[]
 
@@ -317,6 +319,7 @@ model ManagementSession {
   neuteringManagement       NeuteringManagement?
   tagManagement  TagManagement?
   rfidManagement RfidManagement?
+  brandManagement BrandManagement?
   healthManagements         HealthManagement[]
 
   animalBatchTransfers    AnimalBatchTransfer[]
@@ -349,7 +352,7 @@ model ManagementParticipant {
 
 model TagManagement {
   id    String  @id @default(uuid()) @db.Uuid
-  items TagManagementItem[]
+  items AnimalTagging[]
 
   managementSessionId String            @unique @db.Uuid @map("management_session_id")
   managementSession   ManagementSession @relation(fields: [managementSessionId], references: [id], onDelete: Restrict)
@@ -359,7 +362,7 @@ model TagManagement {
   @@map("tag_management")
 }
 
-model TagManagementItem {
+model AnimalTagging {
   id    Int     @id @default(autoincrement())
   tag   String? // null = tag removida
   notes String?
@@ -376,13 +379,13 @@ model TagManagementItem {
 
   @@index([animalId])
   @@index([managementId])
-  @@map("tag_management_item")
+  @@map("animal_tagging")
 }
 
 
 model RfidManagement {
   id    String  @id @default(uuid()) @db.Uuid
-  items RfidManagementItem[]
+  items AnimalRfidTagging[]
 
   managementSessionId String            @unique @db.Uuid @map("management_session_id")
   managementSession   ManagementSession @relation(fields: [managementSessionId], references: [id], onDelete: Restrict)
@@ -392,7 +395,7 @@ model RfidManagement {
   @@map("rfid_management")
 }
 
-model RfidManagementItem {
+model AnimalRfidTagging {
   id    Int     @id @default(autoincrement())
   rfid  String? // null = rfid removido
   notes String?
@@ -409,12 +412,12 @@ model RfidManagementItem {
 
   @@index([animalId])
   @@index([managementId])
-  @@map("rfid_management_item")
+  @@map("animal_rfid_tagging")
 }
 
 model NeuteringManagement {
   id    String  @id @default(uuid()) @db.Uuid
-  items NeuteringManagementItem[]
+  items AnimalNeutering[]
 
   managementSessionId String            @unique @db.Uuid @map("management_session_id")
   managementSession   ManagementSession @relation(fields: [managementSessionId], references: [id], onDelete: Restrict)
@@ -424,7 +427,7 @@ model NeuteringManagement {
   @@map("neutering_management")
 }
 
-model NeuteringManagementItem {
+model AnimalNeutering {
   id     Int     @id @default(autoincrement())
   method String? // método usado neste animal (ex.: burdizzo, cirúrgica, elástico)
   notes  String? // observação específica desse animal (ex.: complicação, sangramento, recastração)
@@ -441,12 +444,12 @@ model NeuteringManagementItem {
 
   @@index([animalId])
   @@index([managementId])
-  @@map("neutering_management_item")
+  @@map("animal_neutering")
 }
 
 model WeighingManagement {
   id    String  @id @default(uuid()) @db.Uuid
-  items WeighingManagementItem[]
+  items AnimalWeighing[]
 
   managementSessionId String            @unique @db.Uuid @map("management_session_id")
   managementSession   ManagementSession @relation(fields: [managementSessionId], references: [id], onDelete: Restrict)
@@ -456,7 +459,7 @@ model WeighingManagement {
   @@map("weighing_management")
 }
 
-model WeighingManagementItem {
+model AnimalWeighing {
   id     Int     @id @default(autoincrement())
   weight Decimal @db.Decimal(10, 2) // valor da pesagem (kg), sempre individual
   notes  String?
@@ -478,7 +481,39 @@ model WeighingManagementItem {
 
   @@index([animalId])
   @@index([managementId])
-  @@map("weighing_management_item")
+  @@map("animal_weighing")
+}
+
+model BrandManagement {
+  id    String  @id @default(uuid()) @db.Uuid
+  items AnimalBranding[]
+
+  managementSessionId String            @unique @db.Uuid @map("management_session_id")
+  managementSession   ManagementSession @relation(fields: [managementSessionId], references: [id], onDelete: Restrict)
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("brand_management")
+}
+
+model AnimalBranding {
+  id             Int      @id @default(autoincrement())
+  isCounterBrand Boolean  @default(false) @map("is_counter_brand") // contramarca (segunda marca, após mudança de dono)
+  notes          String?
+
+  brandedAt DateTime? @map("branded_at") // preenchido só quando managementId = null (avulso)
+
+  managementId String?           @db.Uuid @map("management_id") // null = avulso
+  management   BrandManagement?  @relation(fields: [managementId], references: [id], onDelete: Restrict)
+
+  animalId String @db.Uuid @map("animal_id")
+  animal   Animal @relation(fields: [animalId], references: [id], onDelete: Restrict)
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([animalId])
+  @@index([managementId])
+  @@map("animal_branding")
 }
 
 

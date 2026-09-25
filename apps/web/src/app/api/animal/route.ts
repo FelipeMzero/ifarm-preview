@@ -237,7 +237,7 @@ export async function POST(request: NextRequest) {
       });
 
       if (data.currentWeightKg != null) {
-        await tx.weighingManagementItem.create({
+        await tx.animalWeighing.create({
           data: {
             animalId: created.id,
             weight: data.currentWeightKg,
@@ -247,7 +247,7 @@ export async function POST(request: NextRequest) {
       }
 
       if (data.currentTag != null) {
-        await tx.tagManagementItem.create({
+        await tx.animalTagging.create({
           data: {
             animalId: created.id,
             tag: data.currentTag,
@@ -257,7 +257,7 @@ export async function POST(request: NextRequest) {
       }
 
       if (data.currentRfid != null) {
-        await tx.rfidManagementItem.create({
+        await tx.animalRfidTagging.create({
           data: {
             animalId: created.id,
             rfid: data.currentRfid,
@@ -267,7 +267,7 @@ export async function POST(request: NextRequest) {
       }
 
       if (data.neutered) {
-        await tx.neuteringManagementItem.create({
+        await tx.animalNeutering.create({
           data: {
             animalId: created.id,
             method: data.neuteringMethod,

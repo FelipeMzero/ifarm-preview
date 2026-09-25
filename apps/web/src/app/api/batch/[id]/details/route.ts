@@ -124,7 +124,7 @@ export async function GET(
         where: { currentBatchId: id, status: "ACTIVE" },
         include: {
           breed: { select: { name: true } },
-          weighingManagementItems: {
+          animalWeighings: {
             where: { cancelledAt: null },
             include: weighingInclude,
           },
@@ -196,9 +196,9 @@ export async function GET(
     ]);
 
     const weighingsByAnimal = animals.map((a) => ({
-      weighings: sortWeighings(
-        a.weighingManagementItems.map(toWeighingDto),
-      ).map((w) => ({ date: w.date, weightKg: w.weightKg })),
+      weighings: sortWeighings(a.animalWeighings.map(toWeighingDto)).map(
+        (w) => ({ date: w.date, weightKg: w.weightKg }),
+      ),
     }));
 
     const animalDtos = animals.map((a, i) => {

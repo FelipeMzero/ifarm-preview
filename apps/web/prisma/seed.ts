@@ -1046,7 +1046,7 @@ async function seedAnimals(ctx: Ctx) {
     }
 
     for (const t of tagEvents) {
-      await prisma.tagManagementItem.create({
+      await prisma.animalTagging.create({
         data: {
           animalId: animal.id,
           tag: t.tag,
@@ -1059,7 +1059,7 @@ async function seedAnimals(ctx: Ctx) {
     // Pesagem avulsa de entrada (compra) ou ao nascer (nem todo nascimento é pesado).
     const entryWeight = weightAt(spec, spec.entryDaysAgo);
     if (entryWeight != null && (spec.origin !== "BIRTH" || random() < 0.6)) {
-      await prisma.weighingManagementItem.create({
+      await prisma.animalWeighing.create({
         data: {
           animalId: animal.id,
           weight: entryWeight,
@@ -1084,7 +1084,7 @@ async function seedAnimals(ctx: Ctx) {
     let rfid: string | null = null;
     if (!spec.skipRfid && firstProp === "BV") {
       rfid = nextRfid();
-      await prisma.rfidManagementItem.create({
+      await prisma.animalRfidTagging.create({
         data: {
           animalId: animal.id,
           rfid,
@@ -1099,7 +1099,7 @@ async function seedAnimals(ctx: Ctx) {
 
     // Castração avulsa (a de 72 dias atrás é feita na sessão) e recastração.
     if (spec.neuteredDaysAgo != null && spec.neuteredDaysAgo !== 72) {
-      await prisma.neuteringManagementItem.create({
+      await prisma.animalNeutering.create({
         data: {
           animalId: animal.id,
           method: "Burdizzo",
@@ -1108,7 +1108,7 @@ async function seedAnimals(ctx: Ctx) {
       });
     }
     if (spec.recastrationDaysAgo != null) {
-      await prisma.neuteringManagementItem.create({
+      await prisma.animalNeutering.create({
         data: {
           animalId: animal.id,
           method: "Cirúrgica",
@@ -1164,7 +1164,7 @@ async function seedSessions(ctx: Ctx, animals: SeededAnimal[]) {
         });
         for (const a of present.filter((p) => !p.spec.skipRfid && !p.rfid)) {
           a.rfid = nextRfid();
-          await prisma.rfidManagementItem.create({
+          await prisma.animalRfidTagging.create({
             data: {
               animalId: a.id,
               rfid: a.rfid,
@@ -1269,13 +1269,13 @@ async function seedSpecialCases(ctx: Ctx, animals: SeededAnimal[]) {
   const reproducao = activeIn("SR:Reprodução");
 
   // Pesagem corrigida (guarda o valor original) e pesagem cancelada (duplicada).
-  const toCorrect = await prisma.weighingManagementItem.findFirst({
+  const toCorrect = await prisma.animalWeighing.findFirst({
     where: { animalId: engorda[0].id, managementId: { not: null } },
     orderBy: { id: "desc" },
     skip: 1,
   });
   if (toCorrect) {
-    await prisma.weighingManagementItem.update({
+    await prisma.animalWeighing.update({
       where: { id: toCorrect.id },
       data: {
         originalWeight: toCorrect.weight.toNumber() + 50,
@@ -1284,7 +1284,7 @@ async function seedSpecialCases(ctx: Ctx, animals: SeededAnimal[]) {
       },
     });
   }
-  await prisma.weighingManagementItem.create({
+  await prisma.animalWeighing.create({
     data: {
       animalId: engorda[1].id,
       weight: engorda[1].weights.get(12)!,
@@ -1297,7 +1297,7 @@ async function seedSpecialCases(ctx: Ctx, animals: SeededAnimal[]) {
   // Brinco perdido e substituído; brinco removido (fica só o RFID).
   const lostTag = engorda[2];
   const newTag = `${lostTag.tag}B`;
-  await prisma.tagManagementItem.create({
+  await prisma.animalTagging.create({
     data: {
       animalId: lostTag.id,
       tag: newTag,
@@ -1312,7 +1312,7 @@ async function seedSpecialCases(ctx: Ctx, animals: SeededAnimal[]) {
   lostTag.tag = newTag;
 
   const removedTag = reproducao[0];
-  await prisma.tagManagementItem.create({
+  await prisma.animalTagging.create({
     data: {
       animalId: removedTag.id,
       tag: null,
@@ -1388,7 +1388,7 @@ async function seedSpecialCases(ctx: Ctx, animals: SeededAnimal[]) {
 
   // Peso atual (desnormalizado) = pesagem válida mais recente.
   for (const a of animals) {
-    const latest = await prisma.weighingManagementItem.findMany({
+    const latest = await prisma.animalWeighing.findMany({
       where: { animalId: a.id, cancelledAt: null },
       include: {
         management: {

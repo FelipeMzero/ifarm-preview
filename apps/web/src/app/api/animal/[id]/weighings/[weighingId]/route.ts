@@ -11,7 +11,7 @@ async function findActiveWeighing(animalId: string, weighingId: string) {
   const numericId = Number(weighingId);
   if (!Number.isInteger(numericId)) return null;
 
-  return prisma.weighingManagementItem.findFirst({
+  return prisma.animalWeighing.findFirst({
     where: { id: numericId, animalId, cancelledAt: null },
   });
 }
@@ -95,7 +95,7 @@ export async function PATCH(request: NextRequest, { params }: Params) {
     const weightChanged = !weighing.weight.equals(data.weightKg);
 
     await prisma.$transaction(async (tx) => {
-      await tx.weighingManagementItem.update({
+      await tx.animalWeighing.update({
         where: { id: weighing.id },
         data: {
           weight: data.weightKg,
@@ -133,7 +133,7 @@ export async function DELETE(_request: NextRequest, { params }: Params) {
     if (!weighing) return notFound();
 
     await prisma.$transaction(async (tx) => {
-      await tx.weighingManagementItem.update({
+      await tx.animalWeighing.update({
         where: { id: weighing.id },
         data: { cancelledAt: new Date() },
       });

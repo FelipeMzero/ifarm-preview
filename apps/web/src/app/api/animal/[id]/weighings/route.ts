@@ -14,7 +14,7 @@ export async function GET(
   const { id } = await params;
 
   try {
-    const items = await prisma.weighingManagementItem.findMany({
+    const items = await prisma.animalWeighing.findMany({
       where: { animalId: id, cancelledAt: null },
       include: weighingInclude,
     });

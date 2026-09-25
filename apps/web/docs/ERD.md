@@ -11,6 +11,7 @@ erDiagram
     String ccir "❓"
     Float latitude "❓"
     Float longitude "❓"
+    String registered_brand "❓"
     DateTime deactivated_at "❓"
     Int address_id "❓"
     String owner_id 
@@ -165,7 +166,7 @@ erDiagram
     }
   
 
-  "tag_management_item" {
+  "animal_tagging" {
     Int management_id "🗝️"
     String tag "❓"
     String notes "❓"
@@ -183,7 +184,7 @@ erDiagram
     }
   
 
-  "rfid_management_item" {
+  "animal_rfid_tagging" {
     Int management_id "🗝️"
     String rfid "❓"
     String notes "❓"
@@ -201,7 +202,7 @@ erDiagram
     }
   
 
-  "neutering_management_item" {
+  "animal_neutering" {
     Int management_id "🗝️"
     String method "❓"
     String notes "❓"
@@ -219,7 +220,7 @@ erDiagram
     }
   
 
-  "weighing_management_item" {
+  "animal_weighing" {
     Int management_id "🗝️"
     Decimal weight 
     String notes "❓"
@@ -228,6 +229,24 @@ erDiagram
     DateTime corrected_at "❓"
     DateTime cancelled_at "❓"
     String weighed_at "❓"
+    String animal_id 
+    DateTime created_at 
+    }
+  
+
+  "brand_management" {
+    String id "🗝️"
+    String management_session_id 
+    DateTime created_at 
+    }
+  
+
+  "animal_branding" {
+    Int management_id "🗝️"
+    Boolean is_counter_brand 
+    String notes "❓"
+    DateTime branded_at "❓"
+    String branded_at "❓"
     String animal_id 
     DateTime created_at 
     }
@@ -393,17 +412,20 @@ erDiagram
     "management_participant" }o--|| management_session : "managementSession"
     "management_participant" }o--|| animal : "batch_id"
     "tag_management" |o--|| management_session : "managementSession"
-    "tag_management_item" }o--|o tag_management : "management"
-    "tag_management_item" }o--|| animal : "animal"
+    "animal_tagging" }o--|o tag_management : "management"
+    "animal_tagging" }o--|| animal : "animal"
     "rfid_management" |o--|| management_session : "managementSession"
-    "rfid_management_item" }o--|o rfid_management : "management"
-    "rfid_management_item" }o--|| animal : "animal"
+    "animal_rfid_tagging" }o--|o rfid_management : "management"
+    "animal_rfid_tagging" }o--|| animal : "animal"
     "neutering_management" |o--|| management_session : "managementSession"
-    "neutering_management_item" }o--|o neutering_management : "management"
-    "neutering_management_item" }o--|| animal : "animal"
+    "animal_neutering" }o--|o neutering_management : "management"
+    "animal_neutering" }o--|| animal : "animal"
     "weighing_management" |o--|| management_session : "managementSession"
-    "weighing_management_item" }o--|o weighing_management : "management"
-    "weighing_management_item" }o--|| animal : "animal"
+    "animal_weighing" }o--|o weighing_management : "management"
+    "animal_weighing" }o--|| animal : "animal"
+    "brand_management" |o--|| management_session : "managementSession"
+    "animal_branding" }o--|o brand_management : "management"
+    "animal_branding" }o--|| animal : "animal"
     "health_management" }o--|| health_management_type : "type"
     "health_management" }o--|o management_session : "managementSession"
     "health_management" }o--|o person : "veterinarian"

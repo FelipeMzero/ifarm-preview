@@ -11,9 +11,9 @@ export const weighingInclude = {
       },
     },
   },
-} satisfies Prisma.WeighingManagementItemInclude;
+} satisfies Prisma.AnimalWeighingInclude;
 
-type WeighingWithSession = Prisma.WeighingManagementItemGetPayload<{
+type WeighingWithSession = Prisma.AnimalWeighingGetPayload<{
   include: typeof weighingInclude;
 }>;
 
@@ -46,7 +46,7 @@ export function sortWeighings<T extends { date: string; id: number }>(
 
 // Recalcula o peso atual (campo desnormalizado) a partir da pesagem válida mais recente.
 export async function recomputeCurrentWeight(tx: Tx, animalId: string) {
-  const weighings = await tx.weighingManagementItem.findMany({
+  const weighings = await tx.animalWeighing.findMany({
     where: { animalId, cancelledAt: null },
     include: weighingInclude,
   });

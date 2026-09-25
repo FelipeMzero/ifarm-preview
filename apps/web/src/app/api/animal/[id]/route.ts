@@ -43,7 +43,7 @@ export async function GET(
       include: {
         breed: { select: { id: true, name: true } },
         currentBatch: { select: { id: true, name: true } },
-        neuteringManagementItems: {
+        animalNeuterings: {
           select: {
             neuteredAt: true,
             createdAt: true,
@@ -78,7 +78,7 @@ export async function GET(
       origin: animal.origin,
       status: animal.status,
       neutered: animal.neutered,
-      neuteredAt: latestNeuteringDate(animal.neuteringManagementItems),
+      neuteredAt: latestNeuteringDate(animal.animalNeuterings),
       currentBatchId: animal.currentBatchId,
       currentBatchName: animal.currentBatch?.name ?? null,
       currentPropertyId: animal.currentPropertyId,
@@ -175,7 +175,7 @@ export async function PUT(
       });
 
       if (data.newTag !== undefined) {
-        await tx.tagManagementItem.create({
+        await tx.animalTagging.create({
           data: {
             animalId: id,
             tag: data.newTag,
@@ -186,7 +186,7 @@ export async function PUT(
       }
 
       if (data.newRfid !== undefined) {
-        await tx.rfidManagementItem.create({
+        await tx.animalRfidTagging.create({
           data: {
             animalId: id,
             rfid: data.newRfid,
@@ -219,7 +219,7 @@ export async function PUT(
       }
 
       if (data.neuteredAt) {
-        await tx.neuteringManagementItem.create({
+        await tx.animalNeutering.create({
           data: {
             animalId: id,
             neuteredAt: data.neuteredAt,
@@ -230,7 +230,7 @@ export async function PUT(
       }
 
       if (data.newWeightKg != null) {
-        await tx.weighingManagementItem.create({
+        await tx.animalWeighing.create({
           data: {
             animalId: id,
             weight: data.newWeightKg,

@@ -50,15 +50,15 @@ export async function GET(
         breed: { select: { name: true } },
         currentBatch: { select: { id: true, name: true } },
         currentProperty: { select: { id: true, name: true } },
-        weighingManagementItems: {
+        animalWeighings: {
           where: { cancelledAt: null },
           include: weighingInclude,
         },
-        tagManagementItems: { include: { management: managementWithSession } },
-        rfidManagementItems: {
+        animalTaggings: { include: { management: managementWithSession } },
+        animalRfidTaggings: {
           include: { management: managementWithSession },
         },
-        neuteringManagementItems: {
+        animalNeuterings: {
           include: { management: managementWithSession },
         },
         healthManagementItems: {
@@ -95,11 +95,9 @@ export async function GET(
       );
     }
 
-    const weighings = sortWeighings(
-      animal.weighingManagementItems.map(toWeighingDto),
-    );
+    const weighings = sortWeighings(animal.animalWeighings.map(toWeighingDto));
 
-    const tagHistory = animal.tagManagementItems
+    const tagHistory = animal.animalTaggings
       .map((t) => ({
         id: t.id,
         date: resolveDate(
@@ -112,7 +110,7 @@ export async function GET(
       }))
       .sort(byDateDesc);
 
-    const rfidHistory = animal.rfidManagementItems
+    const rfidHistory = animal.animalRfidTaggings
       .map((r) => ({
         id: r.id,
         date: resolveDate(
@@ -125,7 +123,7 @@ export async function GET(
       }))
       .sort(byDateDesc);
 
-    const neutering = animal.neuteringManagementItems
+    const neutering = animal.animalNeuterings
       .map((n) => ({
         id: n.id,
         date: resolveDate(
