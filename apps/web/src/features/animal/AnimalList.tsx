@@ -2,7 +2,6 @@
 
 import { ColumnDef, VisibilityState } from "@tanstack/react-table";
 import {
-  Beef,
   IdCard,
   Nfc,
   Pencil,
@@ -12,6 +11,7 @@ import {
   Tag,
   Trash2,
 } from "lucide-react";
+import { CowHead } from "@/components/icons/cow-head";
 import { useRouter } from "next/navigation";
 
 import React, { useEffect, useState } from "react";
@@ -372,7 +372,7 @@ export default function AnimalList() {
       >
         {animals.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 gap-2 text-muted-foreground">
-            <Beef size={50} className="opacity-30" />
+            <CowHead size={50} className="opacity-30" />
             <p className="text-2xl">Nenhum animal encontrado.</p>
           </div>
         ) : (

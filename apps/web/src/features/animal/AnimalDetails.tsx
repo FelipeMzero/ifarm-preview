@@ -5,14 +5,12 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
   ArrowLeft,
-  Beef,
   Cake,
   Calendar,
   Fence,
   History,
   Layers,
   LineChart,
-  MapPin,
   Nfc,
   Pencil,
   ShoppingCart,
@@ -24,6 +22,7 @@ import {
   TrendingUp,
   Weight,
 } from "lucide-react";
+import { CowHead } from "@/components/icons/cow-head";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -67,7 +66,6 @@ import { WeighingCorrectionNote } from "./WeighingCorrectionNote";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const ARROBA_KG = 15;
-
 
 function daysBetween(from: string, to: string | Date = new Date()): number {
   const end = typeof to === "string" ? new Date(to) : to;
@@ -135,7 +133,7 @@ function buildRecentActivity(animal: AnimalFullDetails): TimelineEvent[] {
     ...animal.propertyHistory.map((p) => ({
       key: `p-${p.id}`,
       date: p.enteredAt,
-      icon: <MapPin className="size-3.5" />,
+      icon: <Fence className="size-3.5" />,
       title: `Entrada na propriedade ${p.propertyName}`,
       description: p.notes,
     })),
@@ -400,7 +398,7 @@ export default function AnimalDetails({
         <CardContent className="flex flex-col gap-4 sm:flex-row sm:items-center">
           <Avatar className="size-14">
             <AvatarFallback className="bg-primary/10">
-              {SEX_ICON[animal.sex] ?? <Beef className="size-6" />}
+              {SEX_ICON[animal.sex] ?? <CowHead className="size-6" />}
             </AvatarFallback>
           </Avatar>
 
@@ -425,7 +423,7 @@ export default function AnimalDetails({
                 {animal.currentRfid ?? "Sem RFID"}
               </span>
               <span className="flex items-center gap-1.5">
-                <MapPin className="size-3.5" />
+                <Fence className="size-3.5" />
                 {animal.currentProperty.name}
               </span>
               <span className="tabular-nums">ID {animal.code}</span>
@@ -772,7 +770,7 @@ export default function AnimalDetails({
                       <li key={b.id} className="relative pb-6 pl-6 last:pb-0">
                         <span
                           className={cn(
-                            "absolute -left-[7px] top-1 size-3.5 rounded-full border-2 border-card",
+                            "absolute -left-1.75 top-1 size-3.5 rounded-full border-2 border-card",
                             isCurrent ? "bg-primary" : "bg-muted-foreground/40",
                           )}
                         />
@@ -857,9 +855,11 @@ export default function AnimalDetails({
                                 <span className="font-medium">
                                   {row.value ?? "Removido"}
                                 </span>
-                                {i === 0 && row.value && row.value === section.current && (
-                                  <Badge variant="secondary">Atual</Badge>
-                                )}
+                                {i === 0 &&
+                                  row.value &&
+                                  row.value === section.current && (
+                                    <Badge variant="secondary">Atual</Badge>
+                                  )}
                               </div>
                             </TableCell>
                             <TableCell className="max-w-40 truncate text-muted-foreground">
@@ -915,7 +915,9 @@ export default function AnimalDetails({
                           )}
                         </TableCell>
                         <TableCell>{h.veterinarianName ?? "—"}</TableCell>
-                        <TableCell>{formatDateOnly(h.withdrawalUntil)}</TableCell>
+                        <TableCell>
+                          {formatDateOnly(h.withdrawalUntil)}
+                        </TableCell>
                         <TableCell>{formatDateOnly(h.nextDueDate)}</TableCell>
                         <TableCell className="text-right tabular-nums">
                           {h.cost != null ? formatCurrency(h.cost) : "—"}

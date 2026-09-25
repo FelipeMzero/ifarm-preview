@@ -7,14 +7,15 @@ import {
   Beef,
   Boxes,
   ChevronRight,
+  Fence,
   KeyRound,
   LayoutDashboard,
   LogOut,
   Map,
-  Tractor,
   UserCog,
   Users,
 } from "lucide-react";
+import { CowHead } from "@/components/icons/cow-head";
 import {
   Collapsible,
   CollapsibleContent,
@@ -49,7 +50,7 @@ import { ThemeToggle } from "./ThemeToggle";
 const NAV = [
   {
     label: "Animais",
-    icon: Beef,
+    icon: CowHead,
     items: [
       { href: "/animais", label: "Animais" },
       { href: "/racas", label: "Raças" },
@@ -61,7 +62,7 @@ const NAV = [
 // "+ Adicionar" já existente em cada tela de listagem.
 const DIRECT_LINKS = [
   { href: "/pessoas", label: "Pessoas", icon: Users },
-  { href: "/propriedades", label: "Propriedades", icon: Tractor },
+  { href: "/propriedades", label: "Propriedades", icon: Fence },
   { href: "/areas", label: "Áreas", icon: Map },
   { href: "/lotes", label: "Lotes", icon: Boxes },
   { href: "/usuarios", label: "Usuários", icon: UserCog },

@@ -5,14 +5,14 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
   ArrowLeft,
-  Beef,
   Compass,
+  Fence,
   LandPlot,
   MapPin,
   Trash2,
-  Tractor,
   User,
 } from "lucide-react";
+import { CowHead } from "@/components/icons/cow-head";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -143,7 +143,7 @@ export default function PropertyDetails({
         <CardContent className="flex items-center gap-4">
           <Avatar size="lg">
             <AvatarFallback>
-              <Tractor className="size-5" />
+              <Fence className="size-5" />
             </AvatarFallback>
           </Avatar>
 
@@ -220,7 +220,7 @@ export default function PropertyDetails({
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Beef className="size-4" /> Lotes e Animais Vinculados
+            <CowHead className="size-4" /> Lotes e Animais Vinculados
           </CardTitle>
         </CardHeader>
         <CardContent>

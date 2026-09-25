@@ -9,7 +9,7 @@ import {
   Power,
   Search,
   Settings2,
-  Tractor,
+  Fence,
   User,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -333,7 +333,7 @@ export default function PropertyList() {
       >
         {properties.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 gap-2 text-muted-foreground">
-            <Tractor size={50} className="opacity-30" />
+            <Fence size={50} className="opacity-30" />
             <p className="text-2xl">Nenhum registro encontrado.</p>
           </div>
         ) : (

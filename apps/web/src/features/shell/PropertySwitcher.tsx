@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { CheckIcon, ChevronsUpDown, Tractor } from "lucide-react";
+import { CheckIcon, ChevronsUpDown, Fence } from "lucide-react";
 import { toast } from "sonner";
 
 import { SidebarMenuButton } from "@/components/ui/sidebar";
@@ -35,7 +35,7 @@ export function PropertySwitcher() {
   if (isLoading) {
     return (
       <SidebarMenuButton size="sm" disabled className="text-muted-foreground">
-        <Tractor className="size-3.5" />
+        <Fence className="size-3.5" />
         <span className="truncate text-xs">Carregando...</span>
       </SidebarMenuButton>
     );
@@ -44,7 +44,7 @@ export function PropertySwitcher() {
   if (options.length === 0) {
     return (
       <SidebarMenuButton size="sm" disabled className="text-muted-foreground">
-        <Tractor className="size-3.5" />
+        <Fence className="size-3.5" />
         <span className="truncate text-xs">Nenhuma propriedade disponível</span>
       </SidebarMenuButton>
     );
@@ -57,7 +57,7 @@ export function PropertySwitcher() {
           size="sm"
           className="text-muted-foreground data-open:bg-sidebar-accent data-open:text-sidebar-accent-foreground"
         >
-          <Tractor className="size-3.5" />
+          <Fence className="size-3.5" />
           <span className="truncate text-xs">
             {property?.name ?? "Selecionar propriedade"}
           </span>

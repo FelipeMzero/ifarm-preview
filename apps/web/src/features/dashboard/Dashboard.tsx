@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { LandPlot, MapPin, Tractor, User } from "lucide-react";
+import { LandPlot, MapPin, Fence, User } from "lucide-react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -73,7 +73,7 @@ export default function Dashboard() {
     if (propertyOptions.length === 0) {
       return (
         <div className="flex flex-col items-center justify-center gap-3 py-16 text-center text-muted-foreground">
-          <Tractor className="size-8" />
+          <Fence className="size-8" />
           <p>Nenhuma propriedade cadastrada ainda.</p>
           <Button asChild size="sm">
             <Link href="/propriedades/novo">Cadastrar propriedade</Link>
@@ -84,7 +84,7 @@ export default function Dashboard() {
 
     return (
       <div className="flex flex-col items-center justify-center gap-3 py-16 text-center text-muted-foreground">
-        <Tractor className="size-8" />
+        <Fence className="size-8" />
         <p>Nenhuma propriedade selecionada.</p>
         <p className="text-sm">
           Escolha uma propriedade no menu lateral para continuar.
@@ -103,7 +103,7 @@ export default function Dashboard() {
         <CardContent className="flex items-center gap-4">
           <Avatar size="lg">
             <AvatarFallback>
-              <Tractor className="size-5" />
+              <Fence className="size-5" />
             </AvatarFallback>
           </Avatar>
           <div className="flex-1 space-y-1">

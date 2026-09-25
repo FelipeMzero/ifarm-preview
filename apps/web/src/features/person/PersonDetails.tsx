@@ -12,7 +12,7 @@ import {
   Phone,
   ShoppingCart,
   Trash2,
-  Tractor,
+  Fence,
   User,
 } from "lucide-react";
 
@@ -311,7 +311,7 @@ export default function PersonDetails({
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Tractor className="size-4" /> Propriedades
+            <Fence className="size-4" /> Propriedades
           </CardTitle>
         </CardHeader>
         <CardContent>
