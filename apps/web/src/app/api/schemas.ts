@@ -206,7 +206,25 @@ export const animalQuerySchema = z.object({
     z.enum(AnimalStatus).optional(),
   ),
   sex: z.preprocess((v) => (v === "" ? undefined : v), z.enum(Sex).optional()),
-  batchId: z.preprocess((v) => (v === "" ? undefined : v), z.uuid().optional()),
+  // "none" = animais sem lote.
+  batchId: z.preprocess(
+    (v) => (v === "" ? undefined : v),
+    z.union([z.uuid(), z.literal("none")]).optional(),
+  ),
+  neutered: z.preprocess(
+    (v) => (v === "" ? undefined : v),
+    z.enum(["true", "false"]).optional(),
+  ),
+  // Faixa etária pela data de nascimento; "unknown" = sem data de nascimento.
+  ageRange: z.preprocess(
+    (v) => (v === "" ? undefined : v),
+    z.enum(["upTo12", "12to24", "over24", "unknown"]).optional(),
+  ),
+  breedId: z.preprocess((v) => (v === "" ? undefined : v), z.uuid().optional()),
+  origin: z.preprocess(
+    (v) => (v === "" ? undefined : v),
+    z.enum(AnimalOrigin).optional(),
+  ),
   excludeBatchId: z.preprocess(
     (v) => (v === "" ? undefined : v),
     z.uuid().optional(),

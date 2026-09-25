@@ -6,6 +6,20 @@ import { uniqueConstraintErrors } from "../dbErrors";
 import { animalCreateApiSchema, animalQuerySchema } from "../schemas";
 import { getOrAssignCurrentProperty } from "../user/current-property/currentProperty";
 
+// Limites de data de nascimento para cada faixa etária (idade em meses completos).
+function birthDateFilter(range: "upTo12" | "12to24" | "over24" | "unknown") {
+  if (range === "unknown") return null;
+  const monthsAgo = (months: number) => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    d.setMonth(d.getMonth() - months);
+    return d;
+  };
+  if (range === "upTo12") return { gt: monthsAgo(12) };
+  if (range === "12to24") return { gt: monthsAgo(24), lte: monthsAgo(12) };
+  return { lte: monthsAgo(24) };
+}
+
 export async function GET(request: NextRequest) {
   const { response, session } = await requireSession(RESOURCE_ACCESS.animais);
   if (response) return response;
@@ -33,6 +47,10 @@ export async function GET(request: NextRequest) {
       excludeBatchId,
       minWeight,
       maxWeight,
+      neutered,
+      ageRange,
+      breedId,
+      origin,
     } = validation.data;
 
     let propertyId = validation.data.propertyId;
@@ -65,7 +83,13 @@ export async function GET(request: NextRequest) {
         : {}),
       ...(status ? { status } : {}),
       ...(sex ? { sex } : {}),
-      ...(batchId ? { currentBatchId: batchId } : {}),
+      ...(batchId
+        ? { currentBatchId: batchId === "none" ? null : batchId }
+        : {}),
+      ...(neutered ? { neutered: neutered === "true" } : {}),
+      ...(breedId ? { breedId } : {}),
+      ...(origin ? { origin } : {}),
+      ...(ageRange ? { birthDate: birthDateFilter(ageRange) } : {}),
       // "<>" no SQL descarta NULL, então os animais sem lote precisam ser incluídos à parte.
       ...(excludeBatchId
         ? {

@@ -1,7 +1,15 @@
 "use client";
 
 import { ColumnDef, VisibilityState } from "@tanstack/react-table";
-import { IdCard, Pencil, Plus, Search, Settings2, Trash2 } from "lucide-react";
+import {
+  IdCard,
+  Pencil,
+  Plus,
+  Search,
+  Settings2,
+  SlidersHorizontal,
+  Trash2,
+} from "lucide-react";
 import { CowHead } from "@/components/icons/cow-head";
 import { useRouter } from "next/navigation";
 
@@ -21,9 +29,16 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
-import { SelectField } from "@/components/our/SelectField";
+import {
+  ActiveFilterChips,
+  AnimalFiltersPopover,
+  AnimalListFilters,
+  countActiveFilters,
+  filtersFromQuery,
+  filtersToQuery,
+  useFilterOptions,
+} from "./AnimalFilters";
 import { AnimalRow, deleteAnimal, getAnimals } from "./services";
-import { EnumAnimalStatus } from "./schema";
 import {
   AnimalIdentification,
   ORIGIN_VARIANT,
@@ -32,11 +47,7 @@ import {
 } from "./display";
 import AnimalDetails from "./AnimalDetails";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import {
-  ANIMAL_ORIGIN_LABELS,
-  ANIMAL_STATUS_LABELS,
-  ANIMAL_STATUS_ITEMS,
-} from "@/lib/enum-labels";
+import { ANIMAL_ORIGIN_LABELS, ANIMAL_STATUS_LABELS } from "@/lib/enum-labels";
 import { ErrorPage } from "@/components/our/ErrorPage";
 import { useCurrentProperty } from "@/features/shell/CurrentPropertyProvider";
 
@@ -148,7 +159,17 @@ function buildColumns(
   ];
 }
 
-export default function AnimalList() {
+type QueryParams = Record<string, string | string[] | undefined>;
+
+const firstParam = (v: string | string[] | undefined) =>
+  (Array.isArray(v) ? v[0] : v) ?? "";
+
+export default function AnimalList({
+  initialQuery = {},
+}: {
+  /** Parâmetros da URL: busca e filtros sobrevivem ao recarregar/compartilhar. */
+  initialQuery?: QueryParams;
+}) {
   const router = useRouter();
   const { property: currentProperty } = useCurrentProperty();
   const [animals, setAnimals] = useState<AnimalRow[]>([]);
@@ -156,9 +177,13 @@ export default function AnimalList() {
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const [pageCount, setPageCount] = useState(0);
   const [total, setTotal] = useState(0);
-  const [search, setSearch] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [status, setStatus] = useState<string>(EnumAnimalStatus.ACTIVE);
+  const [search, setSearch] = useState(() => firstParam(initialQuery.busca));
+  const [debouncedSearch, setDebouncedSearch] = useState(search);
+  const [filters, setFilters] = useState<AnimalListFilters>(() =>
+    filtersFromQuery(initialQuery),
+  );
+  const [debouncedFilters, setDebouncedFilters] = useState(filters);
+  const filterOptions = useFilterOptions(currentProperty?.id);
   const [loading, setLoading] = useState(true);
   const [isFirstLoad, setIsFirstLoad] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -177,6 +202,26 @@ export default function AnimalList() {
     return () => clearTimeout(timer);
   }, [search]);
 
+  // Os campos de peso são digitados: espera uma pausa antes de buscar.
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedFilters(filters), 300);
+    return () => clearTimeout(timer);
+  }, [filters]);
+
+  // Mantém busca e filtros na URL.
+  useEffect(() => {
+    const query = new URLSearchParams();
+    if (debouncedSearch) query.set("busca", debouncedSearch);
+    filtersToQuery(debouncedFilters, query);
+    const qs = query.toString();
+    router.replace(`/animais${qs ? `?${qs}` : ""}`, { scroll: false });
+  }, [debouncedSearch, debouncedFilters, router]);
+
+  function handleFiltersChange(next: AnimalListFilters) {
+    setFilters(next);
+    setPageIndex(0);
+  }
+
   useEffect(() => {
     let cancelled = false;
 
@@ -188,7 +233,7 @@ export default function AnimalList() {
           page: pageIndex,
           pageSize,
           search: debouncedSearch,
-          status,
+          ...debouncedFilters,
         });
         if (!cancelled) {
           setAnimals(result.data);
@@ -213,7 +258,7 @@ export default function AnimalList() {
     pageIndex,
     pageSize,
     debouncedSearch,
-    status,
+    debouncedFilters,
     refreshKey,
     currentProperty?.id,
   ]);
@@ -229,6 +274,8 @@ export default function AnimalList() {
       setPendingDeleteId(null);
     }
   }
+
+  const activeFilterCount = countActiveFilters(filters);
 
   const columns = buildColumns(
     (id) => router.push(`/animais/${id}`),
@@ -271,14 +318,21 @@ export default function AnimalList() {
           />
         </div>
 
-        <SelectField
-          value={status}
-          onValueChange={(val) => {
-            setStatus(val);
-            setPageIndex(0);
-          }}
-          items={[{ value: "", label: "Todos" }, ...ANIMAL_STATUS_ITEMS]}
-        />
+        <AnimalFiltersPopover
+          filters={filters}
+          options={filterOptions}
+          onChange={handleFiltersChange}
+        >
+          <Button variant="outline">
+            <SlidersHorizontal className="size-4" />
+            Filtros
+            {activeFilterCount > 0 && (
+              <span className="rounded-full bg-primary px-1.5 text-[10px] font-semibold tabular-nums text-primary-foreground">
+                {activeFilterCount}
+              </span>
+            )}
+          </Button>
+        </AnimalFiltersPopover>
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -304,6 +358,12 @@ export default function AnimalList() {
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
+
+      <ActiveFilterChips
+        filters={filters}
+        options={filterOptions}
+        onChange={handleFiltersChange}
+      />
 
       <div
         className={

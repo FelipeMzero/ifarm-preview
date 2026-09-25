@@ -4,6 +4,7 @@ import {
   Combobox,
   ComboboxContent,
   ComboboxEmpty,
+  ComboboxInput,
   ComboboxItem,
   ComboboxList,
   ComboboxTrigger,
@@ -18,6 +19,9 @@ type SelectFieldProps = {
   onValueChange: (value: string) => void;
   items: SelectFieldItem[];
   placeholder?: string;
+  /** Mostra um campo de busca no topo da lista (útil com muitas opções). */
+  searchable?: boolean;
+  searchPlaceholder?: string;
   id?: string;
   className?: string;
   "aria-invalid"?: boolean;
@@ -28,6 +32,8 @@ export function SelectField({
   onValueChange,
   items,
   placeholder,
+  searchable = false,
+  searchPlaceholder = "Buscar...",
   id,
   className,
   ...props
@@ -40,7 +46,8 @@ export function SelectField({
       itemToStringLabel={(val: string) =>
         items.find((item) => item.value === val)?.label ?? val
       }
-      filter={null}
+      // Sem busca a lista fica fixa; com busca usa o filtro padrão pelo rótulo.
+      filter={searchable ? undefined : null}
     >
       <ComboboxTrigger
         id={id}
@@ -56,7 +63,12 @@ export function SelectField({
         <ComboboxValue placeholder={placeholder} />
       </ComboboxTrigger>
       <ComboboxContent>
-        <ComboboxEmpty>Não há itens</ComboboxEmpty>
+        {searchable && (
+          <ComboboxInput showTrigger={false} placeholder={searchPlaceholder} />
+        )}
+        <ComboboxEmpty>
+          {searchable ? "Nenhum resultado" : "Não há itens"}
+        </ComboboxEmpty>
         <ComboboxList>
           {(item: SelectFieldItem) => (
             <ComboboxItem key={item.value} value={item.value}>

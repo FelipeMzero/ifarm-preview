@@ -156,6 +156,10 @@ export async function getAnimals(
     excludeBatchId?: string;
     minWeight?: string;
     maxWeight?: string;
+    neutered?: string;
+    ageRange?: string;
+    breedId?: string;
+    origin?: string;
   } = {},
 ): Promise<AnimalListResult> {
   const {
@@ -169,6 +173,10 @@ export async function getAnimals(
     excludeBatchId = "",
     minWeight = "",
     maxWeight = "",
+    neutered = "",
+    ageRange = "",
+    breedId = "",
+    origin = "",
   } = params;
   const query = new URLSearchParams({
     page: String(page),
@@ -182,6 +190,10 @@ export async function getAnimals(
   if (excludeBatchId) query.set("excludeBatchId", excludeBatchId);
   if (minWeight) query.set("minWeight", minWeight);
   if (maxWeight) query.set("maxWeight", maxWeight);
+  if (neutered) query.set("neutered", neutered);
+  if (ageRange) query.set("ageRange", ageRange);
+  if (breedId) query.set("breedId", breedId);
+  if (origin) query.set("origin", origin);
 
   const response = await fetch(`${API_ENDPOINTS.ANIMALS}?${query}`);
   const result = await response.json();
