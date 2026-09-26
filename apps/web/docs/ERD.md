@@ -74,6 +74,7 @@ erDiagram
     Int code 
     String name "❓"
     DateTime birth_date "❓"
+    Boolean birth_date_estimated 
     AnimalOrigin origin 
     Sex sex 
     AnimalStatus status 
@@ -139,7 +140,7 @@ erDiagram
   
 
   "management_session" {
-    String id "🗝️"
+    String purchase_event_id "🗝️"
     String title 
     String notes "❓"
     DateTime scheduled_date 
@@ -148,6 +149,7 @@ erDiagram
     DateTime cancelled_at "❓"
     Json steps 
     String property_id 
+    String purchase_event_id "❓"
     DateTime created_at 
     DateTime updated_at 
     }
@@ -175,6 +177,9 @@ erDiagram
     String tag "❓"
     String notes "❓"
     DateTime identified_at 
+    String original_tag "❓"
+    DateTime corrected_at "❓"
+    DateTime cancelled_at "❓"
     String management_id "❓"
     String animal_id 
     DateTime created_at 
@@ -189,10 +194,13 @@ erDiagram
   
 
   "animal_rfid_tagging" {
-    Int management_id "🗝️"
+    Int original_rfid "🗝️"
     String rfid "❓"
     String notes "❓"
     DateTime identified_at 
+    String original_rfid "❓"
+    DateTime corrected_at "❓"
+    DateTime cancelled_at "❓"
     String management_id "❓"
     String animal_id 
     DateTime created_at 
@@ -254,6 +262,7 @@ erDiagram
     Boolean is_counter_brand 
     String notes "❓"
     DateTime branded_at 
+    DateTime cancelled_at "❓"
     String management_id "❓"
     String animal_id 
     DateTime created_at 
@@ -374,32 +383,41 @@ erDiagram
     String id "🗝️"
     DateTime purchase_date 
     String gta_number "❓"
+    String invoice_number "❓"
     String notes "❓"
-    DateTime confirmed_at "❓"
+    DateTime closed_at "❓"
+    DateTime paid_at "❓"
     DateTime cancelled_at "❓"
-    PurchasePricingType pricing_type 
-    Decimal price_per_arroba "❓"
-    Decimal total_price "❓"
     String seller_id 
     String destination_property_id 
-    String destination_batch_id "❓"
     DateTime created_at 
     DateTime updated_at 
     }
   
 
-  "purchase_event_item" {
-    Int animal_id "🗝️"
-    Decimal weight "❓"
-    Decimal cost "❓"
-    String tag "❓"
-    String rfid "❓"
-    Sex sex "❓"
-    DateTime birth_date "❓"
+  "purchase_category" {
+    Int id "🗝️"
+    Sex sex 
+    Int min_age_months "❓"
+    Int max_age_months "❓"
+    Int expected_quantity 
     String notes "❓"
+    PurchasePricingType pricing_type 
+    Decimal unit_price "❓"
+    Decimal total_price "❓"
+    Decimal invoiced_weight "❓"
+    Decimal shrink_percent "❓"
     String breed_id "❓"
     String event_id 
-    String animal_id "❓"
+    }
+  
+
+  "purchased_animal" {
+    Int id "🗝️"
+    Decimal cost "❓"
+    Int category_id 
+    String animal_id 
+    String management_session_id 
     DateTime created_at 
     }
   
@@ -417,6 +435,7 @@ erDiagram
     "user_settings" }o--|o property : "currentProperty"
     "person" |o--|o address : "address"
     "management_session" }o--|| property : "property"
+    "management_session" }o--|o purchase_event : "purchaseEvent"
     "management_participant" }o--|| management_session : "managementSession"
     "management_participant" }o--|| animal : "batch_id"
     "tag_management" |o--|| management_session : "managementSession"
@@ -458,8 +477,9 @@ erDiagram
     "animal_batch_history" }o--|o batch : "batch"
     "purchase_event" }o--|| person : "seller"
     "purchase_event" }o--|| property : "destinationProperty"
-    "purchase_event" }o--|o batch : "destinationBatch"
-    "purchase_event_item" }o--|o breed : "breed"
-    "purchase_event_item" }o--|| purchase_event : "event"
-    "purchase_event_item" }o--|o animal : "animal"
+    "purchase_category" }o--|o breed : "breed"
+    "purchase_category" }o--|| purchase_event : "event"
+    "purchased_animal" }o--|| purchase_category : "category"
+    "purchased_animal" }o--|| animal : "animal"
+    "purchased_animal" }o--|| management_session : "managementSession"
 ```

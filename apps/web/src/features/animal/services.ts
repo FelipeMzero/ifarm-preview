@@ -290,6 +290,8 @@ export type AnimalFullDetails = {
   name: string | null;
   sex: string;
   birthDate: string | null;
+  /** Idade informada (ex.: compra), sem registro de nascimento. */
+  birthDateEstimated: boolean;
   breedName: string | null;
   origin: string;
   status: string;
@@ -318,6 +320,45 @@ export async function getAnimalDetails(id: string): Promise<AnimalFullDetails> {
   }
 
   return result;
+}
+
+async function postJson(url: string, data: unknown, fallback: string) {
+  const response = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  const result = await response.json();
+
+  if (!response.ok) {
+    throw new ApiError(result.message ?? fallback, result.errors);
+  }
+
+  return result;
+}
+
+// Registra uma pesagem na hora (date vazio = hoje).
+export function createWeighing(
+  animalId: string,
+  data: { weightKg: string; date?: string; notes?: string },
+) {
+  return postJson(
+    API_ENDPOINTS.ANIMAL_WEIGHINGS(animalId),
+    data,
+    "Não foi possível registrar a pesagem.",
+  );
+}
+
+// Registra uma castração (ou recastração, com motivo) na hora.
+export function createNeutering(
+  animalId: string,
+  data: { date: string; method?: string; notes?: string },
+) {
+  return postJson(
+    API_ENDPOINTS.ANIMAL_NEUTERINGS(animalId),
+    data,
+    "Não foi possível registrar a castração.",
+  );
 }
 
 export type WeighingCorrectionData = {
@@ -360,6 +401,111 @@ export async function cancelWeighing(animalId: string, weighingId: number) {
 
   if (!response.ok) {
     throw new Error(result.message ?? "Não foi possível excluir a pesagem.");
+  }
+
+  return result;
+}
+
+export type IdentifierKind = "tag" | "rfid";
+
+// Registro do histórico de brinco/RFID (value null = identificador removido).
+export type AnimalIdentifierRecord = {
+  id: number;
+  date: string;
+  value: string | null;
+  notes: string | null;
+  fromSession: boolean;
+  correctedAt: string | null;
+  originalValue: string | null;
+};
+
+export type IdentifierCorrectionData = {
+  value: string;
+  date?: string;
+  notes?: string;
+};
+
+const identifiersUrl = (animalId: string, kind: IdentifierKind) =>
+  `/api/animal/${animalId}/identifiers/${kind}`;
+
+export async function getIdentifiers(
+  animalId: string,
+  kind: IdentifierKind,
+): Promise<AnimalIdentifierRecord[]> {
+  const response = await fetch(identifiersUrl(animalId, kind));
+  const result = await response.json();
+
+  if (!response.ok) {
+    throw new Error(result.message);
+  }
+
+  return result;
+}
+
+// Troca o identificador na hora (value vazio = remover).
+export async function changeIdentifier(
+  animalId: string,
+  kind: IdentifierKind,
+  data: { value: string; notes?: string },
+) {
+  const response = await fetch(identifiersUrl(animalId, kind), {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  const result = await response.json();
+
+  if (!response.ok) {
+    throw new ApiError(
+      result.message ?? "Não foi possível trocar a identificação.",
+      result.errors,
+    );
+  }
+
+  return result;
+}
+
+export async function correctIdentifier(
+  animalId: string,
+  kind: IdentifierKind,
+  recordId: number,
+  data: IdentifierCorrectionData,
+) {
+  const response = await fetch(
+    `${identifiersUrl(animalId, kind)}/${recordId}`,
+    {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    },
+  );
+  const result = await response.json();
+
+  if (!response.ok) {
+    throw new ApiError(
+      result.message ?? "Não foi possível corrigir a identificação.",
+      result.errors,
+    );
+  }
+
+  return result;
+}
+
+export async function cancelIdentifier(
+  animalId: string,
+  kind: IdentifierKind,
+  recordId: number,
+) {
+  const response = await fetch(
+    `${identifiersUrl(animalId, kind)}/${recordId}`,
+    { method: "DELETE" },
+  );
+  const result = await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      result.message ?? "Não foi possível excluir a identificação.",
+    );
   }
 
   return result;

@@ -108,7 +108,6 @@ model Batch {
   originAnimalTransferItems  AnimalBatchTransferItem[] @relation("AnimalBatchTransferItemOrigin")
   originPropertyTransfers      AnimalPropertyTransfer[] @relation("AnimalPropertyTransferOriginBatch")
   destinationPropertyTransfers AnimalPropertyTransfer[] @relation("AnimalPropertyTransferDestinationBatch")
-  purchaseEvents PurchaseEvent[]
 
   @@index([propertyId])
   @@map("batch")
@@ -156,6 +155,7 @@ model Animal {
   code              Int                   @unique @default(autoincrement())
   name              String?
   birthDate         DateTime? @db.Date    @map("birth_date")
+  birthDateEstimated Boolean @default(false) @map("birth_date_estimated")
   origin            AnimalOrigin          @default(UNDEFINED)
   sex               Sex                   @default(MALE)
   status            AnimalStatus          @default(ACTIVE)
@@ -203,7 +203,9 @@ model Animal {
   batchTransferItems AnimalBatchTransferItem[]
   animalPropertyHistories AnimalPropertyHistory[]
   animalBatchHistories AnimalBatchHistory[]
-  purchaseEventItems PurchaseEventItem[]
+
+  // Compras
+  purchasedAnimals PurchasedAnimal[]
 
 
   @@index([status])
@@ -291,7 +293,7 @@ model Breed {
   updatedAt     DateTime  @updatedAt @map("updated_at")
 
   animals Animal[]
-  purchaseEventItems PurchaseEventItem[]
+  purchaseCategories PurchaseCategory[]
 
   @@map("breed")
 }
@@ -328,6 +330,11 @@ model ManagementSession {
   rfidManagement RfidManagement?
   brandManagement BrandManagement?
   healthManagements         HealthManagement[]
+
+  purchaseEventId String?        @db.Uuid @map("purchase_event_id") // preenchido = sessão de recepção
+  purchaseEvent   PurchaseEvent? @relation(fields: [purchaseEventId], references: [id], onDelete: Restrict)
+  purchasedAnimals PurchasedAnimal[]
+
 
   animalBatchTransfers    AnimalBatchTransfer[]
   animalPropertyTransfers AnimalPropertyTransfer[]
@@ -383,6 +390,13 @@ model AnimalTagging {
 
   identifiedAt DateTime @map("identified_at") // data do manejo; em sessão, copiada da data da sessão
 
+  // Correções preservam o rastro: o valor lançado originalmente é guardado na primeira
+  // correção e a exclusão é lógica (cancelada = ignorada no histórico e nos cálculos).
+  originalTag String?   @map("original_tag")
+  correctedAt DateTime? @map("corrected_at")
+  cancelledAt DateTime? @map("cancelled_at")
+
+
   managementId String?         @db.Uuid @map("management_id") // null = avulso
   management   TagManagement?  @relation(fields: [managementId], references: [id], onDelete: Restrict)
 
@@ -415,6 +429,11 @@ model AnimalRfidTagging {
   notes String?
 
   identifiedAt DateTime @map("identified_at") // data do manejo; em sessão, copiada da data da sessão
+
+  originalRfid String?   @map("original_rfid")
+  correctedAt  DateTime? @map("corrected_at")
+  cancelledAt  DateTime? @map("cancelled_at")
+
 
   managementId String?          @db.Uuid @map("management_id") // null = avulso
   management   RfidManagement?  @relation(fields: [managementId], references: [id], onDelete: Restrict)
@@ -523,6 +542,8 @@ model AnimalBranding {
   notes          String?
 
   brandedAt DateTime @map("branded_at") // data do manejo; em sessão, copiada da data da sessão
+
+  cancelledAt            DateTime? @map("cancelled_at")
 
   managementId String?           @db.Uuid @map("management_id") // null = avulso
   management   BrandManagement?  @relation(fields: [managementId], references: [id], onDelete: Restrict)
@@ -765,43 +786,44 @@ model PurchaseEvent {
   id           String    @id @default(uuid()) @db.Uuid
   purchaseDate DateTime  @map("purchase_date")
   gtaNumber    String?   @map("gta_number")
+  invoiceNumber String?  @map("invoice_number")
   notes        String?
-  confirmedAt  DateTime? @map("confirmed_at")
-  cancelledAt  DateTime? @map("cancelled_at")
 
-  pricingType    PurchasePricingType @map("pricing_type")
-  pricePerArroba Decimal?            @db.Decimal(10, 2) @map("price_per_arroba") // usado se pricingType = PER_ARROBA
-  totalPrice     Decimal?            @db.Decimal(12, 2) @map("total_price")      // usado se pricingType = LUMP_SUM
+  // financeiro, independente do físico
+  closedAt    DateTime? @map("closed_at")    // negociação fechada (valores congelados)
+  paidAt      DateTime? @map("paid_at")
+  cancelledAt DateTime? @map("cancelled_at")
+  // status físico é derivado: soma de animais recebidos vs expectedQuantity das categorias
 
-  items PurchaseEventItem[]
-
-  sellerId String @db.Uuid @map("seller_id")
-  seller   Person @relation(fields: [sellerId], references: [id], onDelete: Restrict)
-
+  sellerId              String   @db.Uuid @map("seller_id")
+  seller                Person   @relation(fields: [sellerId], references: [id], onDelete: Restrict)
   destinationPropertyId String   @db.Uuid @map("destination_property_id")
   destinationProperty   Property @relation(fields: [destinationPropertyId], references: [id], onDelete: Restrict)
 
-  destinationBatchId String? @db.Uuid @map("destination_batch_id")
-  destinationBatch   Batch?  @relation(fields: [destinationBatchId], references: [id], onDelete: Restrict)
+  categories PurchaseCategory[]
+  receptions ManagementSession[] // uma compra pode ter várias recepções (viagens)
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
   @@index([sellerId])
   @@index([destinationPropertyId])
-  @@index([destinationBatchId])
   @@map("purchase_event")
 }
 
-model PurchaseEventItem {
-  id        Int      @id @default(autoincrement())
-  weight    Decimal? @db.Decimal(10, 2) // peso de entrada — base do cálculo por arroba, quando aplicável
-  cost      Decimal? @db.Decimal(10, 2) // custo individual calculado e congelado na confirmação
-  tag       String?
-  rfid      String?
-  sex       Sex?
-  birthDate DateTime? @db.Date    @map("birth_date")
-  notes     String?
+model PurchaseCategory {
+  id               Int     @id @default(autoincrement())
+  sex              Sex
+  minAgeMonths     Int?    @map("min_age_months")
+  maxAgeMonths     Int?    @map("max_age_months")
+  expectedQuantity Int     @map("expected_quantity")
+  notes            String?
+
+  pricingType    PurchasePricingType @map("pricing_type")
+  unitPrice      Decimal?  @db.Decimal(12, 2) @map("unit_price")        // por cabeça ou por arroba
+  totalPrice     Decimal?  @db.Decimal(12, 2) @map("total_price")       // LUMP_SUM
+  invoicedWeight Decimal?  @db.Decimal(12, 2) @map("invoiced_weight")   // peso de origem/embarque (kg), base do pagamento
+  shrinkPercent  Decimal?  @db.Decimal(5, 2)  @map("shrink_percent")    // quebra acordada
 
   breedId String? @db.Uuid @map("breed_id")
   breed   Breed?  @relation(fields: [breedId], references: [id], onDelete: Restrict)
@@ -809,18 +831,38 @@ model PurchaseEventItem {
   eventId String        @db.Uuid @map("event_id")
   event   PurchaseEvent @relation(fields: [eventId], references: [id], onDelete: Restrict)
 
-  animalId String? @unique @db.Uuid @map("animal_id") // null até a confirmação; preenchido ao materializar o Animal
-  animal   Animal? @relation(fields: [animalId], references: [id], onDelete: Restrict)
+  animals PurchasedAnimal[]
+
+  @@index([eventId])
+  @@map("purchase_category")
+}
+
+// vínculo animal ↔ categoria da compra, criado na recepção
+model PurchasedAnimal {
+  id   Int      @id @default(autoincrement())
+  cost Decimal? @db.Decimal(12, 2) // rateio congelado no fechamento
+
+  categoryId Int              @map("category_id")
+  category   PurchaseCategory @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+
+  animalId String @unique @db.Uuid @map("animal_id")
+  animal   Animal @relation(fields: [animalId], references: [id], onDelete: Restrict)
+
+  // sessão de recepção em que foi criado
+  managementSessionId String            @db.Uuid @map("management_session_id")
+  managementSession   ManagementSession @relation(fields: [managementSessionId], references: [id], onDelete: Restrict)
 
   createdAt DateTime @default(now()) @map("created_at")
 
-  @@index([eventId])
-  @@map("purchase_event_item")
+  @@index([categoryId])
+  @@index([managementSessionId])
+  @@map("purchased_animal")
 }
 
 // Enums
 
 enum PurchasePricingType {
+  PER_HEAD
   PER_ARROBA
   LUMP_SUM
   @@map("purchase_pricing_type")

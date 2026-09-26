@@ -34,8 +34,10 @@ export async function GET(
         currentBatch: { select: { id: true, name: true } },
         currentProperty: { select: { id: true, name: true } },
         animalWeighings: { where: { cancelledAt: null, ...effectiveWeighing } },
-        animalTaggings: { where: effectiveTagging },
-        animalRfidTaggings: { where: effectiveRfidTagging },
+        animalTaggings: { where: { cancelledAt: null, ...effectiveTagging } },
+        animalRfidTaggings: {
+          where: { cancelledAt: null, ...effectiveRfidTagging },
+        },
         animalNeuterings: {
           where: { cancelledAt: null, ...effectiveNeutering },
         },
@@ -56,11 +58,16 @@ export async function GET(
         animalPropertyHistories: {
           include: { property: { select: { id: true, name: true } } },
         },
-        purchaseEventItems: {
+        purchasedAnimals: {
           include: {
-            event: {
-              include: { seller: { select: { id: true, name: true } } },
+            category: {
+              include: {
+                event: {
+                  include: { seller: { select: { id: true, name: true } } },
+                },
+              },
             },
+            managementSession: { select: { managementDate: true } },
           },
         },
       },
@@ -141,22 +148,42 @@ export async function GET(
       }))
       .sort(byDateDesc);
 
-    const purchaseItem = animal.purchaseEventItems.find(
-      (p) => !p.event.cancelledAt,
+    const purchased = animal.purchasedAnimals.find(
+      (p) => !p.category.event.cancelledAt,
     );
-    const purchase = purchaseItem
-      ? {
-          date: purchaseItem.event.purchaseDate.toISOString(),
-          sellerId: purchaseItem.event.seller.id,
-          sellerName: purchaseItem.event.seller.name,
-          pricingType: purchaseItem.event.pricingType,
-          pricePerArroba: purchaseItem.event.pricePerArroba?.toNumber() ?? null,
-          totalPrice: purchaseItem.event.totalPrice?.toNumber() ?? null,
-          cost: purchaseItem.cost?.toNumber() ?? null,
-          weightKg: purchaseItem.weight?.toNumber() ?? null,
-          gtaNumber: purchaseItem.event.gtaNumber,
-          notes: purchaseItem.event.notes,
-        }
+    const purchase = purchased
+      ? (() => {
+          const { category } = purchased;
+          const { event } = category;
+          const unitPrice = category.unitPrice?.toNumber() ?? null;
+          // Peso de entrada = pesagem feita no dia da recepção, se houver.
+          const receptionDay = toDateOnly(
+            purchased.managementSession.managementDate,
+          );
+          const entryWeighing = weighings.find(
+            (w) => w.date.slice(0, 10) === receptionDay,
+          );
+          return {
+            date: event.purchaseDate.toISOString(),
+            sellerId: event.seller.id,
+            sellerName: event.seller.name,
+            pricingType: category.pricingType,
+            pricePerArroba:
+              category.pricingType === "PER_ARROBA" ? unitPrice : null,
+            // O valor total é da categoria; só vale como valor do animal se ela tem um só.
+            totalPrice:
+              category.pricingType === "LUMP_SUM" &&
+              category.expectedQuantity === 1
+                ? (category.totalPrice?.toNumber() ?? null)
+                : null,
+            cost:
+              purchased.cost?.toNumber() ??
+              (category.pricingType === "PER_HEAD" ? unitPrice : null),
+            weightKg: entryWeighing?.weightKg ?? null,
+            gtaNumber: event.gtaNumber,
+            notes: event.notes,
+          };
+        })()
       : null;
 
     return NextResponse.json({
@@ -167,6 +194,7 @@ export async function GET(
       name: animal.name,
       sex: animal.sex,
       birthDate: toDateOnly(animal.birthDate),
+      birthDateEstimated: animal.birthDateEstimated,
       breedName: animal.breed?.name ?? null,
       origin: animal.origin,
       status: animal.status,

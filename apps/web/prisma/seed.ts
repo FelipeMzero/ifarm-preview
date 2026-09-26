@@ -777,9 +777,15 @@ type Purchase = {
   batch: string;
   pricing:
     | { type: "PER_ARROBA"; pricePerArroba: number }
+    | { type: "PER_HEAD"; pricePerHead: number }
     | { type: "LUMP_SUM"; total: number };
   gta?: string;
+  invoice?: string;
   notes?: string;
+  /** Quebra de peso acordada (%) entre o embarque e a chegada. */
+  shrinkPercent?: number;
+  /** Idade informada pelo vendedor, sem registro de nascimento. */
+  estimatedBirth?: boolean;
 };
 
 const PURCHASES: Record<string, Purchase> = {
@@ -790,7 +796,10 @@ const PURCHASES: Record<string, Purchase> = {
     batch: "SR:Engorda",
     pricing: { type: "PER_ARROBA", pricePerArroba: 300 },
     gta: "MG-4589123",
+    invoice: "NF 001.245",
     notes: "Leilão de garrotes — lote 34",
+    shrinkPercent: 3,
+    estimatedBirth: true,
   },
   "SR:vacas": {
     prop: "SR",
@@ -799,14 +808,16 @@ const PURCHASES: Record<string, Purchase> = {
     batch: "SR:Cria",
     pricing: { type: "LUMP_SUM", total: 9600 },
     gta: "MG-3011457",
+    estimatedBirth: true,
   },
   "SR:touro": {
     prop: "SR",
     daysAgo: 150,
     seller: "boaVista",
     batch: "SR:Reprodução",
-    pricing: { type: "LUMP_SUM", total: 18000 },
+    pricing: { type: "PER_HEAD", pricePerHead: 18000 },
     gta: "MT-7788990",
+    invoice: "NF 000.778",
     notes: "Touro PO com exame andrológico",
   },
   "SR:desmama": {
@@ -1468,48 +1479,127 @@ async function seedPurchases(ctx: Ctx, animals: SeededAnimal[]) {
     );
     const totalWeight = entryWeights.reduce((s, w) => s + w, 0);
 
+    const weightOf = new Map(bought.map((a, i) => [a.id, entryWeights[i]]));
+    const pricing = p.pricing;
+
+    // Negociação fechada e paga na data da compra.
     const event = await prisma.purchaseEvent.create({
       data: {
         purchaseDate: ago(p.daysAgo),
-        confirmedAt: ago(p.daysAgo),
+        closedAt: ago(p.daysAgo),
+        paidAt: ago(p.daysAgo),
         gtaNumber: p.gta,
+        invoiceNumber: p.invoice,
         notes: p.notes,
-        pricingType: p.pricing.type,
-        pricePerArroba:
-          p.pricing.type === "PER_ARROBA" ? p.pricing.pricePerArroba : null,
-        totalPrice:
-          p.pricing.type === "LUMP_SUM"
-            ? p.pricing.total
-            : round((totalWeight / 30) * p.pricing.pricePerArroba, 2),
         sellerId: ctx.people[p.seller],
         destinationPropertyId: ctx.properties[p.prop],
-        destinationBatchId: ctx.batches[p.batch],
       },
     });
 
-    for (const [i, a] of bought.entries()) {
-      const weight = entryWeights[i];
-      // Por arroba: peso vivo ÷ 30 × preço. Valor fechado: rateio proporcional ao peso.
-      const cost =
-        p.pricing.type === "PER_ARROBA"
-          ? (weight / 30) * p.pricing.pricePerArroba
-          : (p.pricing.total * weight) / totalWeight;
-      await prisma.purchaseEventItem.create({
+    // Custo individual. Por arroba: peso vivo ÷ 30 × preço; por cabeça: o preço;
+    // valor fechado: rateio proporcional ao peso.
+    const costOf = (a: SeededAnimal) => {
+      const weight = weightOf.get(a.id)!;
+      if (pricing.type === "PER_ARROBA")
+        return (weight / 30) * pricing.pricePerArroba;
+      if (pricing.type === "PER_HEAD") return pricing.pricePerHead;
+      return (pricing.total * weight) / totalWeight;
+    };
+
+    // Uma categoria por sexo (é como o gado costuma ser negociado).
+    const categoryOf = new Map<string, number>();
+    for (const sex of ["MALE", "FEMALE"] as Sex[]) {
+      const group = bought.filter((a) => a.spec.sex === sex);
+      if (!group.length) continue;
+      const groupWeight = group.reduce((s, a) => s + weightOf.get(a.id)!, 0);
+      const ages = group
+        .filter((a) => a.spec.birthDaysAgo != null)
+        .map((a) => Math.floor((a.spec.birthDaysAgo! - p.daysAgo) / 30.4));
+      const breeds = new Set(group.map((a) => a.spec.breed));
+
+      const category = await prisma.purchaseCategory.create({
         data: {
           eventId: event.id,
-          animalId: a.id,
-          weight,
-          cost: round(cost, 2),
-          tag: a.tag,
-          sex: a.spec.sex,
-          breedId: ctx.breeds[a.spec.breed],
-          birthDate:
-            a.spec.birthDaysAgo != null ? dateAgo(a.spec.birthDaysAgo) : null,
+          sex,
+          breedId:
+            breeds.size === 1 ? ctx.breeds[group[0].spec.breed] : undefined,
+          minAgeMonths: ages.length ? Math.min(...ages) : null,
+          maxAgeMonths: ages.length ? Math.max(...ages) : null,
+          expectedQuantity: group.length,
+          pricingType: pricing.type,
+          unitPrice:
+            pricing.type === "PER_ARROBA"
+              ? pricing.pricePerArroba
+              : pricing.type === "PER_HEAD"
+                ? pricing.pricePerHead
+                : null,
+          totalPrice:
+            pricing.type === "LUMP_SUM"
+              ? round((pricing.total * groupWeight) / totalWeight, 2)
+              : null,
+          // Peso de embarque: o de chegada acrescido da quebra acordada.
+          invoicedWeight:
+            pricing.type === "PER_ARROBA"
+              ? round(groupWeight / (1 - (p.shrinkPercent ?? 0) / 100), 2)
+              : null,
+          shrinkPercent: p.shrinkPercent,
         },
+      });
+      for (const a of group) categoryOf.set(a.id, category.id);
+    }
+
+    // Uma recepção (sessão de manejo já consolidada) por dia de chegada: compras
+    // entregues em mais de uma viagem geram mais de uma recepção.
+    const seller = await prisma.person.findUniqueOrThrow({
+      where: { id: ctx.people[p.seller] },
+      select: { name: true },
+    });
+    const trips = [...new Set(bought.map((a) => a.spec.entryDaysAgo))].sort(
+      (a, b) => b - a,
+    );
+    for (const [tripIndex, entryDaysAgo] of trips.entries()) {
+      const arrived = bought.filter(
+        (a) => a.spec.entryDaysAgo === entryDaysAgo,
+      );
+      const reception = await prisma.managementSession.create({
+        data: {
+          propertyId: ctx.properties[p.prop],
+          title: `Recepção da compra de ${seller.name}${
+            trips.length > 1 ? ` (viagem ${tripIndex + 1})` : ""
+          }`,
+          scheduledDate: ago(entryDaysAgo),
+          managementDate: ago(entryDaysAgo),
+          confirmedAt: ago(entryDaysAgo),
+          purchaseEventId: event.id,
+          participants: { create: arrived.map((a) => ({ animalId: a.id })) },
+        },
+      });
+
+      for (const a of arrived) {
+        await prisma.purchasedAnimal.create({
+          data: {
+            categoryId: categoryOf.get(a.id)!,
+            animalId: a.id,
+            managementSessionId: reception.id,
+            cost: round(costOf(a), 2),
+          },
+        });
+      }
+    }
+
+    if (p.estimatedBirth) {
+      await prisma.animal.updateMany({
+        where: {
+          id: { in: bought.map((a) => a.id) },
+          birthDate: { not: null },
+        },
+        data: { birthDateEstimated: true },
       });
     }
   }
-  console.log(`- ${Object.keys(PURCHASES).length} compras criadas`);
+  console.log(
+    `- ${Object.keys(PURCHASES).length} compras criadas (com categorias e recepções)`,
+  );
 }
 
 async function seedTransfers(

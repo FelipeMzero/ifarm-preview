@@ -276,30 +276,55 @@ export async function POST(request: NextRequest) {
         });
       }
 
+      // Compra avulsa de um animal: compra já fechada, com uma categoria de 1 animal,
+      // e uma sessão de recepção já consolidada (o modelo liga o animal à compra pela
+      // recepção). A recepção aparece nas sessões de manejo como as demais.
       if (data.origin === "PURCHASE") {
+        const now = new Date();
+        const seller = await tx.person.findUniqueOrThrow({
+          where: { id: data.sellerId! },
+          select: { name: true },
+        });
+
         const purchaseEvent = await tx.purchaseEvent.create({
           data: {
             purchaseDate: data.acquisitionDate ?? entryDate,
             notes: data.purchaseNotes,
-            confirmedAt: new Date(),
-            pricingType: "LUMP_SUM",
-            totalPrice: data.purchasePrice,
+            closedAt: now,
             sellerId: data.sellerId!,
             destinationPropertyId: propertyId,
-            destinationBatchId: data.batchId,
           },
         });
 
-        await tx.purchaseEventItem.create({
+        const category = await tx.purchaseCategory.create({
           data: {
             eventId: purchaseEvent.id,
-            animalId: created.id,
-            weight: data.currentWeightKg,
-            tag: data.currentTag,
-            rfid: data.currentRfid,
             sex: data.sex,
-            birthDate: data.birthDate,
             breedId: data.breedId,
+            expectedQuantity: 1,
+            pricingType: "LUMP_SUM",
+            totalPrice: data.purchasePrice,
+          },
+        });
+
+        const reception = await tx.managementSession.create({
+          data: {
+            propertyId,
+            title: `Recepção de compra (${seller.name})`,
+            scheduledDate: entryDate,
+            managementDate: entryDate,
+            confirmedAt: now,
+            purchaseEventId: purchaseEvent.id,
+            participants: { create: { animalId: created.id } },
+          },
+        });
+
+        await tx.purchasedAnimal.create({
+          data: {
+            categoryId: category.id,
+            animalId: created.id,
+            managementSessionId: reception.id,
+            cost: data.purchasePrice,
           },
         });
       }

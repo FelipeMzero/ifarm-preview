@@ -561,7 +561,11 @@ export default function AnimalDetails({
             </CardHeader>
             <CardContent>
               {weighings.length > 1 ? (
-                <AnimalWeightChart weighings={weighings} />
+                <AnimalWeightChart
+                  weighings={weighings}
+                  birthDate={animal.birthDate}
+                  birthDateEstimated={animal.birthDateEstimated}
+                />
               ) : (
                 <EmptyState
                   icon={<LineChart />}
@@ -581,7 +585,7 @@ export default function AnimalDetails({
                 <CardTitle>Pesagens</CardTitle>
               </CardHeader>
               <CardContent>
-                <Table>
+                <Table className="[&_tr]:border-border">
                   <TableHeader>
                     <TableRow>
                       <TableHead>Data</TableHead>
@@ -727,7 +731,7 @@ export default function AnimalDetails({
                       message="Nenhum registro."
                     />
                   ) : (
-                    <Table>
+                    <Table className="[&_tr]:border-border">
                       <TableHeader>
                         <TableRow>
                           <TableHead>Data</TableHead>
@@ -780,7 +784,7 @@ export default function AnimalDetails({
                   message="Nenhum manejo sanitário registrado."
                 />
               ) : (
-                <Table>
+                <Table className="[&_tr]:border-border">
                   <TableHeader>
                     <TableRow>
                       <TableHead>Data</TableHead>
@@ -836,7 +840,7 @@ export default function AnimalDetails({
                   }
                 />
               ) : (
-                <Table>
+                <Table className="[&_tr]:border-border">
                   <TableHeader>
                     <TableRow>
                       <TableHead>Data</TableHead>
@@ -891,7 +895,7 @@ export default function AnimalDetails({
                   message="Nenhum histórico de propriedade."
                 />
               ) : (
-                <Table>
+                <Table className="[&_tr]:border-border">
                   <TableHeader>
                     <TableRow>
                       <TableHead>Propriedade</TableHead>

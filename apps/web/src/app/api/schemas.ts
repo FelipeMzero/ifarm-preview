@@ -854,3 +854,37 @@ export const neuteringCancelApiSchema = z.object({
   // sido castrado antes de chegar (sem registro), então quem decide é o usuário.
   keepNeutered: z.boolean().optional(),
 });
+
+// Registro avulso de pesagem feito pelo histórico de pesagens (gravado na hora).
+export const weighingCreateApiSchema = z.object({
+  weightKg: z.coerce
+    .number("Informe um peso válido")
+    .positive("O peso deve ser maior que zero"),
+  date: z
+    .string()
+    .optional()
+    .transform((v) => (v ? new Date(`${v}T00:00:00`) : undefined)),
+  notes: z
+    .string()
+    .optional()
+    .transform((v) => v || null),
+});
+
+// Registro avulso de castração feito pelo histórico de castrações (gravado na hora).
+export const neuteringCreateApiSchema = z.object({
+  date: z
+    .string()
+    .min(1, "Informe a data")
+    .transform((v) => new Date(`${v}T00:00:00`)),
+  method: z
+    .string()
+    .trim()
+    .max(50, "Máximo de 50 caracteres")
+    .optional()
+    .transform((v) => v || null),
+  notes: z
+    .string()
+    .trim()
+    .optional()
+    .transform((v) => v || null),
+});

@@ -315,7 +315,7 @@ export default function PersonDetails({
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <Table>
+          <Table className="[&_tr]:border-border">
             <TableHeader>
               <TableRow>
                 <TableHead>Fazenda</TableHead>
@@ -347,7 +347,7 @@ export default function PersonDetails({
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <Table>
+          <Table className="[&_tr]:border-border">
             <TableHeader>
               <TableRow>
                 <TableHead>Data</TableHead>
@@ -377,7 +377,7 @@ export default function PersonDetails({
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <Table>
+          <Table className="[&_tr]:border-border">
             <TableHeader>
               <TableRow>
                 <TableHead>Data</TableHead>

@@ -511,7 +511,7 @@ export default function BatchDetails({
                   message="Nenhum animal neste lote."
                 />
               ) : (
-                <Table>
+                <Table className="[&_tr]:border-border">
                   <TableHeader>
                     <TableRow>
                       <TableHead>Identificação</TableHead>
@@ -620,7 +620,7 @@ export default function BatchDetails({
                   message="Nenhuma movimentação registrada."
                 />
               ) : (
-                <Table>
+                <Table className="[&_tr]:border-border">
                   <TableHeader>
                     <TableRow>
                       <TableHead>Animal</TableHead>
@@ -673,7 +673,7 @@ export default function BatchDetails({
               {batch.areaHistory.length === 0 ? (
                 <EmptyState icon={<Map />} message="Nenhuma área registrada." />
               ) : (
-                <Table>
+                <Table className="[&_tr]:border-border">
                   <TableHeader>
                     <TableRow>
                       <TableHead>Área</TableHead>

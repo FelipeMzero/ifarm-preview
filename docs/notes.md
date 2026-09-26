@@ -8,8 +8,9 @@
 - Quando um lote de animais é comprado, eles são criados automaticamente e a identificação é feita depois? (sim)
 - pastagem rotativa (sim)
 - animas podem ser pesados e vacinados no mesmo evento
+- Dependências para o módulo de áreas de pastagem (@geoman-io/leaflet-geoman-free; @turf/area + @turf/helpers)
 
-# Dependências para o módulo de áreas de pastagem
+# Questionamentos - dia 26/09/2026
 
-- @geoman-io/leaflet-geoman-free
-- @turf/area + @turf/helpers
+- É necessário registrar partos e desmamas?
+- Na aquisição de animais por compra, como os animais são identificados após a compra?

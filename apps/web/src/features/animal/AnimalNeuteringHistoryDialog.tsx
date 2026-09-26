@@ -2,9 +2,18 @@
 
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Pencil, Scissors, Trash2 } from "lucide-react";
+import {
+  CircleAlert,
+  Loader2,
+  Pencil,
+  Plus,
+  Scissors,
+  Trash2,
+  TriangleAlert,
+} from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Dialog,
   DialogContent,
@@ -32,8 +41,10 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
+  ApiError,
   AnimalNeuteringRecord,
   cancelNeutering,
+  createNeutering,
   getNeuterings,
 } from "./services";
 import { AnimalNeuteringCorrectionForm } from "./AnimalNeuteringCorrectionForm";
@@ -42,9 +53,11 @@ import { formatDate } from "./format";
 interface AnimalNeuteringHistoryDialogProps {
   animalId: string;
   birthDate?: string | null;
+  /** Situação atual do animal (pode ser castrado sem registro, ex.: chegou castrado). */
+  neutered: boolean;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  // Chamado após corrigir ou excluir, para quem abriu atualizar a castração exibida.
+  // Chamado após registrar, corrigir ou excluir, para quem abriu atualizar a castração exibida.
   onChanged: () => void;
 }
 
@@ -76,9 +89,144 @@ function NeuteringCorrectionNote({
   );
 }
 
+const todayInput = () => new Date().toLocaleDateString("en-CA");
+
+const METHODS = ["Burdizzo", "Cirúrgica", "Elástico"];
+
+// Registro na hora. Se o animal já é castrado, é uma recastração (motivo obrigatório).
+function NeuteringRegisterPanel({
+  animalId,
+  birthDate,
+  neutered,
+  latest,
+  onChanged,
+}: {
+  animalId: string;
+  birthDate?: string | null;
+  neutered: boolean;
+  latest: AnimalNeuteringRecord | null;
+  onChanged: () => void;
+}) {
+  const [date, setDate] = useState(todayInput);
+  const [method, setMethod] = useState("");
+  const [notes, setNotes] = useState("");
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [saving, setSaving] = useState(false);
+
+  async function handleSubmit(e: React.FormEvent) {
+    // Eventos do React atravessam o portal do diálogo pela árvore de componentes:
+    // não deixa o submit chegar a um formulário da tela de trás.
+    e.preventDefault();
+    e.stopPropagation();
+    if (neutered && !notes.trim()) {
+      setErrors({ notes: "Informe o motivo da recastração." });
+      return;
+    }
+
+    setSaving(true);
+    setErrors({});
+    try {
+      await createNeutering(animalId, { date, method, notes });
+      toast.success(
+        neutered ? "Recastração registrada." : "Castração registrada.",
+      );
+      setDate(todayInput());
+      setMethod("");
+      setNotes("");
+      onChanged();
+    } catch (err) {
+      if (err instanceof ApiError && err.errors) setErrors(err.errors);
+      else toast.error((err as Error).message);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  const error = errors.date ?? errors.method ?? errors.notes;
+
+  return (
+    <div className="space-y-3 rounded-md border border-border bg-muted/40 p-3">
+      <p className="text-sm">
+        <span className="text-muted-foreground">Situação: </span>
+        <span className="font-medium">
+          {!neutered
+            ? "não castrado"
+            : latest
+              ? `castrado em ${formatDate(latest.date)}${latest.method ? ` (${latest.method})` : ""}`
+              : "castrado (sem registro)"}
+        </span>
+      </p>
+      {neutered && (
+        <p className="flex items-start gap-1.5 text-xs text-warning">
+          <TriangleAlert className="mt-0.5 size-3.5 shrink-0" />
+          Registre uma nova castração só se o procedimento precisou ser refeito,
+          informando o motivo.
+        </p>
+      )}
+
+      <form
+        onSubmit={handleSubmit}
+        className="grid gap-2 sm:grid-cols-[10rem_9rem_1fr_auto]"
+      >
+        <Input
+          aria-label="Data da castração"
+          type="date"
+          value={date}
+          min={birthDate ?? undefined}
+          max={todayInput()}
+          aria-invalid={errors.date ? true : undefined}
+          onChange={(e) => {
+            setDate(e.target.value);
+            setErrors({});
+          }}
+        />
+        <Input
+          aria-label="Método"
+          placeholder="Método"
+          list="neutering-register-methods"
+          value={method}
+          maxLength={50}
+          onChange={(e) => setMethod(e.target.value)}
+        />
+        <Input
+          aria-label={neutered ? "Motivo da recastração" : "Observação"}
+          placeholder={
+            neutered ? "Motivo da recastração (obrigatório)" : "Observação"
+          }
+          value={notes}
+          aria-invalid={errors.notes ? true : undefined}
+          onChange={(e) => {
+            setNotes(e.target.value);
+            setErrors({});
+          }}
+        />
+        <Button type="submit" disabled={saving || !date}>
+          {saving ? (
+            <Loader2 className="size-4 animate-spin" />
+          ) : (
+            <Plus className="size-4" />
+          )}
+          Registrar
+        </Button>
+        <datalist id="neutering-register-methods">
+          {METHODS.map((m) => (
+            <option key={m} value={m} />
+          ))}
+        </datalist>
+      </form>
+      {error && (
+        <p className="flex items-center gap-1.5 text-xs text-destructive">
+          <CircleAlert className="size-4 shrink-0" /> {error}
+        </p>
+      )}
+    </div>
+  );
+}
+
 export function AnimalNeuteringHistoryDialog({
   animalId,
   birthDate,
+  neutered,
   open,
   onOpenChange,
   onChanged,
@@ -152,14 +300,29 @@ export function AnimalNeuteringHistoryDialog({
         <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle>
-              {editing ? "Corrigir Castração" : "Histórico de Castrações"}
+              {editing ? "Corrigir Castração" : "Castração"}
             </DialogTitle>
             <DialogDescription>
               {editing
                 ? `Castração de ${formatDate(editing.date)}.`
-                : "Corrija ou exclua castrações lançadas com erro. As alterações são gravadas imediatamente."}
+                : "Registre a castração ou corrija as lançadas com erro. As alterações são gravadas imediatamente."}
             </DialogDescription>
           </DialogHeader>
+
+          {!editing && neuterings !== null && (
+            <>
+              <NeuteringRegisterPanel
+                animalId={animalId}
+                birthDate={birthDate}
+                neutered={neutered}
+                latest={neuterings[0] ?? null}
+                onChanged={afterChange}
+              />
+              <h3 className="-mb-2 text-sm font-medium uppercase text-muted-foreground">
+                Histórico
+              </h3>
+            </>
+          )}
 
           {editing ? (
             <AnimalNeuteringCorrectionForm
@@ -187,7 +350,7 @@ export function AnimalNeuteringHistoryDialog({
             </div>
           ) : (
             <div className="max-h-[60vh] overflow-y-auto">
-              <Table>
+              <Table className="[&_tr]:border-border">
                 <TableHeader>
                   <TableRow>
                     <TableHead>Data</TableHead>

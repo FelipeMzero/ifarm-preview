@@ -95,58 +95,12 @@ export const animalEditFormSchema = z.object({
 
 export type AnimalEditFormData = z.infer<typeof animalEditFormSchema>;
 
-export const animalTagChangeSchema = z.object({
-  value: z
-    .string()
-    .max(
-      FIELD_LIMITS.animal.earTag,
-      `Máximo de ${FIELD_LIMITS.animal.earTag} caracteres`,
-    )
-    .optional(),
-  notes: z.string().optional(),
-});
-
-export type AnimalTagChangeData = z.infer<typeof animalTagChangeSchema>;
-
-export const animalRfidChangeSchema = z.object({
-  value: z
-    .string()
-    .max(
-      FIELD_LIMITS.animal.rfid,
-      `Máximo de ${FIELD_LIMITS.animal.rfid} caracteres`,
-    )
-    .optional(),
-  notes: z.string().optional(),
-});
-
-export type AnimalRfidChangeData = z.infer<typeof animalRfidChangeSchema>;
-
-export const animalWeightChangeSchema = z.object({
-  value: z.string().min(1, "Este campo não pode ser vazio"),
-  notes: z.string().optional(),
-});
-
-export type AnimalWeightChangeData = z.infer<typeof animalWeightChangeSchema>;
-
 export const animalBatchChangeSchema = z.object({
   newBatchId: z.string().min(1, "Este campo não pode ser vazio"),
   notes: z.string().optional(),
 });
 
 export type AnimalBatchChangeData = z.infer<typeof animalBatchChangeSchema>;
-
-export const animalNeuteringSchema = z.object({
-  date: z.string().min(1, "Este campo não pode ser vazio"),
-  method: z.string().optional(),
-  notes: z.string().optional(),
-});
-
-export type AnimalNeuteringData = z.infer<typeof animalNeuteringSchema>;
-
-// Recastração não é rotineira: o motivo é obrigatório.
-export const animalRecastrationSchema = animalNeuteringSchema.extend({
-  notes: z.string().trim().min(1, "Informe o motivo da recastração"),
-});
 
 export const weighingCorrectionSchema = z.object({
   weightKg: z

@@ -67,6 +67,52 @@ function weightSeries(
   });
 }
 
+type PurchasedInBatch = {
+  managementSession: { managementDate: Date | null };
+  animal: { animalBatchHistories: { enteredAt: Date }[] };
+  category: {
+    event: {
+      id: string;
+      purchaseDate: Date;
+      closedAt: Date | null;
+      seller: { id: string; name: string };
+    };
+  };
+};
+
+// Agrupa por compra os animais que entraram neste lote no dia da recepção (um animal
+// que chegou em outro lote e veio para cá depois não conta como compra deste lote).
+function groupPurchases(purchased: PurchasedInBatch[]) {
+  const byEvent = new Map<
+    string,
+    PurchasedInBatch["category"]["event"] & { animalCount: number }
+  >();
+  for (const p of purchased) {
+    const reception = p.managementSession.managementDate;
+    if (!reception) continue;
+    const enteredOnReception = p.animal.animalBatchHistories.some(
+      (h) =>
+        dayKey(h.enteredAt.toISOString()) === dayKey(reception.toISOString()),
+    );
+    if (!enteredOnReception) continue;
+    const { event } = p.category;
+    const current = byEvent.get(event.id);
+    byEvent.set(event.id, {
+      ...event,
+      animalCount: (current?.animalCount ?? 0) + 1,
+    });
+  }
+  return [...byEvent.values()]
+    .sort((a, b) => b.purchaseDate.getTime() - a.purchaseDate.getTime())
+    .map((e) => ({
+      id: e.id,
+      date: e.purchaseDate.toISOString(),
+      seller: e.seller,
+      animalCount: e.animalCount,
+      confirmed: e.closedAt != null,
+    }));
+}
+
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
@@ -185,12 +231,35 @@ export async function GET(
           items: { where: { originBatchId: id }, select: { id: true } },
         },
       }),
-      prisma.purchaseEvent.findMany({
-        where: { destinationBatchId: id, cancelledAt: null },
-        orderBy: { purchaseDate: "desc" },
+      // A compra não tem lote de destino: vale o lote em que cada animal entrou na
+      // recepção (histórico de lote aberto na data da sessão de recepção).
+      prisma.purchasedAnimal.findMany({
+        where: {
+          category: { event: { cancelledAt: null } },
+          animal: { animalBatchHistories: { some: { batchId: id } } },
+        },
         include: {
-          seller: { select: { id: true, name: true } },
-          _count: { select: { items: true } },
+          managementSession: { select: { managementDate: true } },
+          animal: {
+            select: {
+              animalBatchHistories: {
+                where: { batchId: id },
+                select: { enteredAt: true },
+              },
+            },
+          },
+          category: {
+            select: {
+              event: {
+                select: {
+                  id: true,
+                  purchaseDate: true,
+                  closedAt: true,
+                  seller: { select: { id: true, name: true } },
+                },
+              },
+            },
+          },
         },
       }),
       stockingPreview({ batchId: id }),
@@ -306,13 +375,7 @@ export async function GET(
           otherBatchName: t.destinationBatch.name,
         })),
       ],
-      purchases: purchases.map((p) => ({
-        id: p.id,
-        date: p.purchaseDate.toISOString(),
-        seller: p.seller,
-        animalCount: p._count.items,
-        confirmed: p.confirmedAt != null,
-      })),
+      purchases: groupPurchases(purchases),
     });
   } catch (error) {
     console.error(error);
