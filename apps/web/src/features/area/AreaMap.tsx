@@ -45,6 +45,16 @@ import markerShadow from "leaflet/dist/images/marker-shadow.png";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/our/ConfirmDialog";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -60,6 +70,7 @@ import {
   updateArea,
   deleteArea,
   toggleAreaStatus,
+  AreaOccupiedError,
   AreaRow,
   ApiError,
 } from "./services";
@@ -689,6 +700,11 @@ export default function AreaMap() {
   const [editingArea, setEditingArea] = useState<AreaRow | null>(null);
   const [detailsArea, setDetailsArea] = useState<AreaRow | null>(null);
   const [deletingAreaId, setDeletingAreaId] = useState<string | null>(null);
+  // Área que não pôde ser desativada por ter um lote.
+  const [occupiedArea, setOccupiedArea] = useState<{
+    name: string;
+    batch: { id: string; name: string };
+  } | null>(null);
 
   const form = useForm<AreaFormData>({
     resolver: zodResolver(areaFormSchema),
@@ -896,9 +912,15 @@ export default function AreaMap() {
     }
   };
 
-  const handleToggleStatus = async (id: string) => {
+  const handleToggleStatus = async (area: AreaRow) => {
+    // Área ocupada não pode ser desativada: explica e oferece mover o lote.
+    if (!area.closedAt && area.occupancy) {
+      mapInstance?.closePopup();
+      setOccupiedArea({ name: area.name, batch: area.occupancy.batch });
+      return;
+    }
     try {
-      await toggleAreaStatus(id);
+      await toggleAreaStatus(area.id);
       toast.success(
         statusFilter === "active"
           ? "Área desativada com sucesso!"
@@ -906,6 +928,12 @@ export default function AreaMap() {
       );
       setRefreshKey((k) => k + 1);
     } catch (err: any) {
+      if (err instanceof AreaOccupiedError) {
+        mapInstance?.closePopup();
+        setOccupiedArea({ name: area.name, batch: err.batch });
+        setRefreshKey((k) => k + 1);
+        return;
+      }
       toast.error(err.message ?? "Erro ao alterar o status do registro.");
     }
   };
@@ -1189,7 +1217,7 @@ export default function AreaMap() {
                                     size="sm"
                                     variant="secondary"
                                     className="h-8 justify-start text-xs font-normal text-muted-foreground hover:bg-accent"
-                                    onClick={() => handleToggleStatus(area.id)}
+                                    onClick={() => handleToggleStatus(area)}
                                   >
                                     <EyeOff className="size-3.5 mr-2" />{" "}
                                     Desativar
@@ -1209,7 +1237,7 @@ export default function AreaMap() {
                                     size="sm"
                                     variant="outline"
                                     className="h-8 justify-start text-xs font-normal"
-                                    onClick={() => handleToggleStatus(area.id)}
+                                    onClick={() => handleToggleStatus(area)}
                                   >
                                     <Eye className="size-3.5 mr-2 text-muted-foreground" />{" "}
                                     Reativar
@@ -1353,6 +1381,32 @@ export default function AreaMap() {
         onOpenChange={(open) => !open && setDetailsArea(null)}
         onDelete={handleDeleteArea}
       />
+
+      <AlertDialog
+        open={occupiedArea !== null}
+        onOpenChange={(open) => !open && setOccupiedArea(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>A área está ocupada</AlertDialogTitle>
+            <AlertDialogDescription>
+              {occupiedArea
+                ? `A área "${occupiedArea.name}" está ocupada pelo lote "${occupiedArea.batch.name}". Mova o lote para outra área e depois desative esta.`
+                : null}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="border-border">
+            <AlertDialogCancel variant="secondary">Voltar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() =>
+                occupiedArea && router.push(`/lotes/${occupiedArea.batch.id}`)
+              }
+            >
+              Trocar área
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <ConfirmDialog
         open={deletingAreaId !== null}

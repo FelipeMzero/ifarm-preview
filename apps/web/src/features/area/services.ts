@@ -140,6 +140,17 @@ export async function deleteArea(id: string) {
   return result;
 }
 
+// Recusa de desativação por haver um lote na área.
+export class AreaOccupiedError extends Error {
+  constructor(
+    message: string,
+    public batch: { id: string; name: string },
+  ) {
+    super(message);
+    this.name = "AreaOccupiedError";
+  }
+}
+
 export async function toggleAreaStatus(id: string) {
   const response = await fetch(API_ENDPOINTS.AREA_BY_ID(id), {
     method: "PATCH",
@@ -147,6 +158,9 @@ export async function toggleAreaStatus(id: string) {
   const result = await response.json();
 
   if (!response.ok) {
+    if (result.code === "OCCUPIED") {
+      throw new AreaOccupiedError(result.message, result.batch);
+    }
     throw new Error(
       result.message ?? "Não foi possível alterar o status da área.",
     );

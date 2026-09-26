@@ -173,6 +173,26 @@ export async function PATCH(
       );
     }
 
+    // Desativar uma área ocupada deixaria o lote "dentro" de uma área inativa
+    // (some do mapa, mas continua como área atual do lote).
+    if (!area.closedAt) {
+      const occupied = await prisma.batchAreaHistory.findFirst({
+        where: { areaId: id, exitedAt: null, batch: { closedAt: null } },
+        select: { batch: { select: { id: true, name: true } } },
+      });
+      if (occupied) {
+        return NextResponse.json(
+          {
+            success: false,
+            code: "OCCUPIED",
+            batch: occupied.batch,
+            message: `A área está ocupada pelo lote "${occupied.batch.name}". Mova o lote para outra área antes de desativar.`,
+          },
+          { status: 409 },
+        );
+      }
+    }
+
     const updated = await prisma.area.update({
       where: { id },
       data: { closedAt: area.closedAt ? null : new Date() },
