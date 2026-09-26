@@ -10,24 +10,10 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import {
-  ChevronDown,
-  ChevronLeft,
-  ChevronRight,
-  ChevronUp,
-  ChevronsUpDown,
-  MoreHorizontal,
-} from "lucide-react";
+import { ChevronDown, ChevronUp, ChevronsUpDown } from "lucide-react";
 import { useState } from "react";
 
-import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Pagination } from "@/components/our/Pagination";
 import {
   Table,
   TableBody,
@@ -36,8 +22,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-
-const PAGE_SIZE_OPTIONS = [5, 10, 20, 50];
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -99,41 +83,10 @@ export function DataTable<TData, TValue>({
     ? pageIndex
     : table.getState().pagination.pageIndex;
   const totalPages = isServerSide ? pageCount : table.getPageCount();
-  const canPrevious = currentPage > 0;
-  const canNext = currentPage < totalPages - 1;
-
-  const from = total ? currentPage * pageSize + 1 : null;
-  const to = total ? Math.min((currentPage + 1) * pageSize, total) : null;
-
-  function handlePrevious() {
-    if (isServerSide) onPageChange?.(currentPage - 1);
-    else table.previousPage();
-  }
-
-  function handleNext() {
-    if (isServerSide) onPageChange?.(currentPage + 1);
-    else table.nextPage();
-  }
 
   function handlePageClick(page: number) {
     if (isServerSide) onPageChange?.(page);
     else table.setPageIndex(page);
-  }
-
-  function getPageButtons() {
-    if (totalPages <= 7) {
-      return Array.from({ length: totalPages }, (_, i) => i);
-    }
-    const pages: (number | "...")[] = [];
-    const firstInner = Math.max(1, currentPage - 1);
-    const lastInner = Math.min(totalPages - 2, currentPage + 1);
-
-    pages.push(0);
-    if (firstInner > 1) pages.push("...");
-    for (let i = firstInner; i <= lastInner; i++) pages.push(i);
-    if (lastInner < totalPages - 2) pages.push("...");
-    pages.push(totalPages - 1);
-    return pages;
   }
 
   return (
@@ -207,81 +160,14 @@ export function DataTable<TData, TValue>({
         </Table>
       </div>
 
-      <div className="flex items-center justify-between gap-4 text-sm text-muted-foreground">
-        {from && to && total ? (
-          <span className="shrink-0">
-            Mostrando {from}–{to} de {total} registros
-          </span>
-        ) : (
-          <span />
-        )}
-
-        <div className="flex items-center gap-2">
-          {onPageSizeChange && (
-            <div className="flex items-center gap-1.5">
-              <span className="shrink-0">Linhas</span>
-              <Select
-                value={String(pageSize)}
-                onValueChange={(v) => {
-                  onPageSizeChange(Number(v));
-                  onPageChange?.(0);
-                }}
-              >
-                <SelectTrigger className="h-8 w-16">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {PAGE_SIZE_OPTIONS.map((size) => (
-                    <SelectItem key={size} value={String(size)}>
-                      {size}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-
-          <div className="flex items-center gap-1">
-            <Button
-              variant="outline"
-              size="icon-sm"
-              onClick={handlePrevious}
-              disabled={!canPrevious}
-            >
-              <ChevronLeft className="size-4" />
-            </Button>
-
-            {getPageButtons().map((page, i) =>
-              page === "..." ? (
-                <span
-                  key={`ellipsis-${i}`}
-                  className="flex size-7 items-center justify-center"
-                >
-                  <MoreHorizontal className="size-4" />
-                </span>
-              ) : (
-                <Button
-                  key={page}
-                  variant={page === currentPage ? "default" : "outline"}
-                  size="icon-sm"
-                  onClick={() => handlePageClick(page)}
-                >
-                  {page + 1}
-                </Button>
-              ),
-            )}
-
-            <Button
-              variant="outline"
-              size="icon-sm"
-              onClick={handleNext}
-              disabled={!canNext}
-            >
-              <ChevronRight className="size-4" />
-            </Button>
-          </div>
-        </div>
-      </div>
+      <Pagination
+        pageIndex={currentPage}
+        pageCount={totalPages}
+        pageSize={pageSize}
+        total={total}
+        onPageChange={handlePageClick}
+        onPageSizeChange={onPageSizeChange}
+      />
     </div>
   );
 }

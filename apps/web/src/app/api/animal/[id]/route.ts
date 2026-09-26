@@ -4,6 +4,7 @@ import { requireSession } from "@/lib/api-auth";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
 import { uniqueConstraintErrors } from "../../dbErrors";
 import { animalUpdateApiSchema } from "../../schemas";
+import { effectiveNeutering } from "../../management-session/effective";
 
 // Com recastração há mais de um registro: vale o mais recente.
 function latestNeuteringDate(items: { neuteredAt: Date }[]): string | null {
@@ -27,7 +28,7 @@ export async function GET(
         breed: { select: { id: true, name: true } },
         currentBatch: { select: { id: true, name: true } },
         animalNeuterings: {
-          where: { cancelledAt: null },
+          where: { cancelledAt: null, ...effectiveNeutering },
           select: { neuteredAt: true },
         },
       },

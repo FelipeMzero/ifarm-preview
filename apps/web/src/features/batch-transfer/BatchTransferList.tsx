@@ -79,19 +79,6 @@ function buildColumns(handlers: {
       accessorKey: "animalCount",
     },
     {
-      header: "Observação",
-      accessorKey: "notes",
-      enableSorting: false,
-      cell: ({ row }) => (
-        <span
-          className="block max-w-56 truncate text-muted-foreground"
-          title={row.original.notes ?? undefined}
-        >
-          {row.original.notes || "—"}
-        </span>
-      ),
-    },
-    {
       header: "Status",
       accessorKey: "status",
       cell: ({ row }) => <TransferStatusBadge status={row.original.status} />,
@@ -263,7 +250,7 @@ export default function BatchTransferList() {
   }
 
   if (isFirstLoad) {
-    return <ListSkeleton columns={6} />;
+    return <ListSkeleton columns={5} />;
   }
 
   const actionRow = pendingAction?.row;

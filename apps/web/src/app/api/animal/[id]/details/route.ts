@@ -3,6 +3,13 @@ import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/api-auth";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
 import { sortWeighings, toWeighingDto } from "../../weighings";
+import {
+  effectiveHealthItem,
+  effectiveNeutering,
+  effectiveRfidTagging,
+  effectiveTagging,
+  effectiveWeighing,
+} from "../../../management-session/effective";
 
 const toDateOnly = (d: Date | null | undefined) =>
   d ? d.toISOString().slice(0, 10) : null;
@@ -26,11 +33,14 @@ export async function GET(
         breed: { select: { name: true } },
         currentBatch: { select: { id: true, name: true } },
         currentProperty: { select: { id: true, name: true } },
-        animalWeighings: { where: { cancelledAt: null } },
-        animalTaggings: true,
-        animalRfidTaggings: true,
-        animalNeuterings: { where: { cancelledAt: null } },
+        animalWeighings: { where: { cancelledAt: null, ...effectiveWeighing } },
+        animalTaggings: { where: effectiveTagging },
+        animalRfidTaggings: { where: effectiveRfidTagging },
+        animalNeuterings: {
+          where: { cancelledAt: null, ...effectiveNeutering },
+        },
         healthManagementItems: {
+          where: effectiveHealthItem,
           include: {
             management: {
               include: {

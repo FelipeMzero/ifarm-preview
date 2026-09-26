@@ -4,6 +4,7 @@ import { requireSession } from "@/lib/api-auth";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
 import { sortWeighings, toWeighingDto } from "../../../animal/weighings";
 import { stockingPreview } from "../../../stocking";
+import { effectiveWeighing } from "../../../management-session/effective";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 // Janela usada no GMD de cada animal: reflete o ritmo recente, não a vida toda.
@@ -104,7 +105,12 @@ export async function GET(
       );
     }
 
-    const pendingWhere = { confirmedAt: null, cancelledAt: null };
+    // Transferências de sessão de manejo ainda não consolidada ficam de fora.
+    const pendingWhere = {
+      confirmedAt: null,
+      cancelledAt: null,
+      managementSessionId: null,
+    };
 
     const [
       animals,
@@ -120,7 +126,9 @@ export async function GET(
         where: { currentBatchId: id, status: "ACTIVE" },
         include: {
           breed: { select: { name: true } },
-          animalWeighings: { where: { cancelledAt: null } },
+          animalWeighings: {
+            where: { cancelledAt: null, ...effectiveWeighing },
+          },
           animalBatchHistories: {
             where: { batchId: id, exitedAt: null },
             select: { enteredAt: true },

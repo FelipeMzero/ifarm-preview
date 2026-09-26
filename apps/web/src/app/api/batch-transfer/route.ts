@@ -11,7 +11,13 @@ import { getOrAssignCurrentProperty } from "../user/current-property/currentProp
 import { transferStatus, validateTransferPlan } from "./shared";
 
 function buildWhere(query: BatchTransferQueryData, propertyId: string) {
-  const where: Record<string, unknown> = { propertyId };
+  const where: Record<string, unknown> = {
+    propertyId,
+    // Transferências de sessão de manejo ainda não consolidada são geridas pela sessão.
+    AND: [
+      { OR: [{ managementSessionId: null }, { confirmedAt: { not: null } }] },
+    ],
+  };
 
   if (query.status === "pending") {
     where.confirmedAt = null;

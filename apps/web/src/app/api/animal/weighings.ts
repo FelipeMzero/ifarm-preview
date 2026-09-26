@@ -1,5 +1,6 @@
 import { Prisma } from "@/lib/prisma";
 import type { AnimalWeighing } from "@/generated/prisma/client";
+import { effectiveWeighing } from "../management-session/effective";
 
 type Tx = Prisma.TransactionClient;
 
@@ -25,7 +26,7 @@ export function sortWeighings<T extends { date: string; id: number }>(
 // Recalcula o peso atual (campo desnormalizado) a partir da pesagem válida mais recente.
 export async function recomputeCurrentWeight(tx: Tx, animalId: string) {
   const latest = await tx.animalWeighing.findFirst({
-    where: { animalId, cancelledAt: null },
+    where: { animalId, cancelledAt: null, ...effectiveWeighing },
     orderBy: [{ weighedAt: "desc" }, { id: "desc" }],
   });
 

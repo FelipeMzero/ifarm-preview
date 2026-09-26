@@ -4,6 +4,7 @@ import { requireSession } from "@/lib/api-auth";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
 import { weighingCorrectionApiSchema } from "../../../../schemas";
 import { recomputeCurrentWeight } from "../../../weighings";
+import { effectiveWeighing } from "../../../../management-session/effective";
 
 type Params = { params: Promise<{ id: string; weighingId: string }> };
 
@@ -12,7 +13,7 @@ async function findActiveWeighing(animalId: string, weighingId: string) {
   if (!Number.isInteger(numericId)) return null;
 
   return prisma.animalWeighing.findFirst({
-    where: { id: numericId, animalId, cancelledAt: null },
+    where: { id: numericId, animalId, cancelledAt: null, ...effectiveWeighing },
   });
 }
 

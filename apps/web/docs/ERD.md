@@ -140,11 +140,13 @@ erDiagram
 
   "management_session" {
     String id "🗝️"
+    String title 
     String notes "❓"
     DateTime scheduled_date 
     DateTime management_date "❓"
     DateTime confirmed_at "❓"
     DateTime cancelled_at "❓"
+    Json steps 
     String property_id 
     DateTime created_at 
     DateTime updated_at 
@@ -155,6 +157,8 @@ erDiagram
     Int batch_id "🗝️"
     String management_session_id 
     String animal_id 
+    Boolean batch_kept 
+    DateTime last_handled_at "❓"
     DateTime created_at 
     }
   

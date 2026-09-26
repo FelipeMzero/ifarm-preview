@@ -11,7 +11,6 @@ import {
   Info,
   Loader2,
   Trash2,
-  X,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -28,14 +27,6 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { FieldSet } from "@/components/ui/field";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { ErrorPage } from "@/components/our/ErrorPage";
 import { FormActionBar } from "@/components/our/FormActionBar";
 import { FormField } from "@/components/our/FormField";
@@ -45,13 +36,24 @@ import {
   SearchCombobox,
   SearchComboboxItem,
 } from "@/components/our/SearchCombobox";
-import { AnimalIdentification, SEX_ICON } from "@/features/animal/display";
 import { cn } from "@/lib/utils";
 import { BatchForm } from "@/features/batch/BatchForm";
 import { getBatch, getBatches } from "@/features/batch/services";
 import { StockingNotice } from "@/features/area/StockingNotice";
 import { useCurrentProperty } from "@/features/shell/CurrentPropertyProvider";
-import { AnimalPicker, toTransferAnimal } from "./AnimalPicker";
+import {
+  AnimalPickerFilters,
+  AnimalPickerPagination,
+  AnimalPickerTable,
+  toTransferAnimal,
+  useAnimalPicker,
+} from "./AnimalPicker";
+import {
+  SelectedAnimalsPagination,
+  SelectedAnimalsSummary,
+  SelectedAnimalsTable,
+  useSelectedPage,
+} from "./SelectedAnimals";
 import { getAnimals } from "@/features/animal/services";
 import { TransferStatusBadge } from "./display";
 import { BatchTransferFormData, batchTransferFormSchema } from "./schema";
@@ -150,6 +152,16 @@ export function BatchTransferForm({
     () => new Set(selected.map((a) => a.id)),
     [selected],
   );
+
+  const selectedPagination = useSelectedPage(selected);
+  const picker = useAnimalPicker({
+    propertyId,
+    destinationBatchId,
+    initialBatchFilter: initialOriginBatchId,
+    selectedIds,
+    onAdd: addAnimals,
+    onRemove: removeAnimals,
+  });
 
   const loadBatches = useCallback(
     async (q: string) => {
@@ -341,19 +353,14 @@ export function BatchTransferForm({
     }
   }
 
-  const weights = selected
-    .map((a) => a.currentWeightKg)
-    .filter((w): w is number => w != null);
-  const avgWeight = weights.length
-    ? weights.reduce((sum, w) => sum + w, 0) / weights.length
-    : null;
-
   // Ex.: animal vendido ou movido para o destino depois de entrar no plano.
   const isInvalid = (a: TransferAnimal) =>
     a.status !== "ACTIVE" || a.currentBatch?.id === destinationBatchId;
 
   // Depois de confirmada, o lote que interessa é o de onde o animal saiu.
   const showOrigin = detail?.status === "confirmed";
+  const batchOf = (a: TransferAnimal) =>
+    (showOrigin ? a.originBatch?.name : a.currentBatch?.name) ?? "Sem lote";
 
   // Todos os campos validados pelo formulário ficam na etapa "Dados".
   function onInvalid() {
@@ -568,128 +575,81 @@ export function BatchTransferForm({
               </div>
             )}
 
+            {/* Grade de 4 linhas (título, filtros/resumo, tabela, paginação) compartilhadas
+                pelas duas colunas: topos e bases das tabelas ficam alinhados. No celular
+                vira uma coluna só, na ordem do código. */}
             <div
-              className={readOnly ? "grid gap-6" : "grid gap-6 lg:grid-cols-2"}
+              className={cn(
+                "grid gap-x-6 gap-y-3",
+                !readOnly && "lg:grid-cols-2",
+              )}
             >
               {!readOnly && (
-                <div className="space-y-2">
-                  <h3 className="text-sm font-medium uppercase text-muted-foreground">
+                <>
+                  <h3 className="flex h-8 items-center text-sm font-medium uppercase text-muted-foreground lg:col-start-1 lg:row-start-1">
                     Selecionar animais
                   </h3>
-                  <AnimalPicker
-                    propertyId={propertyId}
-                    destinationBatchId={destinationBatchId}
-                    initialBatchFilter={initialOriginBatchId}
-                    selectedIds={selectedIds}
-                    onAdd={addAnimals}
-                    onRemove={removeAnimals}
+                  <AnimalPickerFilters
+                    picker={picker}
+                    className="lg:col-start-1 lg:row-start-2"
                   />
-                </div>
+                  <AnimalPickerTable
+                    picker={picker}
+                    className="lg:col-start-1 lg:row-start-3"
+                  />
+                  <AnimalPickerPagination
+                    picker={picker}
+                    className="lg:col-start-1 lg:row-start-4"
+                  />
+                </>
               )}
 
-              <div className="space-y-2">
-                <div className="flex h-5 items-center justify-between">
-                  <h3 className="text-sm font-medium uppercase text-muted-foreground">
-                    {readOnly
-                      ? "Animais transferidos"
-                      : "Animais na transferência"}{" "}
-                    ({selected.length})
-                  </h3>
-                  {!readOnly && selected.length > 0 && (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="text-destructive hover:text-destructive"
-                      onClick={() => setSelected([])}
-                    >
-                      <Trash2 className="size-4" /> Remover todos
-                    </Button>
-                  )}
-                </div>
-
-                {avgWeight != null && (
-                  <p className="text-sm text-muted-foreground">
-                    Peso médio atual:{" "}
-                    <span className="font-medium text-foreground">
-                      {avgWeight.toFixed(1)} kg
-                    </span>
-                  </p>
+              <div
+                className={cn(
+                  "flex h-8 items-center justify-between",
+                  !readOnly && "max-lg:mt-4 lg:col-start-2 lg:row-start-1",
                 )}
-
-                {selected.length === 0 ? (
-                  <div className="flex h-40 items-center justify-center rounded-md border border-dashed border-border text-sm text-muted-foreground">
-                    Nenhum animal adicionado.
-                  </div>
-                ) : (
-                  <div className="max-h-120 overflow-y-auto rounded-md border border-border">
-                    <Table className="[&_tr]:border-border">
-                      <TableHeader className="sticky top-0 z-10">
-                        <TableRow className="bg-muted">
-                          <TableHead className="text-muted-foreground">
-                            Identificação
-                          </TableHead>
-                          <TableHead className="text-muted-foreground">
-                            {showOrigin ? "Lote de origem" : "Lote atual"}
-                          </TableHead>
-                          <TableHead className="text-muted-foreground">
-                            Sexo
-                          </TableHead>
-                          <TableHead className="text-right text-muted-foreground">
-                            Peso
-                          </TableHead>
-                          {!readOnly && <TableHead className="w-10" />}
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {selected.map((animal) => (
-                          <TableRow key={animal.id}>
-                            <TableCell>
-                              <div className="flex items-center gap-2">
-                                <AnimalIdentification animal={animal} />
-                                {!readOnly && isInvalid(animal) && (
-                                  <span
-                                    title="Este animal não está mais ativo ou já está no lote de destino. Remova-o para poder salvar."
-                                    className="text-destructive"
-                                  >
-                                    <CircleAlert className="size-4" />
-                                  </span>
-                                )}
-                              </div>
-                            </TableCell>
-                            <TableCell className="max-w-32 truncate text-muted-foreground">
-                              {(showOrigin
-                                ? animal.originBatch?.name
-                                : animal.currentBatch?.name) ?? "Sem lote"}
-                            </TableCell>
-                            <TableCell>
-                              {SEX_ICON[animal.sex] ?? animal.sex}
-                            </TableCell>
-                            <TableCell className="text-right tabular-nums">
-                              {animal.currentWeightKg != null
-                                ? `${animal.currentWeightKg} kg`
-                                : "—"}
-                            </TableCell>
-                            {!readOnly && (
-                              <TableCell>
-                                <Button
-                                  type="button"
-                                  variant="ghost"
-                                  size="icon-sm"
-                                  title="Remover da transferência"
-                                  onClick={() => removeAnimals([animal.id])}
-                                >
-                                  <X className="size-4" />
-                                </Button>
-                              </TableCell>
-                            )}
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
+              >
+                <h3 className="text-sm font-medium uppercase text-muted-foreground">
+                  {readOnly
+                    ? "Animais transferidos"
+                    : "Animais na transferência"}{" "}
+                  ({selected.length})
+                </h3>
+                {!readOnly && selected.length > 0 && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="text-destructive hover:text-destructive"
+                    onClick={() => setSelected([])}
+                  >
+                    <Trash2 className="size-4" /> Remover todos
+                  </Button>
                 )}
               </div>
+              <SelectedAnimalsSummary
+                animals={selected}
+                batchOf={batchOf}
+                className={cn(!readOnly && "lg:col-start-2 lg:row-start-2")}
+              />
+              <SelectedAnimalsTable
+                animals={selected}
+                pageAnimals={selectedPagination.pageAnimals}
+                batchHeader={showOrigin ? "Lote de origem" : "Lote atual"}
+                batchOf={batchOf}
+                isInvalid={isInvalid}
+                invalidTitle="Este animal não está mais ativo ou já está no lote de destino. Remova-o para poder salvar."
+                removeTitle="Remover da transferência"
+                readOnly={readOnly}
+                onRemove={(animalId) => removeAnimals([animalId])}
+                className={cn(!readOnly && "lg:col-start-2 lg:row-start-3")}
+              />
+              <SelectedAnimalsPagination
+                animals={selected}
+                pagination={selectedPagination}
+                className={cn(!readOnly && "lg:col-start-2 lg:row-start-4")}
+              />
             </div>
           </div>
         </div>

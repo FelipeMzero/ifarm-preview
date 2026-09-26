@@ -1,0 +1,29 @@
+import type { FieldValues, Path, UseFormReturn } from "react-hook-form";
+import { toast } from "sonner";
+import { ApiError } from "../services";
+
+// Leva os erros da API para os campos do formulário da etapa e avisa o usuário.
+export function handleStepError<T extends FieldValues>(
+  form: UseFormReturn<T>,
+  error: unknown,
+) {
+  if (error instanceof ApiError) {
+    Object.entries(error.errors ?? {}).forEach(([field, message]) =>
+      form.setError(field as Path<T>, { type: "server", message }),
+    );
+    toast.error(error.message);
+  } else {
+    toast.error("A requisição falhou! Tente novamente.");
+  }
+}
+
+export const formatKg = (value: number) =>
+  `${value.toLocaleString("pt-BR", { maximumFractionDigits: 2 })} kg`;
+
+export const formatBRL = (value: number) =>
+  value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+
+export const formatDay = (iso: string) =>
+  new Date(iso.length === 10 ? `${iso}T00:00:00` : iso).toLocaleDateString(
+    "pt-BR",
+  );

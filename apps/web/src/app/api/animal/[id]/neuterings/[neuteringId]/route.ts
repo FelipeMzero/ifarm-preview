@@ -6,6 +6,7 @@ import {
   neuteringCancelApiSchema,
   neuteringCorrectionApiSchema,
 } from "../../../../schemas";
+import { effectiveNeutering } from "../../../../management-session/effective";
 
 type Params = { params: Promise<{ id: string; neuteringId: string }> };
 
@@ -14,7 +15,12 @@ async function findActiveNeutering(animalId: string, neuteringId: string) {
   if (!Number.isInteger(numericId)) return null;
 
   return prisma.animalNeutering.findFirst({
-    where: { id: numericId, animalId, cancelledAt: null },
+    where: {
+      id: numericId,
+      animalId,
+      cancelledAt: null,
+      ...effectiveNeutering,
+    },
   });
 }
 
@@ -161,7 +167,7 @@ export async function DELETE(request: NextRequest, { params }: Params) {
       // Sem nenhuma castração restante, o usuário decide se o animal continua
       // castrado (pode ter chegado castrado, sem registro). Padrão: não castrado.
       const remaining = await tx.animalNeutering.count({
-        where: { animalId: id, cancelledAt: null },
+        where: { animalId: id, cancelledAt: null, ...effectiveNeutering },
       });
       if (remaining === 0) {
         await tx.animal.update({

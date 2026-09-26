@@ -304,11 +304,18 @@ model Breed {
 
 model ManagementSession {
   id             String    @id @default(uuid()) @db.Uuid
+  title          String                            // identifica a sessão na listagem (ex.: "Pesagem mensal da recria")
   notes          String?
   scheduledDate  DateTime  @map("scheduled_date")  // data prevista, usada para lembretes/agendamento
   managementDate DateTime? @map("management_date") // data em que o manejo de fato ocorreu
   confirmedAt    DateTime? @map("confirmed_at")
   cancelledAt    DateTime? @map("cancelled_at")
+
+  // Etapas do manejo, na ordem em que são registradas em cada animal. Cada item é
+  // { type: "weighing" | "neutering" | "tag" | "rfid" | "health" | "batch", ... };
+  // o sanitário aponta para o HealthManagement (healthManagementId) e a apartação guarda os lotes
+  // sugeridos (suggestedBatchIds). A apartação, quando existe, é sempre a última.
+  steps Json @default("[]")
 
   propertyId String   @db.Uuid @map("property_id")
   property   Property @relation(fields: [propertyId], references: [id], onDelete: Restrict)
@@ -342,6 +349,13 @@ model ManagementParticipant {
   animal   Animal @relation(fields: [animalId], references: [id], onDelete: Restrict)
 
   // batchId String? @db.Uuid @map("batch_id") // Colocar isso se for frequente precisar de "todas as pesagens realizadas enquanto o animal estava no Lote X"
+
+  // Na apartação, "permanecer no lote atual" não gera transferência; fica registrado aqui
+  // para a etapa contar como feita.
+  batchKept Boolean @default(false) @map("batch_kept")
+
+  // Último registro de etapa feito no animal (ordena a lista de manejados).
+  lastHandledAt DateTime? @map("last_handled_at")
 
   createdAt DateTime @default(now()) @map("created_at")
 

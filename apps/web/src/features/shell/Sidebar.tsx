@@ -7,6 +7,7 @@ import {
   Beef,
   Boxes,
   ChevronRight,
+  ClipboardList,
   Fence,
   KeyRound,
   LayoutDashboard,
@@ -63,6 +64,11 @@ const NAV = [
       { href: "/lotes", label: "Lotes" },
       { href: "/lotes/transferencias", label: "Transferências" },
     ],
+  },
+  {
+    label: "Manejos",
+    icon: ClipboardList,
+    items: [{ href: "/manejos", label: "Sessões de manejo" }],
   },
 ];
 

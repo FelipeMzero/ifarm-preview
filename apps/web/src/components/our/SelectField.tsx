@@ -41,7 +41,8 @@ export function SelectField({
   return (
     <Combobox
       items={items}
-      value={value}
+      // "" sem item correspondente = nada selecionado (mostra o placeholder).
+      value={value === "" && !items.some((i) => i.value === "") ? null : value}
       onValueChange={(val) => onValueChange((val as string) ?? "")}
       itemToStringLabel={(val: string) =>
         items.find((item) => item.value === val)?.label ?? val

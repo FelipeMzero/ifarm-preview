@@ -1,15 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import {
-  ChevronLeft,
-  ChevronRight,
-  ListPlus,
-  Loader2,
-  Search,
-} from "lucide-react";
+import { ListPlus, Loader2, Search } from "lucide-react";
 import { toast } from "sonner";
 
+import { Pagination } from "@/components/our/Pagination";
 import { SelectField, SelectFieldItem } from "@/components/our/SelectField";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -26,6 +21,7 @@ import { AnimalRow, getAnimals } from "@/features/animal/services";
 import { getBatches } from "@/features/batch/services";
 import { AnimalIdentification, SEX_ICON } from "@/features/animal/display";
 import { SEX_ITEMS } from "@/lib/enum-labels";
+import { cn } from "@/lib/utils";
 import { TransferAnimal } from "./services";
 
 const PAGE_SIZE = 10;
@@ -46,7 +42,7 @@ export function toTransferAnimal(a: AnimalRow): TransferAnimal {
   };
 }
 
-type AnimalPickerProps = {
+type AnimalPickerOptions = {
   propertyId?: string;
   // Animais que já estão no destino não aparecem para seleção.
   destinationBatchId: string;
@@ -57,14 +53,19 @@ type AnimalPickerProps = {
   onRemove: (ids: string[]) => void;
 };
 
-export function AnimalPicker({
+/**
+ * Estado e busca do seletor de animais. As partes (filtros, tabela e paginação) são
+ * componentes separados para que a tela possa posicioná-las numa grade, alinhadas com
+ * outros blocos; o AnimalPicker abaixo as monta empilhadas.
+ */
+export function useAnimalPicker({
   propertyId,
   destinationBatchId,
   initialBatchFilter,
   selectedIds,
   onAdd,
   onRemove,
-}: AnimalPickerProps) {
+}: AnimalPickerOptions) {
   const [search, setSearch] = useState("");
   const [sex, setSex] = useState("");
   const [batchFilter, setBatchFilter] = useState(initialBatchFilter ?? "");
@@ -159,7 +160,7 @@ export function AnimalPicker({
     };
   }, [query, page]);
 
-  async function handleAddAll() {
+  async function addAll() {
     setAddingAll(true);
     try {
       const result = await getAnimals({
@@ -174,7 +175,7 @@ export function AnimalPicker({
       toast.success(
         toAdd.length
           ? `${toAdd.length} animal(is) adicionado(s).`
-          : "Todos os animais filtrados já estão na transferência.",
+          : "Todos os animais filtrados já estão na seleção.",
       );
       if (result.total > ADD_ALL_LIMIT) {
         toast.warning(
@@ -191,7 +192,7 @@ export function AnimalPicker({
   const pageSelectedCount = animals.filter((a) => selectedIds.has(a.id)).length;
   const allPageSelected =
     animals.length > 0 && pageSelectedCount === animals.length;
-  const headerChecked = allPageSelected
+  const headerChecked: boolean | "indeterminate" = allPageSelected
     ? true
     : pageSelectedCount > 0
       ? "indeterminate"
@@ -212,35 +213,69 @@ export function AnimalPicker({
     else onRemove([animal.id]);
   }
 
+  return {
+    destinationBatchId,
+    selectedIds,
+    search,
+    setSearch,
+    sex,
+    setSex,
+    originFilter,
+    setBatchFilter,
+    batchItems,
+    minWeight,
+    setMinWeight,
+    maxWeight,
+    setMaxWeight,
+    page,
+    setPage,
+    animals,
+    total,
+    pageCount,
+    loading,
+    addingAll,
+    addAll,
+    headerChecked,
+    togglePage,
+    toggleAnimal,
+  };
+}
+
+export type AnimalPickerState = ReturnType<typeof useAnimalPicker>;
+
+type PartProps = { picker: AnimalPickerState; className?: string };
+
+/** Busca, filtros, total encontrado e "Adicionar todos". */
+export function AnimalPickerFilters({ picker: p, className }: PartProps) {
   return (
-    <div className="space-y-3">
+    <div className={cn("space-y-3", className)}>
       <div className="grid gap-2 sm:grid-cols-2">
         <div className="relative sm:col-span-2">
           <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder="Buscar por ID, brinco, RFID ou apelido..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            value={p.search}
+            onChange={(e) => p.setSearch(e.target.value)}
             className="pl-8"
           />
         </div>
         <SelectField
-          value={originFilter}
+          value={p.originFilter}
           onValueChange={(val) => {
-            setBatchFilter(val);
-            setPage(0);
+            p.setBatchFilter(val);
+            p.setPage(0);
           }}
           items={[
             { value: "", label: "Todos os lotes" },
-            ...batchItems.filter((b) => b.value !== destinationBatchId),
+            ...p.batchItems.filter((b) => b.value !== p.destinationBatchId),
           ]}
           className="w-full"
         />
         <SelectField
-          value={sex}
+          value={p.sex}
           onValueChange={(val) => {
-            setSex(val);
-            setPage(0);
+            p.setSex(val);
+            p.setPage(0);
           }}
           items={[{ value: "", label: "Ambos os sexos" }, ...SEX_ITEMS]}
           className="w-full"
@@ -251,143 +286,151 @@ export function AnimalPicker({
             min={0}
             step="any"
             placeholder="Peso mín. (kg)"
-            value={minWeight}
-            onChange={(e) => setMinWeight(e.target.value)}
+            value={p.minWeight}
+            onChange={(e) => p.setMinWeight(e.target.value)}
           />
           <Input
             type="number"
             min={0}
             step="any"
             placeholder="Peso máx. (kg)"
-            value={maxWeight}
-            onChange={(e) => setMaxWeight(e.target.value)}
+            value={p.maxWeight}
+            onChange={(e) => p.setMaxWeight(e.target.value)}
           />
         </div>
       </div>
 
       <div className="flex items-center justify-between gap-2 text-sm text-muted-foreground">
         <span>
-          {total} animal(is) encontrado(s)
-          {loading && <Loader2 className="ml-2 inline size-3.5 animate-spin" />}
+          {p.total} animal(is) encontrado(s)
+          {p.loading && (
+            <Loader2 className="ml-2 inline size-3.5 animate-spin" />
+          )}
         </span>
         <Button
           type="button"
           variant="outline"
           size="sm"
-          disabled={total === 0 || addingAll}
-          onClick={handleAddAll}
+          disabled={p.total === 0 || p.addingAll}
+          onClick={p.addAll}
         >
-          {addingAll ? (
+          {p.addingAll ? (
             <Loader2 className="size-4 animate-spin" />
           ) : (
             <ListPlus className="size-4" />
           )}
-          Adicionar todos ({total})
+          Adicionar todos ({p.total})
         </Button>
       </div>
+    </div>
+  );
+}
 
-      <div
-        className={
-          loading
-            ? "overflow-hidden rounded-md border border-border opacity-60 transition-opacity"
-            : "overflow-hidden rounded-md border border-border transition-opacity"
-        }
-      >
-        <Table className="[&_tr]:border-border">
-          <TableHeader>
-            <TableRow className="bg-muted">
-              <TableHead className="w-10">
-                <Checkbox
-                  checked={headerChecked}
-                  onCheckedChange={togglePage}
-                  disabled={animals.length === 0}
-                  aria-label="Selecionar animais da página"
-                />
-              </TableHead>
-              <TableHead className="text-muted-foreground">
-                Identificação
-              </TableHead>
-              <TableHead className="text-muted-foreground">Lote</TableHead>
-              <TableHead className="text-muted-foreground">Sexo</TableHead>
-              <TableHead className="text-right text-muted-foreground">
-                Peso
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {animals.length === 0 ? (
-              <TableRow>
-                <TableCell
-                  colSpan={5}
-                  className="h-24 text-center text-muted-foreground"
-                >
-                  Nenhum animal encontrado.
-                </TableCell>
-              </TableRow>
-            ) : (
-              animals.map((animal) => {
-                const checked = selectedIds.has(animal.id);
-                return (
-                  <TableRow
-                    key={animal.id}
-                    data-state={checked ? "selected" : undefined}
-                    className="cursor-pointer hover:bg-accent/40"
-                    onClick={() => toggleAnimal(animal, !checked)}
-                  >
-                    <TableCell onClick={(e) => e.stopPropagation()}>
-                      <Checkbox
-                        checked={checked}
-                        onCheckedChange={(value) =>
-                          toggleAnimal(animal, value === true)
-                        }
-                        aria-label="Selecionar animal"
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <AnimalIdentification animal={animal} />
-                    </TableCell>
-                    <TableCell className="max-w-32 truncate text-muted-foreground">
-                      {animal.currentBatch?.name ?? "Sem lote"}
-                    </TableCell>
-                    <TableCell>{SEX_ICON[animal.sex] ?? animal.sex}</TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      {animal.currentWeightKg != null
-                        ? `${animal.currentWeightKg} kg`
-                        : "—"}
-                    </TableCell>
-                  </TableRow>
-                );
-              })
-            )}
-          </TableBody>
-        </Table>
-      </div>
-
-      {pageCount > 1 && (
-        <div className="flex items-center justify-end gap-2 text-sm text-muted-foreground">
-          <span>
-            Página {page + 1} de {pageCount}
-          </span>
-          <Button
-            type="button"
-            variant="outline"
-            size="icon-sm"
-            disabled={page === 0}
-            onClick={() => setPage((p) => p - 1)}
-          >
-            <ChevronLeft className="size-4" />
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            size="icon-sm"
-            disabled={page >= pageCount - 1}
-            onClick={() => setPage((p) => p + 1)}
-          >
-            <ChevronRight className="size-4" />
-          </Button>
-        </div>
+/** Tabela da página atual, com seleção por linha e da página inteira. */
+export function AnimalPickerTable({ picker: p, className }: PartProps) {
+  return (
+    <div
+      className={cn(
+        "overflow-hidden rounded-md border border-border transition-opacity",
+        p.loading && "opacity-60",
+        className,
       )}
+    >
+      <Table className="[&_tr]:border-border">
+        <TableHeader>
+          <TableRow className="bg-muted">
+            <TableHead className="w-10">
+              <Checkbox
+                checked={p.headerChecked}
+                onCheckedChange={p.togglePage}
+                disabled={p.animals.length === 0}
+                aria-label="Selecionar animais da página"
+              />
+            </TableHead>
+            <TableHead className="text-muted-foreground">
+              Identificação
+            </TableHead>
+            <TableHead className="text-muted-foreground">Lote</TableHead>
+            <TableHead className="text-muted-foreground">Sexo</TableHead>
+            <TableHead className="text-right text-muted-foreground">
+              Peso
+            </TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {p.animals.length === 0 ? (
+            <TableRow>
+              <TableCell
+                colSpan={5}
+                className="h-24 text-center text-muted-foreground"
+              >
+                Nenhum animal encontrado.
+              </TableCell>
+            </TableRow>
+          ) : (
+            p.animals.map((animal) => {
+              const checked = p.selectedIds.has(animal.id);
+              return (
+                <TableRow
+                  key={animal.id}
+                  data-state={checked ? "selected" : undefined}
+                  className="cursor-pointer hover:bg-accent/40"
+                  onClick={() => p.toggleAnimal(animal, !checked)}
+                >
+                  <TableCell onClick={(e) => e.stopPropagation()}>
+                    <Checkbox
+                      checked={checked}
+                      onCheckedChange={(value) =>
+                        p.toggleAnimal(animal, value === true)
+                      }
+                      aria-label="Selecionar animal"
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <AnimalIdentification animal={animal} />
+                  </TableCell>
+                  <TableCell className="max-w-32 truncate text-muted-foreground">
+                    {animal.currentBatch?.name ?? "Sem lote"}
+                  </TableCell>
+                  <TableCell>{SEX_ICON[animal.sex] ?? animal.sex}</TableCell>
+                  <TableCell className="text-right tabular-nums">
+                    {animal.currentWeightKg != null
+                      ? `${animal.currentWeightKg} kg`
+                      : "—"}
+                  </TableCell>
+                </TableRow>
+              );
+            })
+          )}
+        </TableBody>
+      </Table>
+    </div>
+  );
+}
+
+export function AnimalPickerPagination({ picker: p, className }: PartProps) {
+  if (p.total === 0) return null;
+  return (
+    <div className={className}>
+      <Pagination
+        pageIndex={p.page}
+        pageCount={p.pageCount}
+        pageSize={PAGE_SIZE}
+        total={p.total}
+        onPageChange={p.setPage}
+      />
+    </div>
+  );
+}
+
+/** Seletor completo (filtros, tabela e paginação empilhados). */
+export function AnimalPicker(props: AnimalPickerOptions) {
+  const picker = useAnimalPicker(props);
+  return (
+    <div className="space-y-3">
+      <AnimalPickerFilters picker={picker} />
+      <AnimalPickerTable picker={picker} />
+      <AnimalPickerPagination picker={picker} />
     </div>
   );
 }

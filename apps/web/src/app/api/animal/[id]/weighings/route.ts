@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/api-auth";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
 import { sortWeighings, toWeighingDto } from "../../weighings";
+import { effectiveWeighing } from "../../../management-session/effective";
 
 export async function GET(
   _request: NextRequest,
@@ -15,7 +16,7 @@ export async function GET(
 
   try {
     const items = await prisma.animalWeighing.findMany({
-      where: { animalId: id, cancelledAt: null },
+      where: { animalId: id, cancelledAt: null, ...effectiveWeighing },
     });
 
     return NextResponse.json(sortWeighings(items.map(toWeighingDto)));

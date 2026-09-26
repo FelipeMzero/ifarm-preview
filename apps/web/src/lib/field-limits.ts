@@ -17,6 +17,12 @@ export const FIELD_LIMITS = {
   },
   batch: { name: 100, notes: 500 },
   batchTransfer: { notes: 500 },
+  managementSession: {
+    title: 100,
+    notes: 500,
+    stepNotes: 500,
+    healthTitle: 100,
+  },
   breed: { name: 60 },
   address: {
     street: 150,

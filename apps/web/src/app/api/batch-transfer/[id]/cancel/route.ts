@@ -15,7 +15,12 @@ export async function POST(
 
   try {
     const cancelled = await prisma.animalBatchTransfer.updateMany({
-      where: { id, confirmedAt: null, cancelledAt: null },
+      where: {
+        id,
+        confirmedAt: null,
+        cancelledAt: null,
+        managementSessionId: null,
+      },
       data: { cancelledAt: new Date() },
     });
 
@@ -23,7 +28,8 @@ export async function POST(
       return NextResponse.json(
         {
           success: false,
-          message: "Somente transferências pendentes podem ser canceladas.",
+          message:
+            "Somente transferências pendentes (fora de sessões de manejo) podem ser canceladas.",
         },
         { status: 409 },
       );

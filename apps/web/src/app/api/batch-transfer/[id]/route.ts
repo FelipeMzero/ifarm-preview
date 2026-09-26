@@ -116,6 +116,17 @@ export async function PUT(
       );
     }
 
+    if (current.managementSessionId) {
+      return NextResponse.json(
+        {
+          success: false,
+          message:
+            "Esta transferência faz parte de uma sessão de manejo e só pode ser alterada pela sessão.",
+        },
+        { status: 409 },
+      );
+    }
+
     if (transferStatus(current) !== "pending") {
       return NextResponse.json(
         {

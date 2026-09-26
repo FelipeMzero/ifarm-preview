@@ -1138,12 +1138,16 @@ async function seedSessions(ctx: Ctx, animals: SeededAnimal[]) {
       if (!present.length) continue;
       const weighed = present.filter((a) => a.weights.has(daysAgo));
 
+      // Etapas na ordem em que foram feitas; gravadas no fim, com os ids dos sanitários.
+      const steps: Prisma.InputJsonObject[] = [{ type: "weighing" }];
+
       const session = await prisma.managementSession.create({
         data: {
           propertyId: ctx.properties[prop],
           scheduledDate: ago(daysAgo),
           managementDate: ago(daysAgo),
           confirmedAt: ago(daysAgo),
+          title: `Pesagem mensal de ${sessionDate.toLocaleDateString("pt-BR", { month: "long" })}`,
           notes: "Pesagem mensal do rebanho",
           participants: { create: present.map((a) => ({ animalId: a.id })) },
           weighingManagement: {
@@ -1162,6 +1166,7 @@ async function seedSessions(ctx: Ctx, animals: SeededAnimal[]) {
 
       // Santa Rita: identificação eletrônica do rebanho e castração dos bezerros.
       if (prop === "SR" && daysAgo === 72) {
+        steps.push({ type: "rfid" }, { type: "neutering" });
         const rfidManagement = await prisma.rfidManagement.create({
           data: { managementSessionId: session.id },
         });
@@ -1198,7 +1203,7 @@ async function seedSessions(ctx: Ctx, animals: SeededAnimal[]) {
 
       // Vacinação contra aftosa (valor fixo por animal); próxima dose no futuro.
       if (daysAgo === sessions[3]) {
-        await prisma.healthManagement.create({
+        const health = await prisma.healthManagement.create({
           data: {
             typeId: ctx.healthTypes["Vacinação"],
             title: "Febre aftosa",
@@ -1213,10 +1218,11 @@ async function seedSessions(ctx: Ctx, animals: SeededAnimal[]) {
             },
           },
         });
+        steps.push({ type: "health", healthManagementId: health.id });
       }
       // Vermifugação (custo por kg), carência já encerrada.
       if (daysAgo === sessions[2]) {
-        await prisma.healthManagement.create({
+        const health = await prisma.healthManagement.create({
           data: {
             typeId: ctx.healthTypes["Vermifugação"],
             title: "Ivermectina 1%",
@@ -1233,10 +1239,11 @@ async function seedSessions(ctx: Ctx, animals: SeededAnimal[]) {
             },
           },
         });
+        steps.push({ type: "health", healthManagementId: health.id });
       }
       // Carrapaticida (custo por kg) com carência ainda vigente.
       if (daysAgo === sessions[0]) {
-        await prisma.healthManagement.create({
+        const health = await prisma.healthManagement.create({
           data: {
             typeId: ctx.healthTypes["Controle de ectoparasitas"],
             title: "Carrapaticida pour-on",
@@ -1254,16 +1261,55 @@ async function seedSessions(ctx: Ctx, animals: SeededAnimal[]) {
             },
           },
         });
+        steps.push({ type: "health", healthManagementId: health.id });
       }
+
+      await prisma.managementSession.update({
+        where: { id: session.id },
+        data: { steps },
+      });
     }
   }
 
-  // Sessão agendada, ainda não realizada.
-  await prisma.managementSession.create({
+  // Sessão planejada, ainda não realizada: pesagem, vermifugação e apartação da recria.
+  const recria = animals.filter(
+    (a) => finalBatch(a.spec) === "SR:Recria" && !a.spec.exit,
+  );
+  const planned = await prisma.managementSession.create({
     data: {
       propertyId: ctx.properties.SR,
       scheduledDate: ago(-18),
-      notes: "Próxima pesagem mensal",
+      title: "Pesagem e vermifugação da recria",
+      notes: "Próxima pesagem mensal, com apartação para a engorda",
+      participants: { create: recria.map((a) => ({ animalId: a.id })) },
+      weighingManagement: { create: {} },
+    },
+  });
+  const plannedHealth = await prisma.healthManagement.create({
+    data: {
+      typeId: ctx.healthTypes["Vermifugação"],
+      title: "Ivermectina 1%",
+      managementSessionId: planned.id,
+      performedAt: ago(-18),
+      pricingType: "PER_WEIGHT",
+      unitPrice: 0.015,
+      withdrawalUntil: dateAgo(-18 - 35),
+    },
+  });
+  await prisma.managementSession.update({
+    where: { id: planned.id },
+    data: {
+      steps: [
+        { type: "weighing" },
+        { type: "health", healthManagementId: plannedHealth.id },
+        {
+          type: "batch",
+          suggestedBatchIds: [
+            ctx.batches["SR:Engorda"],
+            ctx.batches["SR:Recria"],
+          ],
+        },
+      ],
     },
   });
 
