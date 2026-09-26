@@ -830,3 +830,27 @@ export const batchReopenApiSchema = z.object({
 });
 
 export type BatchReopenApiData = z.infer<typeof batchReopenApiSchema>;
+
+export const neuteringCorrectionApiSchema = z.object({
+  date: z
+    .string()
+    .optional()
+    .transform((v) => (v ? new Date(`${v}T00:00:00`) : undefined)),
+  method: z
+    .string()
+    .optional()
+    .transform((v) => v || null),
+  notes: z
+    .string()
+    .optional()
+    .transform((v) => v || null),
+});
+export type NeuteringCorrectionApiData = z.infer<
+  typeof neuteringCorrectionApiSchema
+>;
+
+export const neuteringCancelApiSchema = z.object({
+  // Usado só quando a castração excluída era a última registrada: o animal pode ter
+  // sido castrado antes de chegar (sem registro), então quem decide é o usuário.
+  keepNeutered: z.boolean().optional(),
+});

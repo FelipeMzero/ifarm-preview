@@ -44,6 +44,7 @@ export async function GET(
         breed: { select: { id: true, name: true } },
         currentBatch: { select: { id: true, name: true } },
         animalNeuterings: {
+          where: { cancelledAt: null },
           select: {
             neuteredAt: true,
             createdAt: true,

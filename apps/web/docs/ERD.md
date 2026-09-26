@@ -207,6 +207,10 @@ erDiagram
     String method "❓"
     String notes "❓"
     DateTime neutered_at "❓"
+    DateTime original_neutered_at "❓"
+    String original_method "❓"
+    DateTime corrected_at "❓"
+    DateTime cancelled_at "❓"
     String neutered_at "❓"
     String animal_id 
     DateTime created_at 

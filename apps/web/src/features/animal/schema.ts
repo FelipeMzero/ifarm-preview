@@ -160,3 +160,13 @@ export const weighingCorrectionSchema = z.object({
 export type WeighingCorrectionFormData = z.infer<
   typeof weighingCorrectionSchema
 >;
+
+export const neuteringCorrectionSchema = z.object({
+  date: z.string().optional(),
+  method: z.string().optional(),
+  notes: z.string().optional(),
+});
+
+export type NeuteringCorrectionFormData = z.infer<
+  typeof neuteringCorrectionSchema
+>;

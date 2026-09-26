@@ -59,6 +59,7 @@ export async function GET(
           include: { management: managementWithSession },
         },
         animalNeuterings: {
+          where: { cancelledAt: null },
           include: { management: managementWithSession },
         },
         healthManagementItems: {
@@ -133,6 +134,7 @@ export async function GET(
         ),
         method: n.method,
         notes: n.notes,
+        correctedAt: n.correctedAt?.toISOString() ?? null,
       }))
       .sort(byDateDesc);
 

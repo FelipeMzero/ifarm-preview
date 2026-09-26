@@ -42,6 +42,7 @@ import { AnimalWeightChangeDialog } from "./AnimalWeightChangeDialog";
 import { AnimalBatchChangeDialog } from "./AnimalBatchChangeDialog";
 import { AnimalNeuteringDialog } from "./AnimalNeuteringDialog";
 import { AnimalWeighingHistoryDialog } from "./AnimalWeighingHistoryDialog";
+import { AnimalNeuteringHistoryDialog } from "./AnimalNeuteringHistoryDialog";
 
 type AnimalEditFormProps = {
   id: string;
@@ -87,6 +88,7 @@ export function AnimalEditForm({
   const [weighingHistoryOpen, setWeighingHistoryOpen] = useState(false);
 
   const [neuteringDialogOpen, setNeuteringDialogOpen] = useState(false);
+  const [neuteringHistoryOpen, setNeuteringHistoryOpen] = useState(false);
   const [pendingNeutering, setPendingNeutering] =
     useState<AnimalNeuteringData | null>(null);
 
@@ -484,6 +486,15 @@ export function AnimalEditForm({
                     <Scissors className="size-4" />
                   </Button>
                 )}
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon-sm"
+                  title="Histórico de castrações"
+                  onClick={() => setNeuteringHistoryOpen(true)}
+                >
+                  <History className="size-4" />
+                </Button>
               </div>
             </div>
           </FieldRow>
@@ -545,6 +556,21 @@ export function AnimalEditForm({
             setAnimal(await getAnimal(id));
           } catch {
             toast.error("Não foi possível atualizar o peso atual.");
+          }
+        }}
+      />
+
+      <AnimalNeuteringHistoryDialog
+        animalId={animal.id}
+        birthDate={animal.birthDate}
+        open={neuteringHistoryOpen}
+        onOpenChange={setNeuteringHistoryOpen}
+        onChanged={async () => {
+          // Só a castração exibida muda; as alterações pendentes do formulário são preservadas.
+          try {
+            setAnimal(await getAnimal(id));
+          } catch {
+            toast.error("Não foi possível atualizar a castração.");
           }
         }}
       />

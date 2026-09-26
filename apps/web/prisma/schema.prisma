@@ -434,6 +434,13 @@ model AnimalNeutering {
 
   neuteredAt DateTime? @map("neutered_at") // preenchido só quando managementId = null (avulso)
 
+  // Correções preservam o rastro: os valores lançados originalmente são guardados na primeira
+  // correção e a exclusão é lógica (cancelada = ignorada no histórico e nos cálculos).
+  originalNeuteredAt DateTime? @map("original_neutered_at")
+  originalMethod     String?   @map("original_method")
+  correctedAt        DateTime? @map("corrected_at")
+  cancelledAt        DateTime? @map("cancelled_at")
+
   managementId String?              @db.Uuid @map("management_id") // null = avulso
   management   NeuteringManagement? @relation(fields: [managementId], references: [id], onDelete: Restrict)
 

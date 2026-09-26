@@ -854,6 +854,14 @@ export default function AnimalDetails({
                               <Badge variant="secondary">Recastração</Badge>
                             )}
                           </div>
+                          {n.correctedAt && (
+                            <div
+                              className="text-xs text-muted-foreground"
+                              title={`Corrigida em ${formatDate(n.correctedAt)}`}
+                            >
+                              corrigido
+                            </div>
+                          )}
                         </TableCell>
                         <TableCell>{n.method ?? "—"}</TableCell>
                         <TableCell className="text-muted-foreground">

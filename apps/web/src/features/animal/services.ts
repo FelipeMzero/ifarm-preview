@@ -32,6 +32,9 @@ const API_ENDPOINTS = {
   ANIMAL_BY_ID: (id: string) => `/api/animal/${id}`,
   ANIMAL_DETAILS: (id: string) => `/api/animal/${id}/details`,
   ANIMAL_WEIGHINGS: (id: string) => `/api/animal/${id}/weighings`,
+  ANIMAL_NEUTERINGS: (id: string) => `/api/animal/${id}/neuterings`,
+  ANIMAL_NEUTERING: (id: string, neuteringId: number) =>
+    `/api/animal/${id}/neuterings/${neuteringId}`,
   ANIMAL_WEIGHING: (id: string, weighingId: number) =>
     `/api/animal/${id}/weighings/${weighingId}`,
 } as const;
@@ -227,6 +230,13 @@ export type AnimalNeutering = {
   date: string;
   method: string | null;
   notes: string | null;
+  correctedAt: string | null;
+};
+
+export type AnimalNeuteringRecord = AnimalNeutering & {
+  fromSession: boolean;
+  originalDate: string | null;
+  originalMethod: string | null;
 };
 
 export type AnimalHealthRecord = {
@@ -363,6 +373,72 @@ export async function getWeighings(
 
   if (!response.ok) {
     throw new Error(result.message);
+  }
+
+  return result;
+}
+
+export async function getNeuterings(
+  animalId: string,
+): Promise<AnimalNeuteringRecord[]> {
+  const response = await fetch(API_ENDPOINTS.ANIMAL_NEUTERINGS(animalId));
+  const result = await response.json();
+
+  if (!response.ok) {
+    throw new Error(result.message);
+  }
+
+  return result;
+}
+
+export type NeuteringCorrectionData = {
+  date?: string;
+  method?: string;
+  notes?: string;
+};
+
+export async function correctNeutering(
+  animalId: string,
+  neuteringId: number,
+  data: NeuteringCorrectionData,
+) {
+  const response = await fetch(
+    API_ENDPOINTS.ANIMAL_NEUTERING(animalId, neuteringId),
+    {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    },
+  );
+  const result = await response.json();
+
+  if (!response.ok) {
+    throw new ApiError(
+      result.message ?? "Não foi possível corrigir a castração.",
+      result.errors,
+    );
+  }
+
+  return result;
+}
+
+export async function cancelNeutering(
+  animalId: string,
+  neuteringId: number,
+  keepNeutered?: boolean,
+) {
+  const response = await fetch(
+    API_ENDPOINTS.ANIMAL_NEUTERING(animalId, neuteringId),
+    {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ keepNeutered }),
+    },
+  );
+  const result = await response.json();
+
+  if (!response.ok) {
+    throw new Error(result.message ?? "Não foi possível excluir a castração.");
   }
 
   return result;
