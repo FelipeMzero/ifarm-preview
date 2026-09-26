@@ -367,7 +367,7 @@ model AnimalTagging {
   tag   String? // null = tag removida
   notes String?
 
-  identifiedAt DateTime? @map("identified_at") // preenchido só quando managementId = null (avulso)
+  identifiedAt DateTime @map("identified_at") // data do manejo; em sessão, copiada da data da sessão
 
   managementId String?         @db.Uuid @map("management_id") // null = avulso
   management   TagManagement?  @relation(fields: [managementId], references: [id], onDelete: Restrict)
@@ -400,7 +400,7 @@ model AnimalRfidTagging {
   rfid  String? // null = rfid removido
   notes String?
 
-  identifiedAt DateTime? @map("identified_at") // preenchido só quando managementId = null (avulso)
+  identifiedAt DateTime @map("identified_at") // data do manejo; em sessão, copiada da data da sessão
 
   managementId String?          @db.Uuid @map("management_id") // null = avulso
   management   RfidManagement?  @relation(fields: [managementId], references: [id], onDelete: Restrict)
@@ -432,7 +432,7 @@ model AnimalNeutering {
   method String? // método usado neste animal (ex.: burdizzo, cirúrgica, elástico)
   notes  String? // observação específica desse animal (ex.: complicação, sangramento, recastração)
 
-  neuteredAt DateTime? @map("neutered_at") // preenchido só quando managementId = null (avulso)
+  neuteredAt DateTime @map("neutered_at") // data do manejo; em sessão, copiada da data da sessão
 
   // Correções preservam o rastro: os valores lançados originalmente são guardados na primeira
   // correção e a exclusão é lógica (cancelada = ignorada no histórico e nos cálculos).
@@ -470,7 +470,7 @@ model AnimalWeighing {
   id     Int     @id @default(autoincrement())
   weight Decimal @db.Decimal(10, 2) // valor da pesagem (kg), sempre individual
   notes  String?
-  weighedAt DateTime? @map("weighed_at") // preenchido só quando managementId = null (avulso)
+  weighedAt DateTime @map("weighed_at") // data do manejo; em sessão, copiada da data da sessão
 
   // Correções preservam o rastro: o peso lançado originalmente é guardado na primeira correção
   // e a exclusão é lógica (cancelada = ignorada no histórico, gráficos e peso atual).
@@ -508,7 +508,7 @@ model AnimalBranding {
   isCounterBrand Boolean  @default(false) @map("is_counter_brand") // contramarca (segunda marca, após mudança de dono)
   notes          String?
 
-  brandedAt DateTime? @map("branded_at") // preenchido só quando managementId = null (avulso)
+  brandedAt DateTime @map("branded_at") // data do manejo; em sessão, copiada da data da sessão
 
   managementId String?           @db.Uuid @map("management_id") // null = avulso
   management   BrandManagement?  @relation(fields: [managementId], references: [id], onDelete: Restrict)
@@ -532,7 +532,7 @@ model HealthManagement {
   pricingType       HealthManagementPricingType?  @map("pricing_type")
   unitPrice         Decimal?                     @db.Decimal(10, 2) @map("unit_price")
 
-  performedAt DateTime? @map("performed_at") // preenchido só quando managementSessionId = null (avulso)
+  performedAt DateTime @map("performed_at") // data do procedimento; em sessão, copiada da data da sessão
 
   items HealthManagementItem[]
 

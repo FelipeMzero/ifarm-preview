@@ -1132,6 +1132,8 @@ async function seedSessions(ctx: Ctx, animals: SeededAnimal[]) {
   for (const prop of ["SR", "BV"] as PropKey[]) {
     const sessions = WEIGHING_SESSIONS[prop];
     for (const daysAgo of sessions) {
+      // A data da sessão é copiada para cada registro do manejo.
+      const sessionDate = ago(daysAgo);
       const present = animals.filter((a) => propAt(a.spec, daysAgo) === prop);
       if (!present.length) continue;
       const weighed = present.filter((a) => a.weights.has(daysAgo));
@@ -1150,6 +1152,7 @@ async function seedSessions(ctx: Ctx, animals: SeededAnimal[]) {
                 create: weighed.map((a) => ({
                   animalId: a.id,
                   weight: a.weights.get(daysAgo)!,
+                  weighedAt: sessionDate,
                 })),
               },
             },
@@ -1169,6 +1172,7 @@ async function seedSessions(ctx: Ctx, animals: SeededAnimal[]) {
               animalId: a.id,
               rfid: a.rfid,
               managementId: rfidManagement.id,
+              identifiedAt: sessionDate,
             },
           });
           await prisma.animal.update({
@@ -1182,7 +1186,11 @@ async function seedSessions(ctx: Ctx, animals: SeededAnimal[]) {
             items: {
               create: present
                 .filter((p) => p.spec.neuteredDaysAgo === 72)
-                .map((p) => ({ animalId: p.id, method: "Cirúrgica" })),
+                .map((p) => ({
+                  animalId: p.id,
+                  method: "Cirúrgica",
+                  neuteredAt: sessionDate,
+                })),
             },
           },
         });
@@ -1196,6 +1204,7 @@ async function seedSessions(ctx: Ctx, animals: SeededAnimal[]) {
             title: "Febre aftosa",
             veterinarianId: ctx.people.vet,
             managementSessionId: session.id,
+            performedAt: sessionDate,
             pricingType: "FIXED",
             unitPrice: 3.5,
             nextDueDate: dateAgo(daysAgo - 180),
@@ -1212,6 +1221,7 @@ async function seedSessions(ctx: Ctx, animals: SeededAnimal[]) {
             typeId: ctx.healthTypes["Vermifugação"],
             title: "Ivermectina 1%",
             managementSessionId: session.id,
+            performedAt: sessionDate,
             pricingType: "PER_WEIGHT",
             unitPrice: 0.015,
             withdrawalUntil: dateAgo(daysAgo - 35),
@@ -1231,6 +1241,7 @@ async function seedSessions(ctx: Ctx, animals: SeededAnimal[]) {
             typeId: ctx.healthTypes["Controle de ectoparasitas"],
             title: "Carrapaticida pour-on",
             managementSessionId: session.id,
+            performedAt: sessionDate,
             pricingType: "PER_WEIGHT",
             unitPrice: 0.02,
             withdrawalUntil: dateAgo(daysAgo - 30),
@@ -1388,21 +1399,10 @@ async function seedSpecialCases(ctx: Ctx, animals: SeededAnimal[]) {
 
   // Peso atual (desnormalizado) = pesagem válida mais recente.
   for (const a of animals) {
-    const latest = await prisma.animalWeighing.findMany({
+    const newest = await prisma.animalWeighing.findFirst({
       where: { animalId: a.id, cancelledAt: null },
-      include: {
-        management: {
-          select: { managementSession: { select: { managementDate: true } } },
-        },
-      },
+      orderBy: [{ weighedAt: "desc" }, { id: "desc" }],
     });
-    const newest = latest
-      .map((w) => ({
-        weight: w.weight,
-        at: (w.weighedAt ??
-          w.management?.managementSession.managementDate)!.getTime(),
-      }))
-      .sort((x, y) => y.at - x.at)[0];
     if (newest) {
       await prisma.animal.update({
         where: { id: a.id },

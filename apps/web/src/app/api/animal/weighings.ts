@@ -1,34 +1,12 @@
 import { Prisma } from "@/lib/prisma";
+import type { AnimalWeighing } from "@/generated/prisma/client";
 
 type Tx = Prisma.TransactionClient;
 
-// Inclusão padrão para ler pesagens com a data da sessão (quando houver).
-export const weighingInclude = {
-  management: {
-    select: {
-      managementSession: {
-        select: { managementDate: true, scheduledDate: true },
-      },
-    },
-  },
-} satisfies Prisma.AnimalWeighingInclude;
-
-type WeighingWithSession = Prisma.AnimalWeighingGetPayload<{
-  include: typeof weighingInclude;
-}>;
-
-// Pesagem avulsa usa weighedAt; a de sessão usa a data da sessão.
-function weighingDate(w: WeighingWithSession): Date {
-  const session = w.management?.managementSession;
-  return (
-    w.weighedAt ?? session?.managementDate ?? session?.scheduledDate ?? w.createdAt
-  );
-}
-
-export function toWeighingDto(w: WeighingWithSession) {
+export function toWeighingDto(w: AnimalWeighing) {
   return {
     id: w.id,
-    date: weighingDate(w).toISOString(),
+    date: w.weighedAt.toISOString(),
     weightKg: w.weight.toNumber(),
     notes: w.notes,
     fromSession: w.managementId != null,
@@ -46,14 +24,10 @@ export function sortWeighings<T extends { date: string; id: number }>(
 
 // Recalcula o peso atual (campo desnormalizado) a partir da pesagem válida mais recente.
 export async function recomputeCurrentWeight(tx: Tx, animalId: string) {
-  const weighings = await tx.animalWeighing.findMany({
+  const latest = await tx.animalWeighing.findFirst({
     where: { animalId, cancelledAt: null },
-    include: weighingInclude,
+    orderBy: [{ weighedAt: "desc" }, { id: "desc" }],
   });
-
-  const latest = weighings
-    .map((w) => ({ weight: w.weight, time: weighingDate(w).getTime(), id: w.id }))
-    .sort((a, b) => b.time - a.time || b.id - a.id)[0];
 
   await tx.animal.update({
     where: { id: animalId },

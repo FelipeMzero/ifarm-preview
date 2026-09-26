@@ -2,37 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/api-auth";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
-import { sortWeighings, toWeighingDto, weighingInclude } from "../../weighings";
-
-type SessionDates = {
-  managementDate: Date | null;
-  scheduledDate: Date;
-} | null;
-
-// Manejos avulsos guardam a data no próprio item; os vinculados a uma sessão usam a data da sessão.
-function resolveDate(
-  own: Date | null | undefined,
-  session: SessionDates | undefined,
-  fallback: Date,
-): string {
-  const date =
-    own ?? session?.managementDate ?? session?.scheduledDate ?? fallback;
-  return date.toISOString();
-}
+import { sortWeighings, toWeighingDto } from "../../weighings";
 
 const toDateOnly = (d: Date | null | undefined) =>
   d ? d.toISOString().slice(0, 10) : null;
 
 const byDateDesc = <T extends { date: string }>(a: T, b: T) =>
   b.date.localeCompare(a.date);
-
-const sessionDatesSelect = {
-  select: { managementDate: true, scheduledDate: true },
-} as const;
-
-const managementWithSession = {
-  select: { managementSession: sessionDatesSelect },
-} as const;
 
 export async function GET(
   _request: NextRequest,
@@ -50,25 +26,16 @@ export async function GET(
         breed: { select: { name: true } },
         currentBatch: { select: { id: true, name: true } },
         currentProperty: { select: { id: true, name: true } },
-        animalWeighings: {
-          where: { cancelledAt: null },
-          include: weighingInclude,
-        },
-        animalTaggings: { include: { management: managementWithSession } },
-        animalRfidTaggings: {
-          include: { management: managementWithSession },
-        },
-        animalNeuterings: {
-          where: { cancelledAt: null },
-          include: { management: managementWithSession },
-        },
+        animalWeighings: { where: { cancelledAt: null } },
+        animalTaggings: true,
+        animalRfidTaggings: true,
+        animalNeuterings: { where: { cancelledAt: null } },
         healthManagementItems: {
           include: {
             management: {
               include: {
                 type: { select: { name: true } },
                 veterinarian: { select: { name: true } },
-                managementSession: sessionDatesSelect,
               },
             },
           },
@@ -101,11 +68,7 @@ export async function GET(
     const tagHistory = animal.animalTaggings
       .map((t) => ({
         id: t.id,
-        date: resolveDate(
-          t.identifiedAt,
-          t.management?.managementSession,
-          t.createdAt,
-        ),
+        date: t.identifiedAt.toISOString(),
         value: t.tag,
         notes: t.notes,
       }))
@@ -114,11 +77,7 @@ export async function GET(
     const rfidHistory = animal.animalRfidTaggings
       .map((r) => ({
         id: r.id,
-        date: resolveDate(
-          r.identifiedAt,
-          r.management?.managementSession,
-          r.createdAt,
-        ),
+        date: r.identifiedAt.toISOString(),
         value: r.rfid,
         notes: r.notes,
       }))
@@ -127,11 +86,7 @@ export async function GET(
     const neutering = animal.animalNeuterings
       .map((n) => ({
         id: n.id,
-        date: resolveDate(
-          n.neuteredAt,
-          n.management?.managementSession,
-          n.createdAt,
-        ),
+        date: n.neuteredAt.toISOString(),
         method: n.method,
         notes: n.notes,
         correctedAt: n.correctedAt?.toISOString() ?? null,
@@ -141,11 +96,7 @@ export async function GET(
     const health = animal.healthManagementItems
       .map((h) => ({
         id: h.id,
-        date: resolveDate(
-          h.management.performedAt,
-          h.management.managementSession,
-          h.createdAt,
-        ),
+        date: h.management.performedAt.toISOString(),
         typeName: h.management.type.name,
         title: h.management.title,
         veterinarianName: h.management.veterinarian?.name ?? null,

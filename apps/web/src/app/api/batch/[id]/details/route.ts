@@ -2,11 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/api-auth";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
-import {
-  sortWeighings,
-  toWeighingDto,
-  weighingInclude,
-} from "../../../animal/weighings";
+import { sortWeighings, toWeighingDto } from "../../../animal/weighings";
 import { stockingPreview } from "../../../stocking";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -124,10 +120,7 @@ export async function GET(
         where: { currentBatchId: id, status: "ACTIVE" },
         include: {
           breed: { select: { name: true } },
-          animalWeighings: {
-            where: { cancelledAt: null },
-            include: weighingInclude,
-          },
+          animalWeighings: { where: { cancelledAt: null } },
           animalBatchHistories: {
             where: { batchId: id, exitedAt: null },
             select: { enteredAt: true },

@@ -82,7 +82,7 @@ export async function PATCH(request: NextRequest, { params }: Params) {
 
       // Troca só o dia e mantém o horário original, para não alterar a ordem
       // entre pesagens do mesmo dia.
-      const original = weighing.weighedAt ?? weighing.createdAt;
+      const original = weighing.weighedAt;
       weighedAt = new Date(data.date);
       weighedAt.setHours(
         original.getHours(),

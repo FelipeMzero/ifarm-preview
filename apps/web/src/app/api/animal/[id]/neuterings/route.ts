@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/api-auth";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
-import { neuteringInclude, toNeuteringDto } from "../../neuterings";
+import { toNeuteringDto } from "../../neuterings";
 
 // Castrações válidas (não canceladas), da mais recente para a mais antiga.
 export async function GET(
@@ -17,7 +17,6 @@ export async function GET(
   try {
     const items = await prisma.animalNeutering.findMany({
       where: { animalId: id, cancelledAt: null },
-      include: neuteringInclude,
     });
 
     return NextResponse.json(

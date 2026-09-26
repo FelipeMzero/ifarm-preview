@@ -170,8 +170,8 @@ erDiagram
     Int management_id "🗝️"
     String tag "❓"
     String notes "❓"
-    DateTime identified_at "❓"
-    String identified_at "❓"
+    DateTime identified_at 
+    String management_id "❓"
     String animal_id 
     DateTime created_at 
     }
@@ -188,8 +188,8 @@ erDiagram
     Int management_id "🗝️"
     String rfid "❓"
     String notes "❓"
-    DateTime identified_at "❓"
-    String identified_at "❓"
+    DateTime identified_at 
+    String management_id "❓"
     String animal_id 
     DateTime created_at 
     }
@@ -206,12 +206,12 @@ erDiagram
     Int management_id "🗝️"
     String method "❓"
     String notes "❓"
-    DateTime neutered_at "❓"
+    DateTime neutered_at 
     DateTime original_neutered_at "❓"
     String original_method "❓"
     DateTime corrected_at "❓"
     DateTime cancelled_at "❓"
-    String neutered_at "❓"
+    String management_id "❓"
     String animal_id 
     DateTime created_at 
     }
@@ -228,11 +228,11 @@ erDiagram
     Int management_id "🗝️"
     Decimal weight 
     String notes "❓"
-    DateTime weighed_at "❓"
+    DateTime weighed_at 
     Decimal original_weight "❓"
     DateTime corrected_at "❓"
     DateTime cancelled_at "❓"
-    String weighed_at "❓"
+    String management_id "❓"
     String animal_id 
     DateTime created_at 
     }
@@ -249,8 +249,8 @@ erDiagram
     Int management_id "🗝️"
     Boolean is_counter_brand 
     String notes "❓"
-    DateTime branded_at "❓"
-    String branded_at "❓"
+    DateTime branded_at 
+    String management_id "❓"
     String animal_id 
     DateTime created_at 
     }
@@ -263,9 +263,9 @@ erDiagram
     DateTime next_due_date "❓"
     HealthManagementPricingType pricing_type "❓"
     Decimal unit_price "❓"
-    DateTime performed_at "❓"
+    DateTime performed_at 
     String type_id 
-    String performed_at "❓"
+    String management_session_id "❓"
     String veterinarian_id "❓"
     DateTime created_at 
     DateTime updated_at 

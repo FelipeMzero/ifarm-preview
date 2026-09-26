@@ -94,7 +94,7 @@ export async function PATCH(request: NextRequest, { params }: Params) {
       }
 
       // Troca só o dia e mantém o horário original.
-      const original = neutering.neuteredAt ?? neutering.createdAt;
+      const original = neutering.neuteredAt;
       neuteredAt = new Date(data.date);
       neuteredAt.setHours(
         original.getHours(),
