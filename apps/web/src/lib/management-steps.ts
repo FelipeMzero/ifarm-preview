@@ -77,7 +77,12 @@ export function sessionStatus(s: {
 // Situação de cada animal no registro: nenhuma, algumas ou todas as etapas registradas.
 export type ParticipantStatus = "pending" | "partial" | "done";
 
-export function participantStatus(done: number, total: number) {
+export function participantStatus(
+  done: number,
+  total: number,
+): ParticipantStatus {
+  // Sem etapas (ex.: recepção de compra só para receber os animais): nada a registrar.
+  if (total === 0) return "done";
   if (done === 0) return "pending";
   return done >= total ? "done" : "partial";
 }

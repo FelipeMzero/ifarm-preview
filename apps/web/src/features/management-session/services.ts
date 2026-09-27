@@ -55,6 +55,34 @@ export type SessionParticipant = {
   status: ParticipantStatus;
   doneKeys: string[];
   lastHandledAt: string | null;
+  /** Recepção de compra: categoria da compra em que o animal foi recebido. */
+  categoryId: number | null;
+};
+
+export type ReceptionCategory = {
+  id: number;
+  label: string;
+  sex: "MALE" | "FEMALE";
+  breed: Ref | null;
+  minAgeMonths: number | null;
+  maxAgeMonths: number | null;
+  expectedQuantity: number;
+  /** Recebidos na compra toda (todas as recepções). */
+  receivedTotal: number;
+  /** Recebidos nesta recepção. */
+  receivedHere: number;
+};
+
+// Sessão usada como recepção de uma compra (sem valores da negociação).
+export type ReceptionInfo = {
+  id: string;
+  purchaseEventId: string;
+  purchaseTitle: string;
+  sellerName: string;
+  gtaNumber: string | null;
+  invoiceNumber: string | null;
+  entryBatch: Ref;
+  categories: ReceptionCategory[];
 };
 
 export type ManagementSessionDetail = {
@@ -70,6 +98,7 @@ export type ManagementSessionDetail = {
   updatedAt: string;
   steps: SessionStepView[];
   participants: SessionParticipant[];
+  reception: ReceptionInfo | null;
 };
 
 export type StepAnimalDetail = SessionAnimal & {
@@ -273,5 +302,21 @@ export function clearStepRecord(id: string, animalId: string, key: string) {
     API_ENDPOINTS.STEP(id, animalId, key),
     "Não foi possível desfazer o registro.",
     { method: "DELETE" },
+  );
+}
+
+export type ReceiveAnimalPayload = {
+  categoryId: number;
+  sex?: "MALE" | "FEMALE";
+  ageMonths?: number | null;
+  name?: string;
+};
+
+// Recepção de compra: cria o animal que desceu do caminhão.
+export function receiveAnimal(id: string, data: ReceiveAnimalPayload) {
+  return request<{ success: true; data: { animalId: string } }>(
+    `${BASE}/${id}/reception/animals`,
+    "Não foi possível receber o animal.",
+    { method: "POST", json: data },
   );
 }

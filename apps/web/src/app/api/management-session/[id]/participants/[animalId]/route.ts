@@ -4,8 +4,13 @@ import { requireSession } from "@/lib/api-auth";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
 import { errorResponse, requireSessionIn, StepError } from "../../../shared";
 import { stepModule } from "../../../steps";
+import {
+  findReception,
+  removeReceivedAnimal,
+} from "../../../../purchase/reception";
 
-// Tira o animal da sessão, desfazendo os registros que ele já tinha.
+// Tira o animal da sessão, desfazendo os registros que ele já tinha. Numa recepção de
+// compra, o animal recebido é apagado.
 export async function DELETE(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string; animalId: string }> },
@@ -34,6 +39,10 @@ export async function DELETE(
       if (removed.count !== 1) {
         throw new StepError("O animal não participa desta sessão.", 404);
       }
+
+      // Na recepção o animal foi criado aqui: sair da sessão desfaz o recebimento.
+      const reception = await findReception(tx, id);
+      if (reception) await removeReceivedAnimal(tx, reception, animalId);
     });
 
     return NextResponse.json({ success: true });

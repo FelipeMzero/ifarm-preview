@@ -39,7 +39,9 @@ export const managementSessionApiSchema = z.object({
     )
     .optional()
     .transform((v) => v || null),
-  steps: z.array(planStepSchema).min(1, "Adicione ao menos um manejo."),
+  // Pode ficar vazio só numa recepção de compra (receber os animais já é o trabalho),
+  // que é criada pela área de recepções; nas demais sessões a rota exige um manejo.
+  steps: z.array(planStepSchema),
   animalIds: z.array(z.uuid()).default([]),
   propertyId: z.uuid().optional(),
 });

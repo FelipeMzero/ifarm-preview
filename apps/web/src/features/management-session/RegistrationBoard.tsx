@@ -5,46 +5,33 @@ import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
   CalendarDays,
-  ChevronRight,
   CircleCheckBig,
   ClipboardList,
   Loader2,
   Play,
   Plus,
   Search,
-  Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
 
-import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
 import { ConfirmDialog } from "@/components/our/ConfirmDialog";
 import { ErrorPage } from "@/components/our/ErrorPage";
 import ListSkeleton from "@/components/our/ListSkeleton";
-import { Pagination } from "@/components/our/Pagination";
-import { AnimalIdentification, SEX_ICON } from "@/features/animal/display";
 import { AnimalPicker } from "@/features/batch-transfer/AnimalPicker";
 import type { TransferAnimal } from "@/features/batch-transfer/services";
 import { useCurrentProperty } from "@/features/shell/CurrentPropertyProvider";
 import type { ParticipantStatus } from "@/lib/management-steps";
-import {
-  ParticipantStatusBadge,
-  SessionStatusBadge,
-  STEP_ICONS,
-  formatSessionDate,
-  todayIso,
-} from "./display";
+import { SessionStatusBadge, formatSessionDate, todayIso } from "./display";
 import {
   addParticipants,
   confirmManagementSession,
@@ -53,13 +40,13 @@ import {
   startManagementSession,
   type ManagementSessionDetail,
   type SessionParticipant,
-  type SessionStepView,
 } from "./services";
-
-// Com centenas de animais a lista fica longa: uma aba por situação, paginada.
-const PAGE_SIZE = 10;
-
-const TABS: ParticipantStatus[] = ["pending", "partial", "done"];
+import {
+  ParticipantTabs,
+  SessionDateDialog,
+  groupParticipants,
+  matchesParticipant,
+} from "./SessionParticipants";
 
 const TAB_LABELS: Record<ParticipantStatus, string> = {
   pending: "A manejar",
@@ -67,199 +54,12 @@ const TAB_LABELS: Record<ParticipantStatus, string> = {
   done: "Completos",
 };
 
-const EMPTY_MESSAGES: Record<ParticipantStatus, string> = {
+const EMPTY_MESSAGES = {
   pending: "Todos os animais já passaram pelo manejo.",
   partial: "Nenhum animal com manejo parcial.",
   done: "Nenhum animal com todos os manejos registrados.",
+  none: "Nenhum animal na sessão.",
 };
-
-function matches(p: SessionParticipant, query: string) {
-  const q = query.trim().toLowerCase();
-  if (!q) return true;
-  const { animal } = p;
-  return [animal.earTag, animal.rfid, animal.name, String(animal.code)].some(
-    (v) => v?.toLowerCase().includes(q),
-  );
-}
-
-function StepProgress({
-  steps,
-  doneKeys,
-}: {
-  steps: SessionStepView[];
-  doneKeys: string[];
-}) {
-  const done = new Set(doneKeys);
-  return (
-    <div className="flex flex-wrap items-center gap-1">
-      {steps.map((step) => {
-        const Icon = STEP_ICONS[step.type];
-        const ok = done.has(step.key);
-        return (
-          <span
-            key={step.key}
-            title={`${step.label}${ok ? " — registrado" : ""}`}
-            className={cn(
-              "flex size-6 items-center justify-center rounded-md border",
-              ok
-                ? "border-primary bg-primary text-primary-foreground"
-                : "border-border text-muted-foreground",
-            )}
-          >
-            <Icon className="size-3.5" />
-          </span>
-        );
-      })}
-    </div>
-  );
-}
-
-function ParticipantRow({
-  participant,
-  steps,
-  canRemove,
-  onOpen,
-  onRemove,
-}: {
-  participant: SessionParticipant;
-  steps: SessionStepView[];
-  canRemove: boolean;
-  onOpen: () => void;
-  onRemove: () => void;
-}) {
-  const { animal } = participant;
-  return (
-    <li className="flex items-center gap-2 rounded-lg border border-border bg-card pr-2 transition-colors hover:bg-accent/40">
-      {/* div em vez de <button>: a identificação do animal já contém um botão (RFID). */}
-      <div
-        role="button"
-        tabIndex={0}
-        onClick={onOpen}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" || e.key === " ") {
-            e.preventDefault();
-            onOpen();
-          }
-        }}
-        className="flex min-w-0 flex-1 cursor-pointer flex-wrap items-center gap-x-4 gap-y-2 rounded-lg p-3 text-left outline-none focus-visible:ring-2 focus-visible:ring-ring"
-      >
-        <div className="min-w-32">
-          <AnimalIdentification animal={animal} />
-        </div>
-        <span className="shrink-0">{SEX_ICON[animal.sex] ?? animal.sex}</span>
-        <span className="max-w-40 truncate text-sm text-muted-foreground">
-          {animal.currentBatch?.name ?? "Sem lote"}
-        </span>
-        <span className="text-sm tabular-nums text-muted-foreground">
-          {animal.currentWeightKg != null
-            ? `${animal.currentWeightKg} kg`
-            : "—"}
-        </span>
-        <span className="ml-auto flex items-center gap-2">
-          {participant.status !== "pending" && (
-            <ParticipantStatusBadge status={participant.status} />
-          )}
-          <StepProgress steps={steps} doneKeys={participant.doneKeys} />
-        </span>
-      </div>
-      {canRemove && (
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon-sm"
-          title="Remover da sessão"
-          className="text-muted-foreground hover:text-destructive"
-          onClick={onRemove}
-        >
-          <Trash2 className="size-4" />
-        </Button>
-      )}
-      <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
-    </li>
-  );
-}
-
-type DateDialogProps = {
-  open: boolean;
-  initial: string;
-  title: string;
-  description: string;
-  confirmLabel: string;
-  onOpenChange: (open: boolean) => void;
-  onConfirm: (date: string) => Promise<void>;
-};
-
-function DateDialog({
-  open,
-  onOpenChange,
-  title,
-  description,
-  ...rest
-}: DateDialogProps) {
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-sm">
-        <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
-          <DialogDescription>{description}</DialogDescription>
-        </DialogHeader>
-        {/* Montado só com o diálogo aberto: cada abertura começa da data atual. */}
-        <DateForm {...rest} onOpenChange={onOpenChange} />
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-function DateForm({
-  initial,
-  confirmLabel,
-  onOpenChange,
-  onConfirm,
-}: Pick<
-  DateDialogProps,
-  "initial" | "confirmLabel" | "onOpenChange" | "onConfirm"
->) {
-  const [date, setDate] = useState(initial);
-  const [saving, setSaving] = useState(false);
-
-  async function submit(e: React.FormEvent) {
-    e.preventDefault();
-    setSaving(true);
-    try {
-      await onConfirm(date);
-      onOpenChange(false);
-    } catch {
-      // Erro já avisado por onConfirm; o diálogo continua aberto para correção.
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  return (
-    <form onSubmit={submit} className="space-y-4">
-      <Input
-        type="date"
-        value={date}
-        max={todayIso()}
-        required
-        onChange={(e) => setDate(e.target.value)}
-      />
-      <DialogFooter>
-        <Button
-          type="button"
-          variant="secondary"
-          onClick={() => onOpenChange(false)}
-        >
-          Cancelar
-        </Button>
-        <Button type="submit" disabled={saving || !date}>
-          {saving && <Loader2 className="animate-spin" />}
-          {confirmLabel}
-        </Button>
-      </DialogFooter>
-    </form>
-  );
-}
 
 export function RegistrationBoard({ id }: { id: string }) {
   const router = useRouter();
@@ -268,8 +68,6 @@ export function RegistrationBoard({ id }: { id: string }) {
   const [detail, setDetail] = useState<ManagementSessionDetail | null>(null);
   const [loadFailed, setLoadFailed] = useState(false);
   const [search, setSearch] = useState("");
-  const [tab, setTab] = useState<ParticipantStatus>("pending");
-  const [page, setPage] = useState(0);
   const [dateDialog, setDateDialog] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [removing, setRemoving] = useState<SessionParticipant | null>(null);
@@ -313,20 +111,10 @@ export function RegistrationBoard({ id }: { id: string }) {
   const inProgress = status === "in_progress";
   const editable = status === "planned" || inProgress;
 
-  const filtered = detail.participants.filter((p) => matches(p, search));
-  // Parciais e completos: o último registrado primeiro.
-  const byRecent = (a: SessionParticipant, b: SessionParticipant) =>
-    (b.lastHandledAt ?? "").localeCompare(a.lastHandledAt ?? "");
-  const lists: Record<ParticipantStatus, SessionParticipant[]> = {
-    pending: filtered.filter((p) => p.status === "pending"),
-    partial: filtered.filter((p) => p.status === "partial").sort(byRecent),
-    done: filtered.filter((p) => p.status === "done").sort(byRecent),
-  };
-  const pending = lists.pending;
-  const current = lists[tab];
-  const pageCount = Math.ceil(current.length / PAGE_SIZE);
-  // Remoções ou registros podem encolher a aba; não deixa a página ficar vazia.
-  const safePage = Math.min(page, Math.max(pageCount - 1, 0));
+  const filtered = detail.participants.filter((p) =>
+    matchesParticipant(p, search),
+  );
+  const pending = groupParticipants(filtered).pending;
 
   const counts = {
     total: detail.participants.length,
@@ -561,10 +349,7 @@ export function RegistrationBoard({ id }: { id: string }) {
           <Input
             placeholder="Brinco, RFID, ID ou apelido (Enter abre o animal)..."
             value={search}
-            onChange={(e) => {
-              setSearch(e.target.value);
-              setPage(0);
-            }}
+            onChange={(e) => setSearch(e.target.value)}
             onKeyDown={handleSearchKey}
             className="h-11 pl-8"
             autoFocus
@@ -581,60 +366,22 @@ export function RegistrationBoard({ id }: { id: string }) {
         )}
       </div>
 
-      <Tabs
-        value={tab}
-        onValueChange={(value) => {
-          setTab(value as ParticipantStatus);
-          setPage(0);
+      <ParticipantTabs
+        participants={detail.participants}
+        steps={steps}
+        search={search}
+        editable={editable}
+        labels={{
+          ...TAB_LABELS,
+          pending: editable ? TAB_LABELS.pending : "Não manejados",
         }}
-        className="gap-3"
-      >
-        <TabsList>
-          {TABS.map((t) => (
-            <TabsTrigger key={t} value={t}>
-              {t === "pending" && !editable ? "Não manejados" : TAB_LABELS[t]} (
-              {lists[t].length})
-            </TabsTrigger>
-          ))}
-        </TabsList>
+        emptyMessages={EMPTY_MESSAGES}
+        removeTitle="Remover da sessão"
+        onOpen={(p) => openAnimal(p.animal.id)}
+        onRemove={setRemoving}
+      />
 
-        {current.length === 0 ? (
-          <div className="flex h-20 items-center justify-center rounded-md border border-dashed border-border text-sm text-muted-foreground">
-            {search
-              ? "Nenhum animal encontrado nesta aba."
-              : !detail.participants.length
-                ? "Nenhum animal na sessão."
-                : EMPTY_MESSAGES[tab]}
-          </div>
-        ) : (
-          <ul className="space-y-2">
-            {current
-              .slice(safePage * PAGE_SIZE, (safePage + 1) * PAGE_SIZE)
-              .map((p) => (
-                <ParticipantRow
-                  key={p.animal.id}
-                  participant={p}
-                  steps={steps}
-                  canRemove={editable}
-                  onOpen={() => openAnimal(p.animal.id)}
-                  onRemove={() => setRemoving(p)}
-                />
-              ))}
-          </ul>
-        )}
-
-        {current.length > 0 && (
-          <Pagination
-            pageIndex={safePage}
-            pageCount={pageCount}
-            pageSize={PAGE_SIZE}
-            total={current.length}
-            onPageChange={setPage}
-          />
-        )}
-      </Tabs>
-
-      <DateDialog
+      <SessionDateDialog
         open={dateDialog}
         initial={detail.managementDate ?? todayIso()}
         title="Data do manejo"

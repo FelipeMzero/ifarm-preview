@@ -13,6 +13,7 @@ import {
   LayoutDashboard,
   LogOut,
   Map,
+  ShoppingCart,
   UserCog,
   Users,
 } from "lucide-react";
@@ -69,6 +70,14 @@ const NAV = [
     label: "Manejos",
     icon: ClipboardList,
     items: [{ href: "/manejos", label: "Sessões de manejo" }],
+  },
+  {
+    label: "Compras",
+    icon: ShoppingCart,
+    items: [
+      { href: "/compras", label: "Compras" },
+      { href: "/recepcoes", label: "Recepções" },
+    ],
   },
 ];
 

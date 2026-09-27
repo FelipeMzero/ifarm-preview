@@ -24,7 +24,11 @@ import {
 } from "./shared";
 
 function buildWhere(query: ManagementSessionQueryData, propertyId: string) {
-  const where: Prisma.ManagementSessionWhereInput = { propertyId };
+  // Recepções de compra ficam na área de recepções, não na lista de manejos.
+  const where: Prisma.ManagementSessionWhereInput = {
+    propertyId,
+    purchaseReception: { is: null },
+  };
 
   if (query.status === "open") {
     where.confirmedAt = null;
@@ -158,6 +162,10 @@ export async function POST(request: NextRequest) {
         { success: false, message: "Nenhuma propriedade selecionada." },
         { status: 400 },
       );
+    }
+
+    if (!data.steps.length) {
+      throw new StepError("Adicione ao menos um manejo.", 400, "steps");
     }
 
     const animalIds = [...new Set(data.animalIds)];

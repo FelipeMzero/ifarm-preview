@@ -46,12 +46,13 @@ const EMPTY_OPTIONS: ManagementOptions = {
 
 const FORM_ID = "management-step-form";
 
-function boardUrl(sessionId: string) {
-  return `/manejos/${sessionId}/registro`;
-}
+// As telas de etapa servem ao registro de manejo e à recepção de compra: cada área
+// informa onde fica a sua lista de animais (e, abaixo dela, /<animal>/<passo>).
+export const sessionBoardPath = (sessionId: string) =>
+  `/manejos/${sessionId}/registro`;
 
-function stepUrl(sessionId: string, animalId: string, index: number) {
-  return `/manejos/${sessionId}/registro/${animalId}/${index + 1}`;
+function stepUrl(boardPath: string, animalId: string, index: number) {
+  return `${boardPath}/${animalId}/${index + 1}`;
 }
 
 // Primeiro passo sem registro (ou o primeiro, se todos já foram feitos).
@@ -64,9 +65,12 @@ export function firstPendingStep(context: SessionAnimalContext) {
 export function AnimalEntry({
   sessionId,
   animalId,
+  boardPath = sessionBoardPath(sessionId),
 }: {
   sessionId: string;
   animalId: string;
+  /** Lista de animais da área (registro de manejo por padrão). */
+  boardPath?: string;
 }) {
   const router = useRouter();
   const [failed, setFailed] = useState(false);
@@ -77,7 +81,7 @@ export function AnimalEntry({
       .then((context) => {
         if (!cancelled) {
           router.replace(
-            stepUrl(sessionId, animalId, firstPendingStep(context)),
+            stepUrl(boardPath, animalId, firstPendingStep(context)),
           );
         }
       })
@@ -87,13 +91,13 @@ export function AnimalEntry({
     return () => {
       cancelled = true;
     };
-  }, [sessionId, animalId, router]);
+  }, [sessionId, animalId, boardPath, router]);
 
   if (failed) {
     return (
       <ErrorPage
         message="Não foi possível abrir o animal nesta sessão."
-        onRetry={() => router.replace(boardUrl(sessionId))}
+        onRetry={() => router.replace(boardPath)}
       />
     );
   }
@@ -105,12 +109,15 @@ type AnimalStepPageProps = {
   animalId: string;
   /** Passo na URL, a partir de 1. */
   step: number;
+  /** Lista de animais da área (registro de manejo por padrão). */
+  boardPath?: string;
 };
 
 export function AnimalStepPage({
   sessionId,
   animalId,
   step,
+  boardPath = sessionBoardPath(sessionId),
 }: AnimalStepPageProps) {
   const router = useRouter();
   const { property: currentProperty } = useCurrentProperty();
@@ -192,7 +199,7 @@ export function AnimalStepPage({
     return (
       <ErrorPage
         message="Esta sessão não tem manejos definidos."
-        onRetry={() => router.push(boardUrl(sessionId))}
+        onRetry={() => router.push(boardPath)}
       />
     );
   }
@@ -201,12 +208,12 @@ export function AnimalStepPage({
   const record = records[current.key] ?? null;
 
   function goTo(target: number) {
-    router.push(stepUrl(sessionId, animalId, target));
+    router.push(stepUrl(boardPath, animalId, target));
   }
 
   function goNext() {
     if (isLast) {
-      router.push(boardUrl(sessionId));
+      router.push(boardPath);
     } else {
       goTo(index + 1);
     }
@@ -246,7 +253,7 @@ export function AnimalStepPage({
         variant="ghost"
         size="sm"
         className="w-fit"
-        onClick={() => router.push(boardUrl(sessionId))}
+        onClick={() => router.push(boardPath)}
       >
         <ArrowLeft className="size-4" /> Lista de animais
       </Button>

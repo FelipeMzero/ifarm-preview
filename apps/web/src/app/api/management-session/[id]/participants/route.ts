@@ -11,6 +11,7 @@ import {
   StepError,
   validationErrors,
 } from "../../shared";
+import { findReception } from "../../../purchase/reception";
 
 // Inclui na sessão animais que não estavam no planejamento (ex.: apareceram no curral).
 // Os que já participam são ignorados.
@@ -36,6 +37,13 @@ export async function POST(
         ["planned", "in_progress"],
         "Somente sessões não consolidadas aceitam novos animais.",
       );
+
+      if (await findReception(tx, id)) {
+        throw new StepError(
+          "Na recepção de compra os animais são criados pelo recebimento, não incluídos da lista.",
+          409,
+        );
+      }
 
       const invalid = await invalidAnimals(tx, session.propertyId, animalIds);
       if (invalid.length) {

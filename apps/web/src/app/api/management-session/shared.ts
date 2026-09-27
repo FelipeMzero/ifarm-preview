@@ -12,6 +12,7 @@ import {
   type StepType,
 } from "@/lib/management-steps";
 import { ConfirmError } from "../batch-transfer/confirmTransfer";
+import { ReceptionError } from "../purchase/reception";
 import { animalLabel, summarize } from "../batch-transfer/shared";
 import { stepModule } from "./steps";
 import { StepError, type SessionCtx, type Tx } from "./steps/types";
@@ -154,7 +155,7 @@ export function findStep(steps: SessionStep[], key: string) {
 }
 
 export function errorResponse(error: unknown) {
-  if (error instanceof StepError) {
+  if (error instanceof StepError || error instanceof ReceptionError) {
     return NextResponse.json(
       {
         success: false,

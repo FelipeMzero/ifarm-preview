@@ -41,7 +41,7 @@ import {
 import type { TransferAnimal } from "@/features/batch-transfer/services";
 import { useCurrentProperty } from "@/features/shell/CurrentPropertyProvider";
 import { SessionStatusBadge, formatSessionDate, todayIso } from "./display";
-import { planFormSchema, type PlanFormData, type PlanStepForm } from "./schema";
+import { planFormSchema, toStepPayload, type PlanFormData } from "./schema";
 import {
   ApiError,
   createManagementSession,
@@ -78,27 +78,6 @@ function toFormValues(detail: ManagementSessionDetail): PlanFormData {
       ...(clientStepModule(step.type).toPlanForm?.(step) ?? {}),
     })),
   };
-}
-
-// Campos vazios viram null; o servidor valida cada etapa pelo schema do seu tipo.
-function toStepPayload(step: PlanStepForm) {
-  if (step.type === "health") {
-    return {
-      type: step.type,
-      healthManagementId: step.healthManagementId || undefined,
-      typeId: step.typeId,
-      title: step.title || null,
-      veterinarianId: step.veterinarianId || null,
-      pricingType: step.pricingType || null,
-      unitPrice: step.unitPrice ? Number(step.unitPrice) : null,
-      withdrawalUntil: step.withdrawalUntil || null,
-      nextDueDate: step.nextDueDate || null,
-    };
-  }
-  if (step.type === "batch") {
-    return { type: step.type, suggestedBatchIds: step.suggestedBatchIds ?? [] };
-  }
-  return { type: step.type };
 }
 
 const EMPTY_OPTIONS: ManagementOptions = {

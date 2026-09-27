@@ -15,8 +15,11 @@ import {
   StepError,
   toDateOnly,
   validationErrors,
+  type LoadedSession,
 } from "../shared";
 import { countDone, describeSteps, loadStepRecords } from "../steps";
+import type { Tx } from "../steps/types";
+import { describeReception, findReception } from "../../purchase/reception";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -35,7 +38,7 @@ export async function GET(_request: NextRequest, { params }: Params) {
       );
     }
 
-    const [row, participants, steps, records] = await Promise.all([
+    const [row, participants, steps, records, reception] = await Promise.all([
       prisma.managementSession.findUniqueOrThrow({ where: { id } }),
       prisma.managementParticipant.findMany({
         where: { managementSessionId: id },
@@ -59,6 +62,7 @@ export async function GET(_request: NextRequest, { params }: Params) {
       }),
       describeSteps(prisma, session, session.steps),
       loadStepRecords(prisma, session, session.steps),
+      describeReception(prisma, id),
     ]);
 
     return NextResponse.json({
@@ -73,6 +77,8 @@ export async function GET(_request: NextRequest, { params }: Params) {
       cancelledAt: row.cancelledAt?.toISOString() ?? null,
       updatedAt: row.updatedAt.toISOString(),
       steps,
+      // Preenchido = sessão de recepção de compra (categorias e contagens, sem valores).
+      reception,
       participants: participants.map(({ animal, lastHandledAt }) => {
         const doneKeys = steps
           .filter((s) => records.get(s.key)?.has(animal.id))
@@ -94,6 +100,7 @@ export async function GET(_request: NextRequest, { params }: Params) {
           status: participantStatus(done, steps.length),
           doneKeys,
           lastHandledAt: lastHandledAt?.toISOString() ?? null,
+          categoryId: reception?.categoryOfAnimal[animal.id] ?? null,
         };
       }),
     });
@@ -130,56 +137,13 @@ export async function PUT(request: NextRequest, { params }: Params) {
         ["planned", "in_progress"],
         "Somente sessões não consolidadas podem ser alteradas.",
       );
-
-      const current = await tx.managementParticipant.findMany({
-        where: { managementSessionId: id },
-        include: {
-          animal: {
-            select: { code: true, currentTag: true, currentRfid: true },
-          },
-        },
-      });
-      const nextIds = new Set(animalIds);
-      const currentIds = new Set(current.map((p) => p.animalId));
-      const removed = current.filter((p) => !nextIds.has(p.animalId));
-      const added = animalIds.filter((a) => !currentIds.has(a));
-
-      const invalid = await invalidAnimals(tx, session.propertyId, added);
-      if (invalid.length) {
-        throw new StepError(invalidAnimalsMessage(invalid), 400, "animalIds");
+      const reception = await findReception(tx, id);
+      if (!reception && !data.steps.length) {
+        throw new StepError("Adicione ao menos um manejo.", 400, "steps");
       }
 
-      // Quem já tem registro só sai pela tela de registro (que desfaz os registros).
-      if (removed.length) {
-        const records = await loadStepRecords(
-          tx,
-          session,
-          session.steps,
-          removed.map((p) => p.animalId),
-        );
-        const handled = removed.filter((p) => countDone(records, p.animalId));
-        if (handled.length) {
-          throw new StepError(
-            `Animais com manejo já registrado não podem sair pelo planejamento: ${summarize(
-              handled.map((p) => animalLabel(p.animal)),
-            )}. Remova-os pela tela de registro.`,
-            409,
-            "animalIds",
-          );
-        }
-        await tx.managementParticipant.deleteMany({
-          where: { id: { in: removed.map((p) => p.id) } },
-        });
-      }
-
-      if (added.length) {
-        await tx.managementParticipant.createMany({
-          data: added.map((animalId) => ({
-            managementSessionId: id,
-            animalId,
-          })),
-        });
-      }
+      // Na recepção os participantes são os animais recebidos (não vêm do planejamento).
+      if (!reception) await updateParticipants(tx, session, animalIds);
 
       const steps = await applyPlanSteps(
         tx,
@@ -202,5 +166,62 @@ export async function PUT(request: NextRequest, { params }: Params) {
     return NextResponse.json({ success: true });
   } catch (error) {
     return errorResponse(error);
+  }
+}
+
+async function updateParticipants(
+  tx: Tx,
+  session: LoadedSession,
+  animalIds: string[],
+) {
+  const id = session.id;
+  const current = await tx.managementParticipant.findMany({
+    where: { managementSessionId: id },
+    include: {
+      animal: {
+        select: { code: true, currentTag: true, currentRfid: true },
+      },
+    },
+  });
+  const nextIds = new Set(animalIds);
+  const currentIds = new Set(current.map((p) => p.animalId));
+  const removed = current.filter((p) => !nextIds.has(p.animalId));
+  const added = animalIds.filter((a) => !currentIds.has(a));
+
+  const invalid = await invalidAnimals(tx, session.propertyId, added);
+  if (invalid.length) {
+    throw new StepError(invalidAnimalsMessage(invalid), 400, "animalIds");
+  }
+
+  // Quem já tem registro só sai pela tela de registro (que desfaz os registros).
+  if (removed.length) {
+    const records = await loadStepRecords(
+      tx,
+      session,
+      session.steps,
+      removed.map((p) => p.animalId),
+    );
+    const handled = removed.filter((p) => countDone(records, p.animalId));
+    if (handled.length) {
+      throw new StepError(
+        `Animais com manejo já registrado não podem sair pelo planejamento: ${summarize(
+          handled.map((p) => animalLabel(p.animal)),
+        )}. Remova-os pela tela de registro.`,
+        409,
+        "animalIds",
+      );
+    }
+    await tx.managementParticipant.deleteMany({
+      where: { id: { in: removed.map((p) => p.id) } },
+    });
+  }
+
+  if (added.length) {
+    await tx.managementParticipant.createMany({
+      data: added.map((animalId) => ({
+        managementSessionId: id,
+        animalId,
+      })),
+    });
   }
 }

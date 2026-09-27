@@ -67,49 +67,39 @@ function weightSeries(
   });
 }
 
-type PurchasedInBatch = {
-  managementSession: { managementDate: Date | null };
-  animal: { animalBatchHistories: { enteredAt: Date }[] };
-  category: {
-    event: {
-      id: string;
-      purchaseDate: Date;
-      closedAt: Date | null;
-      seller: { id: string; name: string };
-    };
+type ReceptionInBatch = {
+  purchaseEvent: {
+    id: string;
+    purchaseDate: Date;
+    confirmedAt: Date | null;
+    seller: { id: string; name: string };
   };
+  _count: { purchasedAnimals: number };
 };
 
-// Agrupa por compra os animais que entraram neste lote no dia da recepção (um animal
-// que chegou em outro lote e veio para cá depois não conta como compra deste lote).
-function groupPurchases(purchased: PurchasedInBatch[]) {
+// Compras que tiveram este lote como lote de entrada, somando as recepções (viagens)
+// de cada compra.
+function groupPurchases(receptions: ReceptionInBatch[]) {
   const byEvent = new Map<
     string,
-    PurchasedInBatch["category"]["event"] & { animalCount: number }
+    ReceptionInBatch["purchaseEvent"] & { animalCount: number }
   >();
-  for (const p of purchased) {
-    const reception = p.managementSession.managementDate;
-    if (!reception) continue;
-    const enteredOnReception = p.animal.animalBatchHistories.some(
-      (h) =>
-        dayKey(h.enteredAt.toISOString()) === dayKey(reception.toISOString()),
-    );
-    if (!enteredOnReception) continue;
-    const { event } = p.category;
-    const current = byEvent.get(event.id);
-    byEvent.set(event.id, {
-      ...event,
-      animalCount: (current?.animalCount ?? 0) + 1,
+  for (const r of receptions) {
+    const current = byEvent.get(r.purchaseEvent.id);
+    byEvent.set(r.purchaseEvent.id, {
+      ...r.purchaseEvent,
+      animalCount: (current?.animalCount ?? 0) + r._count.purchasedAnimals,
     });
   }
   return [...byEvent.values()]
+    .filter((e) => e.animalCount > 0)
     .sort((a, b) => b.purchaseDate.getTime() - a.purchaseDate.getTime())
     .map((e) => ({
       id: e.id,
       date: e.purchaseDate.toISOString(),
       seller: e.seller,
       animalCount: e.animalCount,
-      confirmed: e.closedAt != null,
+      confirmed: e.confirmedAt != null,
     }));
 }
 
@@ -231,35 +221,18 @@ export async function GET(
           items: { where: { originBatchId: id }, select: { id: true } },
         },
       }),
-      // A compra não tem lote de destino: vale o lote em que cada animal entrou na
-      // recepção (histórico de lote aberto na data da sessão de recepção).
-      prisma.purchasedAnimal.findMany({
-        where: {
-          category: { event: { cancelledAt: null } },
-          animal: { animalBatchHistories: { some: { batchId: id } } },
-        },
-        include: {
-          managementSession: { select: { managementDate: true } },
-          animal: {
+      prisma.purchaseReception.findMany({
+        where: { entryBatchId: id, purchaseEvent: { cancelledAt: null } },
+        select: {
+          purchaseEvent: {
             select: {
-              animalBatchHistories: {
-                where: { batchId: id },
-                select: { enteredAt: true },
-              },
+              id: true,
+              purchaseDate: true,
+              confirmedAt: true,
+              seller: { select: { id: true, name: true } },
             },
           },
-          category: {
-            select: {
-              event: {
-                select: {
-                  id: true,
-                  purchaseDate: true,
-                  closedAt: true,
-                  seller: { select: { id: true, name: true } },
-                },
-              },
-            },
-          },
+          _count: { select: { purchasedAnimals: true } },
         },
       }),
       stockingPreview({ batchId: id }),

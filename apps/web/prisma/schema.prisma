@@ -108,6 +108,7 @@ model Batch {
   originAnimalTransferItems  AnimalBatchTransferItem[] @relation("AnimalBatchTransferItemOrigin")
   originPropertyTransfers      AnimalPropertyTransfer[] @relation("AnimalPropertyTransferOriginBatch")
   destinationPropertyTransfers AnimalPropertyTransfer[] @relation("AnimalPropertyTransferDestinationBatch")
+  purchaseReceptions           PurchaseReception[]
 
   @@index([propertyId])
   @@map("batch")
@@ -331,9 +332,9 @@ model ManagementSession {
   brandManagement BrandManagement?
   healthManagements         HealthManagement[]
 
-  purchaseEventId String?        @db.Uuid @map("purchase_event_id") // preenchido = sessão de recepção
-  purchaseEvent   PurchaseEvent? @relation(fields: [purchaseEventId], references: [id], onDelete: Restrict)
-  purchasedAnimals PurchasedAnimal[]
+  // A sessão de manejo é genérica; quando é usada para receber animais comprados, a
+  // compra a incorpora por PurchaseReception (a dependência vai da compra para a sessão).
+  purchaseReception PurchaseReception?
 
 
   animalBatchTransfers    AnimalBatchTransfer[]
@@ -784,24 +785,25 @@ model AnimalBatchHistory {
 
 model PurchaseEvent {
   id           String    @id @default(uuid()) @db.Uuid
+  title        String    // distingue compras do mesmo vendedor
   purchaseDate DateTime  @map("purchase_date")
-  gtaNumber    String?   @map("gta_number")
-  invoiceNumber String?  @map("invoice_number")
   notes        String?
 
-  // financeiro, independente do físico
-  closedAt    DateTime? @map("closed_at")    // negociação fechada (valores congelados)
-  paidAt      DateTime? @map("paid_at")
-  cancelledAt DateTime? @map("cancelled_at")
-  // status físico é derivado: soma de animais recebidos vs expectedQuantity das categorias
+  // Situação: em andamento (sem confirmedAt/cancelledAt), consolidada ou cancelada.
+  // O pagamento é um fato registrado durante o andamento; bloqueia os valores.
+  paidAt           DateTime? @map("paid_at")
+  paymentReference String?   @map("payment_reference") // comprovante (PIX, TED...)
+  confirmedAt      DateTime? @map("confirmed_at")      // consolidada: custos rateados, nada mais muda
+  cancelledAt      DateTime? @map("cancelled_at")
 
   sellerId              String   @db.Uuid @map("seller_id")
   seller                Person   @relation(fields: [sellerId], references: [id], onDelete: Restrict)
   destinationPropertyId String   @db.Uuid @map("destination_property_id")
   destinationProperty   Property @relation(fields: [destinationPropertyId], references: [id], onDelete: Restrict)
 
-  categories PurchaseCategory[]
-  receptions ManagementSession[] // uma compra pode ter várias recepções (viagens)
+  categories       PurchaseCategory[]
+  receptions       PurchaseReception[] // uma compra pode ter várias recepções (viagens)
+  purchasedAnimals PurchasedAnimal[]
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -824,6 +826,7 @@ model PurchaseCategory {
   totalPrice     Decimal?  @db.Decimal(12, 2) @map("total_price")       // LUMP_SUM
   invoicedWeight Decimal?  @db.Decimal(12, 2) @map("invoiced_weight")   // peso de origem/embarque (kg), base do pagamento
   shrinkPercent  Decimal?  @db.Decimal(5, 2)  @map("shrink_percent")    // quebra acordada
+  costSplit      PurchaseCostSplit @default(EQUAL) @map("cost_split")  // rateio do valor fechado
 
   breedId String? @db.Uuid @map("breed_id")
   breed   Breed?  @relation(fields: [breedId], references: [id], onDelete: Restrict)
@@ -833,29 +836,65 @@ model PurchaseCategory {
 
   animals PurchasedAnimal[]
 
+  @@unique([id, eventId]) // alvo da FK composta de PurchasedAnimal (mesma compra)
   @@index([eventId])
   @@map("purchase_category")
 }
 
-// vínculo animal ↔ categoria da compra, criado na recepção
+// Chegada física de animais de uma compra (uma por viagem). A compra incorpora uma
+// sessão de manejo para receber os animais: os animais são criados no registro da
+// sessão e recebem nela os primeiros manejos.
+model PurchaseReception {
+  id String @id @default(uuid()) @db.Uuid
+
+  purchaseEventId String        @db.Uuid @map("purchase_event_id")
+  purchaseEvent   PurchaseEvent @relation(fields: [purchaseEventId], references: [id], onDelete: Restrict)
+
+  managementSessionId String            @unique @db.Uuid @map("management_session_id")
+  managementSession   ManagementSession @relation(fields: [managementSessionId], references: [id], onDelete: Restrict)
+
+  // Lote em que os animais recebidos entram (até uma eventual apartação).
+  entryBatchId String @db.Uuid @map("entry_batch_id")
+  entryBatch   Batch  @relation(fields: [entryBatchId], references: [id], onDelete: Restrict)
+
+  // Documentos da carga (cada viagem tem os seus).
+  gtaNumber     String? @map("gta_number")
+  invoiceNumber String? @map("invoice_number")
+
+  purchasedAnimals PurchasedAnimal[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@unique([id, purchaseEventId]) // alvo da FK composta de PurchasedAnimal (mesma compra)
+  @@index([purchaseEventId])
+  @@index([entryBatchId])
+  @@map("purchase_reception")
+}
+
+// Vínculo animal ↔ compra, criado na recepção. Categoria e recepção são ligadas por FKs
+// compostas com purchase_event_id: o banco garante que as duas são da mesma compra.
 model PurchasedAnimal {
   id   Int      @id @default(autoincrement())
-  cost Decimal? @db.Decimal(12, 2) // rateio congelado no fechamento
+  // Custo de aquisição, rateado uma única vez na consolidação da compra (nulo antes).
+  cost Decimal? @db.Decimal(12, 2)
+
+  purchaseEventId String        @db.Uuid @map("purchase_event_id")
+  purchaseEvent   PurchaseEvent @relation(fields: [purchaseEventId], references: [id], onDelete: Restrict)
 
   categoryId Int              @map("category_id")
-  category   PurchaseCategory @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  category   PurchaseCategory @relation(fields: [categoryId, purchaseEventId], references: [id, eventId], onDelete: Restrict)
+
+  receptionId String            @db.Uuid @map("reception_id")
+  reception   PurchaseReception @relation(fields: [receptionId, purchaseEventId], references: [id, purchaseEventId], onDelete: Restrict)
 
   animalId String @unique @db.Uuid @map("animal_id")
   animal   Animal @relation(fields: [animalId], references: [id], onDelete: Restrict)
 
-  // sessão de recepção em que foi criado
-  managementSessionId String            @db.Uuid @map("management_session_id")
-  managementSession   ManagementSession @relation(fields: [managementSessionId], references: [id], onDelete: Restrict)
-
   createdAt DateTime @default(now()) @map("created_at")
 
+  @@index([purchaseEventId])
   @@index([categoryId])
-  @@index([managementSessionId])
+  @@index([receptionId])
   @@map("purchased_animal")
 }
 
@@ -866,6 +905,13 @@ enum PurchasePricingType {
   PER_ARROBA
   LUMP_SUM
   @@map("purchase_pricing_type")
+}
+
+// Rateio do valor fechado entre os animais recebidos.
+enum PurchaseCostSplit {
+  EQUAL     // valor ÷ recebidos
+  BY_WEIGHT // proporcional ao peso de entrada
+  @@map("purchase_cost_split")
 }
 
 

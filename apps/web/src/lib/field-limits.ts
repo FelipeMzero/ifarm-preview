@@ -23,6 +23,13 @@ export const FIELD_LIMITS = {
     stepNotes: 500,
     healthTitle: 100,
   },
+  purchase: {
+    title: 100,
+    gtaNumber: 30,
+    invoiceNumber: 30,
+    paymentReference: 200,
+    notes: 500,
+  },
   breed: { name: 60 },
   address: {
     street: 150,

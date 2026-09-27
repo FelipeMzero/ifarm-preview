@@ -140,7 +140,7 @@ erDiagram
   
 
   "management_session" {
-    String purchase_event_id "🗝️"
+    String id "🗝️"
     String title 
     String notes "❓"
     DateTime scheduled_date 
@@ -149,7 +149,6 @@ erDiagram
     DateTime cancelled_at "❓"
     Json steps 
     String property_id 
-    String purchase_event_id "❓"
     DateTime created_at 
     DateTime updated_at 
     }
@@ -381,12 +380,12 @@ erDiagram
 
   "purchase_event" {
     String id "🗝️"
+    String title 
     DateTime purchase_date 
-    String gta_number "❓"
-    String invoice_number "❓"
     String notes "❓"
-    DateTime closed_at "❓"
     DateTime paid_at "❓"
+    String payment_reference "❓"
+    DateTime confirmed_at "❓"
     DateTime cancelled_at "❓"
     String seller_id 
     String destination_property_id 
@@ -407,17 +406,30 @@ erDiagram
     Decimal total_price "❓"
     Decimal invoiced_weight "❓"
     Decimal shrink_percent "❓"
+    PurchaseCostSplit cost_split 
     String breed_id "❓"
     String event_id 
+    }
+  
+
+  "purchase_reception" {
+    String id "🗝️"
+    String purchase_event_id 
+    String management_session_id 
+    String entry_batch_id 
+    String gta_number "❓"
+    String invoice_number "❓"
+    DateTime created_at 
     }
   
 
   "purchased_animal" {
     Int id "🗝️"
     Decimal cost "❓"
+    String purchase_event_id 
     Int category_id 
+    String reception_id 
     String animal_id 
-    String management_session_id 
     DateTime created_at 
     }
   
@@ -435,7 +447,6 @@ erDiagram
     "user_settings" }o--|o property : "currentProperty"
     "person" |o--|o address : "address"
     "management_session" }o--|| property : "property"
-    "management_session" }o--|o purchase_event : "purchaseEvent"
     "management_participant" }o--|| management_session : "managementSession"
     "management_participant" }o--|| animal : "batch_id"
     "tag_management" |o--|| management_session : "managementSession"
@@ -479,7 +490,11 @@ erDiagram
     "purchase_event" }o--|| property : "destinationProperty"
     "purchase_category" }o--|o breed : "breed"
     "purchase_category" }o--|| purchase_event : "event"
+    "purchase_reception" }o--|| purchase_event : "purchaseEvent"
+    "purchase_reception" |o--|| management_session : "managementSession"
+    "purchase_reception" }o--|| batch : "entryBatch"
+    "purchased_animal" }o--|| purchase_event : "purchaseEvent"
     "purchased_animal" }o--|| purchase_category : "category"
+    "purchased_animal" }o--|| purchase_reception : "reception"
     "purchased_animal" }o--|| animal : "animal"
-    "purchased_animal" }o--|| management_session : "managementSession"
 ```

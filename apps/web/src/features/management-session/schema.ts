@@ -46,6 +46,27 @@ export const planStepFormSchema = z
 
 export type PlanStepForm = z.infer<typeof planStepFormSchema>;
 
+// Campos vazios viram null; o servidor valida cada etapa pelo schema do seu tipo.
+export function toStepPayload(step: PlanStepForm) {
+  if (step.type === "health") {
+    return {
+      type: step.type,
+      healthManagementId: step.healthManagementId || undefined,
+      typeId: step.typeId,
+      title: step.title || null,
+      veterinarianId: step.veterinarianId || null,
+      pricingType: step.pricingType || null,
+      unitPrice: step.unitPrice ? Number(step.unitPrice) : null,
+      withdrawalUntil: step.withdrawalUntil || null,
+      nextDueDate: step.nextDueDate || null,
+    };
+  }
+  if (step.type === "batch") {
+    return { type: step.type, suggestedBatchIds: step.suggestedBatchIds ?? [] };
+  }
+  return { type: step.type };
+}
+
 export const planFormSchema = z.object({
   title: z
     .string()

@@ -10,6 +10,15 @@ import type {
   AnimalStatus,
   Sex,
 } from "../src/generated/prisma/enums";
+import { stepKey, type SessionStep } from "../src/lib/management-steps";
+import { consolidateSession } from "../src/app/api/management-session/consolidate";
+import { saveAnimalStep } from "../src/app/api/management-session/records";
+import { applyPlanSteps } from "../src/app/api/management-session/shared";
+import { planStepSchema } from "../src/app/api/management-session/steps";
+import {
+  findReception,
+  receiveAnimal,
+} from "../src/app/api/purchase/reception";
 
 // ---------------------------------------------------------------------------
 // Datas relativas ao dia do seed
@@ -771,6 +780,8 @@ const WEIGHING_SESSIONS: Record<PropKey, number[]> = {
 };
 
 type Purchase = {
+  /** Título que distingue a compra (há vendedores com mais de uma). */
+  title: string;
   prop: PropKey;
   daysAgo: number;
   seller: PersonKey;
@@ -779,6 +790,7 @@ type Purchase = {
     | { type: "PER_ARROBA"; pricePerArroba: number }
     | { type: "PER_HEAD"; pricePerHead: number }
     | { type: "LUMP_SUM"; total: number };
+  /** GTA e nota fiscal da (primeira) carga; ficam na recepção. */
   gta?: string;
   invoice?: string;
   notes?: string;
@@ -790,6 +802,7 @@ type Purchase = {
 
 const PURCHASES: Record<string, Purchase> = {
   "SR:garrotes": {
+    title: "Garrotes Nelore — leilão, lote 34",
     prop: "SR",
     daysAgo: 200,
     seller: "leiloes",
@@ -802,6 +815,7 @@ const PURCHASES: Record<string, Purchase> = {
     estimatedBirth: true,
   },
   "SR:vacas": {
+    title: "Vacas de cria",
     prop: "SR",
     daysAgo: 700,
     seller: "insumos",
@@ -811,6 +825,7 @@ const PURCHASES: Record<string, Purchase> = {
     estimatedBirth: true,
   },
   "SR:touro": {
+    title: "Touro PO reprodutor",
     prop: "SR",
     daysAgo: 150,
     seller: "boaVista",
@@ -821,6 +836,7 @@ const PURCHASES: Record<string, Purchase> = {
     notes: "Touro PO com exame andrológico",
   },
   "SR:desmama": {
+    title: "Bezerros de desmama",
     prop: "SR",
     daysAgo: 330,
     seller: "maria",
@@ -828,6 +844,7 @@ const PURCHASES: Record<string, Purchase> = {
     pricing: { type: "PER_ARROBA", pricePerArroba: 280 },
   },
   "BV:terminação": {
+    title: "Boi magro para terminação",
     prop: "BV",
     daysAgo: 300,
     seller: "leiloes",
@@ -836,6 +853,7 @@ const PURCHASES: Record<string, Purchase> = {
     gta: "MT-1122334",
   },
   "BV:engorda": {
+    title: "Garrotes para engorda",
     prop: "BV",
     daysAgo: 180,
     seller: "insumos",
@@ -1482,14 +1500,12 @@ async function seedPurchases(ctx: Ctx, animals: SeededAnimal[]) {
     const weightOf = new Map(bought.map((a, i) => [a.id, entryWeights[i]]));
     const pricing = p.pricing;
 
-    // Negociação fechada e paga na data da compra.
+    // Paga na data da compra; consolidada depois da última recepção (abaixo).
     const event = await prisma.purchaseEvent.create({
       data: {
+        title: p.title,
         purchaseDate: ago(p.daysAgo),
-        closedAt: ago(p.daysAgo),
         paidAt: ago(p.daysAgo),
-        gtaNumber: p.gta,
-        invoiceNumber: p.invoice,
         notes: p.notes,
         sellerId: ctx.people[p.seller],
         destinationPropertyId: ctx.properties[p.prop],
@@ -1497,7 +1513,7 @@ async function seedPurchases(ctx: Ctx, animals: SeededAnimal[]) {
     });
 
     // Custo individual. Por arroba: peso vivo ÷ 30 × preço; por cabeça: o preço;
-    // valor fechado: rateio proporcional ao peso.
+    // valor fechado: rateio proporcional ao peso (costSplit BY_WEIGHT).
     const costOf = (a: SeededAnimal) => {
       const weight = weightOf.get(a.id)!;
       if (pricing.type === "PER_ARROBA")
@@ -1542,7 +1558,8 @@ async function seedPurchases(ctx: Ctx, animals: SeededAnimal[]) {
             pricing.type === "PER_ARROBA"
               ? round(groupWeight / (1 - (p.shrinkPercent ?? 0) / 100), 2)
               : null,
-          shrinkPercent: p.shrinkPercent,
+          shrinkPercent: pricing.type === "PER_ARROBA" ? p.shrinkPercent : null,
+          costSplit: pricing.type === "LUMP_SUM" ? "BY_WEIGHT" : "EQUAL",
         },
       });
       for (const a of group) categoryOf.set(a.id, category.id);
@@ -1550,10 +1567,6 @@ async function seedPurchases(ctx: Ctx, animals: SeededAnimal[]) {
 
     // Uma recepção (sessão de manejo já consolidada) por dia de chegada: compras
     // entregues em mais de uma viagem geram mais de uma recepção.
-    const seller = await prisma.person.findUniqueOrThrow({
-      where: { id: ctx.people[p.seller] },
-      select: { name: true },
-    });
     const trips = [...new Set(bought.map((a) => a.spec.entryDaysAgo))].sort(
       (a, b) => b - a,
     );
@@ -1561,31 +1574,48 @@ async function seedPurchases(ctx: Ctx, animals: SeededAnimal[]) {
       const arrived = bought.filter(
         (a) => a.spec.entryDaysAgo === entryDaysAgo,
       );
-      const reception = await prisma.managementSession.create({
+      const session = await prisma.managementSession.create({
         data: {
           propertyId: ctx.properties[p.prop],
-          title: `Recepção da compra de ${seller.name}${
-            trips.length > 1 ? ` (viagem ${tripIndex + 1})` : ""
-          }`,
+          title: `Recepção ${tripIndex + 1} — ${p.title}`,
           scheduledDate: ago(entryDaysAgo),
           managementDate: ago(entryDaysAgo),
           confirmedAt: ago(entryDaysAgo),
-          purchaseEventId: event.id,
           participants: { create: arrived.map((a) => ({ animalId: a.id })) },
+        },
+      });
+      // A compra incorpora a sessão de manejo como recepção (lote de entrada = lote da compra).
+      const reception = await prisma.purchaseReception.create({
+        data: {
+          purchaseEventId: event.id,
+          managementSessionId: session.id,
+          entryBatchId: ctx.batches[p.batch],
+          // Cada carga tem seus documentos; as viagens seguintes ganham um sufixo.
+          gtaNumber: p.gta && (tripIndex ? `${p.gta}-${tripIndex + 1}` : p.gta),
+          invoiceNumber:
+            p.invoice &&
+            (tripIndex ? `${p.invoice}-${tripIndex + 1}` : p.invoice),
         },
       });
 
       for (const a of arrived) {
         await prisma.purchasedAnimal.create({
           data: {
+            purchaseEventId: event.id,
             categoryId: categoryOf.get(a.id)!,
+            receptionId: reception.id,
             animalId: a.id,
-            managementSessionId: reception.id,
             cost: round(costOf(a), 2),
           },
         });
       }
     }
+
+    // Consolidada no dia da última chegada: custos rateados.
+    await prisma.purchaseEvent.update({
+      where: { id: event.id },
+      data: { confirmedAt: ago(Math.min(...trips)) },
+    });
 
     if (p.estimatedBirth) {
       await prisma.animal.updateMany({
@@ -1597,8 +1627,42 @@ async function seedPurchases(ctx: Ctx, animals: SeededAnimal[]) {
       });
     }
   }
+  // Compra negociada e ainda não entregue (nem paga): para testar a recepção do começo.
+  // Os machos são pesados na chegada: o peso faturado fica em branco até lá.
+  await prisma.purchaseEvent.create({
+    data: {
+      title: "Bezerros desmamados — leilão set/26",
+      purchaseDate: ago(3),
+      notes: "Entrega prevista para esta semana; machos pesados na chegada",
+      sellerId: ctx.people.leiloes,
+      destinationPropertyId: ctx.properties.SR,
+      categories: {
+        create: [
+          {
+            sex: "MALE",
+            minAgeMonths: 8,
+            maxAgeMonths: 12,
+            breedId: ctx.breeds.Nelore,
+            expectedQuantity: 12,
+            pricingType: "PER_ARROBA",
+            unitPrice: 310,
+          },
+          {
+            sex: "FEMALE",
+            minAgeMonths: 8,
+            maxAgeMonths: 12,
+            breedId: ctx.breeds.Nelore,
+            expectedQuantity: 8,
+            pricingType: "LUMP_SUM",
+            totalPrice: 14000,
+          },
+        ],
+      },
+    },
+  });
+
   console.log(
-    `- ${Object.keys(PURCHASES).length} compras criadas (com categorias e recepções)`,
+    `- ${Object.keys(PURCHASES).length + 1} compras criadas (com categorias e recepções; 1 aguardando entrega)`,
   );
 }
 
@@ -1748,6 +1812,484 @@ async function seedUserSettings(ctx: Ctx) {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Fluxos em andamento: sessões de manejo e compras/recepções em cada situação que o
+// sistema prevê. Usa as mesmas funções das rotas da API (recebimento, registro das
+// etapas, consolidação), para que os dados fiquem iguais aos produzidos pela aplicação.
+// ---------------------------------------------------------------------------
+
+type Tx = Prisma.TransactionClient;
+type PlanStep = { type: string } & Record<string, unknown>;
+
+const WORKFLOW_TX = { timeout: 120_000 };
+
+// Instante durante o dia de `n` dias atrás (ex.: consolidação no fim do manejo).
+const atHour = (n: number, hour: number) =>
+  new Date(TODAY.getTime() - n * DAY_MS + hour * 60 * 60 * 1000);
+
+// Cria a sessão já iniciada na data informada, com as etapas do plano.
+async function createStartedSession(
+  tx: Tx,
+  data: {
+    propertyId: string;
+    title: string;
+    daysAgo: number;
+    notes?: string;
+    steps: PlanStep[];
+    animalIds?: string[];
+  },
+) {
+  const session = await tx.managementSession.create({
+    data: {
+      propertyId: data.propertyId,
+      title: data.title,
+      notes: data.notes,
+      scheduledDate: dateAgo(data.daysAgo),
+      managementDate: dateAgo(data.daysAgo),
+      participants: data.animalIds
+        ? { create: data.animalIds.map((animalId) => ({ animalId })) }
+        : undefined,
+    },
+  });
+  const steps = await applyPlanSteps(
+    tx,
+    session,
+    [],
+    data.steps.map((s) => planStepSchema.parse(s)),
+  );
+  await tx.managementSession.update({
+    where: { id: session.id },
+    data: { steps },
+  });
+  return { id: session.id, steps: steps as SessionStep[] };
+}
+
+const keyOf = (steps: SessionStep[], type: string) =>
+  stepKey(steps.find((s) => s.type === type)!);
+
+async function seedOpenSessions(ctx: Ctx) {
+  const engorda = await prisma.animal.findMany({
+    where: { currentBatchId: ctx.batches["SR:Engorda"], status: "ACTIVE" },
+    orderBy: { code: "asc" },
+    take: 12,
+  });
+
+  // Em andamento (hoje): uns completos, uns parciais, o resto a manejar.
+  await prisma.$transaction(async (tx) => {
+    const session = await createStartedSession(tx, {
+      propertyId: ctx.properties.SR,
+      title: "Pesagem, vermifugação e apartação da engorda",
+      notes: "Separar os animais que voltam para a recria",
+      daysAgo: 0,
+      animalIds: engorda.map((a) => a.id),
+      steps: [
+        { type: "weighing" },
+        {
+          type: "health",
+          typeId: ctx.healthTypes["Vermifugação"],
+          title: "Ivermectina 1%",
+          pricingType: "PER_WEIGHT",
+          unitPrice: 0.015,
+        },
+        {
+          type: "batch",
+          suggestedBatchIds: [
+            ctx.batches["SR:Engorda"],
+            ctx.batches["SR:Recria"],
+          ],
+        },
+      ],
+    });
+    const weighing = keyOf(session.steps, "weighing");
+    const health = keyOf(session.steps, "health");
+    const batch = keyOf(session.steps, "batch");
+
+    for (const [i, a] of engorda.entries()) {
+      const weightKg = Math.round((a.currentWeight?.toNumber() ?? 380) + 12);
+      if (i < 4) {
+        // Completos; dois voltam para a recria.
+        await saveAnimalStep(tx, session.id, a.id, weighing, { weightKg });
+        await saveAnimalStep(tx, session.id, a.id, health, {});
+        await saveAnimalStep(tx, session.id, a.id, batch, {
+          batchId: i >= 2 ? ctx.batches["SR:Recria"] : null,
+        });
+      } else if (i < 7) {
+        // Parciais: pesados; o sanitário ficou para depois.
+        await saveAnimalStep(tx, session.id, a.id, weighing, { weightKg });
+      }
+    }
+  }, WORKFLOW_TX);
+
+  // Cancelada antes de começar (sem registros).
+  const cria = await prisma.animal.findMany({
+    where: { currentBatchId: ctx.batches["SR:Cria"], status: "ACTIVE" },
+    take: 6,
+  });
+  await prisma.$transaction(async (tx) => {
+    const session = await createStartedSession(tx, {
+      propertyId: ctx.properties.SR,
+      title: "Pesagem da cria",
+      notes: "Cancelada: chuva forte, curral alagado",
+      daysAgo: 6,
+      animalIds: cria.map((a) => a.id),
+      steps: [{ type: "weighing" }],
+    });
+    await tx.managementSession.update({
+      where: { id: session.id },
+      data: { managementDate: null, cancelledAt: atHour(6, 7) },
+    });
+  }, WORKFLOW_TX);
+}
+
+type CategoryInput = Omit<Prisma.PurchaseCategoryCreateManyInput, "eventId">;
+
+async function createOpenPurchase(
+  tx: Tx,
+  ctx: Ctx,
+  data: {
+    title: string;
+    seller: PersonKey;
+    daysAgo: number;
+    notes?: string;
+    paidDaysAgo?: number;
+    paymentReference?: string;
+    cancelledDaysAgo?: number;
+    categories: CategoryInput[];
+  },
+) {
+  return tx.purchaseEvent.create({
+    data: {
+      title: data.title,
+      purchaseDate: dateAgo(data.daysAgo),
+      notes: data.notes,
+      sellerId: ctx.people[data.seller],
+      destinationPropertyId: ctx.properties.SR,
+      paidAt: data.paidDaysAgo != null ? dateAgo(data.paidDaysAgo) : null,
+      paymentReference: data.paymentReference,
+      cancelledAt:
+        data.cancelledDaysAgo != null ? atHour(data.cancelledDaysAgo, 9) : null,
+      categories: { create: data.categories },
+    },
+    include: { categories: { orderBy: { id: "asc" } } },
+  });
+}
+
+// Abre uma recepção como a área de recepções: sessão iniciada, lote de entrada
+// Quarentena e os documentos da carga.
+async function openReception(
+  tx: Tx,
+  ctx: Ctx,
+  purchase: { id: string; title: string },
+  data: {
+    trip: number;
+    daysAgo: number;
+    steps: PlanStep[];
+    gta?: string;
+    invoice?: string;
+  },
+) {
+  const session = await createStartedSession(tx, {
+    propertyId: ctx.properties.SR,
+    title: `Recepção ${data.trip} — ${purchase.title}`,
+    daysAgo: data.daysAgo,
+    steps: data.steps,
+  });
+  await tx.purchaseReception.create({
+    data: {
+      purchaseEventId: purchase.id,
+      managementSessionId: session.id,
+      entryBatchId: ctx.batches["SR:Quarentena"],
+      gtaNumber: data.gta,
+      invoiceNumber: data.invoice,
+    },
+  });
+  return session;
+}
+
+// Recebe um animal como no painel da recepção.
+async function receive(
+  tx: Tx,
+  sessionId: string,
+  categoryId: number,
+  ageMonths: number,
+) {
+  const session = await tx.managementSession.findUniqueOrThrow({
+    where: { id: sessionId },
+  });
+  const reception = await findReception(tx, sessionId);
+  return receiveAnimal(
+    tx,
+    {
+      id: session.id,
+      propertyId: session.propertyId,
+      managementDate: session.managementDate!,
+    },
+    reception!,
+    { categoryId, ageMonths, name: null },
+  );
+}
+
+async function seedOpenPurchases(ctx: Ctx) {
+  const nelore = ctx.breeds.Nelore;
+  let tagCounter = 700;
+  const nextTag = () => `C-${++tagCounter}`;
+  let rfidCounter = 9000;
+  const nextRfid = () => `076000${String(1_000_000 + ++rfidCounter)}`;
+
+  // 1. Em andamento e não paga, em duas viagens: a 1ª concluída; a 2ª recebendo
+  //    agora (animais completos, parciais e a manejar).
+  await prisma.$transaction(async (tx) => {
+    const purchase = await createOpenPurchase(tx, ctx, {
+      title: "Novilhas Nelore — Faz. Boa Vista",
+      seller: "boaVista",
+      daysAgo: 12,
+      notes: "Entrega em duas viagens",
+      categories: [
+        {
+          sex: "FEMALE",
+          minAgeMonths: 14,
+          maxAgeMonths: 20,
+          breedId: nelore,
+          expectedQuantity: 12,
+          pricingType: "PER_HEAD",
+          unitPrice: 2600,
+        },
+      ],
+    });
+    const [novilhas] = purchase.categories;
+
+    const trip1 = await openReception(tx, ctx, purchase, {
+      trip: 1,
+      daysAgo: 5,
+      gta: "MT-2203341",
+      invoice: "NF 004.112",
+      steps: [{ type: "tag" }, { type: "weighing" }],
+    });
+    for (let i = 0; i < 4; i++) {
+      const id = await receive(tx, trip1.id, novilhas.id, 15 + i);
+      await saveAnimalStep(tx, trip1.id, id, "tag", { value: nextTag() });
+      await saveAnimalStep(tx, trip1.id, id, "weighing", {
+        weightKg: 305 + i * 11,
+      });
+    }
+    await consolidateSession(tx, trip1.id, atHour(5, 17));
+
+    const trip2 = await openReception(tx, ctx, purchase, {
+      trip: 2,
+      daysAgo: 0,
+      gta: "MT-2203398",
+      steps: [{ type: "tag" }, { type: "rfid" }, { type: "weighing" }],
+    });
+    for (let i = 0; i < 5; i++) {
+      const id = await receive(tx, trip2.id, novilhas.id, 16 + (i % 3));
+      if (i < 2) {
+        await saveAnimalStep(tx, trip2.id, id, "tag", { value: nextTag() });
+        await saveAnimalStep(tx, trip2.id, id, "rfid", { value: nextRfid() });
+        await saveAnimalStep(tx, trip2.id, id, "weighing", {
+          weightKg: 298 + i * 9,
+        });
+      } else if (i < 4) {
+        await saveAnimalStep(tx, trip2.id, id, "tag", { value: nextTag() });
+      }
+    }
+  }, WORKFLOW_TX);
+
+  // 2. Paga, tudo recebido e recepções concluídas: pronta para consolidar.
+  await prisma.$transaction(async (tx) => {
+    const purchase = await createOpenPurchase(tx, ctx, {
+      title: "Garrotes anelorados — Maria",
+      seller: "maria",
+      daysAgo: 25,
+      paidDaysAgo: 20,
+      paymentReference: "TED — Banco do Brasil",
+      categories: [
+        {
+          sex: "MALE",
+          minAgeMonths: 18,
+          maxAgeMonths: 24,
+          expectedQuantity: 6,
+          pricingType: "PER_ARROBA",
+          unitPrice: 305,
+          invoicedWeight: 2280,
+          shrinkPercent: 3,
+        },
+      ],
+    });
+    const [garrotes] = purchase.categories;
+    for (const [trip, daysAgo, count] of [
+      [1, 18, 4],
+      [2, 15, 2],
+    ] as const) {
+      const session = await openReception(tx, ctx, purchase, {
+        trip,
+        daysAgo,
+        gta: `MG-77810${trip}`,
+        invoice: `NF 010.55${trip}`,
+        steps: [{ type: "weighing" }],
+      });
+      for (let i = 0; i < count; i++) {
+        const id = await receive(tx, session.id, garrotes.id, 20);
+        await saveAnimalStep(tx, session.id, id, "weighing", {
+          weightKg: 362 + i * 8 + trip * 3,
+        });
+      }
+      await consolidateSession(tx, session.id, atHour(daysAgo, 17));
+    }
+  }, WORKFLOW_TX);
+
+  // 3. Paga, entrega incompleta (4 de 6) e um caminhão que não veio (recepção
+  //    cancelada): consolidar declara que não vem mais nada. Valor fechado, rateio igual.
+  await prisma.$transaction(async (tx) => {
+    const purchase = await createOpenPurchase(tx, ctx, {
+      title: "Bezerras de reposição — Insumos",
+      seller: "insumos",
+      daysAgo: 30,
+      paidDaysAgo: 28,
+      paymentReference: "PIX",
+      categories: [
+        {
+          sex: "FEMALE",
+          minAgeMonths: 7,
+          maxAgeMonths: 10,
+          expectedQuantity: 6,
+          pricingType: "LUMP_SUM",
+          totalPrice: 10200,
+          costSplit: "EQUAL",
+        },
+      ],
+    });
+    const [bezerras] = purchase.categories;
+    const session = await openReception(tx, ctx, purchase, {
+      trip: 1,
+      daysAgo: 22,
+      gta: "GO-5501223",
+      steps: [{ type: "weighing" }],
+    });
+    for (let i = 0; i < 4; i++) {
+      const id = await receive(tx, session.id, bezerras.id, 8);
+      await saveAnimalStep(tx, session.id, id, "weighing", {
+        weightKg: 188 + i * 7,
+      });
+    }
+    await consolidateSession(tx, session.id, atHour(22, 17));
+
+    const noShow = await openReception(tx, ctx, purchase, {
+      trip: 2,
+      daysAgo: 16,
+      steps: [{ type: "weighing" }],
+    });
+    await tx.managementSession.update({
+      where: { id: noShow.id },
+      data: { cancelledAt: atHour(16, 10) },
+    });
+  }, WORKFLOW_TX);
+
+  // 4. Por arroba pesada na chegada: recepção concluída com todos pesados e o peso
+  //    faturado ainda em branco (a tela sugere a soma de chegada); não paga.
+  await prisma.$transaction(async (tx) => {
+    const purchase = await createOpenPurchase(tx, ctx, {
+      title: "Garrotes — pesados na chegada",
+      seller: "leiloes",
+      daysAgo: 10,
+      notes: "Preço por arroba sobre o peso na balança da fazenda",
+      categories: [
+        {
+          sex: "MALE",
+          minAgeMonths: 12,
+          maxAgeMonths: 18,
+          breedId: nelore,
+          expectedQuantity: 5,
+          pricingType: "PER_ARROBA",
+          unitPrice: 300,
+        },
+      ],
+    });
+    const [garrotes] = purchase.categories;
+    const session = await openReception(tx, ctx, purchase, {
+      trip: 1,
+      daysAgo: 7,
+      gta: "MG-6634102",
+      invoice: "NF 000.931",
+      steps: [{ type: "weighing" }, { type: "tag" }],
+    });
+    for (let i = 0; i < 5; i++) {
+      const id = await receive(tx, session.id, garrotes.id, 14);
+      await saveAnimalStep(tx, session.id, id, "weighing", {
+        weightKg: 296 + i * 13,
+      });
+      await saveAnimalStep(tx, session.id, id, "tag", { value: nextTag() });
+    }
+    await consolidateSession(tx, session.id, atHour(7, 17));
+  }, WORKFLOW_TX);
+
+  // 5. Paga antes da entrega; recepção em andamento sem manejos (só o cadastro).
+  await prisma.$transaction(async (tx) => {
+    const purchase = await createOpenPurchase(tx, ctx, {
+      title: "Touros Nelore PO — Faz. Boa Vista",
+      seller: "boaVista",
+      daysAgo: 8,
+      paidDaysAgo: 6,
+      categories: [
+        {
+          sex: "MALE",
+          minAgeMonths: 30,
+          maxAgeMonths: 40,
+          breedId: nelore,
+          expectedQuantity: 2,
+          pricingType: "PER_HEAD",
+          unitPrice: 17500,
+          notes: "Com exame andrológico",
+        },
+      ],
+    });
+    const [touros] = purchase.categories;
+    const session = await openReception(tx, ctx, purchase, {
+      trip: 1,
+      daysAgo: 0,
+      gta: "MT-9910045",
+      steps: [],
+    });
+    await receive(tx, session.id, touros.id, 34);
+  }, WORKFLOW_TX);
+
+  // 6. Cancelada: negociação desfeita antes da entrega (a recepção vazia também).
+  await prisma.$transaction(async (tx) => {
+    const purchase = await createOpenPurchase(tx, ctx, {
+      title: "Vacas de descarte — negociação desfeita",
+      seller: "carlos",
+      daysAgo: 20,
+      cancelledDaysAgo: 14,
+      notes: "Vendedor desistiu da venda",
+      categories: [
+        {
+          sex: "FEMALE",
+          minAgeMonths: 60,
+          expectedQuantity: 10,
+          pricingType: "PER_ARROBA",
+          unitPrice: 250,
+        },
+      ],
+    });
+    const session = await openReception(tx, ctx, purchase, {
+      trip: 1,
+      daysAgo: 15,
+      steps: [{ type: "weighing" }],
+    });
+    await tx.managementSession.update({
+      where: { id: session.id },
+      data: { cancelledAt: atHour(14, 9) },
+    });
+  }, WORKFLOW_TX);
+}
+
+async function seedWorkflows(ctx: Ctx) {
+  await seedOpenSessions(ctx);
+  await seedOpenPurchases(ctx);
+  console.log(
+    "- fluxos em andamento: sessões (em andamento, cancelada) e 6 compras (recebendo, pronta para consolidar, entrega incompleta, pesada na chegada, paga antes da entrega, cancelada)",
+  );
+}
+
 async function main() {
   await seedUsers();
 
@@ -1770,6 +2312,7 @@ async function main() {
   const groups = await seedSpecialCases(ctx, animals);
   await seedPurchases(ctx, animals);
   await seedTransfers(ctx, animals, groups);
+  await seedWorkflows(ctx);
   await seedUserSettings(ctx);
 
   console.log(`\nSeed concluído. Login: admin@ifarm.local / ${PASSWORD}`);

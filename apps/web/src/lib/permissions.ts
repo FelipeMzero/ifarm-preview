@@ -22,4 +22,8 @@ export const RESOURCE_ACCESS = {
   areas: { forbiddenRoles: ["technician"] },
   lotes: { forbiddenRoles: ["technician"] },
   manejos: { forbiddenRoles: ["technician"] },
+  // Compras envolvem valores: mesma restrição de Animais.
+  compras: { forbiddenRoles: ["technician", "worker"] },
+  // Recepção dos animais comprados: trabalho de curral, sem valores (como os manejos).
+  recepcoes: { forbiddenRoles: ["technician"] },
 } as const;

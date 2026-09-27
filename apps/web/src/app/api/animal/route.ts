@@ -276,9 +276,8 @@ export async function POST(request: NextRequest) {
         });
       }
 
-      // Compra avulsa de um animal: compra já fechada, com uma categoria de 1 animal,
-      // e uma sessão de recepção já consolidada (o modelo liga o animal à compra pela
-      // recepção). A recepção aparece nas sessões de manejo como as demais.
+      // Compra avulsa de um animal: compra já consolidada, com uma categoria de 1 animal
+      // e uma recepção já concluída (o modelo liga o animal à compra pela recepção).
       if (data.origin === "PURCHASE") {
         const now = new Date();
         const seller = await tx.person.findUniqueOrThrow({
@@ -286,11 +285,15 @@ export async function POST(request: NextRequest) {
           select: { name: true },
         });
 
+        const purchaseDate = data.acquisitionDate ?? entryDate;
         const purchaseEvent = await tx.purchaseEvent.create({
           data: {
-            purchaseDate: data.acquisitionDate ?? entryDate,
+            title: `Compra avulsa de ${seller.name}`,
+            purchaseDate,
             notes: data.purchaseNotes,
-            closedAt: now,
+            // Já terminou: paga (com o valor informado) e consolidada.
+            paidAt: data.purchasePrice != null ? purchaseDate : null,
+            confirmedAt: now,
             sellerId: data.sellerId!,
             destinationPropertyId: propertyId,
           },
@@ -307,23 +310,30 @@ export async function POST(request: NextRequest) {
           },
         });
 
-        const reception = await tx.managementSession.create({
+        const session = await tx.managementSession.create({
           data: {
             propertyId,
             title: `Recepção de compra (${seller.name})`,
             scheduledDate: entryDate,
             managementDate: entryDate,
             confirmedAt: now,
-            purchaseEventId: purchaseEvent.id,
             participants: { create: { animalId: created.id } },
+          },
+        });
+        const reception = await tx.purchaseReception.create({
+          data: {
+            purchaseEventId: purchaseEvent.id,
+            managementSessionId: session.id,
+            entryBatchId: data.batchId,
           },
         });
 
         await tx.purchasedAnimal.create({
           data: {
+            purchaseEventId: purchaseEvent.id,
             categoryId: category.id,
+            receptionId: reception.id,
             animalId: created.id,
-            managementSessionId: reception.id,
             cost: data.purchasePrice,
           },
         });

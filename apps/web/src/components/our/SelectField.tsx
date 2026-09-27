@@ -24,6 +24,7 @@ type SelectFieldProps = {
   searchPlaceholder?: string;
   id?: string;
   className?: string;
+  disabled?: boolean;
   "aria-invalid"?: boolean;
 };
 
@@ -36,11 +37,13 @@ export function SelectField({
   searchPlaceholder = "Buscar...",
   id,
   className,
+  disabled,
   ...props
 }: SelectFieldProps) {
   return (
     <Combobox
       items={items}
+      disabled={disabled}
       // "" sem item correspondente = nada selecionado (mostra o placeholder).
       value={value === "" && !items.some((i) => i.value === "") ? null : value}
       onValueChange={(val) => onValueChange((val as string) ?? "")}
@@ -57,6 +60,7 @@ export function SelectField({
           "focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50",
           "aria-invalid:border-destructive aria-invalid:focus:ring-3 aria-invalid:ring-destructive/20",
           "md:text-sm dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40",
+          "disabled:cursor-not-allowed disabled:opacity-50 data-disabled:cursor-not-allowed data-disabled:opacity-50",
           className,
         )}
         {...props}

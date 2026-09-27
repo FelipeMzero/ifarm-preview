@@ -67,7 +67,12 @@ export async function GET(
                 },
               },
             },
-            managementSession: { select: { managementDate: true } },
+            reception: {
+              select: {
+                gtaNumber: true,
+                managementSession: { select: { managementDate: true } },
+              },
+            },
           },
         },
       },
@@ -158,7 +163,7 @@ export async function GET(
           const unitPrice = category.unitPrice?.toNumber() ?? null;
           // Peso de entrada = pesagem feita no dia da recepção, se houver.
           const receptionDay = toDateOnly(
-            purchased.managementSession.managementDate,
+            purchased.reception.managementSession.managementDate,
           );
           const entryWeighing = weighings.find(
             (w) => w.date.slice(0, 10) === receptionDay,
@@ -180,7 +185,8 @@ export async function GET(
               purchased.cost?.toNumber() ??
               (category.pricingType === "PER_HEAD" ? unitPrice : null),
             weightKg: entryWeighing?.weightKg ?? null,
-            gtaNumber: event.gtaNumber,
+            // GTA da carga (recepção) em que o animal chegou.
+            gtaNumber: purchased.reception.gtaNumber,
             notes: event.notes,
           };
         })()

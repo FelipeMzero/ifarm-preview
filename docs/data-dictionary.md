@@ -20,7 +20,7 @@
 7. [Sessões de manejo](#7-sessões-de-manejo) — `management_session`, `management_participant`
 8. [Manejos](#8-manejos) — pesagem, castração, brinco, RFID, marcação, sanitário
 9. [Transferências](#9-transferências) — entre lotes e entre propriedades
-10. [Compras](#10-compras) — `purchase_event`, `purchase_category`, `purchased_animal`
+10. [Compras](#10-compras) — `purchase_event`, `purchase_category`, `purchase_reception`, `purchased_animal`
 11. [Usuários e autenticação](#11-usuários-e-autenticação)
 12. [Glossário](#12-glossário)
 13. [Estruturas previstas e ainda não usadas](#13-estruturas-previstas-e-ainda-não-usadas)
@@ -490,7 +490,7 @@ Histórico com vigência (ver 2.3) das propriedades em que o animal esteve.
 
 ## 7. Sessões de manejo
 
-Uma **sessão de manejo** reúne o trabalho feito num grupo de animais no curral: planejamento → registro animal por animal → consolidação. Também representa a **recepção** de animais comprados.
+Uma **sessão de manejo** reúne o trabalho feito num grupo de animais no curral: planejamento → registro animal por animal → consolidação. A sessão é genérica e não conhece compras: quando uma compra usa uma sessão para receber animais, é a compra que a incorpora, por meio de `purchase_reception` (ver 10.3).
 
 ### 7.1 `management_session` — Sessão de manejo
 
@@ -505,7 +505,6 @@ Uma **sessão de manejo** reúne o trabalho feito num grupo de animais no curral
 | `cancelled_at` | timestamp | N | | | Cancelamento: nenhum registro da sessão passa a valer. |
 | `steps` | jsonb | | `[]` | | Etapas do manejo, na ordem em que são registradas em cada animal. Estrutura abaixo. |
 | `property_id` | uuid | | | FK → `property` | Propriedade. |
-| `purchase_event_id` | uuid | N | | FK → `purchase_event` | Preenchido = **sessão de recepção** de uma compra (ver 10). |
 | `created_at`, `updated_at` | timestamp | | now | | Auditoria. |
 
 **Estado (derivado):**
@@ -804,12 +803,14 @@ Uma compra tem três dimensões independentes:
 - **Financeiro:** fechamento e pagamento.
 - **Físico:** a chegada dos animais, em uma ou mais recepções.
 
-Os animais passam a existir na **recepção**, que é uma sessão de manejo com `purchase_event_id`.
+Os animais passam a existir na **recepção**: uma sessão de manejo incorporada pela compra por meio de `purchase_reception`. A dependência vai da compra para a sessão; a sessão continua genérica.
 
 ```
 purchase_event 1──* purchase_category 1──* purchased_animal *──1 animal
-      │                                            │
-      └──────────── 1──* management_session (recepção) ──1──*┘
+      │                                         │ (mesma compra: FKs compostas)
+      └── 1──* purchase_reception 1──* ─────────┘
+                    │ 1:1
+              management_session
 ```
 
 ### 10.1 `purchase_event` — Compra
@@ -821,9 +822,9 @@ purchase_event 1──* purchase_category 1──* purchased_animal *──1 ani
 | `gta_number` | text | N | | | Número da GTA. |
 | `invoice_number` | text | N | | | Número da nota fiscal. |
 | `notes` | text | N | | | Observação. |
-| `closed_at` | timestamp | N | | | Negociação fechada: os valores ficam congelados e o custo de cada animal (`purchased_animal.cost`) é rateado. |
-| `paid_at` | timestamp | N | | | Pagamento concluído. |
-| `cancelled_at` | timestamp | N | | | Compra cancelada. Compras canceladas não aparecem como aquisição do animal. |
+| `closed_at` | timestamp | N | | | Negociação fechada: os valores da negociação ficam congelados (a compra e suas categorias não podem mais ser alteradas) e o custo de cada animal (`purchased_animal.cost`) é rateado. Exige os preços da forma escolhida em todas as categorias. Pode acontecer antes, durante ou depois das recepções. |
+| `paid_at` | timestamp | N | | | Pagamento concluído. Só em compra fechada. |
+| `cancelled_at` | timestamp | N | | | Compra cancelada. Só é possível sem animais recebidos e sem pagamento; as recepções ainda vazias são canceladas junto. |
 | `seller_id` | uuid | | | FK → `person` | Vendedor. |
 | `destination_property_id` | uuid | | | FK → `property` | Propriedade que recebe os animais. |
 | `created_at`, `updated_at` | timestamp | | now | | Auditoria. |
@@ -851,29 +852,53 @@ Grupo homogêneo negociado junto (ex.: "30 machos de 12 a 18 meses, por arroba")
 | `breed_id` | uuid | N | | FK → `breed` | Raça, quando a categoria é de uma raça só. |
 | `event_id` | uuid | | | FK → `purchase_event` | Compra. |
 
-**Índices:** `event_id`.
+**Restrições e índices:** `UNIQUE (id, event_id)` (alvo da FK composta de `purchased_animal`); índice `event_id`.
+**Regras:** editável enquanto a compra está aberta; uma categoria com animais recebidos não pode ser removida.
 
-### 10.3 `purchased_animal` — Animal comprado
+### 10.3 `purchase_reception` — Recepção
 
-Liga o animal à categoria da compra. É criado na recepção, junto com o animal.
+Chegada física de uma leva de animais de uma compra (uma por viagem/entrega). Incorpora uma sessão de manejo, em que os animais são criados e recebem os primeiros manejos.
+
+| Coluna | Tipo | Nulo | Padrão | Chave | Descrição e regras |
+|---|---|---|---|---|---|
+| `id` | uuid | | uuid | PK | Identificador. |
+| `purchase_event_id` | uuid | | | FK → `purchase_event` | Compra. Não pode estar cancelada. |
+| `management_session_id` | uuid | | | FK → `management_session`, UK | Sessão usada para receber (1:1). A sessão deve ser da propriedade de destino da compra. |
+| `entry_batch_id` | uuid | | | FK → `batch` | **Lote de entrada**: todo animal recebido entra nele (primeiro período de `animal_batch_history`). Ativo e da mesma propriedade. Definido ao abrir a recepção. A apartação da sessão (opcional) pode mandar animais para outros lotes na consolidação. |
+| `created_at` | timestamp | | now | | Auditoria. |
+
+**Restrições e índices:** `UNIQUE (id, purchase_event_id)` (alvo da FK composta de `purchased_animal`); índices `purchase_event_id`, `entry_batch_id`.
+
+**Regras da sessão quando ela é uma recepção** (a sessão consulta o módulo de compras):
+- **Receber um animal** (sessão em andamento): cria o `animal` já **ativo** (origem `PURCHASE`, sexo e raça da categoria — o sexo pode ser trocado pelo operador, com alerta —, data de nascimento estimada a partir da idade informada, com `birth_date_estimated = true`), os primeiros períodos em `animal_property_history` e `animal_batch_history` (lote de entrada), o `management_participant` e o `purchased_animal`. O animal existe desde o recebimento; os manejos feitos nele seguem a regra de registro efetivo (2.6).
+- Não se incluem animais já existentes na recepção: todos os participantes são animais recebidos nela.
+- **Tirar um animal da recepção** (antes de consolidar) desfaz o recebimento: os registros da sessão são desfeitos e o animal é **apagado**. Se o animal já tiver outros registros fora da recepção, a remoção é recusada.
+- A recepção só pode ser **cancelada** sem animais recebidos.
+- Na **consolidação**, nenhum animal recebido sai da sessão (mesmo sem manejos registrados); com a compra fechada, os custos são recalculados.
+- Uma recepção pode não ter manejos: nesse caso receber o animal já é o trabalho todo.
+
+### 10.4 `purchased_animal` — Animal comprado
+
+Liga o animal à compra: à categoria em que foi classificado e à recepção em que chegou. É criado no recebimento, junto com o animal.
 
 | Coluna | Tipo | Nulo | Padrão | Chave | Descrição e regras |
 |---|---|---|---|---|---|
 | `id` | serial | | | PK | Identificador. |
-| `cost` | numeric(12,2) | N | | | Custo de aquisição do animal, rateado e congelado no fechamento da compra. Por arroba: peso ÷ 30 × preço. Por cabeça: o preço. Valor fechado: rateio proporcional ao peso. |
-| `category_id` | serial | | | FK → `purchase_category` | Categoria. |
+| `cost` | numeric(12,2) | N | | | Custo de aquisição do animal. Nulo enquanto a compra não está fechada. Os **valores da negociação** ficam congelados no fechamento, mas o **rateio** é recalculado a cada recebimento/remoção e a cada recepção consolidada depois disso. Por cabeça: o preço. Por arroba: (peso faturado − quebra) ÷ 30 × preço da arroba — sem peso faturado, usa-se o peso de chegada —, rateado pelo peso de entrada. Valor fechado: o total da categoria rateado pelo peso de entrada. Animais sem pesagem entram com a média dos pesados; sem nenhuma pesagem, o rateio é igual. |
+| `purchase_event_id` | uuid | | | FK → `purchase_event` | Compra. Participa das duas FKs compostas abaixo. |
+| `category_id` | serial | | | FK → `purchase_category` (composta) | Categoria. FK `(category_id, purchase_event_id)` → `purchase_category (id, event_id)`. |
+| `reception_id` | uuid | | | FK → `purchase_reception` (composta) | Recepção em que o animal chegou. FK `(reception_id, purchase_event_id)` → `purchase_reception (id, purchase_event_id)`. |
 | `animal_id` | uuid | | | FK → `animal`, UK | Animal. Um animal é comprado no máximo uma vez. |
-| `management_session_id` | uuid | | | FK → `management_session` | Sessão de recepção em que o animal chegou. |
 | `created_at` | timestamp | | now | | Auditoria. |
 
-**Índices:** `category_id`, `management_session_id`.
-**Regra:** o peso de entrada do animal é a pesagem efetiva feita no dia da recepção.
+**Restrições e índices:** as duas **FKs compostas** com `purchase_event_id` garantem, no banco, que categoria e recepção pertencem à mesma compra; índices `purchase_event_id`, `category_id`, `reception_id`.
+**Regra:** o peso de entrada do animal é a pesagem feita na sessão da sua recepção.
 
-### 10.4 Recepção e compra avulsa
+### 10.5 Área de recepções, compra avulsa e lote de entrada
 
-- **Recepção:** sessão de manejo com `purchase_event_id`. Uma compra pode ter várias recepções (entregas em viagens diferentes). Ela aparece na lista de sessões de manejo como as demais.
+- **Área de recepções:** a sessão de uma recepção **não** aparece na lista de sessões de manejo; é acessada pela compra. A área de recepções (acessível também a funcionários, sem valores da negociação) lista as compras **a receber** — não canceladas, com menos animais recebidos que o negociado ou com uma recepção em aberto. Ao **abrir uma recepção** escolhem-se o lote de entrada e os manejos; a sessão já é criada iniciada, com a data de hoje (alterável).
 - **Compra avulsa:** ao cadastrar um único animal com origem `PURCHASE`, a aplicação cria uma compra já fechada, uma categoria de 1 animal (`LUMP_SUM`, com sexo e raça do animal), uma recepção já consolidada e o `purchased_animal` com o custo informado.
-- **Lote de entrada:** a compra não tem lote de destino. Considera-se que a compra "entrou" no lote em que o animal foi colocado no dia da recepção (histórico de lote aberto nessa data).
+- **Compras de um lote:** a compra não tem lote de destino; as compras de um lote são as que tiveram recepções com ele como lote de entrada (`purchase_reception.entry_batch_id`).
 
 ---
 
@@ -954,7 +979,7 @@ Tokens temporários (verificação de e-mail, redefinição de senha): `id` (PK)
 | **Lotação** | Ocupação de uma área em UA, comparada à capacidade (`hectares` × `stocking_rate`). |
 | **Quebra** | Perda de peso dos animais entre o embarque e a chegada, descontada no pagamento por peso. |
 | **Recastração** | Nova castração de um animal já castrado, quando o procedimento precisou ser refeito. |
-| **Recepção** | Sessão de manejo que registra a chegada de animais comprados. |
+| **Recepção** | Chegada de uma leva de animais comprados, registrada numa sessão de manejo incorporada pela compra (`purchase_reception`). |
 | **RFID** | Identificação eletrônica por radiofrequência (brinco ou bolus eletrônico). |
 | **UA (Unidade Animal)** | 450 kg de peso vivo. Sem peso registrado, a aplicação estima pela idade: até 12 meses = 0,4; até 24 meses = 0,75; adulto = 1; touro adulto = 1,25; sem idade = 1. |
 
@@ -968,5 +993,4 @@ Existem no banco, mas ainda não têm tela ou fluxo na aplicação (ou têm só 
 |---|---|
 | `brand_management`, `animal_branding` (marcação a ferro) | Sem tela; a etapa de marcação na sessão de manejo ainda não foi implementada. |
 | `animal_property_transfer`, `animal_property_transfer_item` | Sem tela; existem só dados de exemplo no seed. |
-| `purchase_event`, `purchase_category`, `purchased_animal` | Sem tela de compras. São usadas pelo cadastro avulso de animal com origem `PURCHASE` e pelo seed. Fechamento financeiro, pagamento e recepções de várias viagens ainda não têm fluxo na interface. |
 | Genealogia (`dam_id`, `sire_id` em `animal`) | Comentadas no schema; não existem no banco. |
