@@ -3,25 +3,14 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import {
-  ArrowLeftRight,
-  Beef,
-  Boxes,
-  ClipboardList,
-  Dna,
-  Fence,
-  KeyRound,
-  LayoutDashboard,
-  LogOut,
-  Map,
-  ShoppingCart,
-  Truck,
-  UserCog,
-  Users,
-} from "lucide-react";
-import { CowHead } from "@/components/icons/cow-head";
+import { Beef, ChevronRight, KeyRound, LogOut } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -39,64 +28,14 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  useSidebar,
 } from "@/components/ui/sidebar";
 import { signOut, useSession } from "@/lib/auth-client";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
 import { ChangePasswordDialog } from "./ChangePasswordDialog";
+import { findNavMatch, NAV, saveClosedSections } from "./nav";
 import { PropertySwitcher } from "./PropertySwitcher";
 import { ThemeToggle } from "./ThemeToggle";
-
-// Seções fixas (sem submenu), agrupadas pelo que o usuário está fazendo. Tudo acima
-// de "Administração" opera sobre a fazenda selecionada; "Administração" vale para o
-// sistema todo. Criar um novo registro fica a cargo do botão "+ Adicionar" de cada
-// tela de listagem.
-const NAV = [
-  {
-    label: null,
-    items: [{ href: "/painel", label: "Painel", icon: LayoutDashboard }],
-  },
-  {
-    label: "Rebanho",
-    items: [
-      { href: "/animais", label: "Animais", icon: CowHead },
-      { href: "/lotes", label: "Lotes", icon: Boxes },
-      {
-        href: "/lotes/transferencias",
-        label: "Transferências",
-        icon: ArrowLeftRight,
-      },
-    ],
-  },
-  {
-    label: "Pastagens",
-    items: [{ href: "/areas", label: "Áreas", icon: Map }],
-  },
-  {
-    label: "Manejo",
-    items: [
-      { href: "/manejos", label: "Sessões de manejo", icon: ClipboardList },
-      { href: "/recepcoes", label: "Recepções", icon: Truck },
-    ],
-  },
-  {
-    label: "Comercial",
-    items: [{ href: "/compras", label: "Compras", icon: ShoppingCart }],
-  },
-  {
-    label: "Cadastros",
-    items: [
-      { href: "/pessoas", label: "Pessoas", icon: Users },
-      { href: "/racas", label: "Raças", icon: Dna },
-    ],
-  },
-  {
-    label: "Administração",
-    items: [
-      { href: "/propriedades", label: "Propriedades", icon: Fence },
-      { href: "/usuarios", label: "Usuários", icon: UserCog },
-    ],
-  },
-];
 
 // Extrai o primeiro segmento da rota (ex: "/animais/novo" -> "animais") pra achar a
 // entrada correspondente em RESOURCE_ACCESS — mesma lógica de match usada no proxy.
@@ -119,25 +58,41 @@ function getInitials(name?: string | null): string {
     .join("");
 }
 
-export function Sidebar() {
+export function Sidebar({
+  initialClosedSections,
+}: {
+  initialClosedSections: string[];
+}) {
   const pathname = usePathname();
   const router = useRouter();
   const { data: session } = useSession();
   const user = session?.user;
   const role = user?.role ?? "";
   const [changingPassword, setChangingPassword] = useState(false);
+  // Seções que o usuário recolheu, lembradas em cookie (ver saveClosedSections).
+  const [closedSections, setClosedSections] = useState(
+    () => new Set(initialClosedSections),
+  );
+  // No modo só ícones os títulos somem, então recolher esconderia os itens sem ter
+  // onde clicar para abrir de volta: ali as seções ficam sempre abertas.
+  const { state, isMobile } = useSidebar();
+  const iconOnly = state === "collapsed" && !isMobile;
+
+  function toggleSection(label: string, open: boolean) {
+    const next = new Set(closedSections);
+    if (open) next.delete(label);
+    else next.add(label);
+    setClosedSections(next);
+    saveClosedSections(next);
+  }
+
 
   const visibleNav = NAV.map((group) => ({
     ...group,
     items: group.items.filter((item) => isHrefAllowed(item.href, role)),
   })).filter((group) => group.items.length > 0);
 
-  // O item mais específico que casa com a rota fica ativo
-  // (ex: /lotes/transferencias/nova → "Transferências", não "Lotes").
-  const activeHref = NAV.flatMap((group) => group.items)
-    .map((item) => item.href)
-    .filter((href) => pathname === href || pathname.startsWith(`${href}/`))
-    .sort((a, b) => b.length - a.length)[0];
+  const activeHref = findNavMatch(pathname)?.item.href;
 
   async function handleLogout() {
     await signOut();
@@ -166,46 +121,76 @@ export function Sidebar() {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        {visibleNav.map(({ label, items }) => (
-          <SidebarGroup key={label ?? "inicio"}>
-            {label && <SidebarGroupLabel>{label}</SidebarGroupLabel>}
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {items.map(({ href, label: itemLabel, icon: Icon }) => (
-                  <SidebarMenuItem key={href}>
-                    <SidebarMenuButton
-                      asChild
-                      isActive={href === activeHref}
-                      tooltip={itemLabel}
-                    >
-                      <Link href={href}>
-                        <Icon />
-                        <span>{itemLabel}</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        ))}
+        {visibleNav.map(({ label, items }) => {
+          const menu = (
+            <SidebarMenu>
+              {items.map(({ href, label: itemLabel, icon: Icon }) => (
+                <SidebarMenuItem key={href}>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={href === activeHref}
+                    tooltip={itemLabel}
+                  >
+                    <Link href={href}>
+                      <Icon />
+                      <span>{itemLabel}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          );
+
+          if (!label) {
+            return (
+              <SidebarGroup key="inicio">
+                <SidebarGroupContent>{menu}</SidebarGroupContent>
+              </SidebarGroup>
+            );
+          }
+
+          return (
+            <Collapsible
+              key={label}
+              open={iconOnly || !closedSections.has(label)}
+              onOpenChange={(open) => toggleSection(label, open)}
+              className="group/collapsible"
+            >
+              <SidebarGroup>
+                <SidebarGroupLabel
+                  asChild
+                  className="hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                >
+                  <CollapsibleTrigger>
+                    {label}
+                    <ChevronRight className="ml-auto transition-transform group-data-[state=open]/collapsible:rotate-90" />
+                  </CollapsibleTrigger>
+                </SidebarGroupLabel>
+                <CollapsibleContent>
+                  <SidebarGroupContent>{menu}</SidebarGroupContent>
+                </CollapsibleContent>
+              </SidebarGroup>
+            </Collapsible>
+          );
+        })}
       </SidebarContent>
       <SidebarFooter>
         <SidebarMenu>
           <SidebarMenuItem>
-            <div className="flex items-center gap-2 rounded-lg p-2">
+            {/* Recolhida (só ícones), a largura não comporta os três lado a lado. */}
+            <div className="flex items-center gap-2 rounded-lg p-2 group-data-[collapsible=icon]:flex-col group-data-[collapsible=icon]:p-0">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button
                     type="button"
-                    className="flex min-w-0 flex-1 items-center gap-2 rounded-lg text-left outline-hidden focus-visible:ring-2 focus-visible:ring-sidebar-ring"
+                    className="flex min-w-0 flex-1 items-center gap-2 rounded-lg text-left outline-hidden focus-visible:ring-2 focus-visible:ring-sidebar-ring group-data-[collapsible=icon]:flex-none"
                   >
                     <Avatar className="size-8 rounded-lg">
                       <AvatarFallback className="bg-primary text-primary-foreground">
                         {getInitials(user?.name)}
                       </AvatarFallback>
                     </Avatar>
-                    <div className="grid min-w-0 flex-1 text-left text-sm leading-tight">
+                    <div className="grid min-w-0 flex-1 text-left text-sm leading-tight group-data-[collapsible=icon]:hidden">
                       <span className="truncate font-medium">
                         {user?.name ?? "—"}
                       </span>
