@@ -4,25 +4,22 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
+  ArrowLeftRight,
   Beef,
   Boxes,
-  ChevronRight,
   ClipboardList,
+  Dna,
   Fence,
   KeyRound,
   LayoutDashboard,
   LogOut,
   Map,
   ShoppingCart,
+  Truck,
   UserCog,
   Users,
 } from "lucide-react";
 import { CowHead } from "@/components/icons/cow-head";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -35,13 +32,13 @@ import {
   Sidebar as SidebarPrimitive,
   SidebarContent,
   SidebarFooter,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarMenuSub,
-  SidebarMenuSubButton,
-  SidebarMenuSubItem,
 } from "@/components/ui/sidebar";
 import { signOut, useSession } from "@/lib/auth-client";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
@@ -49,45 +46,56 @@ import { ChangePasswordDialog } from "./ChangePasswordDialog";
 import { PropertySwitcher } from "./PropertySwitcher";
 import { ThemeToggle } from "./ThemeToggle";
 
+// Seções fixas (sem submenu), agrupadas pelo que o usuário está fazendo. Tudo acima
+// de "Administração" opera sobre a fazenda selecionada; "Administração" vale para o
+// sistema todo. Criar um novo registro fica a cargo do botão "+ Adicionar" de cada
+// tela de listagem.
 const NAV = [
   {
-    label: "Animais",
-    icon: CowHead,
+    label: null,
+    items: [{ href: "/painel", label: "Painel", icon: LayoutDashboard }],
+  },
+  {
+    label: "Rebanho",
     items: [
-      { href: "/animais", label: "Animais" },
-      { href: "/racas", label: "Raças" },
+      { href: "/animais", label: "Animais", icon: CowHead },
+      { href: "/lotes", label: "Lotes", icon: Boxes },
+      {
+        href: "/lotes/transferencias",
+        label: "Transferências",
+        icon: ArrowLeftRight,
+      },
     ],
   },
   {
-    label: "Lotes",
-    icon: Boxes,
+    label: "Pastagens",
+    items: [{ href: "/areas", label: "Áreas", icon: Map }],
+  },
+  {
+    label: "Manejo",
     items: [
-      { href: "/lotes", label: "Lotes" },
-      { href: "/lotes/transferencias", label: "Transferências" },
+      { href: "/manejos", label: "Sessões de manejo", icon: ClipboardList },
+      { href: "/recepcoes", label: "Recepções", icon: Truck },
     ],
   },
   {
-    label: "Manejos",
-    icon: ClipboardList,
-    items: [{ href: "/manejos", label: "Sessões de manejo" }],
+    label: "Comercial",
+    items: [{ href: "/compras", label: "Compras", icon: ShoppingCart }],
   },
   {
-    label: "Compras",
-    icon: ShoppingCart,
+    label: "Cadastros",
     items: [
-      { href: "/compras", label: "Compras" },
-      { href: "/recepcoes", label: "Recepções" },
+      { href: "/pessoas", label: "Pessoas", icon: Users },
+      { href: "/racas", label: "Raças", icon: Dna },
     ],
   },
-];
-
-// Links diretos (sem submenu) — criar um novo registro fica a cargo do botão
-// "+ Adicionar" já existente em cada tela de listagem.
-const DIRECT_LINKS = [
-  { href: "/pessoas", label: "Pessoas", icon: Users },
-  { href: "/propriedades", label: "Propriedades", icon: Fence },
-  { href: "/areas", label: "Áreas", icon: Map },
-  { href: "/usuarios", label: "Usuários", icon: UserCog },
+  {
+    label: "Administração",
+    items: [
+      { href: "/propriedades", label: "Propriedades", icon: Fence },
+      { href: "/usuarios", label: "Usuários", icon: UserCog },
+    ],
+  },
 ];
 
 // Extrai o primeiro segmento da rota (ex: "/animais/novo" -> "animais") pra achar a
@@ -124,6 +132,13 @@ export function Sidebar() {
     items: group.items.filter((item) => isHrefAllowed(item.href, role)),
   })).filter((group) => group.items.length > 0);
 
+  // O item mais específico que casa com a rota fica ativo
+  // (ex: /lotes/transferencias/nova → "Transferências", não "Lotes").
+  const activeHref = NAV.flatMap((group) => group.items)
+    .map((item) => item.href)
+    .filter((href) => pathname === href || pathname.startsWith(`${href}/`))
+    .sort((a, b) => b.length - a.length)[0];
+
   async function handleLogout() {
     await signOut();
     router.push("/login");
@@ -151,73 +166,29 @@ export function Sidebar() {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton asChild isActive={pathname === "/painel"}>
-              <Link href="/painel">
-                <LayoutDashboard />
-                <span>Painel</span>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-
-          {visibleNav.map(({ label, icon: Icon, items }) => {
-            // O item mais específico que casa com a rota fica ativo
-            // (ex: /lotes/transferencias/nova → "Transferências", não "Lotes").
-            const activeHref = items
-              .map((item) => item.href)
-              .filter((href) => pathname === href || pathname.startsWith(`${href}/`))
-              .sort((a, b) => b.length - a.length)[0];
-            const isGroupActive = activeHref !== undefined;
-
-            return (
-              <Collapsible
-                key={label}
-                defaultOpen={isGroupActive}
-                className="group/collapsible"
-              >
-                <SidebarMenuItem>
-                  <CollapsibleTrigger asChild>
-                    <SidebarMenuButton isActive={isGroupActive}>
-                      <Icon />
-                      <span>{label}</span>
-                      <ChevronRight className="ml-auto transition-transform group-data-[state=open]/collapsible:rotate-90" />
+        {visibleNav.map(({ label, items }) => (
+          <SidebarGroup key={label ?? "inicio"}>
+            {label && <SidebarGroupLabel>{label}</SidebarGroupLabel>}
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {items.map(({ href, label: itemLabel, icon: Icon }) => (
+                  <SidebarMenuItem key={href}>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={href === activeHref}
+                      tooltip={itemLabel}
+                    >
+                      <Link href={href}>
+                        <Icon />
+                        <span>{itemLabel}</span>
+                      </Link>
                     </SidebarMenuButton>
-                  </CollapsibleTrigger>
-                  <CollapsibleContent>
-                    <SidebarMenuSub>
-                      {items.map((item) => (
-                        <SidebarMenuSubItem key={item.href}>
-                          <SidebarMenuSubButton
-                            asChild
-                            isActive={item.href === activeHref}
-                          >
-                            <Link href={item.href}>
-                              <span>{item.label}</span>
-                            </Link>
-                          </SidebarMenuSubButton>
-                        </SidebarMenuSubItem>
-                      ))}
-                    </SidebarMenuSub>
-                  </CollapsibleContent>
-                </SidebarMenuItem>
-              </Collapsible>
-            );
-          })}
-
-          {DIRECT_LINKS.filter((link) => isHrefAllowed(link.href, role)).map(
-            ({ href, label, icon: Icon }) => (
-              <SidebarMenuItem key={href}>
-                <SidebarMenuButton asChild isActive={pathname.startsWith(href)}>
-                  <Link href={href}>
-                    <Icon />
-                    <span>{label}</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            ),
-          )}
-        </SidebarMenu>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        ))}
       </SidebarContent>
       <SidebarFooter>
         <SidebarMenu>
