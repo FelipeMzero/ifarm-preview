@@ -3,6 +3,11 @@ import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/api-auth";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
 import { batchTransferApiSchema } from "../../schemas";
+import {
+  assertNoConflicts,
+  CommitmentError,
+  commitmentErrorResponse,
+} from "../../animal/commitments";
 import { transferStatus, validateTransferPlan } from "../shared";
 
 export async function GET(
@@ -178,6 +183,13 @@ export async function PUT(
         });
       }
 
+      await assertNoConflicts(
+        tx,
+        addedAnimalIds,
+        { kind: "transfer" },
+        { transferId: id },
+      );
+
       if (addedAnimalIds.length) {
         await tx.animalBatchTransferItem.createMany({
           data: addedAnimalIds.map((animalId) => ({
@@ -190,6 +202,9 @@ export async function PUT(
 
     return NextResponse.json({ success: true });
   } catch (error) {
+    if (error instanceof CommitmentError) {
+      return commitmentErrorResponse(error);
+    }
     if (error instanceof TransferNotPendingError) {
       return NextResponse.json(
         {

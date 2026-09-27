@@ -39,6 +39,7 @@ import {
 } from "./services";
 import { AnimalWeighingCorrectionForm } from "./AnimalWeighingCorrectionForm";
 import { WeighingCorrectionNote } from "./WeighingCorrectionNote";
+import { CommitmentNotice } from "./CommitmentNotice";
 import { formatDate, formatKg } from "./format";
 
 interface AnimalWeighingHistoryDialogProps {
@@ -119,6 +120,10 @@ function WeighingRegisterPanel({
           <span className="font-medium">sem pesagem</span>
         )}
       </p>
+      <CommitmentNotice
+        animalId={animalId}
+        intent={{ kind: "record", type: "weighing" }}
+      />
 
       <form
         onSubmit={handleSubmit}

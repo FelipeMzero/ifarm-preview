@@ -48,6 +48,7 @@ import {
   getNeuterings,
 } from "./services";
 import { AnimalNeuteringCorrectionForm } from "./AnimalNeuteringCorrectionForm";
+import { CommitmentNotice } from "./CommitmentNotice";
 import { formatDate } from "./format";
 
 interface AnimalNeuteringHistoryDialogProps {
@@ -163,6 +164,10 @@ function NeuteringRegisterPanel({
           informando o motivo.
         </p>
       )}
+      <CommitmentNotice
+        animalId={animalId}
+        intent={{ kind: "record", type: "neutering" }}
+      />
 
       <form
         onSubmit={handleSubmit}

@@ -155,6 +155,8 @@ export function AnimalEditForm({
           });
         });
         toast.error("Verifique os campos destacados.");
+      } else if (error instanceof ApiError) {
+        toast.error(error.message);
       } else {
         toast.error("A requisição falhou! Tente novamente.");
       }

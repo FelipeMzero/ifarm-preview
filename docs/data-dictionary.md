@@ -7,7 +7,7 @@
 | Mapeamento | Prisma ORM 7 (`apps/web/prisma/schema.prisma`) |
 | Fonte da verdade | O schema Prisma. Este documento descreve significado e regras; em caso de divergência, vale o schema |
 | Diagrama ER | [`apps/web/docs/ERD.md`](../apps/web/docs/ERD.md) (gerado a partir do schema) |
-| Atualizado em | 26/09/2026 |
+| Atualizado em | 27/09/2026 |
 
 ## Sumário
 
@@ -199,6 +199,43 @@ Se for necessária auditoria completa (quem, quando, cada valor), o caminho é u
 - Registro avulso em dia passado: grava a meia-noite local do dia.
 - Registro de sessão: recebe a data do manejo (`management_date`). Na consolidação, recebe o instante da consolidação se o manejo for de hoje, ou a data do manejo se for de outro dia.
 - A data de um manejo não pode ser futura nem anterior ao nascimento do animal.
+
+### 2.9 Compromissos pendentes
+
+Validar só o estado atual do animal (ativo, na propriedade, em qual lote) não basta: operações **abertas** já contam com o animal e não podem ser contraditas por outra. Um animal está **comprometido** quando participa de:
+
+| Compromisso | Aberto quando |
+|---|---|
+| **Recepção** | Sessão com `purchase_reception`, sem `confirmed_at` nem `cancelled_at` (ver 10.3). |
+| **Sessão de manejo** | Sessão planejada ou em andamento (ver 7.1), com as chaves das suas etapas (`type`, ou `health:{healthManagementId}`). |
+| **Transferência de lote** | `animal_batch_transfer` pendente e **isolada** (`management_session_id` nulo). A transferência da apartação pertence à sessão e conta como a etapa `batch` dela. |
+
+**Conflitos.** Ao incluir o animal A numa nova operação:
+
+| A já está em… | Sessão | Transferência | Troca direta de lote | Registro avulso |
+|---|---|---|---|---|
+| Recepção aberta | bloqueia | bloqueia | bloqueia | bloqueia |
+| Sessão aberta | bloqueia se as duas têm a mesma etapa exclusiva¹ | bloqueia se a sessão tem apartação | bloqueia se a sessão tem apartação | avisa se a sessão tem a mesma etapa² |
+| Transferência pendente | bloqueia se a nova sessão tem apartação | bloqueia | bloqueia | — |
+
+¹ São exclusivas todas as etapas, **exceto a pesagem**: castração, brinco, RFID, apartação e o **mesmo** procedimento sanitário (procedimentos diferentes podem coexistir). Duas pesagens pendentes são permitidas, porque cada pesagem é um registro próprio, com a própria data.
+
+² Ex.: castração avulsa num animal com castração pendente numa sessão aberta. Pode ser um procedimento à parte, então só se avisa. Pela mesma lógica, castrar um animal que já é castrado (recastração, por registro errado ou procedimento que falhou) também é só um aviso, e exige o motivo.
+
+A recepção aberta é exclusiva nos dois sentidos: um animal que está em outra operação também impede a consolidação da recepção. Até a recepção ser concluída, o animal ainda pode ser apagado (ver 10.3) e seus manejos de entrada ainda não valem (2.6).
+
+**Quando a regra é checada:**
+- ao incluir animais numa sessão (criação, edição do planejamento, inclusão durante o registro) ou numa transferência (criação e edição). Na edição da sessão, quem já participava só é checado contra as etapas **acrescentadas** ao planejamento;
+- na troca de lote pelo cadastro do animal e nos registros avulsos de pesagem, castração, brinco e RFID;
+- de novo na **consolidação** da sessão e na **confirmação** da transferência, para pegar conflitos gravados antes desta regra e inclusões simultâneas.
+
+**Desempenho.** A busca parte das operações **abertas** (sempre poucas, achadas pelos índices parciais `management_session_open_idx` e `animal_batch_transfer_open_idx`) e só então cruza com os animais pelos índices `(operação, animal)`. Partir dos animais leria todo o histórico de participações deles, que cresce com os anos. Medido com 5.000 animais e 20 anos de sessões mensais (1,2 milhão de participações): checar 2.000 animais de uma vez leva cerca de 15 ms, sem crescer com o histórico.
+
+As checagens travam as linhas dos animais envolvidos (`SELECT … FOR UPDATE`) até o fim da transação, para que duas operações incluindo o mesmo animal ao mesmo tempo sejam checadas uma depois da outra. A própria operação sendo editada ou consolidada não conta como conflito.
+
+**Interface.** O seletor de animais mostra os comprometidos desabilitados, com o motivo, e os ignora em "adicionar todos". Os registros avulsos mostram o aviso antes de salvar.
+
+**Na aplicação:** as regras (função pura, com testes) ficam em `src/lib/animal-commitments.ts`; a busca no banco, a trava e o erro, em `src/app/api/animal/commitments.ts`. O script `pnpm check:commitments` lista os conflitos já existentes entre operações abertas.
 
 ---
 
@@ -535,13 +572,13 @@ Regras de `steps`:
 
 **Consolidação** (em uma transação):
 1. Remove da sessão os participantes sem nenhum registro.
-2. Exige ao menos um animal manejado, todos ativos na propriedade, e `management_date` que não seja futura.
+2. Exige ao menos um animal manejado, todos ativos na propriedade e sem compromisso conflitante em outra operação aberta (ver 2.9), e `management_date` que não seja futura.
 3. Marca `confirmed_at`.
 4. Efetiva as etapas na ordem pesagem → castração → brinco → RFID → sanitário → apartação: normaliza as datas dos registros, recalcula `current_weight`, marca `neutered`, atualiza `current_tag`/`current_rfid`, calcula custos sanitários não informados e confirma as transferências de lote da apartação.
 
 Etapas puladas num animal simplesmente não têm efeito sobre ele.
 
-**Índices:** `(property_id, scheduled_date)`.
+**Índices:** `(property_id, scheduled_date)`; parcial `management_session_open_idx` em `property_id` onde `confirmed_at` e `cancelled_at` são nulos (sessões abertas, ver 2.9).
 
 ### 7.2 `management_participant` — Animal participante da sessão
 
@@ -549,7 +586,7 @@ Etapas puladas num animal simplesmente não têm efeito sobre ele.
 |---|---|---|---|---|---|
 | `id` | serial | | | PK | Identificador. |
 | `management_session_id` | uuid | | | FK → `management_session` | Sessão. |
-| `animal_id` | uuid | | | FK → `animal` | Animal. Deve estar ativo na propriedade da sessão. |
+| `animal_id` | uuid | | | FK → `animal` | Animal. Deve estar ativo na propriedade da sessão e sem compromisso conflitante com as etapas dela (ver 2.9). |
 | `batch_kept` | boolean | | `false` | | Na apartação, `true` = decisão de **permanecer no lote atual**. Essa decisão não gera transferência; o registro aqui faz a etapa contar como feita. |
 | `last_handled_at` | timestamp | N | | | Instante do último registro de etapa no animal. Ordena a lista de manejados. Volta a nulo quando todos os registros do animal são desfeitos. |
 | `created_at` | timestamp | | now | | Auditoria. |
@@ -738,10 +775,11 @@ Plano de mover animais de um ou mais lotes para um lote de destino. Estado deriv
 | `management_session_id` | uuid | N | | FK → `management_session` | Preenchido = transferência gerada pela **apartação** de uma sessão. Uma por lote de destino. |
 | `created_at`, `updated_at` | timestamp | | now | | Auditoria. |
 
-**Índices:** `destination_batch_id`, `property_id`, `management_session_id`.
+**Índices:** `destination_batch_id`, `property_id`, `management_session_id`; parcial `animal_batch_transfer_open_idx` em `property_id` onde `confirmed_at` e `cancelled_at` são nulos (transferências pendentes, ver 2.9).
 
 **Regras:**
 - Os animais podem vir de lotes diferentes (ou de nenhum), mas precisam estar ativos na propriedade e fora do lote de destino, tanto ao salvar quanto ao confirmar.
+- Um animal não pode estar em duas transferências pendentes, nem numa transferência pendente e numa sessão aberta com apartação, nem numa recepção aberta (ver 2.9).
 - A confirmação registra `origin_batch_id` em cada item, fecha o período vigente em `animal_batch_history`, abre um novo no destino e atualiza `animal.current_batch_id`. Se a data for hoje, usa o instante da confirmação.
 - Transferências de sessão ainda não consolidada são geridas só pela sessão: não aparecem na lista de transferências, não podem ser editadas, confirmadas ou canceladas por fora, e são confirmadas (ou canceladas) junto com a sessão.
 
@@ -872,6 +910,7 @@ Chegada física de uma leva de animais de uma compra (uma por viagem/entrega). I
 **Regras da sessão quando ela é uma recepção** (a sessão consulta o módulo de compras):
 - **Receber um animal** (sessão em andamento): cria o `animal` já **ativo** (origem `PURCHASE`, sexo e raça da categoria — o sexo pode ser trocado pelo operador, com alerta —, data de nascimento estimada a partir da idade informada, com `birth_date_estimated = true`), os primeiros períodos em `animal_property_history` e `animal_batch_history` (lote de entrada), o `management_participant` e o `purchased_animal`. O animal existe desde o recebimento; os manejos feitos nele seguem a regra de registro efetivo (2.6).
 - Não se incluem animais já existentes na recepção: todos os participantes são animais recebidos nela.
+- Até a recepção ser consolidada, os animais recebidos **não participam de nenhuma outra operação** (sessão, transferência, troca de lote, registro avulso). Ver 2.9.
 - **Tirar um animal da recepção** (antes de consolidar) desfaz o recebimento: os registros da sessão são desfeitos e o animal é **apagado**. Se o animal já tiver outros registros fora da recepção, a remoção é recusada.
 - A recepção só pode ser **cancelada** sem animais recebidos.
 - Na **consolidação**, nenhum animal recebido sai da sessão (mesmo sem manejos registrados); com a compra fechada, os custos são recalculados.

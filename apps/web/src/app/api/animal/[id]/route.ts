@@ -2,6 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/api-auth";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
+import type { CommitmentIntent } from "@/lib/animal-commitments";
+import {
+  assertNoConflicts,
+  CommitmentError,
+  commitmentErrorResponse,
+} from "../commitments";
 import { uniqueConstraintErrors } from "../../dbErrors";
 import { animalUpdateApiSchema } from "../../schemas";
 import { effectiveNeutering } from "../../management-session/effective";
@@ -131,7 +137,28 @@ export async function PUT(
 
     const now = new Date();
 
+    // Troca de lote e registros pelo cadastro respeitam os compromissos do animal.
+    const intents: CommitmentIntent[] = [
+      ...(data.newBatchId ? [{ kind: "batchChange" as const }] : []),
+      ...(data.newTag !== undefined
+        ? [{ kind: "record" as const, type: "tag" as const }]
+        : []),
+      ...(data.newRfid !== undefined
+        ? [{ kind: "record" as const, type: "rfid" as const }]
+        : []),
+      ...(data.neuteredAt
+        ? [{ kind: "record" as const, type: "neutering" as const }]
+        : []),
+      ...(data.newWeightKg != null
+        ? [{ kind: "record" as const, type: "weighing" as const }]
+        : []),
+    ];
+
     await prisma.$transaction(async (tx) => {
+      for (const intent of intents) {
+        await assertNoConflicts(tx, [id], intent);
+      }
+
       await tx.animal.update({
         where: { id },
         data: {
@@ -218,6 +245,9 @@ export async function PUT(
 
     return NextResponse.json({ success: true });
   } catch (error) {
+    if (error instanceof CommitmentError) {
+      return commitmentErrorResponse(error, null);
+    }
     const errors = uniqueConstraintErrors(error);
     if (errors) {
       return NextResponse.json({ success: false, errors }, { status: 409 });

@@ -161,6 +161,8 @@ export function BatchTransferForm({
     selectedIds,
     onAdd: addAnimals,
     onRemove: removeAnimals,
+    intent: { kind: "transfer" },
+    exclude: id ? { transferId: id } : undefined,
   });
 
   const loadBatches = useCallback(

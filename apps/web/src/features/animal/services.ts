@@ -1,3 +1,4 @@
+import type { Commitment, CommitmentExclusion } from "@/lib/animal-commitments";
 import { AnimalFormData } from "./schema";
 
 export class ApiError extends Error {
@@ -31,6 +32,8 @@ const API_ENDPOINTS = {
   ANIMALS: "/api/animal",
   ANIMAL_BY_ID: (id: string) => `/api/animal/${id}`,
   ANIMAL_DETAILS: (id: string) => `/api/animal/${id}/details`,
+  ANIMAL_COMMITMENTS: (id: string) => `/api/animal/${id}/commitments`,
+  COMMITMENTS: "/api/animal/commitments",
   ANIMAL_WEIGHINGS: (id: string) => `/api/animal/${id}/weighings`,
   ANIMAL_NEUTERINGS: (id: string) => `/api/animal/${id}/neuterings`,
   ANIMAL_NEUTERING: (id: string, neuteringId: number) =>
@@ -588,4 +591,29 @@ export async function cancelNeutering(
   }
 
   return result;
+}
+
+export async function getAnimalCommitments(id: string): Promise<Commitment[]> {
+  const response = await fetch(API_ENDPOINTS.ANIMAL_COMMITMENTS(id));
+  if (!response.ok) {
+    throw new ApiError("Não foi possível carregar as operações do animal.");
+  }
+  return response.json();
+}
+
+// Compromissos em aberto de vários animais (só os que têm algum).
+export async function getCommitmentsFor(
+  animalIds: string[],
+  exclude: CommitmentExclusion = {},
+): Promise<Record<string, Commitment[]>> {
+  if (!animalIds.length) return {};
+  const response = await fetch(API_ENDPOINTS.COMMITMENTS, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ animalIds, ...exclude }),
+  });
+  if (!response.ok) {
+    throw new ApiError("Não foi possível verificar as operações dos animais.");
+  }
+  return response.json();
 }

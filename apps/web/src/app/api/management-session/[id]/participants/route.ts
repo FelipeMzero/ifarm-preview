@@ -8,9 +8,11 @@ import {
   invalidAnimals,
   invalidAnimalsMessage,
   requireSessionIn,
+  sessionIntent,
   StepError,
   validationErrors,
 } from "../../shared";
+import { assertNoConflicts } from "../../../animal/commitments";
 import { findReception } from "../../../purchase/reception";
 
 // Inclui na sessão animais que não estavam no planejamento (ex.: apareceram no curral).
@@ -49,6 +51,12 @@ export async function POST(
       if (invalid.length) {
         throw new StepError(invalidAnimalsMessage(invalid), 400, "animalIds");
       }
+      await assertNoConflicts(
+        tx,
+        animalIds,
+        sessionIntent(session.steps, false),
+        { sessionId: id },
+      );
 
       const created = await tx.managementParticipant.createMany({
         data: animalIds.map((animalId) => ({

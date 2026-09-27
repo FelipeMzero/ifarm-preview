@@ -10,6 +10,11 @@ import {
   toWeighingDto,
 } from "../../weighings";
 import { effectiveWeighing } from "../../../management-session/effective";
+import {
+  assertNoConflicts,
+  CommitmentError,
+  commitmentErrorResponse,
+} from "../../commitments";
 
 export async function GET(
   _request: NextRequest,
@@ -68,6 +73,7 @@ export async function POST(
     }
 
     await prisma.$transaction(async (tx) => {
+      await assertNoConflicts(tx, [id], { kind: "record", type: "weighing" });
       await tx.animalWeighing.create({
         data: {
           animalId: id,
@@ -81,6 +87,9 @@ export async function POST(
 
     return NextResponse.json({ success: true }, { status: 201 });
   } catch (error) {
+    if (error instanceof CommitmentError) {
+      return commitmentErrorResponse(error, null);
+    }
     console.error(error);
     return NextResponse.json(
       { success: false, message: "Ocorreu um erro interno no servidor." },

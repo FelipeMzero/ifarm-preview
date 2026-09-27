@@ -2,6 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/api-auth";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
+import {
+  assertNoConflicts,
+  CommitmentError,
+  commitmentErrorResponse,
+} from "../../commitments";
 import { neuteringCreateApiSchema } from "../../../schemas";
 import { resolveEventDate } from "../../eventDate";
 import { toNeuteringDto } from "../../neuterings";
@@ -90,6 +95,7 @@ export async function POST(
     }
 
     await prisma.$transaction(async (tx) => {
+      await assertNoConflicts(tx, [id], { kind: "record", type: "neutering" });
       await tx.animalNeutering.create({
         data: {
           animalId: id,
@@ -103,6 +109,9 @@ export async function POST(
 
     return NextResponse.json({ success: true }, { status: 201 });
   } catch (error) {
+    if (error instanceof CommitmentError) {
+      return commitmentErrorResponse(error, null);
+    }
     console.error(error);
     return NextResponse.json(
       { success: false, message: "Ocorreu um erro interno no servidor." },

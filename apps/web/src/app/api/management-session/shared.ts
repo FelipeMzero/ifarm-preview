@@ -11,6 +11,8 @@ import {
   type SessionStep,
   type StepType,
 } from "@/lib/management-steps";
+import type { CommitmentIntent } from "@/lib/animal-commitments";
+import { CommitmentError } from "../animal/commitments";
 import { ConfirmError } from "../batch-transfer/confirmTransfer";
 import { ReceptionError } from "../purchase/reception";
 import { animalLabel, summarize } from "../batch-transfer/shared";
@@ -155,7 +157,11 @@ export function findStep(steps: SessionStep[], key: string) {
 }
 
 export function errorResponse(error: unknown) {
-  if (error instanceof StepError || error instanceof ReceptionError) {
+  if (
+    error instanceof StepError ||
+    error instanceof ReceptionError ||
+    error instanceof CommitmentError
+  ) {
     return NextResponse.json(
       {
         success: false,
@@ -176,6 +182,17 @@ export function errorResponse(error: unknown) {
     { success: false, message: "Ocorreu um erro interno no servidor." },
     { status: 500 },
   );
+}
+
+// Intenção de participar desta sessão, para a checagem de compromissos dos animais
+// (a recepção de compra é exclusiva; as demais conflitam pelas etapas).
+export function sessionIntent(
+  steps: SessionStep[],
+  isReception: boolean,
+): CommitmentIntent {
+  return isReception
+    ? { kind: "reception" }
+    : { kind: "session", stepKeys: steps.map(stepKey) };
 }
 
 export function validationErrors(error: z.ZodError) {

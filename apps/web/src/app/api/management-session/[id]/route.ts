@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/api-auth";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
-import { participantStatus } from "@/lib/management-steps";
+import { participantStatus, stepKey } from "@/lib/management-steps";
+import { assertNoConflicts } from "../../animal/commitments";
 import { animalLabel, summarize } from "../../batch-transfer/shared";
 import { managementSessionApiSchema } from "../schemas";
 import {
@@ -12,6 +13,7 @@ import {
   invalidAnimalsMessage,
   loadSession,
   requireSessionIn,
+  sessionIntent,
   StepError,
   toDateOnly,
   validationErrors,
@@ -143,7 +145,9 @@ export async function PUT(request: NextRequest, { params }: Params) {
       }
 
       // Na recepção os participantes são os animais recebidos (não vêm do planejamento).
-      if (!reception) await updateParticipants(tx, session, animalIds);
+      const participants = reception
+        ? null
+        : await updateParticipants(tx, session, animalIds);
 
       const steps = await applyPlanSteps(
         tx,
@@ -151,6 +155,26 @@ export async function PUT(request: NextRequest, { params }: Params) {
         session.steps,
         data.steps,
       );
+
+      if (participants) {
+        await assertNoConflicts(
+          tx,
+          participants.added,
+          sessionIntent(steps, false),
+          { sessionId: id },
+        );
+        // Quem já participava só é checado nas etapas acrescentadas ao planejamento.
+        const previous = new Set(session.steps.map(stepKey));
+        const newKeys = steps.map(stepKey).filter((key) => !previous.has(key));
+        if (newKeys.length) {
+          await assertNoConflicts(
+            tx,
+            participants.kept,
+            { kind: "session", stepKeys: newKeys },
+            { sessionId: id },
+          );
+        }
+      }
 
       await tx.managementSession.update({
         where: { id },
@@ -187,6 +211,7 @@ async function updateParticipants(
   const currentIds = new Set(current.map((p) => p.animalId));
   const removed = current.filter((p) => !nextIds.has(p.animalId));
   const added = animalIds.filter((a) => !currentIds.has(a));
+  const kept = animalIds.filter((a) => currentIds.has(a));
 
   const invalid = await invalidAnimals(tx, session.propertyId, added);
   if (invalid.length) {
@@ -224,4 +249,6 @@ async function updateParticipants(
       })),
     });
   }
+
+  return { added, kept };
 }

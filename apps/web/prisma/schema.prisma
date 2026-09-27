@@ -344,6 +344,9 @@ model ManagementSession {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   @@index([propertyId, scheduledDate])
+  // Sessões abertas são sempre poucas: a checagem de compromissos dos animais parte
+  // delas, sem passar pelo histórico (docs/data-dictionary.md, 2.9).
+  @@index([propertyId], map: "management_session_open_idx", where: { confirmedAt: null, cancelledAt: null })
   @@map("management_session")
 }
 
@@ -736,6 +739,8 @@ model AnimalBatchTransfer {
   @@index([destinationBatchId])
   @@index([propertyId])
   @@index([managementSessionId])
+  // Idem para as transferências pendentes.
+  @@index([propertyId], map: "animal_batch_transfer_open_idx", where: { confirmedAt: null, cancelledAt: null })
   @@map("animal_batch_transfer")
 }
 

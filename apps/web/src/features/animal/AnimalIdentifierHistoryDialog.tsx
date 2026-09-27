@@ -44,6 +44,7 @@ import {
   IDENTIFIER_LABELS,
   IDENTIFIER_MAX_LENGTH,
 } from "./AnimalIdentifierCorrectionForm";
+import { CommitmentNotice } from "./CommitmentNotice";
 import { formatDate } from "./format";
 
 interface AnimalIdentifierHistoryDialogProps {
@@ -129,6 +130,10 @@ function IdentifierChangePanel({
           </Button>
         )}
       </div>
+      <CommitmentNotice
+        animalId={animalId}
+        intent={{ kind: "record", type: kind }}
+      />
 
       <form
         onSubmit={handleSubmit}

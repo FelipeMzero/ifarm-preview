@@ -1,8 +1,10 @@
+import { assertNoConflicts } from "../animal/commitments";
 import { animalLabel, summarize } from "../batch-transfer/shared";
 import { findReception } from "../purchase/reception";
 import {
   requireManagementDate,
   requireSessionIn,
+  sessionIntent,
   startOfToday,
   StepError,
 } from "./shared";
@@ -77,6 +79,15 @@ export async function consolidateSession(tx: Tx, id: string, at?: Date) {
       )}. Remova-os da sessão antes de consolidar.`,
     );
   }
+
+  // Rechecagem: pega conflitos anteriores à regra de compromissos e inclusões
+  // simultâneas.
+  await assertNoConflicts(
+    tx,
+    handled.map((p) => p.animalId),
+    sessionIntent(session.steps, !!reception),
+    { sessionId: id },
+  );
 
   if (notHandled.length) {
     await tx.managementParticipant.deleteMany({

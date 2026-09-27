@@ -8,6 +8,11 @@ import {
   type BatchTransferQueryData,
 } from "@/app/api/schemas";
 import { getOrAssignCurrentProperty } from "../user/current-property/currentProperty";
+import {
+  assertNoConflicts,
+  CommitmentError,
+  commitmentErrorResponse,
+} from "../animal/commitments";
 import { transferStatus, validateTransferPlan } from "./shared";
 
 function buildWhere(query: BatchTransferQueryData, propertyId: string) {
@@ -176,16 +181,19 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, errors }, { status: 400 });
     }
 
-    const transfer = await prisma.animalBatchTransfer.create({
-      data: {
-        transferDate: data.transferDate,
-        notes: data.notes,
-        destinationBatchId: data.destinationBatchId,
-        propertyId,
-        items: {
-          create: animalIds.map((animalId) => ({ animalId })),
+    const transfer = await prisma.$transaction(async (tx) => {
+      await assertNoConflicts(tx, animalIds, { kind: "transfer" });
+      return tx.animalBatchTransfer.create({
+        data: {
+          transferDate: data.transferDate,
+          notes: data.notes,
+          destinationBatchId: data.destinationBatchId,
+          propertyId,
+          items: {
+            create: animalIds.map((animalId) => ({ animalId })),
+          },
         },
-      },
+      });
     });
 
     return NextResponse.json(
@@ -193,6 +201,9 @@ export async function POST(request: NextRequest) {
       { status: 201 },
     );
   } catch (error) {
+    if (error instanceof CommitmentError) {
+      return commitmentErrorResponse(error);
+    }
     console.error(error);
     return NextResponse.json(
       { success: false, message: "Ocorreu um erro interno no servidor." },

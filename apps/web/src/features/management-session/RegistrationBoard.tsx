@@ -403,6 +403,11 @@ export function RegistrationBoard({ id }: { id: string }) {
           <AnimalPicker
             propertyId={currentProperty?.id}
             destinationBatchId=""
+            intent={{
+              kind: "session",
+              stepKeys: detail?.steps.map((s) => s.key) ?? [],
+            }}
+            exclude={{ sessionId: id }}
             selectedIds={participantIds}
             onAdd={handleAdd}
             onRemove={() =>

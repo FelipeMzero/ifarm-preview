@@ -17,9 +17,18 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { AnimalRow, getAnimals } from "@/features/animal/services";
+import {
+  AnimalRow,
+  getAnimals,
+  getCommitmentsFor,
+} from "@/features/animal/services";
 import { getBatches } from "@/features/batch/services";
 import { AnimalIdentification, SEX_ICON } from "@/features/animal/display";
+import {
+  blockingReason,
+  type CommitmentExclusion,
+  type CommitmentIntent,
+} from "@/lib/animal-commitments";
 import { SEX_ITEMS } from "@/lib/enum-labels";
 import { cn } from "@/lib/utils";
 import { TransferAnimal } from "./services";
@@ -51,7 +60,30 @@ type AnimalPickerOptions = {
   selectedIds: Set<string>;
   onAdd: (animals: TransferAnimal[]) => void;
   onRemove: (ids: string[]) => void;
+  /**
+   * O que se vai fazer com os animais: os que têm operação em aberto conflitante
+   * aparecem desabilitados, com o motivo (ver lib/animal-commitments).
+   */
+  intent?: CommitmentIntent;
+  /** A operação sendo editada, que não conta como conflito. */
+  exclude?: CommitmentExclusion;
 };
+
+// Motivo de indisponibilidade de cada animal (só os indisponíveis).
+async function unavailableAnimals(
+  animalIds: string[],
+  intent: CommitmentIntent | undefined,
+  exclude: CommitmentExclusion | undefined,
+) {
+  const reasons = new Map<string, string>();
+  if (!intent) return reasons;
+  const commitments = await getCommitmentsFor(animalIds, exclude);
+  for (const [id, list] of Object.entries(commitments)) {
+    const reason = blockingReason(list, intent);
+    if (reason) reasons.set(id, reason);
+  }
+  return reasons;
+}
 
 /**
  * Estado e busca do seletor de animais. As partes (filtros, tabela e paginação) são
@@ -65,6 +97,8 @@ export function useAnimalPicker({
   selectedIds,
   onAdd,
   onRemove,
+  intent,
+  exclude,
 }: AnimalPickerOptions) {
   const [search, setSearch] = useState("");
   const [sex, setSex] = useState("");
@@ -83,6 +117,13 @@ export function useAnimalPicker({
   const [pageCount, setPageCount] = useState(0);
   const [loading, setLoading] = useState(false);
   const [addingAll, setAddingAll] = useState(false);
+  const [unavailable, setUnavailable] = useState<Map<string, string>>(
+    new Map(),
+  );
+  // Serializados para as buscas não dispararem a cada render por causa de um objeto
+  // novo (ex.: as etapas do planejamento ainda sendo editadas).
+  const intentKey = JSON.stringify(intent ?? null);
+  const excludeKey = JSON.stringify(exclude ?? {});
 
   // Texto e faixa de peso só disparam a busca depois de uma pausa na digitação.
   useEffect(() => {
@@ -144,6 +185,13 @@ export function useAnimalPicker({
           setPage(0);
           return;
         }
+        const reasons = await unavailableAnimals(
+          result.data.map((a) => a.id),
+          JSON.parse(intentKey) ?? undefined,
+          JSON.parse(excludeKey),
+        );
+        if (cancelled) return;
+        setUnavailable(reasons);
         setAnimals(result.data);
         setTotal(result.total);
         setPageCount(result.pageCount);
@@ -158,7 +206,7 @@ export function useAnimalPicker({
     return () => {
       cancelled = true;
     };
-  }, [query, page]);
+  }, [query, page, intentKey, excludeKey]);
 
   async function addAll() {
     setAddingAll(true);
@@ -168,15 +216,26 @@ export function useAnimalPicker({
         page: 0,
         pageSize: ADD_ALL_LIMIT,
       });
+      const reasons = await unavailableAnimals(
+        result.data.map((a) => a.id),
+        intent,
+        exclude,
+      );
       const toAdd = result.data
-        .filter((a) => !selectedIds.has(a.id))
+        .filter((a) => !selectedIds.has(a.id) && !reasons.has(a.id))
         .map(toTransferAnimal);
       onAdd(toAdd);
       toast.success(
         toAdd.length
           ? `${toAdd.length} animal(is) adicionado(s).`
-          : "Todos os animais filtrados já estão na seleção.",
+          : "Todos os animais filtrados disponíveis já estão na seleção.",
       );
+      const skipped = result.data.filter((a) => reasons.has(a.id)).length;
+      if (skipped) {
+        toast.warning(
+          `${skipped} animal(is) ficaram de fora por estarem em outra operação em aberto.`,
+        );
+      }
       if (result.total > ADD_ALL_LIMIT) {
         toast.warning(
           `Apenas os primeiros ${ADD_ALL_LIMIT} resultados foram considerados. Refine os filtros.`,
@@ -189,9 +248,14 @@ export function useAnimalPicker({
     }
   }
 
-  const pageSelectedCount = animals.filter((a) => selectedIds.has(a.id)).length;
+  // A seleção da página inteira ignora os indisponíveis (mas desmarca os que já
+  // estavam selecionados).
+  const selectable = animals.filter((a) => !unavailable.has(a.id));
+  const pageSelectedCount = selectable.filter((a) =>
+    selectedIds.has(a.id),
+  ).length;
   const allPageSelected =
-    animals.length > 0 && pageSelectedCount === animals.length;
+    selectable.length > 0 && pageSelectedCount === selectable.length;
   const headerChecked: boolean | "indeterminate" = allPageSelected
     ? true
     : pageSelectedCount > 0
@@ -203,14 +267,15 @@ export function useAnimalPicker({
       onRemove(animals.map((a) => a.id));
     } else {
       onAdd(
-        animals.filter((a) => !selectedIds.has(a.id)).map(toTransferAnimal),
+        selectable.filter((a) => !selectedIds.has(a.id)).map(toTransferAnimal),
       );
     }
   }
 
   function toggleAnimal(animal: AnimalRow, checked: boolean) {
-    if (checked) onAdd([toTransferAnimal(animal)]);
-    else onRemove([animal.id]);
+    if (checked) {
+      if (!unavailable.has(animal.id)) onAdd([toTransferAnimal(animal)]);
+    } else onRemove([animal.id]);
   }
 
   return {
@@ -230,6 +295,7 @@ export function useAnimalPicker({
     page,
     setPage,
     animals,
+    unavailable,
     total,
     pageCount,
     loading,
@@ -343,7 +409,7 @@ export function AnimalPickerTable({ picker: p, className }: PartProps) {
               <Checkbox
                 checked={p.headerChecked}
                 onCheckedChange={p.togglePage}
-                disabled={p.animals.length === 0}
+                disabled={p.animals.every((a) => p.unavailable.has(a.id))}
                 aria-label="Selecionar animais da página"
               />
             </TableHead>
@@ -370,16 +436,24 @@ export function AnimalPickerTable({ picker: p, className }: PartProps) {
           ) : (
             p.animals.map((animal) => {
               const checked = p.selectedIds.has(animal.id);
+              const reason = p.unavailable.get(animal.id);
+              // Indisponível e fora da seleção: não há o que fazer na linha.
+              const locked = !!reason && !checked;
               return (
                 <TableRow
                   key={animal.id}
                   data-state={checked ? "selected" : undefined}
-                  className="cursor-pointer hover:bg-accent/40"
-                  onClick={() => p.toggleAnimal(animal, !checked)}
+                  className={cn(
+                    locked
+                      ? "cursor-not-allowed opacity-60"
+                      : "cursor-pointer hover:bg-accent/40",
+                  )}
+                  onClick={() => !locked && p.toggleAnimal(animal, !checked)}
                 >
                   <TableCell onClick={(e) => e.stopPropagation()}>
                     <Checkbox
                       checked={checked}
+                      disabled={locked}
                       onCheckedChange={(value) =>
                         p.toggleAnimal(animal, value === true)
                       }
@@ -388,6 +462,14 @@ export function AnimalPickerTable({ picker: p, className }: PartProps) {
                   </TableCell>
                   <TableCell>
                     <AnimalIdentification animal={animal} />
+                    {reason && (
+                      <p
+                        className="mt-0.5 max-w-64 truncate text-xs text-warning"
+                        title={`Em ${reason}`}
+                      >
+                        Em {reason}
+                      </p>
+                    )}
                   </TableCell>
                   <TableCell className="max-w-32 truncate text-muted-foreground">
                     {animal.currentBatch?.name ?? "Sem lote"}

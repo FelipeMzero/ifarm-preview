@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   ArrowLeft,
@@ -131,12 +131,24 @@ export function ManagementSessionForm({
   );
 
   const selectedPagination = useSelectedPage(selected);
+  // As etapas do planejamento definem com o que os animais não podem conflitar. Um
+  // procedimento sanitário ainda não salvo não tem chave (é novo, não conflita).
+  const plannedSteps = useWatch({ control, name: "steps" });
+  const stepKeys = (plannedSteps ?? []).flatMap((s) =>
+    s.type !== "health"
+      ? [s.type]
+      : s.healthManagementId
+        ? [`health:${s.healthManagementId}`]
+        : [],
+  );
   const picker = useAnimalPicker({
     propertyId,
     destinationBatchId: "",
     selectedIds,
     onAdd: addAnimals,
     onRemove: removeAnimals,
+    intent: { kind: "session", stepKeys },
+    exclude: id ? { sessionId: id } : undefined,
   });
 
   useEffect(() => {

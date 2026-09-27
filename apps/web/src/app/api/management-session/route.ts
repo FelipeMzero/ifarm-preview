@@ -7,6 +7,7 @@ import {
   sessionStatus,
   STEP_TYPE_LABELS,
 } from "@/lib/management-steps";
+import { assertNoConflicts } from "../animal/commitments";
 import { getOrAssignCurrentProperty } from "../user/current-property/currentProperty";
 import {
   managementSessionApiSchema,
@@ -18,6 +19,7 @@ import {
   errorResponse,
   invalidAnimals,
   invalidAnimalsMessage,
+  sessionIntent,
   StepError,
   toDateOnly,
   validationErrors,
@@ -197,6 +199,9 @@ export async function POST(request: NextRequest) {
       await tx.managementSession.update({
         where: { id: created.id },
         data: { steps },
+      });
+      await assertNoConflicts(tx, animalIds, sessionIntent(steps, false), {
+        sessionId: created.id,
       });
       return created.id;
     });

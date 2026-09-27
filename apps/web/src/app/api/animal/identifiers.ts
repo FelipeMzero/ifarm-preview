@@ -6,6 +6,11 @@ import {
   effectiveRfidTagging,
   effectiveTagging,
 } from "../management-session/effective";
+import {
+  assertNoConflicts,
+  CommitmentError,
+  commitmentErrorResponse,
+} from "./commitments";
 
 type Tx = Prisma.TransactionClient;
 
@@ -187,6 +192,9 @@ async function recomputeCurrent(
 }
 
 function errorResponse(error: unknown) {
+  if (error instanceof CommitmentError) {
+    return commitmentErrorResponse(error, null);
+  }
   if (error instanceof IdentifierError) {
     return NextResponse.json(
       {
@@ -353,6 +361,7 @@ export async function addIdentifier(
     }
 
     await prisma.$transaction(async (tx) => {
+      await assertNoConflicts(tx, [animalId], { kind: "record", type: kind });
       const animal = await tx.animal.findUnique({
         where: { id: animalId },
         select: { currentTag: true, currentRfid: true },

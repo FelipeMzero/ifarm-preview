@@ -1300,7 +1300,9 @@ async function seedSessions(ctx: Ctx, animals: SeededAnimal[]) {
     }
   }
 
-  // Sessão planejada, ainda não realizada: pesagem, vermifugação e apartação da recria.
+  // Sessão planejada, ainda não realizada: pesagem e vermifugação da recria. Sem
+  // apartação: os mais pesados da recria já têm transferência pendente para a engorda
+  // (seedTransfers), e as duas decidiriam o lote deles (docs/data-dictionary.md, 2.9).
   const recria = animals.filter(
     (a) => finalBatch(a.spec) === "SR:Recria" && !a.spec.exit,
   );
@@ -1309,7 +1311,7 @@ async function seedSessions(ctx: Ctx, animals: SeededAnimal[]) {
       propertyId: ctx.properties.SR,
       scheduledDate: ago(-18),
       title: "Pesagem e vermifugação da recria",
-      notes: "Próxima pesagem mensal, com apartação para a engorda",
+      notes: "Próxima pesagem mensal",
       participants: { create: recria.map((a) => ({ animalId: a.id })) },
       weighingManagement: { create: {} },
     },
@@ -1331,13 +1333,6 @@ async function seedSessions(ctx: Ctx, animals: SeededAnimal[]) {
       steps: [
         { type: "weighing" },
         { type: "health", healthManagementId: plannedHealth.id },
-        {
-          type: "batch",
-          suggestedBatchIds: [
-            ctx.batches["SR:Engorda"],
-            ctx.batches["SR:Recria"],
-          ],
-        },
       ],
     },
   });
@@ -1868,8 +1863,15 @@ const keyOf = (steps: SessionStep[], type: string) =>
   stepKey(steps.find((s) => s.type === type)!);
 
 async function seedOpenSessions(ctx: Ctx) {
+  // A sessão tem apartação: fica sem os animais que já têm transferência pendente.
   const engorda = await prisma.animal.findMany({
-    where: { currentBatchId: ctx.batches["SR:Engorda"], status: "ACTIVE" },
+    where: {
+      currentBatchId: ctx.batches["SR:Engorda"],
+      status: "ACTIVE",
+      batchTransferItems: {
+        none: { transfer: { confirmedAt: null, cancelledAt: null } },
+      },
+    },
     orderBy: { code: "asc" },
     take: 12,
   });
