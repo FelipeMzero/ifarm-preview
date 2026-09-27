@@ -6,7 +6,7 @@
 | SGBD | PostgreSQL |
 | Mapeamento | Prisma ORM 7 (`apps/web/prisma/schema.prisma`) |
 | Fonte da verdade | O schema Prisma. Este documento descreve significado e regras; em caso de divergência, vale o schema |
-| Diagrama ER | [`apps/web/docs/ERD.md`](../apps/web/docs/ERD.md) (gerado a partir do schema) |
+| Diagrama ER | [`docs/ERD.md`](ERD.md) (gerado a partir do schema) |
 | Atualizado em | 27/09/2026 |
 
 ## Sumário

@@ -14,7 +14,7 @@ datasource db {
 
 generator erd {
   provider      = "prisma-erd-generator"
-  output        = "../docs/ERD.md"
+  output        = "../../../docs/ERD.md" // docs/ na raiz do repositório
   ignorePattern = "User,Session,Account,Verification"
   ignoreEnums   = true
 }
