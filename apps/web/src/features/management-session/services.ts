@@ -284,25 +284,32 @@ export function getSessionAnimal(id: string, animalId: string) {
   );
 }
 
-export function saveStepRecord(
+// Registrar e desfazer devolvem o contexto atualizado do animal.
+export async function saveStepRecord(
   id: string,
   animalId: string,
   key: string,
   payload: unknown,
 ) {
-  return request(
+  const result = await request<{ data: SessionAnimalContext }>(
     API_ENDPOINTS.STEP(id, animalId, key),
     "Não foi possível salvar o registro.",
     { method: "PUT", json: payload },
   );
+  return result.data;
 }
 
-export function clearStepRecord(id: string, animalId: string, key: string) {
-  return request(
+export async function clearStepRecord(
+  id: string,
+  animalId: string,
+  key: string,
+) {
+  const result = await request<{ data: SessionAnimalContext }>(
     API_ENDPOINTS.STEP(id, animalId, key),
     "Não foi possível desfazer o registro.",
     { method: "DELETE" },
   );
+  return result.data;
 }
 
 export type ReceiveAnimalPayload = {

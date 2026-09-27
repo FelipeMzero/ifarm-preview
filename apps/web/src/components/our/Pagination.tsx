@@ -25,21 +25,20 @@ type PaginationProps = {
   onPageSizeChange?: (size: number) => void;
 };
 
-// Até 7 páginas mostra todas; acima disso, primeira, vizinhas da atual e última.
-function getPageButtons(currentPage: number, totalPages: number) {
-  if (totalPages <= 7) {
+// Sempre até 5 posições, para os botões não mudarem de lugar ao navegar: até 5
+// páginas mostra todas; acima disso, primeira, atual e última (as vizinhas ficam com
+// as setas), com as 3 primeiras ou as 3 últimas juntas quando a atual está na ponta.
+function getPageButtons(
+  currentPage: number,
+  totalPages: number,
+): (number | "...")[] {
+  if (totalPages <= 5) {
     return Array.from({ length: totalPages }, (_, i) => i);
   }
-  const pages: (number | "...")[] = [];
-  const firstInner = Math.max(1, currentPage - 1);
-  const lastInner = Math.min(totalPages - 2, currentPage + 1);
-
-  pages.push(0);
-  if (firstInner > 1) pages.push("...");
-  for (let i = firstInner; i <= lastInner; i++) pages.push(i);
-  if (lastInner < totalPages - 2) pages.push("...");
-  pages.push(totalPages - 1);
-  return pages;
+  const last = totalPages - 1;
+  if (currentPage <= 2) return [0, 1, 2, "...", last];
+  if (currentPage >= last - 2) return [0, "...", last - 2, last - 1, last];
+  return [0, "...", currentPage, "...", last];
 }
 
 /** Rodapé de paginação padrão das listas (usado pelo DataTable e demais listas). */

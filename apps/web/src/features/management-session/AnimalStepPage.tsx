@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   ArrowLeft,
   ArrowRight,
@@ -61,65 +61,26 @@ export function firstPendingStep(context: SessionAnimalContext) {
   return index === -1 ? 0 : index;
 }
 
-/** Abre o animal no primeiro passo ainda não registrado. */
-export function AnimalEntry({
-  sessionId,
-  animalId,
-  boardPath = sessionBoardPath(sessionId),
-}: {
-  sessionId: string;
-  animalId: string;
-  /** Lista de animais da área (registro de manejo por padrão). */
-  boardPath?: string;
-}) {
-  const router = useRouter();
-  const [failed, setFailed] = useState(false);
-
-  useEffect(() => {
-    let cancelled = false;
-    getSessionAnimal(sessionId, animalId)
-      .then((context) => {
-        if (!cancelled) {
-          router.replace(
-            stepUrl(boardPath, animalId, firstPendingStep(context)),
-          );
-        }
-      })
-      .catch(() => {
-        if (!cancelled) setFailed(true);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [sessionId, animalId, boardPath, router]);
-
-  if (failed) {
-    return (
-      <ErrorPage
-        message="Não foi possível abrir o animal nesta sessão."
-        onRetry={() => router.replace(boardPath)}
-      />
-    );
-  }
-  return <FormSkeleton />;
-}
-
 type AnimalStepPageProps = {
   sessionId: string;
   animalId: string;
-  /** Passo na URL, a partir de 1. */
-  step: number;
   /** Lista de animais da área (registro de manejo por padrão). */
   boardPath?: string;
 };
 
+/**
+ * Registro de um animal, etapa por etapa. Atende às URLs /<animal> (abre no primeiro
+ * passo pendente) e /<animal>/<passo>. Trocar de passo só troca a URL
+ * (history.pushState, integrado ao roteador do Next): a tela não é remontada nem
+ * recarrega os dados, e o voltar do navegador continua passando pelos passos.
+ */
 export function AnimalStepPage({
   sessionId,
   animalId,
-  step,
   boardPath = sessionBoardPath(sessionId),
 }: AnimalStepPageProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const { property: currentProperty } = useCurrentProperty();
   const [context, setContext] = useState<SessionAnimalContext | null>(null);
   const [options, setOptions] = useState<ManagementOptions>(EMPTY_OPTIONS);
@@ -129,13 +90,27 @@ export function AnimalStepPage({
   // Remonta a tela da etapa depois de desfazer, para limpar o formulário.
   const [version, setVersion] = useState(0);
 
-  const [refreshKey, setRefreshKey] = useState(0);
+  // Passo da URL (a partir de 1); sem passo = primeiro pendente.
+  const animalPath = `${boardPath}/${animalId}`;
+  const urlStep = pathname.startsWith(`${animalPath}/`)
+    ? Number(pathname.slice(animalPath.length + 1)) || 1
+    : null;
 
   useEffect(() => {
     let cancelled = false;
     getSessionAnimal(sessionId, animalId)
       .then((data) => {
-        if (!cancelled) setContext(data);
+        if (cancelled) return;
+        setContext(data);
+        // Aberto sem passo: fixa na URL o primeiro pendente (sem nova entrada no
+        // histórico), para recarregar a página cair no mesmo passo.
+        if (!window.location.pathname.startsWith(`${animalPath}/`)) {
+          window.history.replaceState(
+            null,
+            "",
+            stepUrl(boardPath, animalId, firstPendingStep(data)),
+          );
+        }
       })
       .catch(() => {
         if (!cancelled) setFailed(true);
@@ -143,7 +118,7 @@ export function AnimalStepPage({
     return () => {
       cancelled = true;
     };
-  }, [sessionId, animalId, step, refreshKey]);
+  }, [sessionId, animalId, boardPath, animalPath]);
 
   useEffect(() => {
     let cancelled = false;
@@ -160,7 +135,9 @@ export function AnimalStepPage({
   }, [currentProperty?.id]);
 
   const index = context
-    ? Math.min(Math.max(step - 1, 0), context.steps.length - 1)
+    ? urlStep === null
+      ? firstPendingStep(context)
+      : Math.min(Math.max(urlStep - 1, 0), context.steps.length - 1)
     : 0;
   // Identifica a tela de etapa montada (muda ao trocar de passo ou desfazer).
   const screenKey = context?.steps[index]
@@ -208,7 +185,7 @@ export function AnimalStepPage({
   const record = records[current.key] ?? null;
 
   function goTo(target: number) {
-    router.push(stepUrl(boardPath, animalId, target));
+    window.history.pushState(null, "", stepUrl(boardPath, animalId, target));
   }
 
   function goNext() {
@@ -222,8 +199,14 @@ export function AnimalStepPage({
   async function handleSubmit(payload: unknown) {
     setSaving(true);
     try {
-      await saveStepRecord(sessionId, animalId, current.key, payload);
+      const updated = await saveStepRecord(
+        sessionId,
+        animalId,
+        current.key,
+        payload,
+      );
       if (isLast) toast.success("Registro do animal concluído.");
+      else setContext(updated);
       goNext();
     } finally {
       setSaving(false);
@@ -233,14 +216,10 @@ export function AnimalStepPage({
   async function handleUndo() {
     setUndoing(false);
     try {
-      await clearStepRecord(sessionId, animalId, current.key);
+      setContext(await clearStepRecord(sessionId, animalId, current.key));
       toast.success("Registro desfeito.");
-      // Limpa o registro já na tela (remontando o formulário) e recarrega o status.
-      setContext((c) =>
-        c ? { ...c, records: { ...c.records, [current.key]: null } } : c,
-      );
+      // Remonta o formulário da etapa, que agora está sem registro.
       setVersion((v) => v + 1);
-      setRefreshKey((k) => k + 1);
     } catch (e) {
       toast.error((e as Error).message);
     }

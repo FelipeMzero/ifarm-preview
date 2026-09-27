@@ -1,8 +1,11 @@
 "use client";
 
 import { use } from "react";
-import { AnimalEntry } from "@/features/management-session/AnimalStepPage";
+import { AnimalStepPage } from "@/features/management-session/AnimalStepPage";
 
+// Mesmas telas de etapa do registro de manejo, voltando para a lista da recepção.
+// Abre no primeiro passo pendente; os passos são URLs filhas (ver [passo]) que o
+// próprio AnimalStepPage troca sem remontar a página.
 export default function Page({
   params,
 }: {
@@ -12,7 +15,7 @@ export default function Page({
 
   return (
     <div className="flex justify-center p-8">
-      <AnimalEntry
+      <AnimalStepPage
         sessionId={id}
         animalId={animalId}
         boardPath={`/recepcoes/${id}`}

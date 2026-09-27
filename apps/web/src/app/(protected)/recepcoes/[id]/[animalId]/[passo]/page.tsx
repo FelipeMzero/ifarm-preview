@@ -1,24 +1,3 @@
-"use client";
-
-import { use } from "react";
-import { AnimalStepPage } from "@/features/management-session/AnimalStepPage";
-
-// Mesmas telas de etapa do registro de manejo, voltando para a lista da recepção.
-export default function Page({
-  params,
-}: {
-  params: Promise<{ id: string; animalId: string; passo: string }>;
-}) {
-  const { id, animalId, passo } = use(params);
-
-  return (
-    <div className="flex justify-center p-8">
-      <AnimalStepPage
-        sessionId={id}
-        animalId={animalId}
-        step={Number(passo) || 1}
-        boardPath={`/recepcoes/${id}`}
-      />
-    </div>
-  );
-}
+// Acesso direto a um passo (link, recarregar a página): a mesma tela do animal, que lê
+// o passo da URL. Dentro dela, trocar de passo não navega até aqui.
+export { default } from "../page";

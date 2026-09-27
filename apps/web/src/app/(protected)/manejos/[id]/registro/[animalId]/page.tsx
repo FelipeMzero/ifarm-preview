@@ -1,8 +1,10 @@
 "use client";
 
 import { use } from "react";
-import { AnimalEntry } from "@/features/management-session/AnimalStepPage";
+import { AnimalStepPage } from "@/features/management-session/AnimalStepPage";
 
+// Registro do animal: abre no primeiro passo pendente; os passos são URLs filhas
+// (ver [passo]) que o próprio AnimalStepPage troca sem remontar a página.
 export default function Page({
   params,
 }: {
@@ -12,7 +14,7 @@ export default function Page({
 
   return (
     <div className="flex justify-center p-8">
-      <AnimalEntry sessionId={id} animalId={animalId} />
+      <AnimalStepPage sessionId={id} animalId={animalId} />
     </div>
   );
 }
