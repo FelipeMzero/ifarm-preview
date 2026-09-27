@@ -44,11 +44,19 @@ import {
   IDENTIFIER_LABELS,
   IDENTIFIER_MAX_LENGTH,
 } from "./AnimalIdentifierCorrectionForm";
+import type { Commitment } from "@/lib/animal-commitments";
 import { CommitmentNotice } from "./CommitmentNotice";
 import { formatDate } from "./format";
 
 interface AnimalIdentifierHistoryDialogProps {
   animalId: string;
+  /** Operações em aberto do animal, para o aviso de conflito (CommitmentNotice). */
+  commitments: Commitment[];
+  /**
+   * Identificador atual (do cadastro do animal): o painel de troca aparece sem esperar
+   * o histórico carregar.
+   */
+  current: string | null;
   kind: IdentifierKind;
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -61,11 +69,13 @@ const displayValue = (value: string | null) => value ?? "Removido";
 // Troca na hora: o novo valor vira um registro de hoje e aparece no topo do histórico.
 function IdentifierChangePanel({
   animalId,
+  commitments,
   kind,
   current,
   onChanged,
 }: {
   animalId: string;
+  commitments: Commitment[];
   kind: IdentifierKind;
   current: string | null;
   onChanged: () => void;
@@ -131,7 +141,7 @@ function IdentifierChangePanel({
         )}
       </div>
       <CommitmentNotice
-        animalId={animalId}
+        commitments={commitments}
         intent={{ kind: "record", type: kind }}
       />
 
@@ -187,6 +197,8 @@ function IdentifierChangePanel({
 
 export function AnimalIdentifierHistoryDialog({
   animalId,
+  commitments,
+  current,
   kind,
   open,
   onOpenChange,
@@ -263,15 +275,16 @@ export function AnimalIdentifierHistoryDialog({
             </DialogDescription>
           </DialogHeader>
 
-          {!editing && records !== null && (
+          {!editing && (
             <IdentifierChangePanel
               animalId={animalId}
+              commitments={commitments}
               kind={kind}
-              current={records[0]?.value ?? null}
+              current={current}
               onChanged={afterChange}
             />
           )}
-          {!editing && records !== null && (
+          {!editing && (
             <h3 className="-mb-2 text-sm font-medium uppercase text-muted-foreground">
               Histórico
             </h3>

@@ -17,6 +17,7 @@ import {
   AnimalDetail,
   IdentifierKind,
   getAnimal,
+  getAnimalCommitments,
   updateAnimal,
 } from "./services";
 import { Breed, getBreeds } from "@/features/breed/services";
@@ -42,6 +43,7 @@ import { AnimalBatchChangeDialog } from "./AnimalBatchChangeDialog";
 import { AnimalWeighingHistoryDialog } from "./AnimalWeighingHistoryDialog";
 import { AnimalIdentifierHistoryDialog } from "./AnimalIdentifierHistoryDialog";
 import { AnimalNeuteringHistoryDialog } from "./AnimalNeuteringHistoryDialog";
+import type { Commitment } from "@/lib/animal-commitments";
 
 type AnimalEditFormProps = {
   id: string;
@@ -59,6 +61,9 @@ export function AnimalEditForm({
   const [isDataLoading, setIsDataLoading] = useState(true);
   const [loadFailed, setLoadFailed] = useState(false);
   const [animal, setAnimal] = useState<AnimalDetail | null>(null);
+  // Operações em aberto do animal, carregadas junto com ele para os avisos das janelas
+  // de registro já aparecerem ao abrir.
+  const [commitments, setCommitments] = useState<Commitment[]>([]);
   const [breeds, setBreeds] = useState<Breed[]>([]);
 
   const [batchDialogOpen, setBatchDialogOpen] = useState(false);
@@ -95,8 +100,13 @@ export function AnimalEditForm({
   useEffect(() => {
     async function loadData() {
       try {
-        const detail = await getAnimal(id);
+        const [detail, open] = await Promise.all([
+          getAnimal(id),
+          // Sem a lista, só os avisos antecipados somem: o servidor ainda barra.
+          getAnimalCommitments(id).catch(() => []),
+        ]);
         setAnimal(detail);
+        setCommitments(open);
         reset({
           name: detail.name ?? "",
           sex: detail.sex as AnimalEditFormData["sex"],
@@ -462,7 +472,11 @@ export function AnimalEditForm({
 
       <AnimalIdentifierHistoryDialog
         animalId={animal.id}
+        commitments={commitments}
         kind={identifierHistory ?? "tag"}
+        current={
+          identifierHistory === "rfid" ? animal.currentRfid : animal.currentTag
+        }
         open={identifierHistory !== null}
         onOpenChange={(open) => !open && setIdentifierHistory(null)}
         onChanged={async () => {
@@ -477,6 +491,7 @@ export function AnimalEditForm({
 
       <AnimalWeighingHistoryDialog
         animalId={animal.id}
+        commitments={commitments}
         birthDate={animal.birthDate}
         open={weighingHistoryOpen}
         onOpenChange={setWeighingHistoryOpen}
@@ -492,6 +507,7 @@ export function AnimalEditForm({
 
       <AnimalNeuteringHistoryDialog
         animalId={animal.id}
+        commitments={commitments}
         birthDate={animal.birthDate}
         neutered={animal.neutered}
         open={neuteringHistoryOpen}

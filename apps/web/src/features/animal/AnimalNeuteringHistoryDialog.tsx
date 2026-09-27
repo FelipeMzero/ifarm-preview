@@ -48,11 +48,14 @@ import {
   getNeuterings,
 } from "./services";
 import { AnimalNeuteringCorrectionForm } from "./AnimalNeuteringCorrectionForm";
+import type { Commitment } from "@/lib/animal-commitments";
 import { CommitmentNotice } from "./CommitmentNotice";
 import { formatDate } from "./format";
 
 interface AnimalNeuteringHistoryDialogProps {
   animalId: string;
+  /** Operações em aberto do animal, para o aviso de conflito (CommitmentNotice). */
+  commitments: Commitment[];
   birthDate?: string | null;
   /** Situação atual do animal (pode ser castrado sem registro, ex.: chegou castrado). */
   neutered: boolean;
@@ -97,15 +100,18 @@ const METHODS = ["Burdizzo", "Cirúrgica", "Elástico"];
 // Registro na hora. Se o animal já é castrado, é uma recastração (motivo obrigatório).
 function NeuteringRegisterPanel({
   animalId,
+  commitments,
   birthDate,
   neutered,
   latest,
   onChanged,
 }: {
   animalId: string;
+  commitments: Commitment[];
   birthDate?: string | null;
   neutered: boolean;
-  latest: AnimalNeuteringRecord | null;
+  // undefined = histórico ainda carregando (o painel já aparece; só este texto espera).
+  latest: AnimalNeuteringRecord | null | undefined;
   onChanged: () => void;
 }) {
   const [date, setDate] = useState(todayInput);
@@ -147,16 +153,20 @@ function NeuteringRegisterPanel({
 
   return (
     <div className="space-y-3 rounded-md border border-border bg-muted/40 p-3">
-      <p className="text-sm">
+      <div className="text-sm">
         <span className="text-muted-foreground">Situação: </span>
-        <span className="font-medium">
-          {!neutered
-            ? "não castrado"
-            : latest
-              ? `castrado em ${formatDate(latest.date)}${latest.method ? ` (${latest.method})` : ""}`
-              : "castrado (sem registro)"}
-        </span>
-      </p>
+        {neutered && latest === undefined ? (
+          <Skeleton className="inline-block h-4 w-40 align-middle" />
+        ) : (
+          <span className="font-medium">
+            {!neutered
+              ? "não castrado"
+              : latest
+                ? `castrado em ${formatDate(latest.date)}${latest.method ? ` (${latest.method})` : ""}`
+                : "castrado (sem registro)"}
+          </span>
+        )}
+      </div>
       {neutered && (
         <p className="flex items-start gap-1.5 text-xs text-warning">
           <TriangleAlert className="mt-0.5 size-3.5 shrink-0" />
@@ -165,7 +175,7 @@ function NeuteringRegisterPanel({
         </p>
       )}
       <CommitmentNotice
-        animalId={animalId}
+        commitments={commitments}
         intent={{ kind: "record", type: "neutering" }}
       />
 
@@ -230,6 +240,7 @@ function NeuteringRegisterPanel({
 
 export function AnimalNeuteringHistoryDialog({
   animalId,
+  commitments,
   birthDate,
   neutered,
   open,
@@ -314,13 +325,16 @@ export function AnimalNeuteringHistoryDialog({
             </DialogDescription>
           </DialogHeader>
 
-          {!editing && neuterings !== null && (
+          {!editing && (
             <>
               <NeuteringRegisterPanel
                 animalId={animalId}
+                commitments={commitments}
                 birthDate={birthDate}
                 neutered={neutered}
-                latest={neuterings[0] ?? null}
+                latest={
+                  neuterings === null ? undefined : (neuterings[0] ?? null)
+                }
                 onChanged={afterChange}
               />
               <h3 className="-mb-2 text-sm font-medium uppercase text-muted-foreground">

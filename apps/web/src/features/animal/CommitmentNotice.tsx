@@ -1,6 +1,3 @@
-"use client";
-
-import { useEffect, useState } from "react";
 import { CircleAlert, TriangleAlert } from "lucide-react";
 import {
   conflictsFor,
@@ -8,32 +5,18 @@ import {
   type Commitment,
   type CommitmentIntent,
 } from "@/lib/animal-commitments";
-import { getAnimalCommitments } from "./services";
 
 // Avisa, antes de salvar, que o animal tem operação em aberto que conflita com o que
-// se vai fazer. O servidor aplica a mesma regra: o bloqueio aqui é só antecipado.
+// se vai fazer. O servidor aplica a mesma regra: o bloqueio aqui é só antecipado. Os
+// compromissos vêm carregados pela tela (junto com o animal), para o aviso já aparecer
+// quando a janela abre.
 export function CommitmentNotice({
-  animalId,
+  commitments,
   intent,
 }: {
-  animalId: string;
+  commitments: Commitment[];
   intent: CommitmentIntent;
 }) {
-  const [commitments, setCommitments] = useState<Commitment[]>([]);
-
-  useEffect(() => {
-    let cancelled = false;
-    getAnimalCommitments(animalId)
-      .then((data) => {
-        if (!cancelled) setCommitments(data);
-      })
-      // Sem a lista, o servidor ainda barra o que for bloqueio.
-      .catch(() => {});
-    return () => {
-      cancelled = true;
-    };
-  }, [animalId]);
-
   const conflicts = conflictsFor(commitments, intent);
   if (!conflicts.length) return null;
 

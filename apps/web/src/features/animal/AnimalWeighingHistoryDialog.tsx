@@ -39,11 +39,14 @@ import {
 } from "./services";
 import { AnimalWeighingCorrectionForm } from "./AnimalWeighingCorrectionForm";
 import { WeighingCorrectionNote } from "./WeighingCorrectionNote";
+import type { Commitment } from "@/lib/animal-commitments";
 import { CommitmentNotice } from "./CommitmentNotice";
 import { formatDate, formatKg } from "./format";
 
 interface AnimalWeighingHistoryDialogProps {
   animalId: string;
+  /** Operações em aberto do animal, para o aviso de conflito (CommitmentNotice). */
+  commitments: Commitment[];
   birthDate?: string | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -56,13 +59,16 @@ const todayInput = () => new Date().toLocaleDateString("en-CA");
 // Registro na hora: a nova pesagem entra no histórico e o peso atual é recalculado.
 function WeighingRegisterPanel({
   animalId,
+  commitments,
   birthDate,
   latest,
   onChanged,
 }: {
   animalId: string;
+  commitments: Commitment[];
   birthDate?: string | null;
-  latest: AnimalWeighing | null;
+  // undefined = histórico ainda carregando (o painel já aparece; só este texto espera).
+  latest: AnimalWeighing | null | undefined;
   onChanged: () => void;
 }) {
   const [weight, setWeight] = useState("");
@@ -106,9 +112,11 @@ function WeighingRegisterPanel({
 
   return (
     <div className="space-y-3 rounded-md border border-border bg-muted/40 p-3">
-      <p className="text-sm">
+      <div className="text-sm">
         <span className="text-muted-foreground">Atual: </span>
-        {latest ? (
+        {latest === undefined ? (
+          <Skeleton className="inline-block h-4 w-32 align-middle" />
+        ) : latest ? (
           <>
             <span className="font-medium">{formatKg(latest.weightKg)}</span>
             <span className="text-muted-foreground">
@@ -119,9 +127,9 @@ function WeighingRegisterPanel({
         ) : (
           <span className="font-medium">sem pesagem</span>
         )}
-      </p>
+      </div>
       <CommitmentNotice
-        animalId={animalId}
+        commitments={commitments}
         intent={{ kind: "record", type: "weighing" }}
       />
 
@@ -182,6 +190,7 @@ function WeighingRegisterPanel({
 
 export function AnimalWeighingHistoryDialog({
   animalId,
+  commitments,
   birthDate,
   open,
   onOpenChange,
@@ -253,12 +262,13 @@ export function AnimalWeighingHistoryDialog({
             </DialogDescription>
           </DialogHeader>
 
-          {!editing && weighings !== null && (
+          {!editing && (
             <>
               <WeighingRegisterPanel
                 animalId={animalId}
+                commitments={commitments}
                 birthDate={birthDate}
-                latest={weighings[0] ?? null}
+                latest={weighings === null ? undefined : (weighings[0] ?? null)}
                 onChanged={afterChange}
               />
               <h3 className="-mb-2 text-sm font-medium uppercase text-muted-foreground">
