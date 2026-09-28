@@ -599,6 +599,20 @@ export const breedApiSchema = z.object({
 
 export type BreedApiData = z.infer<typeof breedApiSchema>;
 
+export const healthManagementTypeApiSchema = z.object({
+  name: z
+    .string()
+    .min(1, "Este campo não pode ser vazio")
+    .max(
+      FIELD_LIMITS.healthManagementType.name,
+      `Máximo de ${FIELD_LIMITS.healthManagementType.name} caracteres`,
+    ),
+});
+
+export type HealthManagementTypeApiData = z.infer<
+  typeof healthManagementTypeApiSchema
+>;
+
 const areaDaysApiField = z.preprocess(
   (v) => (v === "" || v === undefined ? null : v),
   z.coerce

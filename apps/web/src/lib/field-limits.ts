@@ -31,6 +31,7 @@ export const FIELD_LIMITS = {
     notes: 500,
   },
   breed: { name: 60 },
+  healthManagementType: { name: 60 },
   address: {
     street: 150,
     number: 15,

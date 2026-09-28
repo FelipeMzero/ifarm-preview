@@ -7,6 +7,7 @@ import {
   LayoutDashboard,
   Map,
   ShoppingCart,
+  Syringe,
   Truck,
   UserCog,
   Users,
@@ -54,6 +55,11 @@ export const NAV = [
     items: [
       { href: "/pessoas", label: "Pessoas", icon: Users },
       { href: "/racas", label: "Raças", icon: Dna },
+      {
+        href: "/tipos-sanitarios",
+        label: "Tipos sanitários",
+        icon: Syringe,
+      },
     ],
   },
   {
