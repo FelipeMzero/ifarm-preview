@@ -64,6 +64,7 @@ const DEFAULT_STEPS: ReceptionFormData["steps"] = [
 
 const EMPTY_OPTIONS: ManagementOptions = {
   healthTypes: [],
+  neuteringTechniques: [],
   people: [],
   batches: [],
 };

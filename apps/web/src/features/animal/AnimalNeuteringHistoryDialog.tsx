@@ -48,6 +48,12 @@ import {
   getNeuterings,
 } from "./services";
 import { AnimalNeuteringCorrectionForm } from "./AnimalNeuteringCorrectionForm";
+import {
+  NeuteringTechnique,
+  getNeuteringTechniques,
+  techniqueItems,
+} from "@/features/neutering-technique/services";
+import { SelectField } from "@/components/our/SelectField";
 import type { Commitment } from "@/lib/animal-commitments";
 import { CommitmentNotice } from "./CommitmentNotice";
 import { formatDate } from "./format";
@@ -78,8 +84,8 @@ function NeuteringCorrectionNote({
     formatDate(neutering.originalDate) !== formatDate(neutering.date)
       ? formatDate(neutering.originalDate)
       : null,
-    neutering.originalMethod !== neutering.method
-      ? (neutering.originalMethod ?? "sem método")
+    neutering.originalTechniqueId !== neutering.techniqueId
+      ? (neutering.originalTechniqueName ?? "sem técnica")
       : null,
   ].filter(Boolean);
 
@@ -95,8 +101,6 @@ function NeuteringCorrectionNote({
 
 const todayInput = () => new Date().toLocaleDateString("en-CA");
 
-const METHODS = ["Burdizzo", "Cirúrgica", "Elástico"];
-
 // Registro na hora. Se o animal já é castrado, é uma recastração (motivo obrigatório).
 function NeuteringRegisterPanel({
   animalId,
@@ -104,18 +108,20 @@ function NeuteringRegisterPanel({
   birthDate,
   neutered,
   latest,
+  techniques,
   onChanged,
 }: {
   animalId: string;
   commitments: Commitment[];
   birthDate?: string | null;
   neutered: boolean;
+  techniques: NeuteringTechnique[];
   // undefined = histórico ainda carregando (o painel já aparece; só este texto espera).
   latest: AnimalNeuteringRecord | null | undefined;
   onChanged: () => void;
 }) {
   const [date, setDate] = useState(todayInput);
-  const [method, setMethod] = useState("");
+  const [techniqueId, setTechniqueId] = useState("");
   const [notes, setNotes] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
@@ -125,6 +131,10 @@ function NeuteringRegisterPanel({
     // não deixa o submit chegar a um formulário da tela de trás.
     e.preventDefault();
     e.stopPropagation();
+    if (!techniqueId) {
+      setErrors({ techniqueId: "Informe a técnica." });
+      return;
+    }
     if (neutered && !notes.trim()) {
       setErrors({ notes: "Informe o motivo da recastração." });
       return;
@@ -133,12 +143,12 @@ function NeuteringRegisterPanel({
     setSaving(true);
     setErrors({});
     try {
-      await createNeutering(animalId, { date, method, notes });
+      await createNeutering(animalId, { date, techniqueId, notes });
       toast.success(
         neutered ? "Recastração registrada." : "Castração registrada.",
       );
       setDate(todayInput());
-      setMethod("");
+      setTechniqueId("");
       setNotes("");
       onChanged();
     } catch (err) {
@@ -149,7 +159,7 @@ function NeuteringRegisterPanel({
     }
   }
 
-  const error = errors.date ?? errors.method ?? errors.notes;
+  const error = errors.date ?? errors.techniqueId ?? errors.notes;
 
   return (
     <div className="space-y-3 rounded-md border border-border bg-muted/40 p-3">
@@ -162,7 +172,7 @@ function NeuteringRegisterPanel({
             {!neutered
               ? "não castrado"
               : latest
-                ? `castrado em ${formatDate(latest.date)}${latest.method ? ` (${latest.method})` : ""}`
+                ? `castrado em ${formatDate(latest.date)}${latest.techniqueName ? ` (${latest.techniqueName})` : ""}`
                 : "castrado (sem registro)"}
           </span>
         )}
@@ -195,13 +205,17 @@ function NeuteringRegisterPanel({
             setErrors({});
           }}
         />
-        <Input
-          aria-label="Método"
-          placeholder="Método"
-          list="neutering-register-methods"
-          value={method}
-          maxLength={50}
-          onChange={(e) => setMethod(e.target.value)}
+        <SelectField
+          aria-label="Técnica"
+          placeholder="Técnica"
+          value={techniqueId}
+          items={techniqueItems(techniques)}
+          aria-invalid={errors.techniqueId ? true : undefined}
+          onValueChange={(value) => {
+            setTechniqueId(value);
+            setErrors({});
+          }}
+          className="w-full min-w-0"
         />
         <Input
           aria-label={neutered ? "Motivo da recastração" : "Observação"}
@@ -223,11 +237,6 @@ function NeuteringRegisterPanel({
           )}
           Registrar
         </Button>
-        <datalist id="neutering-register-methods">
-          {METHODS.map((m) => (
-            <option key={m} value={m} />
-          ))}
-        </datalist>
       </form>
       {error && (
         <p className="flex items-center gap-1.5 text-xs text-destructive">
@@ -256,6 +265,23 @@ export function AnimalNeuteringHistoryDialog({
   const [cancelling, setCancelling] = useState<AnimalNeuteringRecord | null>(
     null,
   );
+  const [techniques, setTechniques] = useState<NeuteringTechnique[]>([]);
+
+  // Técnicas cadastradas (inclui inativas, para exibir a gravada numa correção).
+  useEffect(() => {
+    if (!open) return;
+    let cancelled = false;
+    getNeuteringTechniques()
+      .then((data) => {
+        if (!cancelled) setTechniques(data);
+      })
+      .catch(() => {
+        if (!cancelled) setTechniques([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [open]);
 
   useEffect(() => {
     if (!open) return;
@@ -335,6 +361,7 @@ export function AnimalNeuteringHistoryDialog({
                 latest={
                   neuterings === null ? undefined : (neuterings[0] ?? null)
                 }
+                techniques={techniques}
                 onChanged={afterChange}
               />
               <h3 className="-mb-2 text-sm font-medium uppercase text-muted-foreground">
@@ -348,6 +375,7 @@ export function AnimalNeuteringHistoryDialog({
               key={editing.id}
               animalId={animalId}
               neutering={editing}
+              techniques={techniques}
               birthDate={birthDate}
               onCancel={() => setEditing(null)}
               onSaved={afterChange}
@@ -373,7 +401,7 @@ export function AnimalNeuteringHistoryDialog({
                 <TableHeader>
                   <TableRow>
                     <TableHead>Data</TableHead>
-                    <TableHead>Método</TableHead>
+                    <TableHead>Técnica</TableHead>
                     <TableHead>Observação</TableHead>
                     <TableHead className="w-0" />
                   </TableRow>
@@ -392,7 +420,7 @@ export function AnimalNeuteringHistoryDialog({
                         </div>
                         <NeuteringCorrectionNote neutering={n} />
                       </TableCell>
-                      <TableCell>{n.method || "—"}</TableCell>
+                      <TableCell>{n.techniqueName || "—"}</TableCell>
                       <TableCell className="max-w-56 truncate text-muted-foreground">
                         {n.notes || "—"}
                       </TableCell>

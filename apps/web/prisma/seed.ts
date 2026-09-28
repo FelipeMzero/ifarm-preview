@@ -230,6 +230,17 @@ async function seedHealthTypes() {
   return ids;
 }
 
+const NEUTERING_TECHNIQUES = ["Burdizzo", "Cirúrgica", "Elástico"] as const;
+type NeuteringTechnique = (typeof NEUTERING_TECHNIQUES)[number];
+
+async function seedNeuteringTechniques() {
+  const ids = {} as Record<NeuteringTechnique, string>;
+  for (const name of NEUTERING_TECHNIQUES) {
+    ids[name] = (await prisma.neuteringTechnique.create({ data: { name } })).id;
+  }
+  return ids;
+}
+
 // ---------------------------------------------------------------------------
 // Propriedades, áreas e lotes
 // ---------------------------------------------------------------------------
@@ -870,6 +881,7 @@ type Ctx = {
   people: Record<PersonKey, string>;
   breeds: Record<string, string>;
   healthTypes: Record<HealthType, string>;
+  neuteringTechniques: Record<NeuteringTechnique, string>;
   properties: Record<PropKey, string>;
   batches: Record<string, string>; // "SR:Engorda" → id
 };
@@ -1131,7 +1143,7 @@ async function seedAnimals(ctx: Ctx) {
       await prisma.animalNeutering.create({
         data: {
           animalId: animal.id,
-          method: "Burdizzo",
+          techniqueId: ctx.neuteringTechniques["Burdizzo"],
           neuteredAt: ago(spec.neuteredDaysAgo),
         },
       });
@@ -1140,7 +1152,7 @@ async function seedAnimals(ctx: Ctx) {
       await prisma.animalNeutering.create({
         data: {
           animalId: animal.id,
-          method: "Cirúrgica",
+          techniqueId: ctx.neuteringTechniques["Cirúrgica"],
           neuteredAt: ago(spec.recastrationDaysAgo),
           notes: "Recastração: testículo remanescente",
         },
@@ -1222,7 +1234,7 @@ async function seedSessions(ctx: Ctx, animals: SeededAnimal[]) {
                 .filter((p) => p.spec.neuteredDaysAgo === 72)
                 .map((p) => ({
                   animalId: p.id,
-                  method: "Cirúrgica",
+                  techniqueId: ctx.neuteringTechniques["Cirúrgica"],
                   neuteredAt: sessionDate,
                 })),
             },
@@ -2306,8 +2318,16 @@ async function main() {
   const people = await seedPeople();
   const breeds = await seedBreeds();
   const healthTypes = await seedHealthTypes();
+  const neuteringTechniques = await seedNeuteringTechniques();
   const { properties, batches } = await seedPropertiesAreasBatches(people);
-  const ctx: Ctx = { people, breeds, healthTypes, properties, batches };
+  const ctx: Ctx = {
+    people,
+    breeds,
+    healthTypes,
+    neuteringTechniques,
+    properties,
+    batches,
+  };
 
   const animals = await seedAnimals(ctx);
   await seedSessions(ctx, animals);

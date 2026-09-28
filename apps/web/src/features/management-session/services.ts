@@ -121,6 +121,7 @@ export type SessionAnimalContext = {
 
 export type ManagementOptions = {
   healthTypes: Ref[];
+  neuteringTechniques: Ref[];
   people: Ref[];
   batches: Ref[];
 };

@@ -46,7 +46,7 @@ export const animalFormSchema = z
     currentWeightKg: z.string().optional(),
     neutered: z.boolean(),
     neuteringDate: z.string().optional(),
-    neuteringMethod: z.string().optional(),
+    neuteringTechniqueId: z.string().optional(),
     // Compra
     sellerId: z.string().optional(),
     purchasePrice: z.string().optional(),
@@ -117,7 +117,7 @@ export type WeighingCorrectionFormData = z.infer<
 
 export const neuteringCorrectionSchema = z.object({
   date: z.string().optional(),
-  method: z.string().optional(),
+  techniqueId: z.string().optional(),
   notes: z.string().optional(),
 });
 

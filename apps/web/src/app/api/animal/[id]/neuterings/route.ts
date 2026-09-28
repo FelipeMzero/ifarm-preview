@@ -9,7 +9,12 @@ import {
 } from "../../commitments";
 import { neuteringCreateApiSchema } from "../../../schemas";
 import { resolveEventDate } from "../../eventDate";
-import { toNeuteringDto } from "../../neuterings";
+import {
+  INVALID_TECHNIQUE_MESSAGE,
+  isValidNeuteringTechnique,
+  neuteringInclude,
+  toNeuteringDto,
+} from "../../neuterings";
 import { effectiveNeutering } from "../../../management-session/effective";
 
 // Castrações válidas (não canceladas), da mais recente para a mais antiga.
@@ -25,6 +30,7 @@ export async function GET(
   try {
     const items = await prisma.animalNeutering.findMany({
       where: { animalId: id, cancelledAt: null, ...effectiveNeutering },
+      include: neuteringInclude,
     });
 
     return NextResponse.json(
@@ -86,6 +92,16 @@ export async function POST(
       );
     }
 
+    if (!(await isValidNeuteringTechnique(data.techniqueId))) {
+      return NextResponse.json(
+        {
+          success: false,
+          errors: { techniqueId: INVALID_TECHNIQUE_MESSAGE },
+        },
+        { status: 400 },
+      );
+    }
+
     const date = await resolveEventDate(id, data.date);
     if (!date.ok) {
       return NextResponse.json(
@@ -100,7 +116,7 @@ export async function POST(
         data: {
           animalId: id,
           neuteredAt: date.at,
-          method: data.method,
+          techniqueId: data.techniqueId,
           notes: data.notes,
         },
       });

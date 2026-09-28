@@ -77,7 +77,7 @@ export type AnimalUpdateData = {
   newWeightKg?: string;
   weightChangeNotes?: string;
   neuteredAt?: string;
-  neuteringMethod?: string;
+  neuteringTechniqueId?: string;
   neuteringNotes?: string;
 };
 
@@ -231,15 +231,17 @@ export type AnimalIdentifierHistory = {
 export type AnimalNeutering = {
   id: number;
   date: string;
-  method: string | null;
+  techniqueName: string | null;
   notes: string | null;
   correctedAt: string | null;
 };
 
 export type AnimalNeuteringRecord = AnimalNeutering & {
   fromSession: boolean;
+  techniqueId: string | null;
   originalDate: string | null;
-  originalMethod: string | null;
+  originalTechniqueId: string | null;
+  originalTechniqueName: string | null;
 };
 
 export type AnimalHealthRecord = {
@@ -355,7 +357,7 @@ export function createWeighing(
 // Registra uma castração (ou recastração, com motivo) na hora.
 export function createNeutering(
   animalId: string,
-  data: { date: string; method?: string; notes?: string },
+  data: { date: string; techniqueId?: string; notes?: string },
 ) {
   return postJson(
     API_ENDPOINTS.ANIMAL_NEUTERINGS(animalId),
@@ -542,7 +544,7 @@ export async function getNeuterings(
 
 export type NeuteringCorrectionData = {
   date?: string;
-  method?: string;
+  techniqueId?: string;
   notes?: string;
 };
 

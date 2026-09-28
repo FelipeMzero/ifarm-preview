@@ -32,6 +32,7 @@ export const FIELD_LIMITS = {
   },
   breed: { name: 60 },
   healthManagementType: { name: 60 },
+  neuteringTechnique: { name: 60 },
   address: {
     street: 150,
     number: 15,

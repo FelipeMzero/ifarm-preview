@@ -63,7 +63,7 @@ export const animalCreateApiSchema = z
       .string()
       .optional()
       .transform((v) => (v ? new Date(`${v}T00:00:00`) : null)),
-    neuteringMethod: z
+    neuteringTechniqueId: z
       .string()
       .optional()
       .transform((v) => v || null),
@@ -184,7 +184,7 @@ export const animalUpdateApiSchema = z.object({
     .string()
     .optional()
     .transform((v) => (v ? new Date(`${v}T00:00:00`) : undefined)),
-  neuteringMethod: z
+  neuteringTechniqueId: z
     .string()
     .optional()
     .transform((v) => v || null),
@@ -613,6 +613,20 @@ export type HealthManagementTypeApiData = z.infer<
   typeof healthManagementTypeApiSchema
 >;
 
+export const neuteringTechniqueApiSchema = z.object({
+  name: z
+    .string()
+    .min(1, "Este campo não pode ser vazio")
+    .max(
+      FIELD_LIMITS.neuteringTechnique.name,
+      `Máximo de ${FIELD_LIMITS.neuteringTechnique.name} caracteres`,
+    ),
+});
+
+export type NeuteringTechniqueApiData = z.infer<
+  typeof neuteringTechniqueApiSchema
+>;
+
 const areaDaysApiField = z.preprocess(
   (v) => (v === "" || v === undefined ? null : v),
   z.coerce
@@ -850,7 +864,7 @@ export const neuteringCorrectionApiSchema = z.object({
     .string()
     .optional()
     .transform((v) => (v ? new Date(`${v}T00:00:00`) : undefined)),
-  method: z
+  techniqueId: z
     .string()
     .optional()
     .transform((v) => v || null),
@@ -890,12 +904,8 @@ export const neuteringCreateApiSchema = z.object({
     .string()
     .min(1, "Informe a data")
     .transform((v) => new Date(`${v}T00:00:00`)),
-  method: z
-    .string()
-    .trim()
-    .max(50, "Máximo de 50 caracteres")
-    .optional()
-    .transform((v) => v || null),
+  // Castração feita na fazenda: a técnica é sempre conhecida.
+  techniqueId: z.string("Informe a técnica.").min(1, "Informe a técnica."),
   notes: z
     .string()
     .trim()

@@ -17,6 +17,7 @@ export const RESOURCE_ACCESS = {
   animais: { forbiddenRoles: ["technician", "worker"] },
   racas: { forbiddenRoles: ["technician", "worker"] },
   "tipos-sanitarios": { forbiddenRoles: ["technician", "worker"] },
+  "tecnicas-castracao": { forbiddenRoles: ["technician", "worker"] },
   pessoas: { forbiddenRoles: ["technician", "worker"] },
   propriedades: { forbiddenRoles: ["technician", "worker"] },
   usuarios: { forbiddenRoles: ["manager", "technician", "worker"] },

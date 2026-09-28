@@ -82,6 +82,7 @@ function toFormValues(detail: ManagementSessionDetail): PlanFormData {
 
 const EMPTY_OPTIONS: ManagementOptions = {
   healthTypes: [],
+  neuteringTechniques: [],
   people: [],
   batches: [],
 };

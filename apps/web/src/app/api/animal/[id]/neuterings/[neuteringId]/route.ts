@@ -7,6 +7,11 @@ import {
   neuteringCorrectionApiSchema,
 } from "../../../../schemas";
 import { effectiveNeutering } from "../../../../management-session/effective";
+import {
+  INVALID_TECHNIQUE_MESSAGE,
+  REQUIRED_TECHNIQUE_MESSAGE,
+  isValidNeuteringTechnique,
+} from "../../../neuterings";
 
 type Params = { params: Promise<{ id: string; neuteringId: string }> };
 
@@ -52,6 +57,32 @@ export async function PATCH(request: NextRequest, { params }: Params) {
     const data = validation.data;
     const neutering = await findActiveNeutering(id, neuteringId);
     if (!neutering) return notFound();
+
+    // Só pode ficar sem técnica o registro lançado sem ela (ex.: animal que chegou castrado).
+    if (neutering.techniqueId && !data.techniqueId) {
+      return NextResponse.json(
+        {
+          success: false,
+          errors: { techniqueId: REQUIRED_TECHNIQUE_MESSAGE },
+        },
+        { status: 400 },
+      );
+    }
+
+    if (
+      !(await isValidNeuteringTechnique(
+        data.techniqueId,
+        neutering.techniqueId,
+      ))
+    ) {
+      return NextResponse.json(
+        {
+          success: false,
+          errors: { techniqueId: INVALID_TECHNIQUE_MESSAGE },
+        },
+        { status: 400 },
+      );
+    }
 
     if (data.date && neutering.managementId) {
       return NextResponse.json(
@@ -115,14 +146,14 @@ export async function PATCH(request: NextRequest, { params }: Params) {
     await prisma.animalNeutering.update({
       where: { id: neutering.id },
       data: {
-        method: data.method,
+        techniqueId: data.techniqueId,
         notes: data.notes,
         ...(neuteredAt ? { neuteredAt } : {}),
         // Guarda os valores lançados originalmente só na primeira correção.
         ...(firstCorrection
           ? {
               originalNeuteredAt: neutering.neuteredAt,
-              originalMethod: neutering.method,
+              originalTechniqueId: neutering.techniqueId,
             }
           : {}),
         correctedAt: new Date(),

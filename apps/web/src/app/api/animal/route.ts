@@ -5,6 +5,10 @@ import { RESOURCE_ACCESS } from "@/lib/permissions";
 import { uniqueConstraintErrors } from "../dbErrors";
 import { animalCreateApiSchema, animalQuerySchema } from "../schemas";
 import { getOrAssignCurrentProperty } from "../user/current-property/currentProperty";
+import {
+  INVALID_TECHNIQUE_MESSAGE,
+  isValidNeuteringTechnique,
+} from "./neuterings";
 
 // Limites de data de nascimento para cada faixa etária (idade em meses completos).
 function birthDateFilter(range: "upTo12" | "12to24" | "over24" | "unknown") {
@@ -170,6 +174,19 @@ export async function POST(request: NextRequest) {
 
     const data = validation.data;
 
+    if (
+      data.neutered &&
+      !(await isValidNeuteringTechnique(data.neuteringTechniqueId))
+    ) {
+      return NextResponse.json(
+        {
+          success: false,
+          errors: { neuteringTechniqueId: INVALID_TECHNIQUE_MESSAGE },
+        },
+        { status: 400 },
+      );
+    }
+
     let propertyId = data.propertyId;
     if (!propertyId) {
       propertyId =
@@ -270,7 +287,7 @@ export async function POST(request: NextRequest) {
         await tx.animalNeutering.create({
           data: {
             animalId: created.id,
-            method: data.neuteringMethod,
+            techniqueId: data.neuteringTechniqueId,
             neuteredAt: data.neuteringDate ?? entryDate,
           },
         });

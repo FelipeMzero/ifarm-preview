@@ -4,20 +4,23 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { TriangleAlert } from "lucide-react";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { FieldSet } from "@/components/ui/field";
 import { FormField } from "@/components/our/FormField";
+import { SelectField } from "@/components/our/SelectField";
+import { techniqueItems } from "@/features/neutering-technique/services";
 import { FIELD_LIMITS } from "@/lib/field-limits";
 import type { StepScreenProps } from "../types";
 import { formatDay, handleStepError } from "../formHelpers";
 
-type NeuteringRecord = { method: string | null; notes: string | null };
-
-const METHODS = ["Burdizzo", "Cirúrgica", "Elástico"];
+type NeuteringRecord = {
+  techniqueId: string | null;
+  techniqueName: string | null;
+  notes: string | null;
+};
 
 const schema = z.object({
-  method: z.string().max(50, "Máximo de 50 caracteres").optional(),
+  techniqueId: z.string().min(1, "Informe a técnica."),
   notes: z.string().optional(),
 });
 type FormData = z.infer<typeof schema>;
@@ -27,11 +30,15 @@ export default function NeuteringStep({
   animal,
   record,
   readOnly,
+  options,
   onSubmit,
 }: StepScreenProps<NeuteringRecord>) {
   const form = useForm<FormData>({
     resolver: zodResolver(schema),
-    defaultValues: { method: record?.method ?? "", notes: record?.notes ?? "" },
+    defaultValues: {
+      techniqueId: record?.techniqueId ?? "",
+      notes: record?.notes ?? "",
+    },
   });
 
   async function submit(data: FormData) {
@@ -69,24 +76,26 @@ export default function NeuteringStep({
 
       <FieldSet className="border-0 p-0" disabled={readOnly}>
         <FormField
-          name="method"
+          name="techniqueId"
           control={form.control}
-          label="Método"
+          label="Técnica"
+          required
           render={({ field, id }) => (
-            <Input
-              {...field}
+            <SelectField
               id={id}
-              list="neutering-methods"
-              placeholder="Ex: Burdizzo"
-              className="max-w-80"
+              value={field.value ?? ""}
+              onValueChange={field.onChange}
+              items={techniqueItems(options.neuteringTechniques, {
+                current: {
+                  id: record?.techniqueId ?? null,
+                  name: record?.techniqueName ?? null,
+                },
+              })}
+              placeholder="Selecione..."
+              className="w-full max-w-80"
             />
           )}
         />
-        <datalist id="neutering-methods">
-          {METHODS.map((m) => (
-            <option key={m} value={m} />
-          ))}
-        </datalist>
 
         <FormField
           name="notes"

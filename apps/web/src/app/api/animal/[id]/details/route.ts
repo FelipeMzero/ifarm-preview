@@ -40,6 +40,7 @@ export async function GET(
         },
         animalNeuterings: {
           where: { cancelledAt: null, ...effectiveNeutering },
+          include: { technique: { select: { name: true } } },
         },
         healthManagementItems: {
           where: effectiveHealthItem,
@@ -109,7 +110,7 @@ export async function GET(
       .map((n) => ({
         id: n.id,
         date: n.neuteredAt.toISOString(),
-        method: n.method,
+        techniqueName: n.technique?.name ?? null,
         notes: n.notes,
         correctedAt: n.correctedAt?.toISOString() ?? null,
       }))

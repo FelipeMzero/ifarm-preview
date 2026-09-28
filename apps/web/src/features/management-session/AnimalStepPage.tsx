@@ -40,6 +40,7 @@ import { formatKg } from "./steps/formHelpers";
 
 const EMPTY_OPTIONS: ManagementOptions = {
   healthTypes: [],
+  neuteringTechniques: [],
   people: [],
   batches: [],
 };

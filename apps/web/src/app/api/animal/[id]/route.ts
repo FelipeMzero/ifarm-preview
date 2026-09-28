@@ -11,6 +11,10 @@ import {
 import { uniqueConstraintErrors } from "../../dbErrors";
 import { animalUpdateApiSchema } from "../../schemas";
 import { effectiveNeutering } from "../../management-session/effective";
+import {
+  INVALID_TECHNIQUE_MESSAGE,
+  isValidNeuteringTechnique,
+} from "../neuterings";
 
 // Com recastração há mais de um registro: vale o mais recente.
 function latestNeuteringDate(items: { neuteredAt: Date }[]): string | null {
@@ -135,6 +139,19 @@ export async function PUT(
       }
     }
 
+    if (
+      data.neuteredAt &&
+      !(await isValidNeuteringTechnique(data.neuteringTechniqueId))
+    ) {
+      return NextResponse.json(
+        {
+          success: false,
+          errors: { neuteringTechniqueId: INVALID_TECHNIQUE_MESSAGE },
+        },
+        { status: 400 },
+      );
+    }
+
     const now = new Date();
 
     // Troca de lote e registros pelo cadastro respeitam os compromissos do animal.
@@ -225,7 +242,7 @@ export async function PUT(
           data: {
             animalId: id,
             neuteredAt: data.neuteredAt,
-            method: data.neuteringMethod,
+            techniqueId: data.neuteringTechniqueId,
             notes: data.neuteringNotes,
           },
         });

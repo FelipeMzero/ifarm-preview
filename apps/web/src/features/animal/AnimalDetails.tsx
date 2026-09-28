@@ -126,7 +126,7 @@ function buildRecentActivity(animal: AnimalFullDetails): TimelineEvent[] {
       icon: <Stethoscope className="size-3.5" />,
       // lista vem da mais recente para a mais antiga
       title: i < animal.neutering.length - 1 ? "Recastração" : "Castração",
-      description: n.method ?? n.notes,
+      description: n.techniqueName ?? n.notes,
     })),
     ...animal.health.map((h) => ({
       key: `h-${h.id}`,
@@ -844,7 +844,7 @@ export default function AnimalDetails({
                   <TableHeader>
                     <TableRow>
                       <TableHead>Data</TableHead>
-                      <TableHead>Método</TableHead>
+                      <TableHead>Técnica</TableHead>
                       <TableHead>Observação</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -867,7 +867,7 @@ export default function AnimalDetails({
                             </div>
                           )}
                         </TableCell>
-                        <TableCell>{n.method ?? "—"}</TableCell>
+                        <TableCell>{n.techniqueName ?? "—"}</TableCell>
                         <TableCell className="text-muted-foreground">
                           {n.notes || "—"}
                         </TableCell>

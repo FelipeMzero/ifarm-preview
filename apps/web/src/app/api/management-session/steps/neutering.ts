@@ -1,5 +1,10 @@
 import { z } from "zod";
 import { defineStep, StepError, stepNotesSchema, type Tx } from "./types";
+import {
+  INVALID_TECHNIQUE_MESSAGE,
+  REQUIRED_TECHNIQUE_MESSAGE,
+  isValidNeuteringTechnique,
+} from "../../animal/neuterings";
 
 async function container(tx: Tx, sessionId: string) {
   return tx.neuteringManagement.findUnique({
@@ -47,19 +52,25 @@ export const neuteringStep = defineStep({
         management: { managementSessionId: session.id },
         ...(animalIds ? { animalId: { in: animalIds } } : {}),
       },
+      include: { technique: { select: { name: true } } },
     });
     return new Map(
-      items.map((i) => [i.animalId, { method: i.method, notes: i.notes }]),
+      items.map((i) => [
+        i.animalId,
+        {
+          techniqueId: i.techniqueId,
+          techniqueName: i.technique?.name ?? null,
+          notes: i.notes,
+        },
+      ]),
     );
   },
 
   payloadSchema: z.object({
-    method: z
-      .string()
-      .trim()
-      .max(50, "Máximo de 50 caracteres")
-      .nullish()
-      .transform((v) => v || null),
+    // Castração feita na fazenda: a técnica é sempre conhecida.
+    techniqueId: z
+      .string(REQUIRED_TECHNIQUE_MESSAGE)
+      .min(1, REQUIRED_TECHNIQUE_MESSAGE),
     notes: stepNotesSchema,
   }),
 
@@ -70,17 +81,26 @@ export const neuteringStep = defineStep({
     const existing = await tx.animalNeutering.findFirst({
       where: { managementId: management.id, animalId: animal.id },
     });
+    if (
+      !(await isValidNeuteringTechnique(
+        payload.techniqueId,
+        existing?.techniqueId,
+        tx,
+      ))
+    ) {
+      throw new StepError(INVALID_TECHNIQUE_MESSAGE, 400, "techniqueId");
+    }
     if (existing) {
       await tx.animalNeutering.update({
         where: { id: existing.id },
-        data: { method: payload.method, notes: payload.notes },
+        data: { techniqueId: payload.techniqueId, notes: payload.notes },
       });
     } else {
       await tx.animalNeutering.create({
         data: {
           managementId: management.id,
           animalId: animal.id,
-          method: payload.method,
+          techniqueId: payload.techniqueId,
           notes: payload.notes,
           neuteredAt: session.managementDate,
         },

@@ -65,7 +65,15 @@ export function SelectField({
         )}
         {...props}
       >
-        <ComboboxValue placeholder={placeholder} />
+        {/* O placeholder é texto puro (sem elemento próprio): o span dá o mesmo tom
+            apagado do placeholder dos inputs, para não parecer um valor escolhido. */}
+        <ComboboxValue
+          placeholder={
+            placeholder != null ? (
+              <span className="text-muted-foreground">{placeholder}</span>
+            ) : undefined
+          }
+        />
       </ComboboxTrigger>
       <ComboboxContent>
         {searchable && (

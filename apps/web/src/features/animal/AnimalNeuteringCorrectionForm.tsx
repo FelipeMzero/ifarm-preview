@@ -10,6 +10,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { DialogFooter } from "@/components/ui/dialog";
 import { FormField } from "@/components/our/FormField";
 import FieldRow from "@/components/our/FieldRow";
+import { SelectField } from "@/components/our/SelectField";
+import {
+  NeuteringTechnique,
+  techniqueItems,
+} from "@/features/neutering-technique/services";
 import { ApiError, AnimalNeuteringRecord, correctNeutering } from "./services";
 import {
   neuteringCorrectionSchema,
@@ -19,6 +24,7 @@ import {
 interface AnimalNeuteringCorrectionFormProps {
   animalId: string;
   neutering: AnimalNeuteringRecord;
+  techniques: NeuteringTechnique[];
   // yyyy-mm-dd; a castração não pode ser anterior ao nascimento
   birthDate?: string | null;
   onCancel: () => void;
@@ -31,6 +37,7 @@ const toInputDate = (iso: string) => new Date(iso).toLocaleDateString("en-CA");
 export function AnimalNeuteringCorrectionForm({
   animalId,
   neutering,
+  techniques,
   birthDate,
   onCancel,
   onSaved,
@@ -39,7 +46,7 @@ export function AnimalNeuteringCorrectionForm({
     resolver: zodResolver(neuteringCorrectionSchema),
     defaultValues: {
       date: toInputDate(neutering.date),
-      method: neutering.method ?? "",
+      techniqueId: neutering.techniqueId ?? "",
       notes: neutering.notes ?? "",
     },
   });
@@ -52,7 +59,7 @@ export function AnimalNeuteringCorrectionForm({
 
     try {
       await correctNeutering(animalId, neutering.id, {
-        method: data.method,
+        techniqueId: data.techniqueId,
         notes: data.notes,
         date: dateChanged ? data.date : undefined,
       });
@@ -101,15 +108,25 @@ export function AnimalNeuteringCorrectionForm({
         />
 
         <FormField
-          name="method"
+          name="techniqueId"
           control={form.control}
-          label="Método"
+          label="Técnica"
+          required={!!neutering.techniqueId}
           render={({ field, id }) => (
-            <Input
-              {...field}
+            <SelectField
               id={id}
-              placeholder="Ex: Burdizzo, cirúrgica, elástico"
-              autoFocus
+              value={field.value ?? ""}
+              onValueChange={field.onChange}
+              items={techniqueItems(techniques, {
+                current: {
+                  id: neutering.techniqueId,
+                  name: neutering.techniqueName,
+                },
+                // Lançada sem técnica (ex.: chegou castrado): pode continuar assim.
+                optional: !neutering.techniqueId,
+              })}
+              placeholder="Selecione..."
+              className="w-full"
             />
           )}
         />

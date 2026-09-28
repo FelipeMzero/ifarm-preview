@@ -215,16 +215,25 @@ erDiagram
 
   "animal_neutering" {
     Int management_id "🗝️"
-    String method "❓"
     String notes "❓"
+    String technique_id "❓"
     DateTime neutered_at 
     DateTime original_neutered_at "❓"
-    String original_method "❓"
+    String original_technique_id "❓"
     DateTime corrected_at "❓"
     DateTime cancelled_at "❓"
     String management_id "❓"
     String animal_id 
     DateTime created_at 
+    }
+  
+
+  "neutering_technique" {
+    String id "🗝️"
+    String name 
+    DateTime deactivated_at "❓"
+    DateTime created_at 
+    DateTime updated_at 
     }
   
 
@@ -456,6 +465,8 @@ erDiagram
     "animal_rfid_tagging" }o--|o rfid_management : "management"
     "animal_rfid_tagging" }o--|| animal : "animal"
     "neutering_management" |o--|| management_session : "managementSession"
+    "animal_neutering" }o--|o neutering_technique : "technique"
+    "animal_neutering" }o--|o neutering_technique : "originalTechnique"
     "animal_neutering" }o--|o neutering_management : "management"
     "animal_neutering" }o--|| animal : "animal"
     "weighing_management" |o--|| management_session : "managementSession"

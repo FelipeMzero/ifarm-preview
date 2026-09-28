@@ -6,6 +6,11 @@ import { zodResolver } from "@hookform/resolvers/zod";
 
 import { createAnimal, ApiError } from "./services";
 import { Breed, getBreeds } from "@/features/breed/services";
+import {
+  NeuteringTechnique,
+  getNeuteringTechniques,
+  techniqueItems,
+} from "@/features/neutering-technique/services";
 import { BatchRow, getBatches } from "@/features/batch/services";
 import { BatchForm } from "@/features/batch/BatchForm";
 import { StockingNotice } from "@/features/area/StockingNotice";
@@ -28,6 +33,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
 import { FormField } from "@/components/our/FormField";
 import FieldRow from "@/components/our/FieldRow";
+import { SelectField } from "@/components/our/SelectField";
 
 import {
   SearchCombobox,
@@ -59,6 +65,7 @@ export default function AnimalForm({
   const propertyId = currentProperty?.id;
 
   const [breeds, setBreeds] = useState<Breed[]>([]);
+  const [techniques, setTechniques] = useState<NeuteringTechnique[]>([]);
   const [batchItems, setBatchItems] = useState<SearchComboboxItem[]>([]);
   const [sellerItems, setSellerItems] = useState<SearchComboboxItem[]>([]);
   const [isSellerModalOpen, setIsSellerModalOpen] = useState(false);
@@ -86,7 +93,7 @@ export default function AnimalForm({
       origin: EnumAnimalOrigin.UNDEFINED,
       neutered: false,
       neuteringDate: "",
-      neuteringMethod: "",
+      neuteringTechniqueId: "",
       breedId: "",
       batchId: "",
       currentWeightKg: "",
@@ -169,6 +176,12 @@ export default function AnimalForm({
         setBreeds(breedList.filter((b) => !b.deactivatedAt));
       } catch {
         setBreeds([]);
+      }
+      try {
+        const techniqueList = await getNeuteringTechniques();
+        setTechniques(techniqueList.filter((t) => !t.deactivatedAt));
+      } catch {
+        setTechniques([]);
       }
     }
     loadStaticOptions();
@@ -399,11 +412,18 @@ export default function AnimalForm({
                 )}
               />
               <FormField
-                name="neuteringMethod"
-                label="Método"
+                name="neuteringTechniqueId"
+                label="Técnica"
                 control={control}
                 render={({ field, id }) => (
-                  <Input {...field} id={id} placeholder="Ex: Cirúrgico" />
+                  <SelectField
+                    id={id}
+                    value={field.value ?? ""}
+                    onValueChange={field.onChange}
+                    items={techniqueItems(techniques, { optional: true })}
+                    placeholder="Selecione..."
+                    className="w-full"
+                  />
                 )}
               />
             </FieldRow>
