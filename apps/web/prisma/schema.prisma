@@ -561,12 +561,13 @@ model AnimalBranding {
 }
 
 model HealthManagement {
-  id              String                       @id @default(uuid()) @db.Uuid
+  id              String                   @id @default(uuid()) @db.Uuid
   title           String?
-  withdrawalUntil DateTime?                    @map("withdrawal_until") @db.Date
-  nextDueDate     DateTime?                    @map("next_due_date") @db.Date
-  pricingType     HealthManagementPricingType? @map("pricing_type")
-  unitPrice       Decimal?                     @map("unit_price") @db.Decimal(10, 2)
+  withdrawalUntil DateTime?                @map("withdrawal_until") @db.Date
+  nextDueDate     DateTime?                @map("next_due_date") @db.Date
+  doseType        HealthManagementDoseType @default(NONE) @map("dose_type")
+  doseMl          Decimal?                 @map("dose_ml") @db.Decimal(10, 2) // FIXED: ml por animal; PER_WEIGHT: ml a cada doseWeightKg
+  doseWeightKg    Decimal?                 @map("dose_weight_kg") @db.Decimal(10, 2) // PER_WEIGHT: peso de referência (ex.: 1 ml a cada 50 kg)
 
   performedAt DateTime @map("performed_at") // data do procedimento; em sessão, copiada da data da sessão
 
@@ -590,9 +591,9 @@ model HealthManagement {
 }
 
 model HealthManagementItem {
-  id    Int      @id @default(autoincrement())
-  notes String? // observação específica desse animal nesse procedimento (reação adversa, etc.)
-  cost  Decimal? @db.Decimal(10, 2) // Custo individual
+  id     Int      @id @default(autoincrement())
+  notes  String? // observação específica desse animal nesse procedimento (reação adversa, etc.)
+  doseMl Decimal? @map("dose_ml") @db.Decimal(10, 2) // dose aplicada neste animal (ml)
 
   managementId String           @map("management_id") @db.Uuid
   management   HealthManagement @relation(fields: [managementId], references: [id], onDelete: Restrict)
@@ -620,12 +621,12 @@ model HealthManagementType {
   @@map("health_management_type")
 }
 
-enum HealthManagementPricingType {
-  FREE // gratuito de fato (campanha subsidiada, produto doado)
-  FIXED // valor fixo por animal, independente de peso
-  PER_WEIGHT // valor por kg de peso vivo
+enum HealthManagementDoseType {
+  NONE // procedimento sem dose (exame, banho, curativo)
+  FIXED // mesma dose para todos os animais
+  PER_WEIGHT // dose proporcional ao peso vivo
 
-  @@map("health_management_pricing_type")
+  @@map("health_management_dose_type")
 }
 
 model AnimalPropertyTransfer {

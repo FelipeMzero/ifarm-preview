@@ -252,7 +252,7 @@ export type AnimalHealthRecord = {
   veterinarianName: string | null;
   withdrawalUntil: string | null;
   nextDueDate: string | null;
-  cost: number | null;
+  doseMl: number | null;
   notes: string | null;
 };
 

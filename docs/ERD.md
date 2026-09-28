@@ -282,8 +282,9 @@ erDiagram
     String title "❓"
     DateTime withdrawal_until "❓"
     DateTime next_due_date "❓"
-    HealthManagementPricingType pricing_type "❓"
-    Decimal unit_price "❓"
+    HealthManagementDoseType dose_type 
+    Decimal dose_ml "❓"
+    Decimal dose_weight_kg "❓"
     DateTime performed_at 
     String type_id 
     String management_session_id "❓"
@@ -296,7 +297,7 @@ erDiagram
   "health_management_item" {
     Int id "🗝️"
     String notes "❓"
-    Decimal cost "❓"
+    Decimal dose_ml "❓"
     String management_id 
     String animal_id 
     DateTime created_at 
@@ -479,7 +480,7 @@ erDiagram
     "health_management" }o--|o management_session : "managementSession"
     "health_management" }o--|o person : "veterinarian"
     "health_management_item" }o--|| health_management : "management"
-    "health_management_item" }o--|| animal : "animal"
+    "health_management_item" }o--|| animal : "dose_ml"
     "animal_property_transfer" }o--|| property : "originProperty"
     "animal_property_transfer" }o--|| property : "destinationProperty"
     "animal_property_transfer" }o--|o batch : "originBatch"

@@ -792,7 +792,7 @@ export default function AnimalDetails({
                       <TableHead>Veterinário</TableHead>
                       <TableHead>Carência até</TableHead>
                       <TableHead>Próxima dose</TableHead>
-                      <TableHead className="text-right">Custo</TableHead>
+                      <TableHead className="text-right">Dose</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -813,7 +813,9 @@ export default function AnimalDetails({
                         </TableCell>
                         <TableCell>{formatDateOnly(h.nextDueDate)}</TableCell>
                         <TableCell className="text-right tabular-nums">
-                          {h.cost != null ? formatCurrency(h.cost) : "—"}
+                          {h.doseMl != null
+                            ? `${h.doseMl.toLocaleString("pt-BR")} ml`
+                            : "—"}
                         </TableCell>
                       </TableRow>
                     ))}

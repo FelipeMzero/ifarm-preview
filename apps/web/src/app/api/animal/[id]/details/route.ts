@@ -125,7 +125,7 @@ export async function GET(
         veterinarianName: h.management.veterinarian?.name ?? null,
         withdrawalUntil: toDateOnly(h.management.withdrawalUntil),
         nextDueDate: toDateOnly(h.management.nextDueDate),
-        cost: h.cost?.toNumber() ?? null,
+        doseMl: h.doseMl?.toNumber() ?? null,
         notes: h.notes,
       }))
       .sort(byDateDesc);

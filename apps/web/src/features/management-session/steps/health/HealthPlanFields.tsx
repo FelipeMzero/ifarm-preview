@@ -7,25 +7,20 @@ import FieldRow from "@/components/our/FieldRow";
 import { SelectField } from "@/components/our/SelectField";
 import { FIELD_LIMITS } from "@/lib/field-limits";
 import type { PlanFieldsProps } from "../types";
-import { PRICING_LABELS, type HealthPricingType } from "./config";
+import { DOSE_LABELS, type HealthDoseType } from "./config";
 
-const PRICING_ITEMS = [
-  { value: "", label: "Não informado" },
-  ...(Object.keys(PRICING_LABELS) as HealthPricingType[]).map((value) => ({
-    value,
-    label: PRICING_LABELS[value],
-  })),
-];
+const DOSE_ITEMS = (Object.keys(DOSE_LABELS) as HealthDoseType[]).map(
+  (value) => ({ value, label: DOSE_LABELS[value] }),
+);
 
-// Produto, responsável, carência e cobrança são do procedimento (iguais para todos os
-// animais); no registro, cada animal só recebe custo individual e observação.
+// Produto, responsável, carência e regra de dose são do procedimento (iguais para
+// todos os animais); no registro, cada animal só recebe a dose aplicada e observação.
 export default function HealthPlanFields({
   index,
   control,
   options,
 }: PlanFieldsProps) {
-  const pricingType = useWatch({ control, name: `steps.${index}.pricingType` });
-  const priced = pricingType === "FIXED" || pricingType === "PER_WEIGHT";
+  const doseType = useWatch({ control, name: `steps.${index}.doseType` });
 
   return (
     <div className="space-y-4">
@@ -107,41 +102,61 @@ export default function HealthPlanFields({
 
       <FieldRow cols={2}>
         <FormField
-          name={`steps.${index}.pricingType`}
+          name={`steps.${index}.doseType`}
           control={control}
-          label="Cobrança"
+          label="Dose"
           render={({ field, id }) => (
             <SelectField
               id={id}
-              value={field.value ?? ""}
+              value={field.value || "NONE"}
               onValueChange={field.onChange}
-              items={PRICING_ITEMS}
+              items={DOSE_ITEMS}
               className="w-full"
             />
           )}
         />
-        {priced && (
-          <FormField
-            name={`steps.${index}.unitPrice`}
-            control={control}
-            label={
-              pricingType === "PER_WEIGHT"
-                ? "Valor por kg (R$)"
-                : "Valor por animal (R$)"
-            }
-            required
-            render={({ field, id }) => (
-              <Input
-                {...field}
-                value={field.value ?? ""}
-                id={id}
-                type="number"
-                inputMode="decimal"
-                step="any"
-                min={0}
+        {(doseType === "FIXED" || doseType === "PER_WEIGHT") && (
+          <FieldRow cols={doseType === "PER_WEIGHT" ? 2 : 1}>
+            <FormField
+              name={`steps.${index}.doseMl`}
+              control={control}
+              label={
+                doseType === "FIXED" ? "Dose por animal (ml)" : "Dose (ml)"
+              }
+              required
+              render={({ field, id }) => (
+                <Input
+                  {...field}
+                  value={field.value ?? ""}
+                  id={id}
+                  type="number"
+                  inputMode="decimal"
+                  step="any"
+                  min={0}
+                />
+              )}
+            />
+            {doseType === "PER_WEIGHT" && (
+              <FormField
+                name={`steps.${index}.doseWeightKg`}
+                control={control}
+                label="A cada (kg)"
+                required
+                render={({ field, id }) => (
+                  <Input
+                    {...field}
+                    value={field.value ?? ""}
+                    id={id}
+                    type="number"
+                    inputMode="decimal"
+                    step="any"
+                    min={0}
+                    placeholder="Ex: 50"
+                  />
+                )}
               />
             )}
-          />
+          </FieldRow>
         )}
       </FieldRow>
     </div>

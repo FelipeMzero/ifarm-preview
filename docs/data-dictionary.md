@@ -133,7 +133,7 @@ Isso vale para `animal_weighing`, `animal_neutering`, `animal_tagging` e `animal
 
 | Coluna | Papel |
 |---|---|
-| Colunas de valor (`weight`, `neutered_at`, `method`, `tag`, `rfid`, `notes`…) | Sempre contêm o valor **vigente**, já corrigido. É o que histórico, gráficos e cálculos usam. |
+| Colunas de valor (`weight`, `neutered_at`, `technique_id`, `tag`, `rfid`, `notes`…) | Sempre contêm o valor **vigente**, já corrigido. É o que histórico, gráficos e cálculos usam. |
 | `original_*` | **Memória do valor lançado originalmente**, antes de qualquer correção. É gravada uma única vez e não muda nas correções seguintes. Nula = o valor nunca foi corrigido. |
 | `corrected_at` | Instante da **última** correção. Nulo = o registro nunca foi corrigido. É atualizado a cada nova correção, inclusive quando só a observação muda. |
 | `cancelled_at` | **Exclusão lógica.** Preenchido = o registro foi excluído pelo usuário: sai do histórico, dos gráficos e dos cálculos, mas continua no banco para auditoria. Não há desfazer pela interface. |
@@ -159,7 +159,7 @@ As tabelas guardam o rastro de maneiras ligeiramente diferentes:
 | Tabela | Campos de memória | Quando são preenchidos | O que **não** é preservado |
 |---|---|---|---|
 | `animal_weighing` | `original_weight` | Na primeira correção que **muda o peso**. Uma correção só da data ou da observação não preenche. | A data original (`weighed_at` é sobrescrita) e a observação original. |
-| `animal_neutering` | `original_neutered_at`, `original_method` | Na **primeira correção de qualquer tipo**: os dois são copiados juntos, mesmo que só um tenha mudado. | A observação original. |
+| `animal_neutering` | `original_neutered_at`, `original_technique_id` | Na **primeira correção de qualquer tipo**: os dois são copiados juntos, mesmo que só um tenha mudado. | A observação original. |
 | `animal_tagging` | `original_tag` | Na primeira correção que **muda o brinco**. | A data original (`identified_at`) e a observação original. |
 | `animal_rfid_tagging` | `original_rfid` | Na primeira correção que **muda o RFID**. | A data original (`identified_at`) e a observação original. |
 
@@ -281,13 +281,13 @@ As checagens travam as linhas dos animais envolvidos (`SELECT … FOR UPDATE`) a
 
 `SINGLE` (solteiro), `MARRIED` (casado), `STABLE_UNION` (união estável), `DIVORCED` (divorciado), `WIDOWED` (viúvo).
 
-### `health_management_pricing_type` — cobrança de procedimento sanitário
+### `health_management_dose_type` — regra de dose de procedimento sanitário
 
-| Valor | Significado | Custo por animal |
+| Valor | Significado | Dose por animal |
 |---|---|---|
-| `FREE` | Gratuito (campanha subsidiada, produto doado) | 0 |
-| `FIXED` | Valor fixo por animal | `unit_price` |
-| `PER_WEIGHT` | Valor por kg de peso vivo | `unit_price` × peso atual do animal |
+| `NONE` | Procedimento sem dose (exame, banho, curativo) | — |
+| `FIXED` | Mesma dose para todos os animais | `dose_ml` |
+| `PER_WEIGHT` | Dose proporcional ao peso vivo | `dose_ml` × peso do animal ÷ `dose_weight_kg` |
 
 ### `purchase_pricing_type` — forma de preço de uma categoria de compra
 
@@ -574,7 +574,7 @@ Regras de `steps`:
 1. Remove da sessão os participantes sem nenhum registro.
 2. Exige ao menos um animal manejado, todos ativos na propriedade e sem compromisso conflitante em outra operação aberta (ver 2.9), e `management_date` que não seja futura.
 3. Marca `confirmed_at`.
-4. Efetiva as etapas na ordem pesagem → castração → brinco → RFID → sanitário → apartação: normaliza as datas dos registros, recalcula `current_weight`, marca `neutered`, atualiza `current_tag`/`current_rfid`, calcula custos sanitários não informados e confirma as transferências de lote da apartação.
+4. Efetiva as etapas na ordem pesagem → castração → brinco → RFID → sanitário → apartação: normaliza as datas dos registros, recalcula `current_weight`, marca `neutered`, atualiza `current_tag`/`current_rfid` e confirma as transferências de lote da apartação.
 
 Etapas puladas num animal simplesmente não têm efeito sobre ele.
 
@@ -641,11 +641,11 @@ O contêiner é criado quando a etapa entra no planejamento e apagado quando a e
 | Coluna | Tipo | Nulo | Padrão | Chave | Descrição e regras |
 |---|---|---|---|---|---|
 | `id` | serial | | | PK | Identificador. |
-| `method` | text | N | | | Método (ex.: Burdizzo, cirúrgica, elástico). Até 50 caracteres. |
+| `technique_id` | uuid | N | | FK → `neutering_technique` | Técnica usada. **Obrigatória** na etapa de sessão e no registro avulso (castração feita na fazenda) e deve estar ativa; opcional só no cadastro de animal que já chegou castrado. Numa correção, não pode ser apagada se o registro já tinha técnica, e pode manter uma técnica inativada depois. |
 | `notes` | text | N | | | Observação. **Obrigatória numa recastração** (castração de animal que já é castrado), como justificativa. |
 | `neutered_at` | timestamp | | | | Data do procedimento (ver 2.8). |
-| `original_neutered_at` | timestamp | N | | | **Memória da data lançada originalmente.** Gravada uma única vez, na **primeira correção de qualquer tipo**, junto com `original_method`, mesmo que a data não tenha mudado; para saber se a data mudou, compare com `neutered_at`. Nulo = nunca corrigida. Ver 2.7. |
-| `original_method` | text | N | | | **Memória do método lançado originalmente.** Gravado junto com `original_neutered_at`, na primeira correção. Como o método pode ser nulo, `original_method` nulo com `corrected_at` preenchido significa que o método original estava em branco. |
+| `original_neutered_at` | timestamp | N | | | **Memória da data lançada originalmente.** Gravada uma única vez, na **primeira correção de qualquer tipo**, junto com `original_technique_id`, mesmo que a data não tenha mudado; para saber se a data mudou, compare com `neutered_at`. Nulo = nunca corrigida. Ver 2.7. |
+| `original_technique_id` | uuid | N | | FK → `neutering_technique` | **Memória da técnica lançada originalmente.** Gravada junto com `original_neutered_at`, na primeira correção. Como a técnica pode ser nula, `original_technique_id` nulo com `corrected_at` preenchido significa que a técnica original estava em branco. |
 | `corrected_at` | timestamp | N | | | Instante da **última** correção. Nulo = nunca corrigida; é o indicador confiável de que houve correção. |
 | `cancelled_at` | timestamp | N | | | **Exclusão lógica.** Preenchido = castração excluída: sai do histórico e da data de castração exibida. Se era a única, o usuário decide se o animal continua castrado (`animal.neutered`). |
 | `management_id` | uuid | N | | FK → `neutering_management` | Nulo = avulsa. |
@@ -723,8 +723,9 @@ Um procedimento (vacina, vermífugo, tratamento, exame…) aplicado a um grupo d
 | `title` | text | N | | | Produto ou descrição (ex.: "Febre aftosa", "Ivermectina 1%"). Até 100 caracteres. |
 | `withdrawal_until` | date | N | | | Fim da carência: até essa data o animal não pode ser abatido ou ter o leite comercializado. |
 | `next_due_date` | date | N | | | Próxima dose/aplicação prevista (lembretes). |
-| `pricing_type` | `health_management_pricing_type` | N | | | Forma de cobrança. |
-| `unit_price` | numeric(10,2) | N | | | Valor por animal (`FIXED`) ou por kg (`PER_WEIGHT`). Obrigatório e maior que 0 nesses casos; nulo em `FREE`. |
+| `dose_type` | `health_management_dose_type` | | `NONE` | | Regra de dose. Com animais já registrados, não pode passar de `NONE` para uma regra com dose, nem o contrário. |
+| `dose_ml` | numeric(10,2) | N | | | Dose em ml: por animal (`FIXED`) ou a cada `dose_weight_kg` (`PER_WEIGHT`). Obrigatória e maior que 0 nesses casos; nula em `NONE`. |
+| `dose_weight_kg` | numeric(10,2) | N | | | Peso de referência da dose por peso (ex.: 1 ml a cada **50** kg). Obrigatório e maior que 0 em `PER_WEIGHT`; nulo nos demais. |
 | `performed_at` | timestamp | | | | Data do procedimento. Em sessão, é provisória até a consolidação, quando recebe a data do manejo. |
 | `type_id` | uuid | | | FK → `health_management_type` | Tipo (deve estar ativo). |
 | `management_session_id` | uuid | N | | FK → `management_session` | Sessão. Nulo = avulso. Sem restrição de unicidade: uma sessão pode ter vários procedimentos. |
@@ -738,8 +739,8 @@ Um procedimento (vacina, vermífugo, tratamento, exame…) aplicado a um grupo d
 | Coluna | Tipo | Nulo | Padrão | Chave | Descrição e regras |
 |---|---|---|---|---|---|
 | `id` | serial | | | PK | Identificador. |
-| `notes` | text | N | | | Observação desse animal (reação adversa, dose diferente…). |
-| `cost` | numeric(10,2) | N | | | Custo individual. Se não for informado, é calculado na consolidação pela forma de cobrança do procedimento (`FREE` = 0; `FIXED` = `unit_price`; `PER_WEIGHT` = `unit_price` × peso atual, com 2 casas). |
+| `notes` | text | N | | | Observação desse animal (reação adversa, aplicação incompleta…). |
+| `dose_ml` | numeric(10,2) | N | | | Dose aplicada (ml). **Obrigatória** quando o procedimento tem dose (`FIXED`/`PER_WEIGHT`) e sempre nula em `NONE`. Na etapa da sessão já vem sugerida pela regra do procedimento (`FIXED` = `dose_ml`; `PER_WEIGHT` = `dose_ml` × peso ÷ `dose_weight_kg`, com 1 casa, usando o peso da sessão ou o atual) e pode ser corrigida; sem peso, o operador informa a dose aplicada. Não é calculada depois, na consolidação. |
 | `management_id` | uuid | | | FK → `health_management` | Procedimento. |
 | `animal_id` | uuid | | | FK → `animal` | Animal. |
 | `created_at` | timestamp | | now | | Auditoria. |
@@ -754,6 +755,17 @@ Um procedimento (vacina, vermífugo, tratamento, exame…) aplicado a um grupo d
 | `name` | text | | | UK | Nome (ex.: Vacinação, Vermifugação, Controle de ectoparasitas, Tratamento, Exame). |
 | `deactivated_at` | timestamp | N | | | Desativação reversível. |
 | `created_at`, `updated_at` | timestamp | | now | | Auditoria. |
+
+### 8.10 `neutering_technique` — Técnica de castração
+
+| Coluna | Tipo | Nulo | Padrão | Chave | Descrição e regras |
+|---|---|---|---|---|---|
+| `id` | uuid | | uuid | PK | Identificador. |
+| `name` | text | | | UK | Nome (ex.: Burdizzo, Cirúrgica, Elástico). Até 60 caracteres. |
+| `deactivated_at` | timestamp | N | | | Desativação reversível. Técnica desativada não aparece para novos registros, mas continua nos já lançados. |
+| `created_at`, `updated_at` | timestamp | | now | | Auditoria. |
+
+**Regras:** técnica já usada em alguma castração (inclusive como `original_technique_id`) não pode ser excluída, só desativada.
 
 ---
 

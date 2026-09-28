@@ -1243,7 +1243,7 @@ async function seedSessions(ctx: Ctx, animals: SeededAnimal[]) {
         });
       }
 
-      // Vacinação contra aftosa (valor fixo por animal); próxima dose no futuro.
+      // Vacinação contra aftosa (dose fixa por animal); próxima dose no futuro.
       if (daysAgo === sessions[3]) {
         const health = await prisma.healthManagement.create({
           data: {
@@ -1252,17 +1252,17 @@ async function seedSessions(ctx: Ctx, animals: SeededAnimal[]) {
             veterinarianId: ctx.people.vet,
             managementSessionId: session.id,
             performedAt: sessionDate,
-            pricingType: "FIXED",
-            unitPrice: 3.5,
+            doseType: "FIXED",
+            doseMl: 2,
             nextDueDate: dateAgo(daysAgo - 180),
             items: {
-              create: present.map((a) => ({ animalId: a.id, cost: 3.5 })),
+              create: present.map((a) => ({ animalId: a.id, doseMl: 2 })),
             },
           },
         });
         steps.push({ type: "health", healthManagementId: health.id });
       }
-      // Vermifugação (custo por kg), carência já encerrada.
+      // Vermifugação (dose por peso: 1 ml a cada 50 kg), carência já encerrada.
       if (daysAgo === sessions[2]) {
         const health = await prisma.healthManagement.create({
           data: {
@@ -1270,20 +1270,21 @@ async function seedSessions(ctx: Ctx, animals: SeededAnimal[]) {
             title: "Ivermectina 1%",
             managementSessionId: session.id,
             performedAt: sessionDate,
-            pricingType: "PER_WEIGHT",
-            unitPrice: 0.015,
+            doseType: "PER_WEIGHT",
+            doseMl: 1,
+            doseWeightKg: 50,
             withdrawalUntil: dateAgo(daysAgo - 35),
             items: {
               create: weighed.map((a) => ({
                 animalId: a.id,
-                cost: round(a.weights.get(daysAgo)! * 0.015, 2),
+                doseMl: round(a.weights.get(daysAgo)! / 50, 1),
               })),
             },
           },
         });
         steps.push({ type: "health", healthManagementId: health.id });
       }
-      // Carrapaticida (custo por kg) com carência ainda vigente.
+      // Carrapaticida (dose por peso: 1 ml a cada 10 kg) com carência ainda vigente.
       if (daysAgo === sessions[0]) {
         const health = await prisma.healthManagement.create({
           data: {
@@ -1291,14 +1292,15 @@ async function seedSessions(ctx: Ctx, animals: SeededAnimal[]) {
             title: "Carrapaticida pour-on",
             managementSessionId: session.id,
             performedAt: sessionDate,
-            pricingType: "PER_WEIGHT",
-            unitPrice: 0.02,
+            doseType: "PER_WEIGHT",
+            doseMl: 1,
+            doseWeightKg: 10,
             withdrawalUntil: dateAgo(daysAgo - 30),
             nextDueDate: dateAgo(daysAgo - 60),
             items: {
               create: weighed.map((a) => ({
                 animalId: a.id,
-                cost: round(a.weights.get(daysAgo)! * 0.02, 2),
+                doseMl: round(a.weights.get(daysAgo)! / 10, 1),
               })),
             },
           },
@@ -1335,8 +1337,9 @@ async function seedSessions(ctx: Ctx, animals: SeededAnimal[]) {
       title: "Ivermectina 1%",
       managementSessionId: planned.id,
       performedAt: ago(-18),
-      pricingType: "PER_WEIGHT",
-      unitPrice: 0.015,
+      doseType: "PER_WEIGHT",
+      doseMl: 1,
+      doseWeightKg: 50,
       withdrawalUntil: dateAgo(-18 - 35),
     },
   });
@@ -1419,7 +1422,7 @@ async function seedSpecialCases(ctx: Ctx, animals: SeededAnimal[]) {
     data: { currentTag: null },
   });
 
-  // Tratamento individual com veterinário, custo e carência vigente.
+  // Tratamento individual com veterinário, dose por peso e carência vigente.
   await prisma.healthManagement.create({
     data: {
       typeId: ctx.healthTypes["Tratamento"],
@@ -1427,16 +1430,17 @@ async function seedSpecialCases(ctx: Ctx, animals: SeededAnimal[]) {
       veterinarianId: ctx.people.vet,
       performedAt: ago(9),
       withdrawalUntil: dateAgo(-19),
-      pricingType: "FIXED",
-      unitPrice: 85,
+      doseType: "PER_WEIGHT",
+      doseMl: 1,
+      doseWeightKg: 10,
       items: {
         create: [
           {
             animalId: engorda[3].id,
-            cost: 85,
+            doseMl: 42,
             notes: "Tosse e febre (40,2 °C)",
           },
-          { animalId: recria[0].id, cost: 85, notes: "Secreção nasal" },
+          { animalId: recria[0].id, doseMl: 28, notes: "Secreção nasal" },
         ],
       },
     },
@@ -1449,20 +1453,17 @@ async function seedSpecialCases(ctx: Ctx, animals: SeededAnimal[]) {
       title: "Exame andrológico",
       veterinarianId: ctx.people.vet,
       performedAt: ago(140),
-      pricingType: "FIXED",
-      unitPrice: 250,
       items: {
         create: [
           {
             animalId: bull.id,
-            cost: 250,
             notes: "Apto para a estação de monta",
           },
         ],
       },
     },
   });
-  // Brucelose das bezerras (campanha gratuita).
+  // Brucelose das bezerras (dose fixa).
   const heifers = animals.filter(
     (a) =>
       a.spec.sex === "FEMALE" &&
@@ -1475,8 +1476,9 @@ async function seedSpecialCases(ctx: Ctx, animals: SeededAnimal[]) {
       title: "Brucelose (B19)",
       veterinarianId: ctx.people.vet,
       performedAt: ago(130),
-      pricingType: "FREE",
-      items: { create: heifers.map((a) => ({ animalId: a.id, cost: 0 })) },
+      doseType: "FIXED",
+      doseMl: 2,
+      items: { create: heifers.map((a) => ({ animalId: a.id, doseMl: 2 })) },
     },
   });
 
@@ -1903,8 +1905,9 @@ async function seedOpenSessions(ctx: Ctx) {
           type: "health",
           typeId: ctx.healthTypes["Vermifugação"],
           title: "Ivermectina 1%",
-          pricingType: "PER_WEIGHT",
-          unitPrice: 0.015,
+          doseType: "PER_WEIGHT",
+          doseMl: 1,
+          doseWeightKg: 50,
         },
         {
           type: "batch",
@@ -1924,7 +1927,9 @@ async function seedOpenSessions(ctx: Ctx) {
       if (i < 4) {
         // Completos; dois voltam para a recria.
         await saveAnimalStep(tx, session.id, a.id, weighing, { weightKg });
-        await saveAnimalStep(tx, session.id, a.id, health, {});
+        await saveAnimalStep(tx, session.id, a.id, health, {
+          doseMl: Math.round(weightKg / 5) / 10, // 1 ml a cada 50 kg
+        });
         await saveAnimalStep(tx, session.id, a.id, batch, {
           batchId: i >= 2 ? ctx.batches["SR:Recria"] : null,
         });
@@ -1969,8 +1974,8 @@ async function seedOpenSessions(ctx: Ctx) {
           type: "health",
           typeId: ctx.healthTypes["Vacinação"],
           title: "Vacina clostridiose",
-          pricingType: "FIXED",
-          unitPrice: 3.5,
+          doseType: "FIXED",
+          doseMl: 5,
         },
         {
           type: "batch",
@@ -2008,7 +2013,7 @@ async function seedOpenSessions(ctx: Ctx) {
         });
       }
       await saveAnimalStep(tx, session.id, a.id, rfid, { value: nextRfid() });
-      await saveAnimalStep(tx, session.id, a.id, health, {});
+      await saveAnimalStep(tx, session.id, a.id, health, { doseMl: 5 });
       await saveAnimalStep(tx, session.id, a.id, batch, {
         batchId: i === 0 ? ctx.batches["SR:Engorda"] : null,
       });

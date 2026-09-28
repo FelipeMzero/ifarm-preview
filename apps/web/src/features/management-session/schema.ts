@@ -17,8 +17,9 @@ export const planStepFormSchema = z
       )
       .optional(),
     veterinarianId: z.string().optional(),
-    pricingType: z.string().optional(),
-    unitPrice: z.string().optional(),
+    doseType: z.string().optional(),
+    doseMl: z.string().optional(),
+    doseWeightKg: z.string().optional(),
     withdrawalUntil: z.string().optional(),
     nextDueDate: z.string().optional(),
     suggestedBatchIds: z.array(z.string()).optional(),
@@ -33,13 +34,20 @@ export const planStepFormSchema = z
       });
     }
     if (
-      (step.pricingType === "FIXED" || step.pricingType === "PER_WEIGHT") &&
-      !(Number(step.unitPrice) > 0)
+      (step.doseType === "FIXED" || step.doseType === "PER_WEIGHT") &&
+      !(Number(step.doseMl) > 0)
     ) {
       ctx.addIssue({
         code: "custom",
-        message: "Informe o valor",
-        path: ["unitPrice"],
+        message: "Informe a dose",
+        path: ["doseMl"],
+      });
+    }
+    if (step.doseType === "PER_WEIGHT" && !(Number(step.doseWeightKg) > 0)) {
+      ctx.addIssue({
+        code: "custom",
+        message: "Informe o peso",
+        path: ["doseWeightKg"],
       });
     }
   });
@@ -55,8 +63,9 @@ export function toStepPayload(step: PlanStepForm) {
       typeId: step.typeId,
       title: step.title || null,
       veterinarianId: step.veterinarianId || null,
-      pricingType: step.pricingType || null,
-      unitPrice: step.unitPrice ? Number(step.unitPrice) : null,
+      doseType: step.doseType || "NONE",
+      doseMl: step.doseMl ? Number(step.doseMl) : null,
+      doseWeightKg: step.doseWeightKg ? Number(step.doseWeightKg) : null,
       withdrawalUntil: step.withdrawalUntil || null,
       nextDueDate: step.nextDueDate || null,
     };

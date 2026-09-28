@@ -9,29 +9,23 @@ import { FieldSet } from "@/components/ui/field";
 import { FormField } from "@/components/our/FormField";
 import { FIELD_LIMITS } from "@/lib/field-limits";
 import type { StepScreenProps } from "../types";
-import { formatBRL, formatDay, handleStepError } from "../formHelpers";
-import { PRICING_LABELS, type HealthConfig } from "./config";
+import { formatDay, handleStepError } from "../formHelpers";
+import { describeDose, doseFor, type HealthConfig } from "./config";
 
-type HealthRecord = { cost: number | null; notes: string | null };
+type HealthRecord = { doseMl: number | null; notes: string | null };
 
-const schema = z.object({
-  cost: z
-    .string()
-    .optional()
-    .refine((v) => !v || Number(v) >= 0, "O custo não pode ser negativo"),
-  notes: z.string().optional(),
-});
-type FormData = z.infer<typeof schema>;
-
-function suggestedCost(config: HealthConfig, weightKg: number | null) {
-  if (config.pricingType === "FREE") return 0;
-  if (config.unitPrice == null) return null;
-  if (config.pricingType === "FIXED") return config.unitPrice;
-  if (config.pricingType === "PER_WEIGHT" && weightKg != null) {
-    return Math.round(config.unitPrice * weightKg * 100) / 100;
-  }
-  return null;
+// Com dose no procedimento, a dose aplicada é obrigatória.
+function makeSchema(hasDose: boolean) {
+  return z.object({
+    doseMl: z
+      .string()
+      .optional()
+      .refine((v) => !hasDose || !!v, "Informe a dose aplicada")
+      .refine((v) => !v || Number(v) > 0, "A dose deve ser maior que zero"),
+    notes: z.string().optional(),
+  });
 }
+type FormData = z.infer<ReturnType<typeof makeSchema>>;
 
 export default function HealthStep({
   formId,
@@ -43,25 +37,35 @@ export default function HealthStep({
   onSubmit,
 }: StepScreenProps<HealthRecord>) {
   const config = (step.config ?? {}) as HealthConfig;
-  const form = useForm<FormData>({
-    resolver: zodResolver(schema),
-    defaultValues: {
-      cost: record?.cost != null ? String(record.cost) : "",
-      notes: record?.notes ?? "",
-    },
-  });
+  const hasDose =
+    config.doseType === "FIXED" || config.doseType === "PER_WEIGHT";
 
   // O peso pesado nesta sessão, se já houver, vale mais que o peso atual.
   const sessionWeight = (records.weighing as { weightKg?: number } | null)
     ?.weightKg;
-  const suggestion = suggestedCost(
-    config,
-    sessionWeight ?? animal.currentWeightKg,
-  );
+  const weightKg = sessionWeight ?? animal.currentWeightKg;
+  const suggestion = hasDose ? doseFor(config, weightKg) : null;
+
+  const form = useForm<FormData>({
+    resolver: zodResolver(makeSchema(hasDose)),
+    defaultValues: {
+      // Sem dose registrada: já vem com a dose calculada, para só conferir.
+      doseMl:
+        record?.doseMl != null
+          ? String(record.doseMl)
+          : suggestion != null
+            ? String(suggestion)
+            : "",
+      notes: record?.notes ?? "",
+    },
+  });
 
   async function submit(data: FormData) {
     try {
-      await onSubmit({ cost: data.cost ?? "", notes: data.notes });
+      await onSubmit({
+        doseMl: hasDose ? (data.doseMl ?? "") : null,
+        notes: data.notes,
+      });
     } catch (error) {
       handleStepError(form, error);
     }
@@ -74,14 +78,7 @@ export default function HealthStep({
       formatDay(config.withdrawalUntil),
     ],
     config.nextDueDate && ["Próxima dose", formatDay(config.nextDueDate)],
-    config.pricingType && [
-      "Cobrança",
-      config.pricingType === "FREE" || config.unitPrice == null
-        ? PRICING_LABELS[config.pricingType]
-        : `${PRICING_LABELS[config.pricingType]}: ${formatBRL(config.unitPrice)}${
-            config.pricingType === "PER_WEIGHT" ? "/kg" : ""
-          }`,
-    ],
+    hasDose && ["Dose", describeDose(config)],
   ].filter(Boolean) as [string, string][];
 
   return (
@@ -102,31 +99,36 @@ export default function HealthStep({
       )}
 
       <p className="text-sm text-muted-foreground">
-        Confirme a aplicação no animal. O custo é opcional: em branco, ele é
-        calculado pela forma de cobrança na consolidação
-        {suggestion != null && ` (estimativa: ${formatBRL(suggestion)})`}.
+        {!hasDose
+          ? "Confirme a aplicação no animal."
+          : suggestion == null
+            ? "Animal sem peso: informe a dose aplicada."
+            : "Confirme a aplicação no animal e corrija a dose se foi diferente."}
       </p>
 
       <FieldSet className="border-0 p-0" disabled={readOnly}>
-        <FormField
-          name="cost"
-          control={form.control}
-          label="Custo individual (R$)"
-          render={({ field, id }) => (
-            <Input
-              {...field}
-              id={id}
-              type="number"
-              inputMode="decimal"
-              step="0.01"
-              min={0}
-              placeholder={
-                suggestion != null ? suggestion.toFixed(2) : undefined
-              }
-              className="max-w-60 tabular-nums"
-            />
-          )}
-        />
+        {hasDose && (
+          <FormField
+            name="doseMl"
+            control={form.control}
+            label="Dose aplicada (ml)"
+            required
+            render={({ field, id }) => (
+              <Input
+                {...field}
+                id={id}
+                type="number"
+                inputMode="decimal"
+                step="any"
+                min={0}
+                placeholder={
+                  suggestion != null ? String(suggestion) : undefined
+                }
+                className="max-w-60 tabular-nums"
+              />
+            )}
+          />
+        )}
 
         <FormField
           name="notes"
@@ -137,7 +139,7 @@ export default function HealthStep({
               {...field}
               id={id}
               maxLength={FIELD_LIMITS.managementSession.stepNotes}
-              placeholder="Reação adversa, dose diferente..."
+              placeholder="Reação adversa, aplicação incompleta..."
               className="resize-none"
               rows={2}
             />

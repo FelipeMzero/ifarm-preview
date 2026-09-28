@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { FIELD_LIMITS } from "@/lib/field-limits";
-import { HealthManagementPricingType } from "@/generated/prisma/enums";
+import { HealthManagementDoseType } from "@/generated/prisma/enums";
 import { defineStep, StepError, stepNotesSchema } from "./types";
 
 const optionalDate = z
@@ -12,9 +12,13 @@ const optionalDate = z
 
 const toDateOnly = (d: Date | null) => d?.toISOString().slice(0, 10) ?? null;
 
+const positiveNumber = z.coerce
+  .number("Informe um valor válido")
+  .positive("Informe um valor maior que zero")
+  .nullish();
+
 export const healthStep = defineStep({
   type: "health",
-  // Depois da pesagem: o custo por kg usa o peso recém-consolidado.
   consolidateOrder: 50,
 
   planSchema: z
@@ -36,25 +40,20 @@ export const healthStep = defineStep({
         .nullish()
         .or(z.literal(""))
         .transform((v) => v || null),
-      pricingType: z
-        .enum(HealthManagementPricingType)
-        .nullish()
-        .or(z.literal(""))
-        .transform((v) => v || null),
-      unitPrice: z.coerce
-        .number("Informe um valor válido")
-        .min(0, "O valor não pode ser negativo")
-        .nullish(),
+      doseType: z.enum(HealthManagementDoseType).default("NONE"),
+      doseMl: positiveNumber,
+      doseWeightKg: positiveNumber,
       withdrawalUntil: optionalDate,
       nextDueDate: optionalDate,
     })
-    .refine(
-      (v) =>
-        v.pricingType !== "FIXED" && v.pricingType !== "PER_WEIGHT"
-          ? true
-          : v.unitPrice != null && v.unitPrice > 0,
-      { message: "Informe o valor.", path: ["unitPrice"] },
-    ),
+    .refine((v) => v.doseType === "NONE" || v.doseMl != null, {
+      message: "Informe a dose.",
+      path: ["doseMl"],
+    })
+    .refine((v) => v.doseType !== "PER_WEIGHT" || v.doseWeightKg != null, {
+      message: "Informe o peso de referência.",
+      path: ["doseWeightKg"],
+    }),
 
   async prepare(tx, session, plan) {
     const type = await tx.healthManagementType.findFirst({
@@ -75,13 +74,32 @@ export const healthStep = defineStep({
       typeId: plan.typeId,
       title: plan.title,
       veterinarianId: plan.veterinarianId,
-      pricingType: plan.pricingType,
-      unitPrice: plan.pricingType === "FREE" ? null : (plan.unitPrice ?? null),
+      doseType: plan.doseType,
+      doseMl: plan.doseType === "NONE" ? null : (plan.doseMl ?? null),
+      doseWeightKg:
+        plan.doseType === "PER_WEIGHT" ? (plan.doseWeightKg ?? null) : null,
       withdrawalUntil: plan.withdrawalUntil,
       nextDueDate: plan.nextDueDate,
     };
 
     if (plan.healthManagementId) {
+      // Registros já feitos seguem a regra de dose da época: com dose, todos têm a
+      // dose aplicada; sem dose, nenhum tem. Trocar entre os dois os deixaria incoerentes.
+      const current = await tx.healthManagement.findFirst({
+        where: { id: plan.healthManagementId, managementSessionId: session.id },
+        select: { doseType: true, _count: { select: { items: true } } },
+      });
+      if (
+        current &&
+        current._count.items > 0 &&
+        (current.doseType === "NONE") !== (plan.doseType === "NONE")
+      ) {
+        throw new StepError(
+          `O procedimento sanitário já foi registrado em ${current._count.items} animal(is): não é possível ${plan.doseType === "NONE" ? "retirar" : "incluir"} a dose. Desfaça os registros antes.`,
+          409,
+        );
+      }
+
       const updated = await tx.healthManagement.updateMany({
         where: { id: plan.healthManagementId, managementSessionId: session.id },
         data,
@@ -138,8 +156,9 @@ export const healthStep = defineStep({
         title: hm.title,
         veterinarianId: hm.veterinarianId,
         veterinarianName: hm.veterinarian?.name ?? null,
-        pricingType: hm.pricingType,
-        unitPrice: hm.unitPrice?.toNumber() ?? null,
+        doseType: hm.doseType,
+        doseMl: hm.doseMl?.toNumber() ?? null,
+        doseWeightKg: hm.doseWeightKg?.toNumber() ?? null,
         withdrawalUntil: toDateOnly(hm.withdrawalUntil),
         nextDueDate: toDateOnly(hm.nextDueDate),
       },
@@ -156,36 +175,47 @@ export const healthStep = defineStep({
     return new Map(
       items.map((i) => [
         i.animalId,
-        { cost: i.cost?.toNumber() ?? null, notes: i.notes },
+        { doseMl: i.doseMl?.toNumber() ?? null, notes: i.notes },
       ]),
     );
   },
 
   payloadSchema: z.object({
-    // Vazio = calculado na consolidação pela forma de cobrança do procedimento.
-    cost: z
+    // Obrigatória quando o procedimento tem dose (validado em save, que conhece a regra).
+    doseMl: z
       .union([z.literal(""), z.null(), z.coerce.number()])
       .optional()
       .transform((v) => (v === "" || v == null ? null : v))
-      .refine((v) => v == null || v >= 0, "O custo não pode ser negativo"),
+      .refine((v) => v == null || v > 0, "A dose deve ser maior que zero"),
     notes: stepNotesSchema,
   }),
 
   async save(tx, _session, step, animal, payload) {
+    const hm = await tx.healthManagement.findUnique({
+      where: { id: step.healthManagementId },
+      select: { doseType: true },
+    });
+    if (!hm) throw new StepError("Procedimento sanitário não encontrado.");
+    // Quem aplicou sabe a dose: não é estimada depois pelo peso.
+    if (hm.doseType !== "NONE" && payload.doseMl == null) {
+      throw new StepError("Informe a dose aplicada.", 400, "doseMl");
+    }
+    const doseMl = hm.doseType === "NONE" ? null : payload.doseMl;
+
     const existing = await tx.healthManagementItem.findFirst({
       where: { managementId: step.healthManagementId, animalId: animal.id },
     });
     if (existing) {
       await tx.healthManagementItem.update({
         where: { id: existing.id },
-        data: { cost: payload.cost, notes: payload.notes },
+        data: { doseMl, notes: payload.notes },
       });
     } else {
       await tx.healthManagementItem.create({
         data: {
           managementId: step.healthManagementId,
           animalId: animal.id,
-          cost: payload.cost,
+          doseMl,
           notes: payload.notes,
         },
       });
@@ -199,35 +229,9 @@ export const healthStep = defineStep({
   },
 
   async consolidate(tx, _session, step, effectiveAt) {
-    const hm = await tx.healthManagement.update({
+    await tx.healthManagement.update({
       where: { id: step.healthManagementId },
       data: { performedAt: effectiveAt },
     });
-
-    // Custos não informados no registro seguem a forma de cobrança.
-    const pending = await tx.healthManagementItem.findMany({
-      where: { managementId: hm.id, cost: null },
-      include: { animal: { select: { currentWeight: true } } },
-    });
-    const unitPrice = hm.unitPrice?.toNumber() ?? null;
-    for (const item of pending) {
-      const weight = item.animal.currentWeight?.toNumber() ?? null;
-      const cost =
-        hm.pricingType === "FREE"
-          ? 0
-          : hm.pricingType === "FIXED"
-            ? unitPrice
-            : hm.pricingType === "PER_WEIGHT" &&
-                unitPrice != null &&
-                weight != null
-              ? Math.round(unitPrice * weight * 100) / 100
-              : null;
-      if (cost != null) {
-        await tx.healthManagementItem.update({
-          where: { id: item.id },
-          data: { cost },
-        });
-      }
-    }
   },
 });
