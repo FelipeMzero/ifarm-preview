@@ -14,3 +14,10 @@
 
 - É necessário registrar partos e desmamas?
 - Na aquisição de animais por compra, como os animais são identificados após a compra?
+
+# Reunião - dia 28/09/2026
+
+- Manejo de marcação (ferra)
+- Lançamento de perdas
+- Módulo de vendas
+- Pastagem rotativa
