@@ -12,6 +12,7 @@ import type {
 } from "../src/generated/prisma/enums";
 import { stepKey, type SessionStep } from "../src/lib/management-steps";
 import { consolidateSession } from "../src/app/api/management-session/consolidate";
+import { findCommitments } from "../src/app/api/animal/commitments";
 import { saveAnimalStep } from "../src/app/api/management-session/records";
 import { applyPlanSteps } from "../src/app/api/management-session/shared";
 import { planStepSchema } from "../src/app/api/management-session/steps";
@@ -1934,6 +1935,86 @@ async function seedOpenSessions(ctx: Ctx) {
     }
   }, WORKFLOW_TX);
 
+  // Em andamento (hoje) com todos os tipos de manejo, para exercitar cada tela de etapa.
+  // Os animais não podem estar em outra operação aberta (a apartação decide o lote).
+  const candidates = await prisma.animal.findMany({
+    where: {
+      currentPropertyId: ctx.properties.SR,
+      status: "ACTIVE",
+      currentBatchId: { not: ctx.batches["SR:Engorda"] },
+    },
+    orderBy: { code: "asc" },
+  });
+  const committed = await findCommitments(
+    prisma,
+    candidates.map((a) => a.id),
+  );
+  const completo = candidates
+    .filter((a) => !committed.get(a.id)?.length)
+    .slice(0, 10);
+
+  await prisma.$transaction(async (tx) => {
+    const session = await createStartedSession(tx, {
+      propertyId: ctx.properties.SR,
+      title: "Manejo completo",
+      notes: "Pesagem, castração, identificação, vacinação e apartação",
+      daysAgo: 0,
+      animalIds: completo.map((a) => a.id),
+      steps: [
+        { type: "weighing" },
+        { type: "neutering" },
+        { type: "tag" },
+        { type: "rfid" },
+        {
+          type: "health",
+          typeId: ctx.healthTypes["Vacinação"],
+          title: "Vacina clostridiose",
+          pricingType: "FIXED",
+          unitPrice: 3.5,
+        },
+        {
+          type: "batch",
+          suggestedBatchIds: [
+            ctx.batches["SR:Recria"],
+            ctx.batches["SR:Engorda"],
+          ],
+        },
+      ],
+    });
+    const weighing = keyOf(session.steps, "weighing");
+    const neutering = keyOf(session.steps, "neutering");
+    const tag = keyOf(session.steps, "tag");
+    const rfid = keyOf(session.steps, "rfid");
+    const health = keyOf(session.steps, "health");
+    const batch = keyOf(session.steps, "batch");
+
+    // Faixa própria de brincos e RFIDs, fora das usadas pelo restante do seed.
+    let rfidCounter = 8000;
+    const nextRfid = () => `076000${String(1_000_000 + ++rfidCounter)}`;
+
+    for (const [i, a] of completo.entries()) {
+      if (i >= 6) continue; // o resto ainda a manejar
+      const weightKg = Math.round((a.currentWeight?.toNumber() ?? 250) + 8);
+      await saveAnimalStep(tx, session.id, a.id, weighing, { weightKg });
+      await saveAnimalStep(tx, session.id, a.id, tag, {
+        value: `SR-${9001 + i}`,
+      });
+      if (i >= 3) continue; // parciais: só pesados e brincados
+
+      // Completos: a castração só vale para machos ainda inteiros.
+      if (a.sex === "MALE" && !a.neutered) {
+        await saveAnimalStep(tx, session.id, a.id, neutering, {
+          techniqueId: ctx.neuteringTechniques["Burdizzo"],
+        });
+      }
+      await saveAnimalStep(tx, session.id, a.id, rfid, { value: nextRfid() });
+      await saveAnimalStep(tx, session.id, a.id, health, {});
+      await saveAnimalStep(tx, session.id, a.id, batch, {
+        batchId: i === 0 ? ctx.batches["SR:Engorda"] : null,
+      });
+    }
+  }, WORKFLOW_TX);
+
   // Cancelada antes de começar (sem registros).
   const cria = await prisma.animal.findMany({
     where: { currentBatchId: ctx.batches["SR:Cria"], status: "ACTIVE" },
@@ -2300,7 +2381,7 @@ async function seedWorkflows(ctx: Ctx) {
   await seedOpenSessions(ctx);
   await seedOpenPurchases(ctx);
   console.log(
-    "- fluxos em andamento: sessões (em andamento, cancelada) e 6 compras (recebendo, pronta para consolidar, entrega incompleta, pesada na chegada, paga antes da entrega, cancelada)",
+    "- fluxos em andamento: sessões (duas em andamento, cancelada) e 6 compras (recebendo, pronta para consolidar, entrega incompleta, pesada na chegada, paga antes da entrega, cancelada)",
   );
 }
 
