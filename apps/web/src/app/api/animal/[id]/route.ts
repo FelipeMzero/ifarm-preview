@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { prisma, Prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/api-auth";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
 import type { CommitmentIntent } from "@/lib/animal-commitments";
@@ -9,6 +9,8 @@ import {
   commitmentErrorResponse,
 } from "../commitments";
 import { uniqueConstraintErrors } from "../../dbErrors";
+import { deleteRecord, DeletionBlockedError } from "../../deletion";
+import { animalDeletionPolicy } from "../deletion-policy";
 import { animalUpdateApiSchema } from "../../schemas";
 import { effectiveNeutering } from "../../management-session/effective";
 import {
@@ -288,9 +290,40 @@ export async function DELETE(
   const { id } = await params;
 
   try {
-    await prisma.animal.delete({ where: { id } });
+    await deleteRecord(animalDeletionPolicy, id);
     return NextResponse.json({ success: true });
   } catch (error) {
+    if (error instanceof DeletionBlockedError) {
+      return NextResponse.json(
+        { success: false, message: error.message },
+        { status: 409 },
+      );
+    }
+
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2025"
+    ) {
+      return NextResponse.json(
+        { success: false, message: "Animal não encontrado." },
+        { status: 404 },
+      );
+    }
+
+    // Vínculo que a policy não cobre: a FK barrou a exclusão.
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2003"
+    ) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Este registro está em uso e não pode ser excluído.",
+        },
+        { status: 409 },
+      );
+    }
+
     console.error(error);
     return NextResponse.json(
       { success: false, message: "Ocorreu um erro interno no servidor." },
