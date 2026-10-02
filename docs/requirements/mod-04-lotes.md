@@ -61,17 +61,17 @@ Permite consultar os lotes da propriedade selecionada, com busca, filtro e acess
 
 ### 2.1.2 - Critérios de Aceitação
 
-- [x] Segue o [padrão de listagem](comum.md#padrão-de-listagem).
-- [x] A listagem deve exibir apenas os lotes da propriedade selecionada (`RN-LOTE-01`).
-- [x] Deve permitir exibir as colunas `Nome`, `Área`, `Quantidade de animais`, `Peso médio atual` e `Atualizado em`.
-- [x] `Nome` é sempre visível.
+- [ ] Segue o [padrão de listagem](comum.md#padrão-de-listagem).
+- [ ] A listagem deve exibir apenas os lotes da propriedade selecionada (`RN-LOTE-01`).
+- [ ] Deve permitir exibir as colunas `Nome`, `Área`, `Quantidade de animais`, `Peso médio atual` e `Atualizado em`.
+- [ ] `Nome` é sempre visível.
 - [ ] A ordenação inicial é por `Atualizado em`, do mais recente para o mais antigo.
-- [x] A pesquisa deve considerar o `Nome`.
-- [x] Os filtros disponíveis são: vigentes, encerrados e todos. O filtro inicial é "vigentes".
-- [x] As ações disponíveis para cada lote são: Editar (`RF-LOTE-03`) e Detalhes (`RF-LOTE-05`).
-- [x] Para um lote vigente, também está disponível a ação Encerrar (`RF-LOTE-07`).
-- [x] Para um lote encerrado, também está disponível a ação Reativar (`RF-LOTE-08`).
-- [x] Deve permitir acionar a criação de um novo lote (`RF-LOTE-02`).
+- [ ] A pesquisa deve considerar o `Nome`.
+- [ ] Os filtros disponíveis são: vigentes, encerrados e todos. O filtro inicial é "vigentes".
+- [ ] As ações disponíveis para cada lote são: Editar (`RF-LOTE-03`) e Detalhes (`RF-LOTE-05`).
+- [ ] Para um lote vigente, também está disponível a ação Encerrar (`RF-LOTE-07`).
+- [ ] Para um lote encerrado, também está disponível a ação Reativar (`RF-LOTE-08`).
+- [ ] Deve permitir acionar a criação de um novo lote (`RF-LOTE-02`).
 
 ### 2.1.3 - Fluxos
 
@@ -124,12 +124,12 @@ Permite cadastrar lotes, definindo a área de pastagem que cada lote passa a ocu
 
 ### 2.2.2 - Critérios de Aceitação
 
-- [x] O cadastro deve permitir informar `Nome`, `Área`, `Descrição`, `Meta`, `Data para venda` e `Peso médio para venda`.
-- [x] Os campos `Nome` e `Área` são obrigatórios.
-- [x] A `Área` deve ser escolhida entre as áreas ativas e livres da propriedade selecionada, com possibilidade de busca por nome (`RN-LOTE-02`).
-- [x] Os campos `Data para venda` e `Peso médio para venda` só devem ser solicitados quando o lote tiver meta, e passam a ser obrigatórios nesse caso (`RN-LOTE-04`).
-- [x] O lote criado será vinculado à propriedade selecionada no sistema (`RN-LOTE-01`), com o status vigente.
-- [x] A criação do lote deve registrar a entrada do lote na área escolhida (`RN-LOTE-03`).
+- [ ] O cadastro deve permitir informar `Nome`, `Área`, `Descrição`, `Meta`, `Data para venda` e `Peso médio para venda`.
+- [ ] Os campos `Nome` e `Área` são obrigatórios.
+- [ ] A `Área` deve ser escolhida entre as áreas ativas e livres da propriedade selecionada, com possibilidade de busca por nome (`RN-LOTE-02`).
+- [ ] Os campos `Data para venda` e `Peso médio para venda` só devem ser solicitados quando o lote tiver meta, e passam a ser obrigatórios nesse caso (`RN-LOTE-04`).
+- [ ] O lote criado será vinculado à propriedade selecionada no sistema (`RN-LOTE-01`), com o status vigente.
+- [ ] A criação do lote deve registrar a entrada do lote na área escolhida (`RN-LOTE-03`).
 
 ### 2.2.3 - Fluxos
 
@@ -184,11 +184,11 @@ Permite editar os dados de um lote. Diferentemente da criação, a área não é
 
 ### 2.3.2 - Critérios de Aceitação
 
-- [x] Os campos `Nome`, `Descrição`, `Meta`, `Data para venda` e `Peso médio para venda` podem ser alterados, com as mesmas regras de preenchimento da criação (`RF-LOTE-02`).
-- [x] A meta pode ser incluída, alterada ou removida (`RN-LOTE-04`).
-- [x] A área atual do lote deve ser exibida sem possibilidade de edição direta, com a opção de acionar a troca de área (`RF-LOTE-04`).
-- [x] O histórico de áreas do lote deve poder ser consultado, com o período de ocupação de cada área (ver `RF-LOTE-04`).
-- [x] Uma troca de área definida só é registrada ao salvar a edição do lote.
+- [ ] Os campos `Nome`, `Descrição`, `Meta`, `Data para venda` e `Peso médio para venda` podem ser alterados, com as mesmas regras de preenchimento da criação (`RF-LOTE-02`).
+- [ ] A meta pode ser incluída, alterada ou removida (`RN-LOTE-04`).
+- [ ] A área atual do lote deve ser exibida sem possibilidade de edição direta, com a opção de acionar a troca de área (`RF-LOTE-04`).
+- [ ] O histórico de áreas do lote deve poder ser consultado, com o período de ocupação de cada área (ver `RF-LOTE-04`).
+- [ ] Uma troca de área definida só é registrada ao salvar a edição do lote.
 
 ### 2.3.3 - Fluxos
 

@@ -24,7 +24,7 @@ export const ANIMAL_STATUS_LABELS: Record<AnimalStatus, string> = {
   SOLD: "Vendido",
   DONATED: "Doado",
   DEAD: "Morto",
-  DISCARDED: "Descarte",
+  MISSING: "Desaparecido",
   SLAUGHTERED: "Abatido",
   REFERENCE: "Referência",
 };

@@ -57,23 +57,23 @@ Permite consultar as áreas de pastagem da propriedade selecionada, desenhadas s
 
 ### 2.1.2 - Critérios de Aceitação
 
-- [x] O mapa deve exibir as áreas ativas da propriedade selecionada, cada uma identificada pelo seu `Nome` e pela sua situação (`RN-AREA-07`).
-- [x] O usuário pode alternar a exibição entre as áreas ativas e as inativas.
-- [x] O mapa deve iniciar enquadrando as áreas exibidas.
-- [x] Sem áreas a exibir, o mapa deve iniciar na localização da propriedade e, na falta dela, na localização do usuário.
-- [x] O usuário pode navegar pelo mapa e aproximar/afastar.
-- [x] O usuário pode voltar o mapa à visão inicial.
-- [x] O usuário pode alternar entre a visualização de mapa e a de imagem de satélite.
-- [x] Para uma área ocupada, deve ser possível consultar no próprio mapa o lote que a ocupa e a quantidade de animais.
-- [x] Para uma área ocupada, deve ser possível consultar no próprio mapa a lotação atual e a capacidade em UA, com o percentual de ocupação (`RN-AREA-04`).
-- [x] Para uma área ocupada, deve ser possível consultar no próprio mapa há quantos dias o lote está na área, com a indicação de prazo de ocupação excedido (`RN-AREA-06`).
-- [x] Para uma área livre, deve ser possível consultar no próprio mapa há quantos dias está em descanso, ou que nunca foi ocupada (`RN-AREA-06`).
-- [x] Para uma área livre, deve ser possível consultar no próprio mapa se ela já está pronta para receber um lote ou, se não, quando estará (`RN-AREA-06`).
-- [x] As ações disponíveis para uma área ativa são: Editar (`RF-AREA-03`), Detalhes (`RF-AREA-04`), Desativar (`RF-AREA-06`) e Excluir (`RF-AREA-05`).
-- [x] A partir de uma área ocupada, o usuário pode acessar o lote que a ocupa (`RF-LOTE-05`).
-- [x] As ações disponíveis para uma área inativa são: Reativar (`RF-AREA-06`) e Excluir (`RF-AREA-05`).
-- [x] A criação de uma nova área (`RF-AREA-02`) só pode ser acionada durante a exibição das áreas ativas.
-- [x] Sem propriedade selecionada, o sistema deve orientar o usuário a selecionar uma.
+- [ ] O mapa deve exibir as áreas ativas da propriedade selecionada, cada uma identificada pelo seu `Nome` e pela sua situação (`RN-AREA-07`).
+- [ ] O usuário pode alternar a exibição entre as áreas ativas e as inativas.
+- [ ] O mapa deve iniciar enquadrando as áreas exibidas.
+- [ ] Sem áreas a exibir, o mapa deve iniciar na localização da propriedade e, na falta dela, na localização do usuário.
+- [ ] O usuário pode navegar pelo mapa e aproximar/afastar.
+- [ ] O usuário pode voltar o mapa à visão inicial.
+- [ ] O usuário pode alternar entre a visualização de mapa e a de imagem de satélite.
+- [ ] Para uma área ocupada, deve ser possível consultar no próprio mapa o lote que a ocupa e a quantidade de animais.
+- [ ] Para uma área ocupada, deve ser possível consultar no próprio mapa a lotação atual e a capacidade em UA, com o percentual de ocupação (`RN-AREA-04`).
+- [ ] Para uma área ocupada, deve ser possível consultar no próprio mapa há quantos dias o lote está na área, com a indicação de prazo de ocupação excedido (`RN-AREA-06`).
+- [ ] Para uma área livre, deve ser possível consultar no próprio mapa há quantos dias está em descanso, ou que nunca foi ocupada (`RN-AREA-06`).
+- [ ] Para uma área livre, deve ser possível consultar no próprio mapa se ela já está pronta para receber um lote ou, se não, quando estará (`RN-AREA-06`).
+- [ ] As ações disponíveis para uma área ativa são: Editar (`RF-AREA-03`), Detalhes (`RF-AREA-04`), Desativar (`RF-AREA-06`) e Excluir (`RF-AREA-05`).
+- [ ] A partir de uma área ocupada, o usuário pode acessar o lote que a ocupa (`RF-LOTE-05`).
+- [ ] As ações disponíveis para uma área inativa são: Reativar (`RF-AREA-06`) e Excluir (`RF-AREA-05`).
+- [ ] A criação de uma nova área (`RF-AREA-02`) só pode ser acionada durante a exibição das áreas ativas.
+- [ ] Sem propriedade selecionada, o sistema deve orientar o usuário a selecionar uma.
 
 ### 2.1.3 - Fluxos
 
@@ -140,13 +140,13 @@ Permite cadastrar áreas de pastagem, desenhando o contorno da área sobre o map
 
 ### 2.2.2 - Critérios de Aceitação
 
-- [x] O usuário desenha o `Polígono` da área clicando no mapa até fechar o contorno e, depois, preenche os demais campos.
-- [x] Após fechar o contorno, o usuário pode ajustar a geometria movendo os vértices.
-- [x] O sistema deve informar a área calculada a partir do `Polígono` e sugeri-la como valor de `Hectares`, recalculando a cada ajuste (`RN-AREA-08`).
+- [ ] O usuário desenha o `Polígono` da área clicando no mapa até fechar o contorno e, depois, preenche os demais campos.
+- [ ] Após fechar o contorno, o usuário pode ajustar a geometria movendo os vértices.
+- [ ] O sistema deve informar a área calculada a partir do `Polígono` e sugeri-la como valor de `Hectares`, recalculando a cada ajuste (`RN-AREA-08`).
 - [ ] Se o valor de `Hectares` divergir significativamente do calculado a partir do `Polígono`, o sistema deve alertar o usuário, sem impedir o salvamento (`RN-AREA-08`).
-- [x] Os campos `Nome`, `Polígono`, `Hectares` e `Taxa de Lotação` são obrigatórios.
-- [x] A área criada será vinculada à propriedade selecionada no sistema (`RN-AREA-01`).
-- [x] O usuário pode cancelar a criação a qualquer momento, inclusive pela tecla Esc.
+- [ ] Os campos `Nome`, `Polígono`, `Hectares` e `Taxa de Lotação` são obrigatórios.
+- [ ] A área criada será vinculada à propriedade selecionada no sistema (`RN-AREA-01`).
+- [ ] O usuário pode cancelar a criação a qualquer momento, inclusive pela tecla Esc.
 
 ### 2.2.3 - Fluxos
 
@@ -203,11 +203,11 @@ Permite editar os dados de uma área de pastagem já cadastrada, incluindo o aju
 
 ### 2.3.2 - Critérios de Aceitação
 
-- [x] Ao iniciar a edição, o mapa deve enquadrar a área, e os campos devem vir preenchidos com os dados atuais.
-- [x] Todos os campos, exceto `Propriedade`, podem ser alterados, com as mesmas regras de preenchimento da criação (`RF-AREA-02`).
-- [x] O `Polígono` pode ser ajustado movendo seus vértices, e o sistema recalcula a sugestão de `Hectares` a cada ajuste (`RN-AREA-08`).
+- [ ] Ao iniciar a edição, o mapa deve enquadrar a área, e os campos devem vir preenchidos com os dados atuais.
+- [ ] Todos os campos, exceto `Propriedade`, podem ser alterados, com as mesmas regras de preenchimento da criação (`RF-AREA-02`).
+- [ ] O `Polígono` pode ser ajustado movendo seus vértices, e o sistema recalcula a sugestão de `Hectares` a cada ajuste (`RN-AREA-08`).
 - [ ] Se o valor de `Hectares` divergir significativamente do calculado a partir do `Polígono`, o sistema deve alertar o usuário, sem impedir o salvamento (`RN-AREA-08`).
-- [x] O usuário pode cancelar a edição a qualquer momento, inclusive pela tecla Esc, mantendo a área como estava.
+- [ ] O usuário pode cancelar a edição a qualquer momento, inclusive pela tecla Esc, mantendo a área como estava.
 
 ### 2.3.3 - Fluxos
 

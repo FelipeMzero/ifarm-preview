@@ -37,15 +37,15 @@ Permite listar, criar, editar, ativar/desativar e excluir, em uma tela única, o
 
 ### 2.1.2 - Critérios de Aceitação
 
-- [x] A listagem deve exibir o `Nome` de todos os tipos de manejo sanitário cadastrados, ordenados alfabeticamente.
-- [x] Deve ser possível pesquisar por `Nome`.
-- [x] A criação e edição de tipos de manejo sanitário deve ocorrer diretamente na listagem, sem necessidade de tela ou dialog separado.
-- [x] Um botão "Adicionar" deve inserir uma nova linha editável ao final da listagem para preenchimento do `Nome`.
-- [x] Um clique duplo sobre o `Nome` de um tipo já cadastrado deve habilitá-lo para edição inline.
-- [x] A confirmação da criação/edição ocorre ao perder o foco do campo (blur) ou pressionar Enter; a tecla Esc cancela a alteração em andamento, restaurando o valor anterior (ou removendo a linha, no caso de uma criação cancelada).
-- [x] O campo `Nome` é obrigatório e único.
-- [x] Deve ser possível excluir um tipo de manejo sanitário, desde que não esteja vinculado a nenhum procedimento sanitário.
-- [x] Caso o tipo de manejo sanitário esteja vinculado a algum procedimento sanitário, a exclusão deve ser impedida (ver [Exclusão vs Inativação](comum.md#exclusão-vs-inativação)).
+- [ ] A listagem deve exibir o `Nome` de todos os tipos de manejo sanitário cadastrados, ordenados alfabeticamente.
+- [ ] Deve ser possível pesquisar por `Nome`.
+- [ ] A criação e edição de tipos de manejo sanitário deve ocorrer diretamente na listagem, sem necessidade de tela ou dialog separado.
+- [ ] Um botão "Adicionar" deve inserir uma nova linha editável ao final da listagem para preenchimento do `Nome`.
+- [ ] Um clique duplo sobre o `Nome` de um tipo já cadastrado deve habilitá-lo para edição inline.
+- [ ] A confirmação da criação/edição ocorre ao perder o foco do campo (blur) ou pressionar Enter; a tecla Esc cancela a alteração em andamento, restaurando o valor anterior (ou removendo a linha, no caso de uma criação cancelada).
+- [ ] O campo `Nome` é obrigatório e único.
+- [ ] Deve ser possível excluir um tipo de manejo sanitário, desde que não esteja vinculado a nenhum procedimento sanitário.
+- [ ] Caso o tipo de manejo sanitário esteja vinculado a algum procedimento sanitário, a exclusão deve ser impedida (ver [Exclusão vs Inativação](comum.md#exclusão-vs-inativação)).
 
 ### 2.1.3 - Fluxos
 

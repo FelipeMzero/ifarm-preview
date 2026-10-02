@@ -65,14 +65,14 @@ Permite consultar os animais da propriedade selecionada, com busca, filtros e ac
 
 ### 2.1.2 - Critérios de Aceitação
 
-- [x] Segue o [padrão de listagem](comum.md#padrão-de-listagem).
-- [x] A listagem deve exibir apenas os animais da propriedade selecionada.
-- [x] Deve permitir exibir as colunas identificação, `Sexo`, `Peso Atual`, `Origem`, `Situação` e `Atualizado em`.
-- [x] A identificação exibida é o `Brinco`; na falta dele, o `RFID`; na falta dos dois, o `ID`.
-- [x] A identificação é sempre visível; `Origem` inicia oculta.
-- [x] A ordenação inicial é por `Atualizado em`, do mais recente para o mais antigo.
-- [x] A pesquisa deve considerar `ID`, `Brinco`, `RFID` e `Apelido`.
-- [x] Deve ser possível filtrar, de forma combinada com a busca e entre si, por:
+- [ ] Segue o [padrão de listagem](comum.md#padrão-de-listagem).
+- [ ] A listagem deve exibir apenas os animais da propriedade selecionada.
+- [ ] Deve permitir exibir as colunas identificação, `Sexo`, `Peso Atual`, `Origem`, `Situação` e `Atualizado em`.
+- [ ] A identificação exibida é o `Brinco`; na falta dele, o `RFID`; na falta dos dois, o `ID`.
+- [ ] A identificação é sempre visível; `Origem` inicia oculta.
+- [ ] A ordenação inicial é por `Atualizado em`, do mais recente para o mais antigo.
+- [ ] A pesquisa deve considerar `ID`, `Brinco`, `RFID` e `Apelido`.
+- [ ] Deve ser possível filtrar, de forma combinada com a busca e entre si, por:
   - `Situação` (inicialmente, apenas os ativos);
   - faixa etária: até 12 meses, de 12 a 24 meses, acima de 24 meses ou sem data de nascimento;
   - `Lote`, entre os lotes vigentes da propriedade, ou animais sem lote;
@@ -81,10 +81,10 @@ Permite consultar os animais da propriedade selecionada, com busca, filtros e ac
   - faixa de `Peso Atual` (mínimo e/ou máximo);
   - `Raça`;
   - `Origem`.
-- [x] Os filtros aplicados devem ficar visíveis, podendo ser removidos individualmente ou todos de uma vez.
-- [x] A busca e os filtros devem ser preservados no endereço da página, para que sobrevivam ao recarregamento e possam ser compartilhados.
-- [x] As ações disponíveis para cada animal são: Editar (`RF-ANIMAL-03`), Detalhes (`RF-ANIMAL-08`) e Excluir (`RF-ANIMAL-09`).
-- [x] Deve permitir acionar o cadastro de um novo animal (`RF-ANIMAL-02`).
+- [ ] Os filtros aplicados devem ficar visíveis, podendo ser removidos individualmente ou todos de uma vez.
+- [ ] A busca e os filtros devem ser preservados no endereço da página, para que sobrevivam ao recarregamento e possam ser compartilhados.
+- [ ] As ações disponíveis para cada animal são: Editar (`RF-ANIMAL-03`), Detalhes (`RF-ANIMAL-08`) e Excluir (`RF-ANIMAL-09`).
+- [ ] Deve permitir acionar o cadastro de um novo animal (`RF-ANIMAL-02`).
 
 ### 2.1.3 - Fluxos
 
@@ -142,19 +142,19 @@ Permite cadastrar individualmente um animal na propriedade selecionada, já com 
 
 ### 2.2.2 - Critérios de Aceitação
 
-- [x] O cadastro deve permitir informar `Brinco`, `RFID`, `Apelido`, `Sexo`, `Data de Nascimento`, `Data de Entrada`, `Raça`, peso, `Lote`, castração e `Origem`.
-- [x] Os campos `Sexo`, `Origem` e `Lote` são obrigatórios. Inicialmente, o `Sexo` é `Macho` e a `Origem` é `Indefinida`.
-- [x] O `Brinco` e o `RFID` não podem estar em uso por outro animal ativo da propriedade (`RN-ANIMAL-01`).
-- [x] A `Raça` deve ser escolhida entre as raças ativas.
-- [x] O `Lote` deve ser escolhido entre os lotes vigentes da propriedade, com possibilidade de busca por nome.
-- [x] Deve ser possível cadastrar um novo lote a partir da escolha do `Lote`, sem sair do cadastro do animal (`RF-LOTE-02`); o lote cadastrado passa a ser o lote do animal.
-- [x] Ao escolher o `Lote`, o sistema deve alertar, sem impedir o cadastro, se a entrada do animal fizer a lotação da área do lote exceder a capacidade (`RN-LOTE-10`).
-- [x] Se o animal for castrado, deve ser possível informar a data da castração e a técnica, escolhida entre as técnicas ativas.
-- [x] Se a `Origem` for `Compra`, devem ser informados o vendedor e o valor da compra (obrigatórios), a data de aquisição e uma observação (opcionais) (`RN-ANIMAL-05`). O vendedor deve ser escolhido entre as pessoas ativas, e deve ser possível cadastrar uma nova pessoa sem sair do cadastro do animal (`RF-PESSOA-02`).
-- [x] As datas informadas devem respeitar `RN-ANIMAL-06`. Sem `Data de Entrada`, o animal entra na propriedade na data do cadastro.
-- [x] O animal cadastrado é vinculado à propriedade selecionada, com a situação `Ativo`, e o `ID` é atribuído automaticamente.
-- [x] O cadastro deve registrar, na `Data de Entrada`, a entrada do animal na propriedade e no lote e, quando informados, a pesagem inicial, o brinco e o RFID iniciais e a castração (na data da castração ou, sem ela, na `Data de Entrada`).
-- [x] Com a `Origem` `Compra`, o cadastro deve registrar a compra do animal, já concluída e com o valor informado; se houver valor, a compra fica registrada como paga na data de aquisição.
+- [ ] O cadastro deve permitir informar `Brinco`, `RFID`, `Apelido`, `Sexo`, `Data de Nascimento`, `Data de Entrada`, `Raça`, peso, `Lote`, castração e `Origem`.
+- [ ] Os campos `Sexo`, `Origem` e `Lote` são obrigatórios. Inicialmente, o `Sexo` é `Macho` e a `Origem` é `Indefinida`.
+- [ ] O `Brinco` e o `RFID` não podem estar em uso por outro animal ativo da propriedade (`RN-ANIMAL-01`).
+- [ ] A `Raça` deve ser escolhida entre as raças ativas.
+- [ ] O `Lote` deve ser escolhido entre os lotes vigentes da propriedade, com possibilidade de busca por nome.
+- [ ] Deve ser possível cadastrar um novo lote a partir da escolha do `Lote`, sem sair do cadastro do animal (`RF-LOTE-02`); o lote cadastrado passa a ser o lote do animal.
+- [ ] Ao escolher o `Lote`, o sistema deve alertar, sem impedir o cadastro, se a entrada do animal fizer a lotação da área do lote exceder a capacidade (`RN-LOTE-10`).
+- [ ] Se o animal for castrado, deve ser possível informar a data da castração e a técnica, escolhida entre as técnicas ativas.
+- [ ] Se a `Origem` for `Compra`, devem ser informados o vendedor e o valor da compra (obrigatórios), a data de aquisição e uma observação (opcionais) (`RN-ANIMAL-05`). O vendedor deve ser escolhido entre as pessoas ativas, e deve ser possível cadastrar uma nova pessoa sem sair do cadastro do animal (`RF-PESSOA-02`).
+- [ ] As datas informadas devem respeitar `RN-ANIMAL-06`. Sem `Data de Entrada`, o animal entra na propriedade na data do cadastro.
+- [ ] O animal cadastrado é vinculado à propriedade selecionada, com a situação `Ativo`, e o `ID` é atribuído automaticamente.
+- [ ] O cadastro deve registrar, na `Data de Entrada`, a entrada do animal na propriedade e no lote e, quando informados, a pesagem inicial, o brinco e o RFID iniciais e a castração (na data da castração ou, sem ela, na `Data de Entrada`).
+- [ ] Com a `Origem` `Compra`, o cadastro deve registrar a compra do animal, já concluída e com o valor informado; se houver valor, a compra fica registrada como paga na data de aquisição.
 
 ### 2.2.3 - Fluxos
 
@@ -224,9 +224,9 @@ Permite editar os dados cadastrais de um animal. Os dados que dependem de manejo
 
 ### 2.3.2 - Critérios de Aceitação
 
-- [x] Os campos `Apelido`, `Sexo`, `Data de Nascimento` e `Raça` podem ser alterados, com as mesmas regras de preenchimento do cadastro (`RF-ANIMAL-02`).
-- [x] O `Brinco`, o `RFID`, o `Lote`, o `Peso Atual` e a castração devem ser exibidos com o seu valor atual, sem edição direta, e permitir acionar, respectivamente, a identificação (`RF-ANIMAL-06`), a troca de lote (`RF-ANIMAL-04`), as pesagens (`RF-ANIMAL-05`) e a castração (`RF-ANIMAL-07`).
-- [x] O `ID`, a `Origem` e a `Situação` não podem ser alterados na edição.
+- [ ] Os campos `Apelido`, `Sexo`, `Data de Nascimento` e `Raça` podem ser alterados, com as mesmas regras de preenchimento do cadastro (`RF-ANIMAL-02`).
+- [ ] O `Brinco`, o `RFID`, o `Lote`, o `Peso Atual` e a castração devem ser exibidos com o seu valor atual, sem edição direta, e permitir acionar, respectivamente, a identificação (`RF-ANIMAL-06`), a troca de lote (`RF-ANIMAL-04`), as pesagens (`RF-ANIMAL-05`) e a castração (`RF-ANIMAL-07`).
+- [ ] O `ID`, a `Origem` e a `Situação` não podem ser alterados na edição.
 
 ### 2.3.3 - Fluxos
 
@@ -270,12 +270,12 @@ Permite mover um animal para outro lote da mesma propriedade, acionada durante a
 
 ### 2.4.2 - Critérios de Aceitação
 
-- [x] A troca deve permitir informar o lote de destino (obrigatório) e uma observação (opcional).
-- [x] O lote de destino deve ser escolhido entre os lotes vigentes da propriedade do animal.
-- [x] Ao escolher o lote de destino, o sistema deve alertar, sem impedir a troca, se a lotação resultante exceder a capacidade da área do lote (`RN-LOTE-10`).
-- [x] A troca só é registrada ao salvar a edição do animal (`RF-ANIMAL-03`).
-- [x] Ao ser registrada, a troca encerra a permanência do animal no lote atual e registra a entrada no lote de destino na data da troca, com a observação informada (`RN-ANIMAL-03`).
-- [x] A troca deve ser impedida quando conflitar com uma operação em aberto do animal (`RN-ANIMAL-10`).
+- [ ] A troca deve permitir informar o lote de destino (obrigatório) e uma observação (opcional).
+- [ ] O lote de destino deve ser escolhido entre os lotes vigentes da propriedade do animal.
+- [ ] Ao escolher o lote de destino, o sistema deve alertar, sem impedir a troca, se a lotação resultante exceder a capacidade da área do lote (`RN-LOTE-10`).
+- [ ] A troca só é registrada ao salvar a edição do animal (`RF-ANIMAL-03`).
+- [ ] Ao ser registrada, a troca encerra a permanência do animal no lote atual e registra a entrada no lote de destino na data da troca, com a observação informada (`RN-ANIMAL-03`).
+- [ ] A troca deve ser impedida quando conflitar com uma operação em aberto do animal (`RN-ANIMAL-10`).
 
 ### 2.4.3 - Fluxos
 
@@ -321,13 +321,13 @@ Permite consultar o histórico de pesagens de um animal, registrar uma nova pesa
 
 ### 2.5.2 - Critérios de Aceitação
 
-- [x] Exibir as pesagens válidas do animal, da mais recente para a mais antiga, com data, peso, observação e se foi feita em sessão de manejo. Pesagens de sessões ainda não consolidadas não entram no histórico.
-- [x] Pesagens corrigidas devem indicar o valor lançado originalmente e a data da correção (`RN-ANIMAL-09`).
-- [x] Deve ser possível registrar uma pesagem avulsa informando o peso (obrigatório, maior que zero), a data (inicialmente hoje) e uma observação. A data deve respeitar `RN-ANIMAL-06`.
-- [x] Deve ser possível corrigir o peso, a data e a observação de uma pesagem. A data de uma pesagem feita em sessão de manejo não pode ser corrigida (`RN-ANIMAL-09`).
-- [x] Deve ser possível anular uma pesagem, mediante confirmação do usuário. A pesagem anulada sai do histórico e dos cálculos.
-- [x] O registro, a correção ou a anulação de uma pesagem deve atualizar o `Peso Atual` do animal (`RN-ANIMAL-07`).
-- [x] Se o animal estiver em uma operação em aberto relacionada, o sistema deve informar o conflito antes do registro (`RN-ANIMAL-10`).
+- [ ] Exibir as pesagens válidas do animal, da mais recente para a mais antiga, com data, peso, observação e se foi feita em sessão de manejo. Pesagens de sessões ainda não consolidadas não entram no histórico.
+- [ ] Pesagens corrigidas devem indicar o valor lançado originalmente e a data da correção (`RN-ANIMAL-09`).
+- [ ] Deve ser possível registrar uma pesagem avulsa informando o peso (obrigatório, maior que zero), a data (inicialmente hoje) e uma observação. A data deve respeitar `RN-ANIMAL-06`.
+- [ ] Deve ser possível corrigir o peso, a data e a observação de uma pesagem. A data de uma pesagem feita em sessão de manejo não pode ser corrigida (`RN-ANIMAL-09`).
+- [ ] Deve ser possível anular uma pesagem, mediante confirmação do usuário. A pesagem anulada sai do histórico e dos cálculos.
+- [ ] O registro, a correção ou a anulação de uma pesagem deve atualizar o `Peso Atual` do animal (`RN-ANIMAL-07`).
+- [ ] Se o animal estiver em uma operação em aberto relacionada, o sistema deve informar o conflito antes do registro (`RN-ANIMAL-10`).
 
 ### 2.5.3 - Fluxos
 
@@ -389,15 +389,15 @@ Permite consultar o histórico de brincos e de RFID de um animal, registrar uma 
 
 ### 2.6.2 - Critérios de Aceitação
 
-- [x] Exibir o histórico de brincos (ou de RFID) do animal, do mais recente para o mais antigo, com data, valor ou indicação de remoção, observação e se foi feito em sessão de manejo.
-- [x] Registros corrigidos devem indicar o valor lançado originalmente e a data da correção (`RN-ANIMAL-09`).
-- [x] Deve ser possível registrar um novo brinco (ou RFID), com uma observação opcional, na data de hoje. O novo valor deve ser diferente do atual.
-- [x] Deve ser possível remover o brinco (ou RFID) atual, mediante confirmação do usuário; a remoção entra no histórico (`RN-ANIMAL-02`).
-- [x] Deve ser possível corrigir o valor, a data e a observação de um registro. A data de um registro feito em sessão de manejo não pode ser corrigida, e nenhuma data pode ser futura (`RN-ANIMAL-09`).
-- [x] Deve ser possível anular um registro, mediante confirmação do usuário. O registro anulado sai do histórico.
-- [x] O registro, a correção ou a anulação deve atualizar o `Brinco` (ou `RFID`) atual do animal para o do registro válido mais recente.
-- [x] O registro, a correção ou a anulação deve ser impedida se levar o animal a um brinco (ou RFID) em uso por outro animal ativo da propriedade (`RN-ANIMAL-01`).
-- [x] Se o animal estiver em uma operação em aberto relacionada, o sistema deve informar o conflito antes do registro (`RN-ANIMAL-10`).
+- [ ] Exibir o histórico de brincos (ou de RFID) do animal, do mais recente para o mais antigo, com data, valor ou indicação de remoção, observação e se foi feito em sessão de manejo.
+- [ ] Registros corrigidos devem indicar o valor lançado originalmente e a data da correção (`RN-ANIMAL-09`).
+- [ ] Deve ser possível registrar um novo brinco (ou RFID), com uma observação opcional, na data de hoje. O novo valor deve ser diferente do atual.
+- [ ] Deve ser possível remover o brinco (ou RFID) atual, mediante confirmação do usuário; a remoção entra no histórico (`RN-ANIMAL-02`).
+- [ ] Deve ser possível corrigir o valor, a data e a observação de um registro. A data de um registro feito em sessão de manejo não pode ser corrigida, e nenhuma data pode ser futura (`RN-ANIMAL-09`).
+- [ ] Deve ser possível anular um registro, mediante confirmação do usuário. O registro anulado sai do histórico.
+- [ ] O registro, a correção ou a anulação deve atualizar o `Brinco` (ou `RFID`) atual do animal para o do registro válido mais recente.
+- [ ] O registro, a correção ou a anulação deve ser impedida se levar o animal a um brinco (ou RFID) em uso por outro animal ativo da propriedade (`RN-ANIMAL-01`).
+- [ ] Se o animal estiver em uma operação em aberto relacionada, o sistema deve informar o conflito antes do registro (`RN-ANIMAL-10`).
 
 ### 2.6.3 - Fluxos
 
@@ -473,14 +473,14 @@ Permite consultar o histórico de castrações de um animal, registrar uma castr
 
 ### 2.7.2 - Critérios de Aceitação
 
-- [x] Exibir as castrações válidas do animal, com data, técnica, observação e se foi feita em sessão de manejo.
-- [x] Castrações corrigidas devem indicar os valores lançados originalmente que mudaram e a data da correção (`RN-ANIMAL-09`).
-- [x] Deve ser possível registrar uma castração avulsa informando a data (inicialmente hoje), a técnica (obrigatória), escolhida entre as técnicas ativas, e uma observação. A data deve respeitar `RN-ANIMAL-06`.
-- [x] Se o animal já for castrado, o registro é uma recastração e a observação, com o motivo, passa a ser obrigatória (`RN-ANIMAL-08`).
-- [x] O registro de uma castração torna o animal castrado.
-- [x] Deve ser possível corrigir a data, a técnica e a observação de uma castração. A data de uma castração feita em sessão de manejo não pode ser corrigida (`RN-ANIMAL-09`). Na correção, a técnica já registrada pode ser mantida mesmo que tenha sido desativada.
-- [x] Deve ser possível anular uma castração, mediante confirmação do usuário. Ao anular a única castração válida, o usuário deve informar se o animal continua castrado (`RN-ANIMAL-08`).
-- [x] Se o animal estiver em uma operação em aberto com castração, o sistema deve avisar antes do registro (`RN-ANIMAL-10`).
+- [ ] Exibir as castrações válidas do animal, com data, técnica, observação e se foi feita em sessão de manejo.
+- [ ] Castrações corrigidas devem indicar os valores lançados originalmente que mudaram e a data da correção (`RN-ANIMAL-09`).
+- [ ] Deve ser possível registrar uma castração avulsa informando a data (inicialmente hoje), a técnica (obrigatória), escolhida entre as técnicas ativas, e uma observação. A data deve respeitar `RN-ANIMAL-06`.
+- [ ] Se o animal já for castrado, o registro é uma recastração e a observação, com o motivo, passa a ser obrigatória (`RN-ANIMAL-08`).
+- [ ] O registro de uma castração torna o animal castrado.
+- [ ] Deve ser possível corrigir a data, a técnica e a observação de uma castração. A data de uma castração feita em sessão de manejo não pode ser corrigida (`RN-ANIMAL-09`). Na correção, a técnica já registrada pode ser mantida mesmo que tenha sido desativada.
+- [ ] Deve ser possível anular uma castração, mediante confirmação do usuário. Ao anular a única castração válida, o usuário deve informar se o animal continua castrado (`RN-ANIMAL-08`).
+- [ ] Se o animal estiver em uma operação em aberto com castração, o sistema deve avisar antes do registro (`RN-ANIMAL-10`).
 
 ### 2.7.3 - Fluxos
 
@@ -552,15 +552,15 @@ Permite consultar as informações detalhadas de um animal: dados cadastrais, in
 
 ### 2.8.2 - Critérios de Aceitação
 
-- [x] Exibir a identificação, a `Situação`, a `Origem` e se o animal é castrado.
-- [x] Exibir `Apelido`, `Sexo`, `Raça`, `Data de Nascimento`, desde quando o animal está na propriedade e a data do cadastro.
-- [x] Exibir o `Peso Atual` e a data da pesagem, a `Idade` (indicando quando é aproximada), o `Ganho Médio Diário` (`RN-LOTE-08`) e o lote atual.
-- [x] Se o animal foi comprado, exibir o vendedor, a data e o valor da compra, o peso de entrada, o preço por arroba (quando houver), o número da GTA e as observações.
-- [x] Exibir a evolução do peso ao longo do tempo e a lista de pesagens.
-- [x] Exibir o histórico de lotes, de identificação (brincos e RFID), de castrações, de propriedades e dos manejos sanitários recebidos, estes com data, procedimento, veterinário, carência, próxima dose e dose aplicada.
-- [x] Exibir a atividade recente do animal, em ordem cronológica decrescente, reunindo pesagens, trocas de lote e de propriedade, identificações, castrações, manejos sanitários e a compra.
-- [x] Os históricos devem considerar apenas os registros válidos: manejos anulados e manejos de sessões não consolidadas não são exibidos.
-- [x] Permitir acionar a edição (`RF-ANIMAL-03`) e a exclusão do animal (`RF-ANIMAL-09`).
+- [ ] Exibir a identificação, a `Situação`, a `Origem` e se o animal é castrado.
+- [ ] Exibir `Apelido`, `Sexo`, `Raça`, `Data de Nascimento`, desde quando o animal está na propriedade e a data do cadastro.
+- [ ] Exibir o `Peso Atual` e a data da pesagem, a `Idade` (indicando quando é aproximada), o `Ganho Médio Diário` (`RN-LOTE-08`) e o lote atual.
+- [ ] Se o animal foi comprado, exibir o vendedor, a data e o valor da compra, o peso de entrada, o preço por arroba (quando houver), o número da GTA e as observações.
+- [ ] Exibir a evolução do peso ao longo do tempo e a lista de pesagens.
+- [ ] Exibir o histórico de lotes, de identificação (brincos e RFID), de castrações, de propriedades e dos manejos sanitários recebidos, estes com data, procedimento, veterinário, carência, próxima dose e dose aplicada.
+- [ ] Exibir a atividade recente do animal, em ordem cronológica decrescente, reunindo pesagens, trocas de lote e de propriedade, identificações, castrações, manejos sanitários e a compra.
+- [ ] Os históricos devem considerar apenas os registros válidos: manejos anulados e manejos de sessões não consolidadas não são exibidos.
+- [ ] Permitir acionar a edição (`RF-ANIMAL-03`) e a exclusão do animal (`RF-ANIMAL-09`).
 
 ### 2.8.3 - Fluxos
 

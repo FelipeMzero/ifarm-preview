@@ -37,15 +37,15 @@ Permite listar, criar, editar, ativar/desativar e excluir, em uma tela única, a
 
 ### 2.1.2 - Critérios de Aceitação
 
-- [x] A listagem deve exibir o `Nome` de todas as técnicas de castração cadastradas, ordenadas alfabeticamente.
-- [x] Deve ser possível pesquisar por `Nome`.
-- [x] A criação e edição de técnicas de castração deve ocorrer diretamente na listagem, sem necessidade de tela ou dialog separado.
-- [x] Um botão "Adicionar" deve inserir uma nova linha editável ao final da listagem para preenchimento do `Nome`.
-- [x] Um clique duplo sobre o `Nome` de uma técnica já cadastrada deve habilitá-lo para edição inline.
-- [x] A confirmação da criação/edição ocorre ao perder o foco do campo (blur) ou pressionar Enter; a tecla Esc cancela a alteração em andamento, restaurando o valor anterior (ou removendo a linha, no caso de uma criação cancelada).
-- [x] O campo `Nome` é obrigatório e único.
-- [x] Deve ser possível excluir uma técnica de castração, desde que não esteja vinculada a nenhuma castração.
-- [x] Caso a técnica de castração esteja vinculada a alguma castração, a exclusão deve ser impedida (ver [Exclusão vs Inativação](comum.md#exclusão-vs-inativação)).
+- [ ] A listagem deve exibir o `Nome` de todas as técnicas de castração cadastradas, ordenadas alfabeticamente.
+- [ ] Deve ser possível pesquisar por `Nome`.
+- [ ] A criação e edição de técnicas de castração deve ocorrer diretamente na listagem, sem necessidade de tela ou dialog separado.
+- [ ] Um botão "Adicionar" deve inserir uma nova linha editável ao final da listagem para preenchimento do `Nome`.
+- [ ] Um clique duplo sobre o `Nome` de uma técnica já cadastrada deve habilitá-lo para edição inline.
+- [ ] A confirmação da criação/edição ocorre ao perder o foco do campo (blur) ou pressionar Enter; a tecla Esc cancela a alteração em andamento, restaurando o valor anterior (ou removendo a linha, no caso de uma criação cancelada).
+- [ ] O campo `Nome` é obrigatório e único.
+- [ ] Deve ser possível excluir uma técnica de castração, desde que não esteja vinculada a nenhuma castração.
+- [ ] Caso a técnica de castração esteja vinculada a alguma castração, a exclusão deve ser impedida (ver [Exclusão vs Inativação](comum.md#exclusão-vs-inativação)).
 
 ### 2.1.3 - Fluxos
 

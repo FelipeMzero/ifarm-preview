@@ -19,17 +19,16 @@ generator erd {
 }
 
 model Property {
-  id              String    @id @default(uuid()) @db.Uuid
-  name            String
-  totalArea       Decimal?  @map("total_area") @db.Decimal(10, 4) // Área Total (ha)
-  productiveArea  Decimal?  @map("productive_area") @db.Decimal(10, 4) // Área Produtiva (ha)
-  car             String?   @unique // Cadastro Ambiental Rural
-  cib             String?   @unique // Cadastro Imobiliário Brasileiro
-  ccir            String?   @unique // Certificado de Cadastro de Imóvel Rural (INCRA)
-  latitude        Float?
-  longitude       Float?
-  registeredBrand String?   @map("registered_brand") // desenho/código da marca de ferro registrada
-  deactivatedAt   DateTime? @map("deactivated_at")
+  id             String    @id @default(uuid()) @db.Uuid
+  name           String
+  totalArea      Decimal?  @map("total_area") @db.Decimal(10, 4) // Área Total (ha)
+  productiveArea Decimal?  @map("productive_area") @db.Decimal(10, 4) // Área Produtiva (ha)
+  car            String?   @unique // Cadastro Ambiental Rural
+  cib            String?   @unique // Cadastro Imobiliário Brasileiro
+  ccir           String?   @unique // Certificado de Cadastro de Imóvel Rural (INCRA)
+  latitude       Float?
+  longitude      Float?
+  deactivatedAt  DateTime? @map("deactivated_at")
 
   addressId Int?     @unique @map("address_id")
   address   Address? @relation(fields: [addressId], references: [id])
@@ -51,6 +50,8 @@ model Property {
   animalPropertyHistories AnimalPropertyHistory[]
   managementSessions      ManagementSession[]
   purchaseEvents          PurchaseEvent[]
+  lossEvents              LossEvent[]
+  slaughterEvents         SlaughterEvent[]
 
   @@index([name])
   @@index([ownerId])
@@ -178,6 +179,10 @@ model Animal {
   currentPropertyId String   @map("current_property_id") @db.Uuid // Campo desnormalizado, pois há constraints que dependem dele, os históricos são apenas registros
   currentProperty   Property @relation(fields: [currentPropertyId], references: [id], onDelete: Restrict)
 
+  // desnormalizado/sincronizado para marcação (ferra)
+  currentBrandId String? @map("current_brand_id") @db.Uuid
+  currentBrand   Brand?  @relation("AnimalCurrentBrand", fields: [currentBrandId], references: [id], onDelete: SetNull)
+
   // desnormalizado/sincronizado
   currentTag    String?  @map("current_tag") // Campo desnormalizado, pois há constraints que dependem dele, os históricos são apenas registros
   currentRfid   String?  @map("current_rfid") // Campo desnormalizado, pois há constraints que dependem dele, os históricos são apenas registros
@@ -200,7 +205,9 @@ model Animal {
   animalBatchHistories    AnimalBatchHistory[]
 
   // Compras
-  purchasedAnimals PurchasedAnimal[]
+  purchasedAnimals   PurchasedAnimal[]
+  lossEventItem      LossEventItem?
+  slaughterEventItem SlaughterEventItem?
 
   @@unique([currentPropertyId, currentTag], where: { status: "ACTIVE", currentTag: { not: null } })
   @@unique([currentPropertyId, currentRfid], where: { status: "ACTIVE", currentRfid: { not: null } })
@@ -209,6 +216,7 @@ model Animal {
   //@@index([damId])
   //@@index([sireId])
   @@index([currentPropertyId])
+  @@index([currentBrandId])
   @@map("animal")
 }
 
@@ -253,6 +261,7 @@ model Person {
   properties        Property[]
   healthManagements HealthManagement[]
   purchaseEvents    PurchaseEvent[]
+  brands            Brand[]
 
   @@index([type])
   @@index([name])
@@ -288,6 +297,33 @@ model Breed {
   purchaseCategories PurchaseCategory[]
 
   @@map("breed")
+}
+
+model Brand {
+  id                 String    @id @default(uuid()) @db.Uuid
+  name               String // identificação curta, ex.: "Marca principal"
+  image              Bytes?    @map("image") // desenho da marca
+  registrationNumber String?   @map("registration_number")
+  registrationBody   String?   @map("registration_body") // prefeitura, órgão estadual, cartório
+  registrationCity   String?   @map("registration_city")
+  registrationState  String?   @map("registration_state") // UF
+  registeredAt       DateTime? @map("registered_at") @db.Date
+  deactivatedAt      DateTime? @map("deactivated_at")
+
+  ownerId String @map("owner_id") @db.Uuid
+  owner   Person @relation(fields: [ownerId], references: [id], onDelete: Restrict)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  brandings         AnimalBranding[]  @relation("AnimalBrandingBrand")
+  originalBrandings AnimalBranding[]  @relation("AnimalBrandingOriginalBrand")
+  suggestedIn       BrandManagement[] @relation("BrandSuggestedBrand")
+  animals           Animal[]          @relation("AnimalCurrentBrand")
+
+  @@unique([registrationNumber, registrationState, registrationCity])
+  @@index([ownerId])
+  @@map("brand")
 }
 
 model ManagementSession {
@@ -349,17 +385,6 @@ model ManagementStep {
   // Cada tipo aparece no máximo uma vez na sessão, exceto o sanitário.
   @@unique([managementSessionId, type], map: "management_step_unique_type", where: { type: { not: "HEALTH" } })
   @@map("management_step")
-}
-
-enum ManagementStepType {
-  WEIGHING // pesagem
-  NEUTERING // castração
-  TAG // brinco
-  RFID
-  HEALTH // procedimento sanitário
-  BATCH // apartação
-
-  @@map("management_step_type")
 }
 
 model ManagementParticipant {
@@ -475,6 +500,7 @@ model NeuteringManagement {
 
   createdAt DateTime @default(now()) @map("created_at")
 
+  @@index([suggestedTechniqueId])
   @@map("neutering_management")
 }
 
@@ -506,6 +532,7 @@ model AnimalNeutering {
 
   @@index([animalId])
   @@index([managementId])
+  @@index([techniqueId])
   @@map("animal_neutering")
 }
 
@@ -565,12 +592,50 @@ model BrandManagement {
   id    String           @id @default(uuid()) @db.Uuid
   items AnimalBranding[]
 
+  // marca prevista no planejamento: vem pré-selecionada no registro de cada animal,
+  // que pode escolher outra; null = não informada
+  suggestedBrandId String? @map("suggested_brand_id") @db.Uuid
+  suggestedBrand   Brand?  @relation("BrandSuggestedBrand", fields: [suggestedBrandId], references: [id], onDelete: Restrict)
+
   managementSessionId String            @unique @map("management_session_id") @db.Uuid
   managementSession   ManagementSession @relation(fields: [managementSessionId], references: [id], onDelete: Restrict)
 
   createdAt DateTime @default(now()) @map("created_at")
 
+  @@index([suggestedBrandId])
   @@map("brand_management")
+}
+
+model AnimalBranding {
+  id    Int     @id @default(autoincrement())
+  notes String?
+
+  brandedAt DateTime @map("branded_at") // data do manejo; em sessão, copiada da data da sessão
+
+  // marca aplicada neste animal; em sessão, pré-selecionada com a sugerida no manejo
+  brandId String @map("brand_id") @db.Uuid
+  brand   Brand  @relation("AnimalBrandingBrand", fields: [brandId], references: [id], onDelete: Restrict)
+
+  // Correções preservam o rastro: os valores lançados originalmente são guardados na primeira
+  // correção e a exclusão é lógica (cancelada = ignorada no histórico).
+  originalBrandedAt DateTime? @map("original_branded_at")
+  originalBrandId   String?   @map("original_brand_id") @db.Uuid
+  originalBrand     Brand?    @relation("AnimalBrandingOriginalBrand", fields: [originalBrandId], references: [id], onDelete: Restrict)
+  correctedAt       DateTime? @map("corrected_at")
+  cancelledAt       DateTime? @map("cancelled_at")
+
+  managementId String?          @map("management_id") @db.Uuid // null = avulso
+  management   BrandManagement? @relation(fields: [managementId], references: [id], onDelete: Restrict)
+
+  animalId String @map("animal_id") @db.Uuid
+  animal   Animal @relation(fields: [animalId], references: [id], onDelete: Restrict)
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([animalId])
+  @@index([managementId])
+  @@index([brandId])
+  @@map("animal_branding")
 }
 
 model BatchManagement {
@@ -597,28 +662,6 @@ model BatchManagementSuggestion {
   @@id([managementId, batchId])
   @@index([batchId])
   @@map("batch_management_suggestion")
-}
-
-model AnimalBranding {
-  id             Int     @id @default(autoincrement())
-  isCounterBrand Boolean @default(false) @map("is_counter_brand") // contramarca (segunda marca, após mudança de dono)
-  notes          String?
-
-  brandedAt DateTime @map("branded_at") // data do manejo; em sessão, copiada da data da sessão
-
-  cancelledAt DateTime? @map("cancelled_at")
-
-  managementId String?          @map("management_id") @db.Uuid // null = avulso
-  management   BrandManagement? @relation(fields: [managementId], references: [id], onDelete: Restrict)
-
-  animalId String @map("animal_id") @db.Uuid
-  animal   Animal @relation(fields: [animalId], references: [id], onDelete: Restrict)
-
-  createdAt DateTime @default(now()) @map("created_at")
-
-  @@index([animalId])
-  @@index([managementId])
-  @@map("animal_branding")
 }
 
 model HealthManagement {
@@ -953,7 +996,94 @@ model PurchasedAnimal {
   @@map("purchased_animal")
 }
 
+model LossEvent {
+  id          String   @id @default(uuid()) @db.Uuid
+  title       String
+  description String?
+  lossDate    DateTime @map("loss_date")
+
+  confirmedAt DateTime? @map("confirmed_at")
+  cancelledAt DateTime? @map("cancelled_at")
+
+  propertyId String   @map("property_id") @db.Uuid
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Restrict)
+
+  items LossEventItem[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([propertyId])
+  @@map("loss_event")
+}
+
+model LossEventItem {
+  id    Int            @id @default(autoincrement())
+  type  AnimalLossType // DEAD ou MISSING, decidido por animal
+  notes String?
+
+  eventId String    @map("event_id") @db.Uuid
+  event   LossEvent @relation(fields: [eventId], references: [id], onDelete: Restrict)
+
+  animalId String @unique @map("animal_id") @db.Uuid
+  animal   Animal @relation(fields: [animalId], references: [id], onDelete: Restrict)
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([eventId])
+  @@map("loss_event_item")
+}
+
+model SlaughterEvent {
+  id            String   @id @default(uuid()) @db.Uuid
+  title         String
+  description   String?
+  slaughterDate DateTime @map("slaughter_date")
+
+  confirmedAt DateTime? @map("confirmed_at") // consolidado: aplica o status final nos animais
+  cancelledAt DateTime? @map("cancelled_at")
+
+  propertyId String   @map("property_id") @db.Uuid
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Restrict)
+
+  items SlaughterEventItem[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([propertyId])
+  @@map("slaughter_event")
+}
+
+model SlaughterEventItem {
+  id    Int     @id @default(autoincrement())
+  notes String?
+
+  eventId String         @map("event_id") @db.Uuid
+  event   SlaughterEvent @relation(fields: [eventId], references: [id], onDelete: Restrict)
+
+  animalId String @unique @map("animal_id") @db.Uuid
+  animal   Animal @relation(fields: [animalId], references: [id], onDelete: Restrict)
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([eventId])
+  @@map("slaughter_event_item")
+}
+
 // Enums
+
+enum ManagementStepType {
+  WEIGHING // pesagem
+  NEUTERING // castração
+  TAG // brinco
+  RFID
+  BRAND // ferra
+  HEALTH // procedimento sanitário
+  BATCH // apartação
+
+  @@map("management_step_type")
+}
 
 enum PurchasePricingType {
   PER_HEAD
@@ -988,12 +1118,19 @@ enum AnimalOrigin {
   @@map("animal_origin")
 }
 
+enum AnimalLossType {
+  DEAD
+  MISSING
+
+  @@map("animal_loss_type")
+}
+
 enum AnimalStatus {
   ACTIVE // Ativo na propriedade
   SOLD // Vendido
   DONATED // Doado
   DEAD // Morto
-  DISCARDED // Descarte
+  MISSING // Desaparecido
   SLAUGHTERED // Abate
   REFERENCE // Referência (o animal não existe na fazenda, serve apenas de referência para genealogia)
 

@@ -11,7 +11,6 @@ erDiagram
     String ccir "❓"
     Float latitude "❓"
     Float longitude "❓"
-    String registered_brand "❓"
     DateTime deactivated_at "❓"
     Int address_id "❓"
     String owner_id 
@@ -83,6 +82,7 @@ erDiagram
     String breed_id "❓"
     String current_batch_id "❓"
     String current_property_id 
+    String current_brand_id "❓"
     String current_tag "❓"
     String current_rfid "❓"
     Decimal current_weight "❓"
@@ -134,6 +134,22 @@ erDiagram
     String id "🗝️"
     String name 
     DateTime deactivated_at "❓"
+    DateTime created_at 
+    DateTime updated_at 
+    }
+  
+
+  "brand" {
+    String id "🗝️"
+    String name 
+    Bytes image "❓"
+    String registration_number "❓"
+    String registration_body "❓"
+    String registration_city "❓"
+    String registration_state "❓"
+    DateTime registered_at "❓"
+    DateTime deactivated_at "❓"
+    String owner_id 
     DateTime created_at 
     DateTime updated_at 
     }
@@ -269,7 +285,23 @@ erDiagram
 
   "brand_management" {
     String id "🗝️"
+    String suggested_brand_id "❓"
     String management_session_id 
+    DateTime created_at 
+    }
+  
+
+  "animal_branding" {
+    Int management_id "🗝️"
+    String notes "❓"
+    DateTime branded_at 
+    String brand_id 
+    DateTime original_branded_at "❓"
+    String original_brand_id "❓"
+    DateTime corrected_at "❓"
+    DateTime cancelled_at "❓"
+    String management_id "❓"
+    String animal_id 
     DateTime created_at 
     }
   
@@ -285,18 +317,6 @@ erDiagram
     String management_id 
     String batch_id 
     Int position 
-    }
-  
-
-  "animal_branding" {
-    Int management_id "🗝️"
-    Boolean is_counter_brand 
-    String notes "❓"
-    DateTime branded_at 
-    DateTime cancelled_at "❓"
-    String management_id "❓"
-    String animal_id 
-    DateTime created_at 
     }
   
 
@@ -466,6 +486,51 @@ erDiagram
     DateTime created_at 
     }
   
+
+  "loss_event" {
+    String id "🗝️"
+    String title 
+    String description "❓"
+    DateTime loss_date 
+    DateTime confirmed_at "❓"
+    DateTime cancelled_at "❓"
+    String property_id 
+    DateTime created_at 
+    DateTime updated_at 
+    }
+  
+
+  "loss_event_item" {
+    Int id "🗝️"
+    AnimalLossType type 
+    String notes "❓"
+    String event_id 
+    String animal_id 
+    DateTime created_at 
+    }
+  
+
+  "slaughter_event" {
+    String id "🗝️"
+    String title 
+    String description "❓"
+    DateTime slaughter_date 
+    DateTime confirmed_at "❓"
+    DateTime cancelled_at "❓"
+    String property_id 
+    DateTime created_at 
+    DateTime updated_at 
+    }
+  
+
+  "slaughter_event_item" {
+    Int id "🗝️"
+    String notes "❓"
+    String event_id 
+    String animal_id 
+    DateTime created_at 
+    }
+  
     "property" |o--|o address : "address"
     "property" }o--|| person : "owner"
     "area" }o--|| property : "property"
@@ -476,9 +541,11 @@ erDiagram
     "animal" }o--|o breed : "breed"
     "animal" }o--|o batch : "currentBatch"
     "animal" }o--|| property : "currentProperty"
+    "animal" }o--|o brand : "currentBrand"
     "user_settings" |o--|| "User" : "user"
     "user_settings" }o--|o property : "currentProperty"
     "person" |o--|o address : "address"
+    "brand" }o--|| person : "owner"
     "management_session" }o--|| property : "property"
     "management_step" }o--|| management_session : "managementSession"
     "management_step" |o--|o health_management : "healthManagement"
@@ -499,12 +566,15 @@ erDiagram
     "weighing_management" |o--|| management_session : "managementSession"
     "animal_weighing" }o--|o weighing_management : "management"
     "animal_weighing" }o--|| animal : "animal"
+    "brand_management" }o--|o brand : "suggestedBrand"
     "brand_management" |o--|| management_session : "managementSession"
+    "animal_branding" }o--|| brand : "brand"
+    "animal_branding" }o--|o brand : "originalBrand"
+    "animal_branding" }o--|o brand_management : "management"
+    "animal_branding" }o--|| animal : "animal"
     "batch_management" |o--|| management_session : "managementSession"
     "batch_management_suggestion" }o--|| batch_management : "management"
     "batch_management_suggestion" }o--|| batch : "batch"
-    "animal_branding" }o--|o brand_management : "management"
-    "animal_branding" }o--|| animal : "animal"
     "health_management" }o--|| health_management_type : "type"
     "health_management" }o--|o management_session : "managementSession"
     "health_management" }o--|o person : "veterinarian"
@@ -538,4 +608,10 @@ erDiagram
     "purchased_animal" }o--|| purchase_category : "category"
     "purchased_animal" }o--|| purchase_reception : "reception"
     "purchased_animal" }o--|| animal : "animal"
+    "loss_event" }o--|| property : "property"
+    "loss_event_item" }o--|| loss_event : "event"
+    "loss_event_item" |o--|| animal : "animal"
+    "slaughter_event" }o--|| property : "property"
+    "slaughter_event_item" }o--|| slaughter_event : "event"
+    "slaughter_event_item" |o--|| animal : "animal"
 ```

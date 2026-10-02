@@ -21,7 +21,7 @@ export const STATUS_VARIANT: Record<string, BadgeVariant> = {
   [EnumAnimalStatus.SOLD]: "secondary",
   [EnumAnimalStatus.DONATED]: "secondary",
   [EnumAnimalStatus.DEAD]: "destructive",
-  [EnumAnimalStatus.DISCARDED]: "outline",
+  [EnumAnimalStatus.MISSING]: "outline",
   [EnumAnimalStatus.SLAUGHTERED]: "destructive",
   [EnumAnimalStatus.REFERENCE]: "outline",
 };

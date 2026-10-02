@@ -114,13 +114,13 @@ Permite cadastrar pessoas físicas ou jurídicas, registrando novos agentes que 
 
 ### 2.2.2 - Critérios de Aceitação
 
-- [x] Os campos `Tipo`, `Documento` e `Nome` são obrigatórios. O `Tipo` inicia como pessoa física.
+- [ ] Os campos `Tipo`, `Documento` e `Nome` são obrigatórios. O `Tipo` inicia como pessoa física.
 - [ ] O `Documento` é único entre as pessoas cadastradas (`RN-PESSOA-02`). `Inscrição Estadual`, `Email` e `RG` podem se repetir.
-- [x] O `Documento` deve ser validado de acordo com o `Tipo` (CPF ou CNPJ) (`RN-PESSOA-01`).
-- [x] O `Email`, quando informado, deve ter formato válido.
-- [x] Devem ser solicitados apenas os campos que se aplicam ao `Tipo` escolhido: `Nome Fantasia` e `Inscrição Estadual` para pessoa jurídica; `RG`, `Data de Nascimento` e `Estado Civil` para pessoa física.
-- [x] O rótulo do `Nome` deve refletir o `Tipo`: nome para pessoa física e razão social para pessoa jurídica.
-- [x] O `Endereço` segue as regras de [Endereço](comum.md#endereço), inclusive o preenchimento automático a partir do CEP.
+- [ ] O `Documento` deve ser validado de acordo com o `Tipo` (CPF ou CNPJ) (`RN-PESSOA-01`).
+- [ ] O `Email`, quando informado, deve ter formato válido.
+- [ ] Devem ser solicitados apenas os campos que se aplicam ao `Tipo` escolhido: `Nome Fantasia` e `Inscrição Estadual` para pessoa jurídica; `RG`, `Data de Nascimento` e `Estado Civil` para pessoa física.
+- [ ] O rótulo do `Nome` deve refletir o `Tipo`: nome para pessoa física e razão social para pessoa jurídica.
+- [ ] O `Endereço` segue as regras de [Endereço](comum.md#endereço), inclusive o preenchimento automático a partir do CEP.
 - [ ] A pessoa é criada com `Status` `Ativo`.
 - [ ] A criação pode ser acionada a partir de outros cadastros que referenciam uma pessoa (ex: vendedor no cadastro de animal, `RF-ANIMAL-02`), sem sair deles.
 
@@ -203,8 +203,8 @@ Permite editar os dados cadastrais de uma pessoa física ou jurídica já regist
 
 ### 2.3.2 - Critérios de Aceitação
 
-- [x] O `Tipo` e o `Documento` são exibidos, mas não podem ser alterados (`RN-PESSOA-02`).
-- [x] Os demais campos podem ser alterados, com as mesmas regras de preenchimento da criação (`RF-PESSOA-02`).
+- [ ] O `Tipo` e o `Documento` são exibidos, mas não podem ser alterados (`RN-PESSOA-02`).
+- [ ] Os demais campos podem ser alterados, com as mesmas regras de preenchimento da criação (`RF-PESSOA-02`).
 
 ### 2.3.3 - Fluxos
 

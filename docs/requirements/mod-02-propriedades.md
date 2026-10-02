@@ -50,14 +50,14 @@ Permite consultar as propriedades cadastradas, com busca, filtro e acesso às a�
 
 ### 2.1.2 - Critérios de Aceitação
 
-- [x] Segue o [padrão de listagem](comum.md#padrão-de-listagem).
-- [x] Deve permitir exibir as colunas `Nome`, `Área Total`, `Município/UF` (a partir do `Endereço`), `Titular`, `Status` e `Atualizado em`.
-- [x] `Nome` é sempre visível; `Área Total` inicia oculta.
-- [x] A ordenação inicial é por `Atualizado em`, do mais recente para o mais antigo.
-- [x] A pesquisa deve considerar o `Nome` da propriedade e o nome do `Titular`.
-- [x] Os filtros disponíveis são: ativas, inativas e todas. O filtro inicial é "ativas".
-- [x] As ações disponíveis para cada propriedade são: Editar (`RF-PROPRIEDADE-03`), Detalhes (`RF-PROPRIEDADE-04`) e Ativar/Desativar (`RF-PROPRIEDADE-06`).
-- [x] Deve permitir acionar a criação de uma nova propriedade (`RF-PROPRIEDADE-02`).
+- [ ] Segue o [padrão de listagem](comum.md#padrão-de-listagem).
+- [ ] Deve permitir exibir as colunas `Nome`, `Área Total`, `Município/UF` (a partir do `Endereço`), `Titular`, `Status` e `Atualizado em`.
+- [ ] `Nome` é sempre visível; `Área Total` inicia oculta.
+- [ ] A ordenação inicial é por `Atualizado em`, do mais recente para o mais antigo.
+- [ ] A pesquisa deve considerar o `Nome` da propriedade e o nome do `Titular`.
+- [ ] Os filtros disponíveis são: ativas, inativas e todas. O filtro inicial é "ativas".
+- [ ] As ações disponíveis para cada propriedade são: Editar (`RF-PROPRIEDADE-03`), Detalhes (`RF-PROPRIEDADE-04`) e Ativar/Desativar (`RF-PROPRIEDADE-06`).
+- [ ] Deve permitir acionar a criação de uma nova propriedade (`RF-PROPRIEDADE-02`).
 
 ### 2.1.3 - Fluxos
 
@@ -110,15 +110,15 @@ Permite cadastrar propriedades (fazendas), registrando novos imóveis rurais par
 
 ### 2.2.2 - Critérios de Aceitação
 
-- [x] Os campos `Nome` e `Titular` são obrigatórios; os demais são opcionais (`RN-PROPRIEDADE-02`).
-- [x] O `Titular` deve ser escolhido entre as pessoas ativas, com possibilidade de busca por nome.
-- [x] Deve ser possível cadastrar uma nova pessoa a partir da escolha do `Titular`, sem sair do cadastro da propriedade (`RF-PESSOA-02`); a pessoa cadastrada passa a ser o titular.
-- [x] Os campos `CIB`, `CCIR` e `CAR` são únicos quando informados (`RN-PROPRIEDADE-01`) e devem seguir os seus formatos oficiais.
-- [x] A `Área Produtiva` não pode ser maior que a `Área Total` quando os dois valores forem informados (`RN-PROPRIEDADE-03`).
-- [x] O `Endereço` segue as regras de [Endereço](comum.md#endereço), inclusive o preenchimento automático a partir do CEP.
-- [x] Ao ser informado um CEP válido, o sistema deve consultar a localização no serviço OpenStreetMap e preencher automaticamente `Latitude` e `Longitude`.
-- [x] Deve ser possível definir `Latitude` e `Longitude` escolhendo um ponto em um mapa.
-- [x] A localização informada deve ser exibida em um mapa.
+- [ ] Os campos `Nome` e `Titular` são obrigatórios; os demais são opcionais (`RN-PROPRIEDADE-02`).
+- [ ] O `Titular` deve ser escolhido entre as pessoas ativas, com possibilidade de busca por nome.
+- [ ] Deve ser possível cadastrar uma nova pessoa a partir da escolha do `Titular`, sem sair do cadastro da propriedade (`RF-PESSOA-02`); a pessoa cadastrada passa a ser o titular.
+- [ ] Os campos `CIB`, `CCIR` e `CAR` são únicos quando informados (`RN-PROPRIEDADE-01`) e devem seguir os seus formatos oficiais.
+- [ ] A `Área Produtiva` não pode ser maior que a `Área Total` quando os dois valores forem informados (`RN-PROPRIEDADE-03`).
+- [ ] O `Endereço` segue as regras de [Endereço](comum.md#endereço), inclusive o preenchimento automático a partir do CEP.
+- [ ] Ao ser informado um CEP válido, o sistema deve consultar a localização no serviço OpenStreetMap e preencher automaticamente `Latitude` e `Longitude`.
+- [ ] Deve ser possível definir `Latitude` e `Longitude` escolhendo um ponto em um mapa.
+- [ ] A localização informada deve ser exibida em um mapa.
 
 ### 2.2.3 - Fluxos
 
@@ -189,8 +189,8 @@ Permite editar os dados cadastrais de uma propriedade já registrada.
 
 ### 2.3.2 - Critérios de Aceitação
 
-- [x] Todos os campos podem ser alterados, com as mesmas regras de preenchimento da criação (`RF-PROPRIEDADE-02`).
-- [x] Ao trocar o `Titular`, o novo titular deve ser escolhido entre as pessoas ativas.
+- [ ] Todos os campos podem ser alterados, com as mesmas regras de preenchimento da criação (`RF-PROPRIEDADE-02`).
+- [ ] Ao trocar o `Titular`, o novo titular deve ser escolhido entre as pessoas ativas.
 
 ### 2.3.3 - Fluxos
 

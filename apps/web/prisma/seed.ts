@@ -246,6 +246,53 @@ async function seedNeuteringTechniques() {
   return ids;
 }
 
+// Marca de ferro do dono de cada fazenda, registrada no município da fazenda. Os animais
+// são marcados com a marca do dono da fazenda em que estão.
+const BRANDS: Record<
+  PropKey,
+  Omit<Prisma.BrandUncheckedCreateInput, "ownerId" | "registeredAt"> & {
+    registeredDaysAgo: number;
+  }
+> = {
+  SR: {
+    name: "Marca CES",
+    registrationNumber: "0457",
+    registrationBody: "Prefeitura Municipal de Uberlândia",
+    registrationCity: "Uberlândia",
+    registrationState: "MG",
+    registeredDaysAgo: 3650,
+  },
+  BV: {
+    name: "Marca Boa Vista",
+    registrationNumber: "1288",
+    registrationBody: "INDEA-MT",
+    registrationCity: "Cuiabá",
+    registrationState: "MT",
+    registeredDaysAgo: 2900,
+  },
+};
+
+async function seedBrands(people: Record<PersonKey, string>) {
+  const ids = {} as Record<PropKey, string>;
+  for (const [key, { registeredDaysAgo, ...data }] of Object.entries(
+    BRANDS,
+  ) as [PropKey, (typeof BRANDS)[PropKey]][]) {
+    const brand = await prisma.brand.create({
+      data: {
+        ...data,
+        registeredAt: dateAgo(registeredDaysAgo),
+        ownerId: people[PROPERTIES[key].ownerKey],
+      },
+    });
+    ids[key] = brand.id;
+  }
+  console.log(`- ${Object.keys(BRANDS).length} marcas criadas`);
+  return ids;
+}
+
+// Bezerros nascidos na fazenda são marcados na desmama, por volta dos 8 meses.
+const BRANDING_AGE_DAYS = 240;
+
 // ---------------------------------------------------------------------------
 // Propriedades, áreas e lotes
 // ---------------------------------------------------------------------------
@@ -669,6 +716,40 @@ add(1, () => ({
     notes: "Óbito por tristeza parasitária",
   },
 }));
+// Cria: bezerra desaparecida do pasto.
+add(1, () => ({
+  sex: "FEMALE",
+  breed: "Nelore",
+  origin: "BIRTH",
+  birthDaysAgo: 150,
+  entryDaysAgo: 150,
+  batches: [["SR:Cria", 150]],
+  weight: { fromBirth: 29, adg: 0.55 },
+  skipRfid: true,
+  exit: {
+    daysAgo: 35,
+    status: "MISSING",
+    notes: "Não encontrada na contagem do pasto",
+  },
+}));
+// Reprodução: 3 vacas de descarte abatidas juntas.
+add(3, (i) => ({
+  sex: "FEMALE",
+  breed: i === 0 ? "Gir" : "Nelore",
+  origin: "UNDEFINED",
+  birthDaysAgo: 3000 + i * 120,
+  entryDaysAgo: 900,
+  batches: [
+    ["SR:Cria", 900],
+    ["SR:Reprodução", 500],
+  ],
+  weight: { current: between(420, 450), adg: between(0.03, 0.08) },
+  exit: {
+    daysAgo: 60,
+    status: "SLAUGHTERED",
+    notes: "Vacas de descarte: idade avançada e falhas reprodutivas",
+  },
+}));
 // Reprodução: 6 vacas vindas da cria, 1 doada e 1 touro comprado por valor fechado.
 add(6, (i) => ({
   sex: "FEMALE",
@@ -740,7 +821,23 @@ add(8, (i) => ({
       ? { daysAgo: 20, status: "SOLD", notes: "Vendido para frigorífico" }
       : undefined,
 }));
-// Engorda: meta de peso sem data (um descartado).
+// Terminação: boi que morreu (fora da compra, origem não informada).
+add(1, () => ({
+  sex: "MALE",
+  breed: "Nelore",
+  origin: "UNDEFINED",
+  birthDaysAgo: 830,
+  entryDaysAgo: 300,
+  batches: [["BV:Terminação", 300]],
+  weight: { current: 520, adg: 0.8 },
+  neuteredDaysAgo: 290,
+  exit: {
+    daysAgo: 15,
+    status: "DEAD",
+    notes: "Óbito por picada de cobra",
+  },
+}));
+// Engorda: meta de peso sem data (um descartado e abatido).
 add(8, (i) => ({
   sex: "MALE",
   breed: i % 2 === 0 ? "Nelore" : "Brahman",
@@ -754,7 +851,7 @@ add(8, (i) => ({
     i === 7
       ? {
           daysAgo: 40,
-          status: "DISCARDED",
+          status: "SLAUGHTERED",
           notes: "Descarte por problema de casco",
         }
       : undefined,
@@ -768,6 +865,21 @@ add(5, (i) => ({
   entryDaysAgo: 400 + i * 10,
   batches: [["BV:Recria", 400 + i * 10]],
   weight: { current: between(290, 320), adg: between(0.45, 0.6) },
+}));
+// Recria: 3 garrotes desaparecidos juntos.
+add(3, (i) => ({
+  sex: "MALE",
+  breed: "Tabapuã",
+  origin: "BIRTH",
+  birthDaysAgo: 380 + i * 12,
+  entryDaysAgo: 380 + i * 12,
+  batches: [["BV:Recria", 380 + i * 12]],
+  weight: { fromBirth: 31, adg: between(0.5, 0.6) },
+  exit: {
+    daysAgo: 50,
+    status: "MISSING",
+    notes: "Sumiram após rompimento da cerca do Piquete 03",
+  },
 }));
 // Cria: 5 vacas e 5 bezerros.
 add(5, (i) => ({
@@ -887,6 +999,7 @@ type Ctx = {
   breeds: Record<string, string>;
   healthTypes: Record<HealthType, string>;
   neuteringTechniques: Record<NeuteringTechnique, string>;
+  brands: Record<PropKey, string>;
   properties: Record<PropKey, string>;
   batches: Record<string, string>; // "SR:Engorda" → id
 };
@@ -1164,11 +1277,100 @@ async function seedAnimals(ctx: Ctx) {
       });
     }
 
+    // Marcação avulsa com a marca do dono da fazenda: na chegada (compra) ou na
+    // desmama (nascidos na fazenda); de novo ao mudar para a fazenda de outro dono.
+    const brandEvents: { daysAgo: number; prop: PropKey; notes?: string }[] =
+      [];
+    const firstBranding =
+      spec.origin === "BIRTH" && spec.birthDaysAgo != null
+        ? spec.birthDaysAgo - BRANDING_AGE_DAYS
+        : spec.entryDaysAgo;
+    if (firstBranding > (exit?.daysAgo ?? 0)) {
+      brandEvents.push({ daysAgo: firstBranding, prop: firstProp });
+    }
+    if (moveToOtherProp && moveToOtherProp[1] > (exit?.daysAgo ?? 0)) {
+      brandEvents.push({
+        daysAgo: moveToOtherProp[1],
+        prop: lastProp,
+        notes: "Marcado na chegada à Santa Rita",
+      });
+    }
+    for (const b of brandEvents) {
+      await prisma.animalBranding.create({
+        data: {
+          animalId: animal.id,
+          brandId: ctx.brands[b.prop],
+          brandedAt: ago(b.daysAgo),
+          notes: b.notes,
+        },
+      });
+    }
+    if (brandEvents.length) {
+      await prisma.animal.update({
+        where: { id: animal.id },
+        data: { currentBrandId: ctx.brands[brandEvents.at(-1)!.prop] },
+      });
+    }
+
     seeded.push({ id: animal.id, spec, tag: currentTag, rfid, weights });
   }
 
   console.log(`- ${seeded.length} animais criados`);
   return seeded;
+}
+
+// Perdas (morte, desaparecimento) e abates dos animais que saíram do rebanho, já
+// consolidados: o status final do animal vem deles. Um evento por saída.
+async function seedLossesAndSlaughters(ctx: Ctx, animals: SeededAnimal[]) {
+  // Saídas do mesmo tipo, dia, fazenda e motivo formam um único evento.
+  const groups = new Map<
+    string,
+    { exit: NonNullable<AnimalSpec["exit"]>; prop: PropKey; ids: string[] }
+  >();
+  for (const { id, spec } of animals) {
+    const exit = spec.exit;
+    if (!exit || !["DEAD", "MISSING", "SLAUGHTERED"].includes(exit.status))
+      continue;
+    const prop = finalProp(spec);
+    const key = `${exit.status}|${exit.daysAgo}|${prop}|${exit.notes}`;
+    const group = groups.get(key) ?? { exit, prop, ids: [] };
+    group.ids.push(id);
+    groups.set(key, group);
+  }
+
+  let losses = 0;
+  let slaughters = 0;
+  for (const { exit, prop, ids } of groups.values()) {
+    const date = ago(exit.daysAgo);
+    const propertyId = ctx.properties[prop];
+    if (exit.status === "SLAUGHTERED") {
+      await prisma.slaughterEvent.create({
+        data: {
+          title: "Abate de descarte",
+          description: exit.notes,
+          slaughterDate: date,
+          confirmedAt: date,
+          propertyId,
+          items: { create: ids.map((animalId) => ({ animalId })) },
+        },
+      });
+      slaughters++;
+    } else {
+      const type = exit.status as "DEAD" | "MISSING";
+      await prisma.lossEvent.create({
+        data: {
+          title: type === "DEAD" ? "Óbito" : "Desaparecimento",
+          description: exit.notes,
+          lossDate: date,
+          confirmedAt: date,
+          propertyId,
+          items: { create: ids.map((animalId) => ({ animalId, type })) },
+        },
+      });
+      losses++;
+    }
+  }
+  console.log(`- ${losses} eventos de perda e ${slaughters} de abate criados`);
 }
 
 async function seedSessions(ctx: Ctx, animals: SeededAnimal[]) {
@@ -2407,17 +2609,20 @@ async function main() {
   const breeds = await seedBreeds();
   const healthTypes = await seedHealthTypes();
   const neuteringTechniques = await seedNeuteringTechniques();
+  const brands = await seedBrands(people);
   const { properties, batches } = await seedPropertiesAreasBatches(people);
   const ctx: Ctx = {
     people,
     breeds,
     healthTypes,
     neuteringTechniques,
+    brands,
     properties,
     batches,
   };
 
   const animals = await seedAnimals(ctx);
+  await seedLossesAndSlaughters(ctx, animals);
   await seedSessions(ctx, animals);
   const groups = await seedSpecialCases(ctx, animals);
   await seedPurchases(ctx, animals);
