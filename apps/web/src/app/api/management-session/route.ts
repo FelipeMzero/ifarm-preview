@@ -3,9 +3,10 @@ import { prisma, type Prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/api-auth";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
 import {
-  parseSessionSteps,
   sessionStatus,
+  sessionStepsSelect,
   STEP_TYPE_LABELS,
+  toSessionSteps,
 } from "@/lib/management-steps";
 import { assertNoConflicts } from "../animal/commitments";
 import { getOrAssignCurrentProperty } from "../user/current-property/currentProperty";
@@ -90,6 +91,7 @@ export async function GET(request: NextRequest) {
       prisma.managementSession.findMany({
         where,
         include: {
+          steps: sessionStepsSelect,
           healthManagements: {
             select: { id: true, title: true, type: { select: { name: true } } },
           },
@@ -119,7 +121,7 @@ export async function GET(request: NextRequest) {
           managementDate: toDateOnly(s.managementDate),
           title: s.title,
           notes: s.notes,
-          steps: parseSessionSteps(s.steps).map((step) => {
+          steps: toSessionSteps(s.steps).map((step) => {
             if (step.type !== "health") return STEP_TYPE_LABELS[step.type];
             const h = health.get(step.healthManagementId);
             return h?.title ?? h?.type.name ?? STEP_TYPE_LABELS.health;
@@ -196,10 +198,6 @@ export async function POST(request: NextRequest) {
         [],
         data.steps,
       );
-      await tx.managementSession.update({
-        where: { id: created.id },
-        data: { steps },
-      });
       await assertNoConflicts(tx, animalIds, sessionIntent(steps, false), {
         sessionId: created.id,
       });

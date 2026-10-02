@@ -17,7 +17,10 @@
 
 # Reunião - dia 28/09/2026
 
-- Manejo de marcação (ferra)
 - Lançamento de perdas
+- Manejo de marcação (ferra)
 - Módulo de vendas
 - Pastagem rotativa
+- Páginas de detalhes
+- Regras de exclusão
+- Relatórios / Dashboard

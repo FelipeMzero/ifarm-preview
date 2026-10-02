@@ -14,7 +14,7 @@ export const STEP_TYPES = [
 
 export type StepType = (typeof STEP_TYPES)[number];
 
-// Formato gravado em ManagementSession.steps.
+// Uma etapa da sessão (linha de ManagementStep, sem a posição).
 export type SessionStep =
   | { type: "weighing" }
   | { type: "neutering" }
@@ -50,14 +50,31 @@ export function normalizeStepOrder<T extends { type: StepType }>(steps: T[]) {
   ];
 }
 
-export function parseSessionSteps(value: unknown): SessionStep[] {
-  if (!Array.isArray(value)) return [];
-  return value.filter(
-    (s): s is SessionStep =>
-      !!s &&
-      typeof s === "object" &&
-      STEP_TYPES.includes((s as { type: StepType }).type),
-  );
+// Etapas gravadas em ManagementStep, na ordem da sessão. O banco guarda o tipo em
+// maiúsculas (enum ManagementStepType).
+export const sessionStepsSelect = {
+  orderBy: { position: "asc" },
+  select: { type: true, healthManagementId: true },
+} as const;
+
+export function toSessionSteps(
+  rows: { type: string; healthManagementId: string | null }[],
+): SessionStep[] {
+  return rows.map((row) => {
+    const type = row.type.toLowerCase() as StepType;
+    return type === "health"
+      ? { type, healthManagementId: row.healthManagementId! }
+      : { type };
+  });
+}
+
+export function toStepRows(steps: SessionStep[]) {
+  return steps.map((step, position) => ({
+    type: step.type.toUpperCase() as Uppercase<StepType>,
+    position,
+    healthManagementId:
+      step.type === "health" ? step.healthManagementId : null,
+  }));
 }
 
 export type ManagementSessionStatus =

@@ -299,16 +299,10 @@ model ManagementSession {
   confirmedAt    DateTime? @map("confirmed_at")
   cancelledAt    DateTime? @map("cancelled_at")
 
-  // Etapas do manejo, na ordem em que são registradas em cada animal. Cada item é
-  // { type: "weighing" | "neutering" | "tag" | "rfid" | "health" | "batch", ... };
-  // o sanitário aponta para o HealthManagement (healthManagementId). A configuração dos demais
-  // fica no contêiner do tipo (ex.: técnica prevista, lotes sugeridos). A apartação, quando
-  // existe, é sempre a última.
-  steps Json @default("[]")
-
   propertyId String   @map("property_id") @db.Uuid
   property   Property @relation(fields: [propertyId], references: [id], onDelete: Restrict)
 
+  steps        ManagementStep[]
   participants ManagementParticipant[]
 
   weighingManagement  WeighingManagement?
@@ -334,6 +328,38 @@ model ManagementSession {
   // delas, sem passar pelo histórico (docs/data-dictionary.md, 2.9).
   @@index([propertyId], map: "management_session_open_idx", where: { confirmedAt: null, cancelledAt: null })
   @@map("management_session")
+}
+
+// Etapas do manejo, na ordem em que são feitas em cada animal. A configuração de cada etapa
+// fica no contêiner do tipo (ex.: técnica prevista, lotes sugeridos, dados do procedimento).
+// A apartação, quando existe, é sempre a última.
+model ManagementStep {
+  id       Int                @id @default(autoincrement())
+  type     ManagementStepType
+  position Int // ordem da etapa na sessão (a partir de 0)
+
+  managementSessionId String            @map("management_session_id") @db.Uuid
+  managementSession   ManagementSession @relation(fields: [managementSessionId], references: [id], onDelete: Cascade)
+
+  // Só no sanitário, que pode se repetir na sessão: o procedimento desta etapa.
+  healthManagementId String?           @unique @map("health_management_id") @db.Uuid
+  healthManagement   HealthManagement? @relation(fields: [healthManagementId], references: [id], onDelete: Restrict)
+
+  @@unique([managementSessionId, position])
+  // Cada tipo aparece no máximo uma vez na sessão, exceto o sanitário.
+  @@unique([managementSessionId, type], map: "management_step_unique_type", where: { type: { not: "HEALTH" } })
+  @@map("management_step")
+}
+
+enum ManagementStepType {
+  WEIGHING // pesagem
+  NEUTERING // castração
+  TAG // brinco
+  RFID
+  HEALTH // procedimento sanitário
+  BATCH // apartação
+
+  @@map("management_step_type")
 }
 
 model ManagementParticipant {
@@ -607,6 +633,7 @@ model HealthManagement {
   performedAt DateTime @map("performed_at") // data do procedimento; em sessão, copiada da data da sessão
 
   items HealthManagementItem[]
+  step  ManagementStep? // etapa da sessão que aplica este procedimento (null = avulso), uma vez que a mesma sessão pode ter vários manejos sanitários.
 
   typeId String               @map("type_id") @db.Uuid
   type   HealthManagementType @relation(fields: [typeId], references: [id], onDelete: Restrict)

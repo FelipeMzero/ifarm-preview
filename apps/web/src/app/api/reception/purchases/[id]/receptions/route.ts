@@ -67,16 +67,12 @@ export async function POST(
         },
       });
 
-      const steps = await applyPlanSteps(
+      await applyPlanSteps(
         tx,
         { ...session, managementDate: today },
         [],
         data.steps,
       );
-      await tx.managementSession.update({
-        where: { id: session.id },
-        data: { steps },
-      });
 
       const reception = await tx.purchaseReception.create({
         data: {

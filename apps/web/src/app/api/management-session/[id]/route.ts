@@ -182,7 +182,6 @@ export async function PUT(request: NextRequest, { params }: Params) {
           title: data.title,
           scheduledDate: data.scheduledDate,
           notes: data.notes,
-          steps,
         },
       });
     });

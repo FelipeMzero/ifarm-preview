@@ -540,7 +540,6 @@ Uma **sessão de manejo** reúne o trabalho feito num grupo de animais no curral
 | `management_date` | timestamp | N | | | Data em que o manejo acontece de fato. Preenchida ao **iniciar o registro** (padrão: hoje). Não pode ser futura. Todos os registros da sessão recebem essa data. |
 | `confirmed_at` | timestamp | N | | | Consolidação: os registros passam a valer (ver 2.6). A sessão não pode mais ser alterada. |
 | `cancelled_at` | timestamp | N | | | Cancelamento: nenhum registro da sessão passa a valer. |
-| `steps` | jsonb | | `[]` | | Etapas do manejo, na ordem em que são registradas em cada animal. Estrutura abaixo. |
 | `property_id` | uuid | | | FK → `property` | Propriedade. |
 | `created_at`, `updated_at` | timestamp | | now | | Auditoria. |
 
@@ -553,24 +552,7 @@ Uma **sessão de manejo** reúne o trabalho feito num grupo de animais no curral
 | Consolidada | `confirmed_at` preenchido | Só leitura |
 | Cancelada | `cancelled_at` preenchido | Só leitura |
 
-**Estrutura de `steps`** — array ordenado, um objeto por etapa:
-
-| `type` | Campos extras | Contêiner dos registros |
-|---|---|---|
-| `"weighing"` | — | `weighing_management` |
-| `"neutering"` | — | `neutering_management` |
-| `"tag"` | — | `tag_management` |
-| `"rfid"` | — | `rfid_management` |
-| `"health"` | `healthManagementId` (uuid) | `health_management` |
-| `"batch"` (apartação) | — | `batch_management` (lotes sugeridos); registros em `animal_batch_transfer` da sessão + `management_participant.batch_kept` |
-
-A configuração de cada etapa definida no planejamento fica no contêiner do tipo (ver 8.1), não em `steps`.
-
-Regras de `steps`:
-- Cada tipo aparece no máximo uma vez, exceto `health`, que pode se repetir (vários procedimentos sanitários na mesma sessão).
-- A apartação (`batch`), quando existe, é sempre a **última** etapa.
-- Uma etapa só pode ser removida do planejamento se ainda não tiver registros.
-- A chave estável de uma etapa é o `type`, ou `health:{healthManagementId}` no sanitário.
+As etapas da sessão ficam em `management_step` (ver 7.2).
 
 **Consolidação** (em uma transação):
 1. Remove da sessão os participantes sem nenhum registro.
@@ -582,7 +564,39 @@ Etapas puladas num animal simplesmente não têm efeito sobre ele.
 
 **Índices:** `(property_id, scheduled_date)`; parcial `management_session_open_idx` em `property_id` onde `confirmed_at` e `cancelled_at` são nulos (sessões abertas, ver 2.9).
 
-### 7.2 `management_participant` — Animal participante da sessão
+### 7.2 `management_step` — Etapa da sessão
+
+Etapas do manejo, na ordem em que são feitas em cada animal.
+
+| Coluna | Tipo | Nulo | Padrão | Chave | Descrição e regras |
+|---|---|---|---|---|---|
+| `id` | serial | | | PK | Identificador. |
+| `type` | enum `management_step_type` | | | | `WEIGHING` (pesagem), `NEUTERING` (castração), `TAG` (brinco), `RFID`, `HEALTH` (procedimento sanitário) ou `BATCH` (apartação). |
+| `position` | integer | | | | Ordem da etapa na sessão, a partir de 0. |
+| `management_session_id` | uuid | | | FK → `management_session` | Sessão. Apagada junto com ela (cascade). |
+| `health_management_id` | uuid | N | | FK → `health_management`, UK | Só no sanitário: o procedimento aplicado nesta etapa. |
+
+Cada tipo de etapa tem um contêiner, onde ficam os registros e a configuração definida no planejamento (ver 8.1):
+
+| `type` | Contêiner |
+|---|---|
+| `WEIGHING` | `weighing_management` |
+| `NEUTERING` | `neutering_management` (técnica prevista) |
+| `TAG` | `tag_management` |
+| `RFID` | `rfid_management` |
+| `HEALTH` | `health_management` (dados do procedimento), apontado por `health_management_id` |
+| `BATCH` | `batch_management` (lotes sugeridos); registros em `animal_batch_transfer` da sessão + `management_participant.batch_kept` |
+
+Regras:
+- Cada tipo aparece no máximo uma vez, exceto `HEALTH`, que pode se repetir (vários procedimentos sanitários na mesma sessão).
+- A apartação (`BATCH`), quando existe, é sempre a **última** etapa.
+- Uma etapa só pode ser removida do planejamento se ainda não tiver registros.
+- A chave estável de uma etapa é o tipo, ou `health:{health_management_id}` no sanitário.
+- Ao salvar o planejamento, as etapas da sessão são regravadas na nova ordem.
+
+**Restrições e índices:** `UNIQUE (management_session_id, position)`; único parcial `management_step_unique_type` em `(management_session_id, type)` onde `type <> 'HEALTH'`; `UNIQUE (health_management_id)`.
+
+### 7.3 `management_participant` — Animal participante da sessão
 
 | Coluna | Tipo | Nulo | Padrão | Chave | Descrição e regras |
 |---|---|---|---|---|---|

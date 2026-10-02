@@ -2,11 +2,13 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import {
   normalizeStepOrder,
-  parseSessionSteps,
   REPEATABLE_STEP_TYPES,
   sessionStatus,
+  sessionStepsSelect,
   STEP_TYPE_LABELS,
   stepKey,
+  toSessionSteps,
+  toStepRows,
   type ManagementSessionStatus,
   type SessionStep,
   type StepType,
@@ -30,7 +32,10 @@ export async function loadSession(
   tx: Tx,
   id: string,
 ): Promise<LoadedSession | null> {
-  const session = await tx.managementSession.findUnique({ where: { id } });
+  const session = await tx.managementSession.findUnique({
+    where: { id },
+    include: { steps: sessionStepsSelect },
+  });
   if (!session) return null;
   return {
     id: session.id,
@@ -38,7 +43,7 @@ export async function loadSession(
     scheduledDate: session.scheduledDate,
     managementDate: session.managementDate,
     status: sessionStatus(session),
-    steps: parseSessionSteps(session.steps),
+    steps: toSessionSteps(session.steps),
   };
 }
 
@@ -111,7 +116,7 @@ export function invalidAnimalsMessage(labels: string[]) {
 }
 
 // Aplica as etapas do planejamento: remove as que saíram (falha se já tiverem
-// registros), cria/atualiza as demais e devolve a lista na ordem a gravar.
+// registros), cria/atualiza as demais e grava a lista em ManagementStep, na ordem.
 export async function applyPlanSteps(
   tx: Tx,
   session: SessionCtx,
@@ -130,6 +135,12 @@ export async function applyPlanSteps(
     }
   }
 
+  // A lista é regravada inteira no fim. Sai antes, para que o sanitário removido possa
+  // apagar o seu procedimento (FK) e a reordenação não esbarre na posição única.
+  await tx.managementStep.deleteMany({
+    where: { managementSessionId: session.id },
+  });
+
   const keptHealth = new Set(
     plan
       .filter((p) => p.type === "health" && p.healthManagementId)
@@ -147,6 +158,12 @@ export async function applyPlanSteps(
   for (const p of normalizeStepOrder(plan)) {
     steps.push(await stepModule(p.type).prepare(tx, session, p));
   }
+  await tx.managementStep.createMany({
+    data: toStepRows(steps).map((row) => ({
+      ...row,
+      managementSessionId: session.id,
+    })),
+  });
   return steps;
 }
 

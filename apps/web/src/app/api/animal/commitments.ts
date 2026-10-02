@@ -7,7 +7,11 @@ import {
   type CommitmentExclusion,
   type CommitmentIntent,
 } from "@/lib/animal-commitments";
-import { parseSessionSteps, stepKey } from "@/lib/management-steps";
+import {
+  sessionStepsSelect,
+  stepKey,
+  toSessionSteps,
+} from "@/lib/management-steps";
 import { animalLabel, summarize } from "../batch-transfer/shared";
 
 // Compromissos pendentes dos animais (regras em lib/animal-commitments.ts e em
@@ -68,7 +72,7 @@ export async function findCommitments(
       select: {
         id: true,
         title: true,
-        steps: true,
+        steps: sessionStepsSelect,
         purchaseReception: { select: { id: true } },
       },
     }),
@@ -114,7 +118,7 @@ export async function findCommitments(
             kind: "session",
             id: s.id,
             title: s.title,
-            stepKeys: parseSessionSteps(s.steps).map(stepKey),
+            stepKeys: toSessionSteps(s.steps).map(stepKey),
           },
     ]),
   );

@@ -10,7 +10,11 @@ import type {
   AnimalStatus,
   Sex,
 } from "../src/generated/prisma/enums";
-import { stepKey, type SessionStep } from "../src/lib/management-steps";
+import {
+  stepKey,
+  toStepRows,
+  type SessionStep,
+} from "../src/lib/management-steps";
 import { consolidateSession } from "../src/app/api/management-session/consolidate";
 import { findCommitments } from "../src/app/api/animal/commitments";
 import { saveAnimalStep } from "../src/app/api/management-session/records";
@@ -1181,7 +1185,7 @@ async function seedSessions(ctx: Ctx, animals: SeededAnimal[]) {
       const weighed = present.filter((a) => a.weights.has(daysAgo));
 
       // Etapas na ordem em que foram feitas; gravadas no fim, com os ids dos sanitários.
-      const steps: Prisma.InputJsonObject[] = [{ type: "weighing" }];
+      const steps: SessionStep[] = [{ type: "weighing" }];
 
       const session = await prisma.managementSession.create({
         data: {
@@ -1308,9 +1312,11 @@ async function seedSessions(ctx: Ctx, animals: SeededAnimal[]) {
         steps.push({ type: "health", healthManagementId: health.id });
       }
 
-      await prisma.managementSession.update({
-        where: { id: session.id },
-        data: { steps },
+      await prisma.managementStep.createMany({
+        data: toStepRows(steps).map((row) => ({
+          ...row,
+          managementSessionId: session.id,
+        })),
       });
     }
   }
@@ -1343,14 +1349,11 @@ async function seedSessions(ctx: Ctx, animals: SeededAnimal[]) {
       withdrawalUntil: dateAgo(-18 - 35),
     },
   });
-  await prisma.managementSession.update({
-    where: { id: planned.id },
-    data: {
-      steps: [
-        { type: "weighing" },
-        { type: "health", healthManagementId: plannedHealth.id },
-      ],
-    },
+  await prisma.managementStep.createMany({
+    data: toStepRows([
+      { type: "weighing" },
+      { type: "health", healthManagementId: plannedHealth.id },
+    ]).map((row) => ({ ...row, managementSessionId: planned.id })),
   });
 
   console.log(
@@ -1867,11 +1870,7 @@ async function createStartedSession(
     [],
     data.steps.map((s) => planStepSchema.parse(s)),
   );
-  await tx.managementSession.update({
-    where: { id: session.id },
-    data: { steps },
-  });
-  return { id: session.id, steps: steps as SessionStep[] };
+  return { id: session.id, steps };
 }
 
 const keyOf = (steps: SessionStep[], type: string) =>

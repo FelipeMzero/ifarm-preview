@@ -147,10 +147,18 @@ erDiagram
     DateTime management_date "❓"
     DateTime confirmed_at "❓"
     DateTime cancelled_at "❓"
-    Json steps 
     String property_id 
     DateTime created_at 
     DateTime updated_at 
+    }
+  
+
+  "management_step" {
+    Int id "🗝️"
+    ManagementStepType type 
+    Int position 
+    String management_session_id 
+    String health_management_id "❓"
     }
   
 
@@ -472,6 +480,8 @@ erDiagram
     "user_settings" }o--|o property : "currentProperty"
     "person" |o--|o address : "address"
     "management_session" }o--|| property : "property"
+    "management_step" }o--|| management_session : "managementSession"
+    "management_step" |o--|o health_management : "healthManagement"
     "management_participant" }o--|| management_session : "managementSession"
     "management_participant" }o--|| animal : "batch_id"
     "tag_management" |o--|| management_session : "managementSession"
