@@ -89,7 +89,7 @@
 
 ### Charter 5: Integridade Referencial e Ciclo de Vida
 
-> Regras: `RN-PESSOA-03` · Requisitos: `RF-PESSOA-05`, `RF-PESSOA-06`
+> Regras: [Exclusão vs Inativação](../../../docs/requirements/comum.md#exclusão-vs-inativação) · Requisitos: `RF-PESSOA-05`, `RF-PESSOA-06`
 
 |   ID    | Cenário                                      |  Resultado  | Observação                                                                            |
 | :-----: | -------------------------------------------- | :---------: | ------------------------------------------------------------------------------------- |
