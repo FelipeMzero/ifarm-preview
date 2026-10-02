@@ -3,7 +3,7 @@ import { FIELD_LIMITS } from "@/lib/field-limits";
 import { STEP_TYPES } from "@/lib/management-steps";
 
 // Uma etapa no formulário de planejamento. Os campos extras só valem para o tipo
-// correspondente (sanitário e apartação); os demais tipos não têm configuração.
+// correspondente (castração, sanitário e apartação); os demais tipos não têm configuração.
 export const planStepFormSchema = z
   .object({
     type: z.enum(STEP_TYPES),
@@ -23,6 +23,9 @@ export const planStepFormSchema = z
     withdrawalUntil: z.string().optional(),
     nextDueDate: z.string().optional(),
     suggestedBatchIds: z.array(z.string()).optional(),
+    suggestedTechniqueId: z.string().optional(),
+    // Só para exibir a técnica prevista se ela tiver sido inativada depois.
+    suggestedTechniqueName: z.string().optional(),
   })
   .superRefine((step, ctx) => {
     if (step.type !== "health") return;
@@ -72,6 +75,12 @@ export function toStepPayload(step: PlanStepForm) {
   }
   if (step.type === "batch") {
     return { type: step.type, suggestedBatchIds: step.suggestedBatchIds ?? [] };
+  }
+  if (step.type === "neutering") {
+    return {
+      type: step.type,
+      suggestedTechniqueId: step.suggestedTechniqueId || null,
+    };
   }
   return { type: step.type };
 }

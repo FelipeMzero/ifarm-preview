@@ -208,6 +208,7 @@ erDiagram
 
   "neutering_management" {
     String id "🗝️"
+    String suggested_technique_id "❓"
     String management_session_id 
     DateTime created_at 
     }
@@ -262,6 +263,20 @@ erDiagram
     String id "🗝️"
     String management_session_id 
     DateTime created_at 
+    }
+  
+
+  "batch_management" {
+    String id "🗝️"
+    String management_session_id 
+    DateTime created_at 
+    }
+  
+
+  "batch_management_suggestion" {
+    String management_id 
+    String batch_id 
+    Int position 
     }
   
 
@@ -465,6 +480,7 @@ erDiagram
     "rfid_management" |o--|| management_session : "managementSession"
     "animal_rfid_tagging" }o--|o rfid_management : "management"
     "animal_rfid_tagging" }o--|| animal : "animal"
+    "neutering_management" }o--|o neutering_technique : "suggestedTechnique"
     "neutering_management" |o--|| management_session : "managementSession"
     "animal_neutering" }o--|o neutering_technique : "technique"
     "animal_neutering" }o--|o neutering_technique : "originalTechnique"
@@ -474,6 +490,9 @@ erDiagram
     "animal_weighing" }o--|o weighing_management : "management"
     "animal_weighing" }o--|| animal : "animal"
     "brand_management" |o--|| management_session : "managementSession"
+    "batch_management" |o--|| management_session : "managementSession"
+    "batch_management_suggestion" }o--|| batch_management : "management"
+    "batch_management_suggestion" }o--|| batch : "batch"
     "animal_branding" }o--|o brand_management : "management"
     "animal_branding" }o--|| animal : "animal"
     "health_management" }o--|| health_management_type : "type"

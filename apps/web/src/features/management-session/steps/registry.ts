@@ -7,7 +7,8 @@ import { healthToPlanForm } from "./health/config";
 import HealthPlanFields from "./health/HealthPlanFields";
 import HealthStep from "./health/HealthStep";
 import { RfidStep, TagStep } from "./identifier/IdentifierStep";
-import NeuteringStep from "./neutering/NeuteringStep";
+import NeuteringPlanFields from "./neutering/NeuteringPlanFields";
+import NeuteringStep, { type NeuteringConfig } from "./neutering/NeuteringStep";
 import type { ClientStepModule, StepScreenProps } from "./types";
 import WeighingStep from "./weighing/WeighingStep";
 
@@ -24,6 +25,16 @@ const CLIENT_STEP_MODULES: Record<StepType, ClientStepModule> = {
     icon: STEP_ICONS.neutering,
     description: "Registra a castração e o método.",
     Screen: NeuteringStep as ComponentType<StepScreenProps>,
+    PlanFields: NeuteringPlanFields,
+    planDefaults: () => ({ suggestedTechniqueId: "" }),
+    toPlanForm: (step) => {
+      const technique = (step.config as NeuteringConfig | undefined)
+        ?.suggestedTechnique;
+      return {
+        suggestedTechniqueId: technique?.id ?? "",
+        suggestedTechniqueName: technique?.name ?? "",
+      };
+    },
   },
   tag: {
     type: "tag",

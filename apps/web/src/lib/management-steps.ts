@@ -21,7 +21,7 @@ export type SessionStep =
   | { type: "tag" }
   | { type: "rfid" }
   | { type: "health"; healthManagementId: string }
-  | { type: "batch"; suggestedBatchIds: string[] };
+  | { type: "batch" };
 
 export const STEP_TYPE_LABELS: Record<StepType, string> = {
   weighing: "Pesagem",

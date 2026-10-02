@@ -113,7 +113,7 @@ Permite criar e alterar o planejamento de uma sessão: data prevista, manejos a 
 |                       |                                                                                                                                                      |
 | :-------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **User Story**        | Como **Administrador**, **Gerente** ou **Funcionário**, quero **planejar uma sessão de manejo** para organizar antecipadamente o trabalho do curral. |
-| **Dependências**      | `RF-MANEJO-01`, `RF-ANIMAL-02`, `RF-TSAN-01` (para procedimentos sanitários)                                                                         |
+| **Dependências**      | `RF-MANEJO-01`, `RF-ANIMAL-02`, `RF-CAST-01` (para a castração), `RF-TSAN-01` (para procedimentos sanitários)                                        |
 | **Regras Vinculadas** | `RN-MANEJO-02`, `RN-MANEJO-03`, `RN-MANEJO-04`                                                                                                       |
 | **Atores**            | Administrador, Gerente, Funcionário                                                                                                                  |
 | **Plataformas**       | Web                                                                                                                                                  |
@@ -123,7 +123,7 @@ Permite criar e alterar o planejamento de uma sessão: data prevista, manejos a 
 - [ ] O planejamento deve permitir informar `Título`, `Data Prevista`, `Observação`, os manejos e os animais.
 - [ ] Os campos `Título` e `Data Prevista` são obrigatórios, e deve haver ao menos um manejo.
 - [ ] Os manejos devem respeitar `RN-MANEJO-02`, e o usuário pode reordená-los.
-- [ ] O procedimento sanitário e a apartação têm dados próprios no planejamento, especificados em `RF-MANEJO-09` e `RF-MANEJO-10`.
+- [ ] A castração, o procedimento sanitário e a apartação têm dados próprios no planejamento, especificados em `RF-MANEJO-07`, `RF-MANEJO-09` e `RF-MANEJO-10`.
 - [ ] Os animais devem ser escolhidos entre os animais ativos da propriedade, com busca por `ID`, `Brinco`, `RFID` ou `Apelido` e filtros por lote, sexo e faixa de peso. Deve ser possível selecionar individualmente ou todos os animais filtrados.
 - [ ] Animais com compromisso conflitante devem aparecer indisponíveis, com o motivo, e não entram na seleção de todos os filtrados (`RN-MANEJO-04`).
 - [ ] O planejamento pode ser alterado enquanto a sessão estiver planejada ou em andamento.
@@ -138,7 +138,7 @@ Permite criar e alterar o planejamento de uma sessão: data prevista, manejos a 
 
 1. O fluxo começa quando o usuário aciona o planejamento de uma nova sessão na listagem (`RF-MANEJO-01`).
 2. O sistema exibe o formulário de planejamento.
-3. O usuário informa `Título`, `Data Prevista` e `Observação`, adiciona os manejos na ordem em que serão feitos, podendo reordená-los e informar os dados próprios do procedimento sanitário e da apartação (`RF-MANEJO-09`, `RF-MANEJO-10`), e seleciona os animais (ver fluxos alternativos).
+3. O usuário informa `Título`, `Data Prevista` e `Observação`, adiciona os manejos na ordem em que serão feitos, podendo reordená-los e informar os dados próprios da castração, do procedimento sanitário e da apartação (`RF-MANEJO-07`, `RF-MANEJO-09`, `RF-MANEJO-10`), e seleciona os animais (ver fluxos alternativos).
 4. O usuário aciona a ação "Salvar".
 5. O sistema valida os dados (`RN-MANEJO-02`, `RN-MANEJO-04`), cria a sessão com a situação `Planejada` e exibe a mensagem: _"Sessão de manejo planejada!"_
 6. O fluxo termina.
@@ -427,9 +427,14 @@ Permite registrar a etapa em que o animal é castrado.
 
 ### 2.7.2 - Critérios de Aceitação
 
+**No planejamento**
+
+- [ ] Pode ser indicada a técnica prevista, entre as técnicas ativas, para agilizar o registro.
+
 **No registro**
 
 - [ ] A técnica é obrigatória e deve ser escolhida entre as técnicas ativas (`RN-MANEJO-07`).
+- [ ] A técnica prevista no planejamento vem pré-selecionada, se ainda estiver ativa, e pode ser trocada por outra.
 - [ ] Alertar, sem impedir o registro, quando o animal for fêmea ou já for castrado, informando a data da castração anterior, se houver (`RN-MANEJO-07`).
 
 **Na consolidação**
@@ -441,9 +446,10 @@ Permite registrar a etapa em que o animal é castrado.
 **Fluxo principal**
 
 1. O fluxo começa quando a etapa de castração é apresentada no registro do animal (`RF-MANEJO-05`).
-2. O usuário escolhe a técnica, entre as técnicas ativas.
-3. O sistema valida os dados (`RN-MANEJO-07`) e registra a castração na sessão.
-4. O fluxo continua em `RF-MANEJO-05`.
+2. O sistema exibe a técnica prevista no planejamento já selecionada, se houver e se ainda estiver ativa.
+3. O usuário mantém a técnica selecionada ou escolhe outra, entre as técnicas ativas.
+4. O sistema valida os dados (`RN-MANEJO-07`) e registra a castração na sessão.
+5. O fluxo continua em `RF-MANEJO-05`.
 
 **Fluxos alternativos**
 
@@ -452,10 +458,15 @@ Permite registrar a etapa em que o animal é castrado.
   2. O sistema exibe o alerta _"Este animal é uma fêmea."_ ou, se o animal já for castrado, informa a data da castração anterior, se houver, sem impedir o registro.
   3. O fluxo continua no passo 2.
 
-- **A2 – Castração sem técnica (passo 3):**
+- **A2 – Castração sem técnica (passo 4):**
   1. A técnica não foi escolhida (`RN-MANEJO-07`).
   2. O sistema impede o registro e exibe a mensagem: _"Informe a técnica."_
-  3. O fluxo retorna ao passo 2.
+  3. O fluxo retorna ao passo 3.
+
+- **A3 – Animal já registrado (passo 2):**
+  1. A castração já foi registrada neste animal na sessão.
+  2. O sistema exibe a técnica registrada, em vez da prevista.
+  3. O fluxo continua no passo 3.
 
 </div>
 

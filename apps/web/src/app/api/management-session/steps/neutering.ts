@@ -16,13 +16,35 @@ export const neuteringStep = defineStep({
   type: "neutering",
   consolidateOrder: 20,
 
-  planSchema: z.object({ type: z.literal("neutering") }),
+  planSchema: z.object({
+    type: z.literal("neutering"),
+    // Técnica prevista: vem pré-selecionada no registro, que pode escolher outra.
+    suggestedTechniqueId: z.uuid().nullish().default(null),
+  }),
 
-  async prepare(tx, session) {
+  async prepare(tx, session, plan) {
+    const techniqueId = plan.suggestedTechniqueId ?? null;
+    // Manter a técnica já planejada é permitido mesmo que tenha sido inativada depois.
+    const current = await container(tx, session.id);
+    if (
+      !(await isValidNeuteringTechnique(
+        techniqueId,
+        current?.suggestedTechniqueId,
+        tx,
+      ))
+    ) {
+      throw new StepError(
+        "A técnica prevista para a castração é inválida ou está inativa.",
+      );
+    }
+
     await tx.neuteringManagement.upsert({
       where: { managementSessionId: session.id },
-      create: { managementSessionId: session.id },
-      update: {},
+      create: {
+        managementSessionId: session.id,
+        suggestedTechniqueId: techniqueId,
+      },
+      update: { suggestedTechniqueId: techniqueId },
     });
     return { type: "neutering" as const };
   },
@@ -42,8 +64,27 @@ export const neuteringStep = defineStep({
     await tx.neuteringManagement.delete({ where: { id: management.id } });
   },
 
-  async describe() {
-    return { label: "Castração" };
+  async describe(tx, session) {
+    const technique = (
+      await tx.neuteringManagement.findUnique({
+        where: { managementSessionId: session.id },
+        select: {
+          suggestedTechnique: {
+            select: { id: true, name: true, deactivatedAt: true },
+          },
+        },
+      })
+    )?.suggestedTechnique;
+    return {
+      label: "Castração",
+      config: {
+        suggestedTechnique: technique && {
+          id: technique.id,
+          name: technique.name,
+          active: !technique.deactivatedAt,
+        },
+      },
+    };
   },
 
   async load(tx, session, _step, animalIds) {

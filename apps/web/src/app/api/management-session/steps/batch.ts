@@ -54,7 +54,24 @@ export const batchStep = defineStep({
         "Algum dos lotes sugeridos para a apartação é inválido ou está encerrado.",
       );
     }
-    return { type: "batch" as const, suggestedBatchIds: ids };
+
+    const management = await tx.batchManagement.upsert({
+      where: { managementSessionId: session.id },
+      create: { managementSessionId: session.id },
+      update: {},
+      select: { id: true },
+    });
+    await tx.batchManagementSuggestion.deleteMany({
+      where: { managementId: management.id },
+    });
+    await tx.batchManagementSuggestion.createMany({
+      data: ids.map((batchId, position) => ({
+        managementId: management.id,
+        batchId,
+        position,
+      })),
+    });
+    return { type: "batch" as const };
   },
 
   async dispose(tx, session) {
@@ -72,21 +89,21 @@ export const batchStep = defineStep({
         409,
       );
     }
+    // As sugestões saem junto (cascade).
+    await tx.batchManagement.deleteMany({
+      where: { managementSessionId: session.id },
+    });
   },
 
-  async describe(tx, _session, step) {
-    const batches = await tx.batch.findMany({
-      where: { id: { in: step.suggestedBatchIds } },
-      select: { id: true, name: true },
+  async describe(tx, session) {
+    const suggestions = await tx.batchManagementSuggestion.findMany({
+      where: { management: { managementSessionId: session.id } },
+      orderBy: { position: "asc" },
+      select: { batch: { select: { id: true, name: true } } },
     });
-    const byId = new Map(batches.map((b) => [b.id, b]));
     return {
       label: "Apartação",
-      config: {
-        suggestedBatches: step.suggestedBatchIds
-          .map((id) => byId.get(id))
-          .filter(Boolean),
-      },
+      config: { suggestedBatches: suggestions.map((s) => s.batch) },
     };
   },
 

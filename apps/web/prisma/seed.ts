@@ -1967,7 +1967,10 @@ async function seedOpenSessions(ctx: Ctx) {
       animalIds: completo.map((a) => a.id),
       steps: [
         { type: "weighing" },
-        { type: "neutering" },
+        {
+          type: "neutering",
+          suggestedTechniqueId: ctx.neuteringTechniques["Burdizzo"],
+        },
         { type: "tag" },
         { type: "rfid" },
         {

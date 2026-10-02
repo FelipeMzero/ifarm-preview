@@ -99,11 +99,12 @@ model Batch {
   // Tramsferências e históricos
   batchAreaHistories           BatchAreaHistory[]
   animalBatchHistories         AnimalBatchHistory[]
-  destinationAnimalTransfers   AnimalBatchTransfer[]     @relation("AnimalBatchTransferDestination")
-  originAnimalTransferItems    AnimalBatchTransferItem[] @relation("AnimalBatchTransferItemOrigin")
-  originPropertyTransfers      AnimalPropertyTransfer[]  @relation("AnimalPropertyTransferOriginBatch")
-  destinationPropertyTransfers AnimalPropertyTransfer[]  @relation("AnimalPropertyTransferDestinationBatch")
+  destinationAnimalTransfers   AnimalBatchTransfer[]       @relation("AnimalBatchTransferDestination")
+  originAnimalTransferItems    AnimalBatchTransferItem[]   @relation("AnimalBatchTransferItemOrigin")
+  originPropertyTransfers      AnimalPropertyTransfer[]    @relation("AnimalPropertyTransferOriginBatch")
+  destinationPropertyTransfers AnimalPropertyTransfer[]    @relation("AnimalPropertyTransferDestinationBatch")
   purchaseReceptions           PurchaseReception[]
+  managementSuggestions        BatchManagementSuggestion[]
 
   @@index([propertyId])
   @@map("batch")
@@ -300,8 +301,9 @@ model ManagementSession {
 
   // Etapas do manejo, na ordem em que são registradas em cada animal. Cada item é
   // { type: "weighing" | "neutering" | "tag" | "rfid" | "health" | "batch", ... };
-  // o sanitário aponta para o HealthManagement (healthManagementId) e a apartação guarda os lotes
-  // sugeridos (suggestedBatchIds). A apartação, quando existe, é sempre a última.
+  // o sanitário aponta para o HealthManagement (healthManagementId). A configuração dos demais
+  // fica no contêiner do tipo (ex.: técnica prevista, lotes sugeridos). A apartação, quando
+  // existe, é sempre a última.
   steps Json @default("[]")
 
   propertyId String   @map("property_id") @db.Uuid
@@ -314,6 +316,7 @@ model ManagementSession {
   tagManagement       TagManagement?
   rfidManagement      RfidManagement?
   brandManagement     BrandManagement?
+  batchManagement     BatchManagement?
   healthManagements   HealthManagement[]
 
   // A sessão de manejo é genérica; quando é usada para receber animais comprados, a
@@ -436,6 +439,11 @@ model NeuteringManagement {
   id    String            @id @default(uuid()) @db.Uuid
   items AnimalNeutering[]
 
+  // técnica prevista no planejamento: vem pré-selecionada no registro de cada animal,
+  // que pode escolher outra; null = não informada
+  suggestedTechniqueId String?             @map("suggested_technique_id") @db.Uuid
+  suggestedTechnique   NeuteringTechnique? @relation("NeuteringSuggestedTechnique", fields: [suggestedTechniqueId], references: [id], onDelete: Restrict)
+
   managementSessionId String            @unique @map("management_session_id") @db.Uuid
   managementSession   ManagementSession @relation(fields: [managementSessionId], references: [id], onDelete: Restrict)
 
@@ -483,8 +491,9 @@ model NeuteringTechnique {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  neuterings         AnimalNeutering[] @relation("NeuteringTechnique")
-  originalNeuterings AnimalNeutering[] @relation("NeuteringOriginalTechnique")
+  neuterings         AnimalNeutering[]     @relation("NeuteringTechnique")
+  originalNeuterings AnimalNeutering[]     @relation("NeuteringOriginalTechnique")
+  suggestedIn        NeuteringManagement[] @relation("NeuteringSuggestedTechnique")
 
   @@map("neutering_technique")
 }
@@ -536,6 +545,32 @@ model BrandManagement {
   createdAt DateTime @default(now()) @map("created_at")
 
   @@map("brand_management")
+}
+
+model BatchManagement {
+  id               String                      @id @default(uuid()) @db.Uuid
+  suggestedBatches BatchManagementSuggestion[]
+
+  managementSessionId String            @unique @map("management_session_id") @db.Uuid
+  managementSession   ManagementSession @relation(fields: [managementSessionId], references: [id], onDelete: Restrict)
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("batch_management")
+}
+
+model BatchManagementSuggestion {
+  managementId String          @map("management_id") @db.Uuid
+  management   BatchManagement @relation(fields: [managementId], references: [id], onDelete: Cascade)
+
+  batchId String @map("batch_id") @db.Uuid
+  batch   Batch  @relation(fields: [batchId], references: [id], onDelete: Restrict)
+
+  position Int // ordem em que os lotes aparecem no registro
+
+  @@id([managementId, batchId])
+  @@index([batchId])
+  @@map("batch_management_suggestion")
 }
 
 model AnimalBranding {

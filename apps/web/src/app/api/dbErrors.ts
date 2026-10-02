@@ -39,8 +39,11 @@ const REFERENCING_CONSTRAINT_LABELS: Record<string, string> = {
   health_management_type_id_fkey: "procedimentos sanitários vinculados",
   animal_neutering_technique_id_fkey: "castrações vinculadas",
   animal_neutering_original_technique_id_fkey: "castrações vinculadas",
+  neutering_management_suggested_technique_id_fkey:
+    "sessões de manejo vinculadas",
   animal_batch_id_fkey: "animais vinculados",
   batch_property_id_fkey: "lotes vinculados",
+  batch_management_suggestion_batch_id_fkey: "sessões de manejo vinculadas",
   batch_area_history_batch_id_fkey: "históricos de área vinculados",
   batch_sale_goal_batch_id_fkey: "metas de venda vinculadas",
   animal_mother_id_fkey: "animais vinculados (como mãe)",

@@ -562,7 +562,9 @@ Uma **sessão de manejo** reúne o trabalho feito num grupo de animais no curral
 | `"tag"` | — | `tag_management` |
 | `"rfid"` | — | `rfid_management` |
 | `"health"` | `healthManagementId` (uuid) | `health_management` |
-| `"batch"` (apartação) | `suggestedBatchIds` (uuid[]) — lotes oferecidos como atalho no registro | `animal_batch_transfer` da sessão + `management_participant.batch_kept` |
+| `"batch"` (apartação) | — | `batch_management` (lotes sugeridos); registros em `animal_batch_transfer` da sessão + `management_participant.batch_kept` |
+
+A configuração de cada etapa definida no planejamento fica no contêiner do tipo (ver 8.1), não em `steps`.
 
 Regras de `steps`:
 - Cada tipo aparece no máximo uma vez, exceto `health`, que pode se repetir (vários procedimentos sanitários na mesma sessão).
@@ -608,7 +610,7 @@ Cada tipo de manejo tem uma tabela de **registro individual** (um por animal) e,
 
 ### 8.1 Contêineres de sessão
 
-`weighing_management`, `neutering_management`, `tag_management`, `rfid_management` e `brand_management` têm a mesma estrutura:
+`weighing_management`, `neutering_management`, `tag_management`, `rfid_management`, `brand_management` e `batch_management` têm a mesma estrutura:
 
 | Coluna | Tipo | Nulo | Padrão | Chave | Descrição e regras |
 |---|---|---|---|---|---|
@@ -617,6 +619,22 @@ Cada tipo de manejo tem uma tabela de **registro individual** (um por animal) e,
 | `created_at` | timestamp | | now | | Auditoria. |
 
 O contêiner é criado quando a etapa entra no planejamento e apagado quando a etapa sai (só se não houver registros).
+
+`neutering_management` tem, além dessas, a técnica prevista no planejamento:
+
+| Coluna | Tipo | Nulo | Padrão | Chave | Descrição e regras |
+|---|---|---|---|---|---|
+| `suggested_technique_id` | uuid | N | | FK → `neutering_technique` | Técnica prevista: vem pré-selecionada no registro de cada animal, que pode escolher outra. Escolhida entre as ativas; pode ser mantida se for inativada depois. Nulo = não informada. |
+
+`batch_management` não liga registros individuais: na apartação, quem muda de lote entra numa `animal_batch_transfer` da sessão, e quem fica é marcado em `management_participant.batch_kept`. Ele guarda os lotes sugeridos no planejamento, em `batch_management_suggestion`:
+
+| Coluna | Tipo | Nulo | Padrão | Chave | Descrição e regras |
+|---|---|---|---|---|---|
+| `management_id` | uuid | | | PK, FK → `batch_management` | Contêiner da apartação. Apagado junto com ele (cascade). |
+| `batch_id` | uuid | | | PK, FK → `batch` | Lote sugerido, oferecido como atalho no registro (qualquer outro lote vigente continua disponível). Deve ser da propriedade da sessão e estar vigente ao planejar. Lote sugerido não pode ser excluído. |
+| `position` | integer | | | | Ordem em que o lote aparece no registro. |
+
+**Índices:** `batch_id`.
 
 ### 8.2 `animal_weighing` — Pesagem
 

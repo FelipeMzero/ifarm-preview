@@ -19,6 +19,11 @@ type NeuteringRecord = {
   notes: string | null;
 };
 
+// Configuração da etapa definida no planejamento (StepView.config).
+export type NeuteringConfig = {
+  suggestedTechnique?: { id: string; name: string; active: boolean } | null;
+};
+
 const schema = z.object({
   techniqueId: z.string().min(1, "Informe a técnica."),
   notes: z.string().optional(),
@@ -27,16 +32,22 @@ type FormData = z.infer<typeof schema>;
 
 export default function NeuteringStep({
   formId,
+  step,
   animal,
   record,
   readOnly,
   options,
   onSubmit,
 }: StepScreenProps<NeuteringRecord>) {
+  // Sem registro, vem a técnica prevista no planejamento, se ainda estiver ativa.
+  const planned = (step.config as NeuteringConfig | undefined)
+    ?.suggestedTechnique;
+  const suggested = planned?.active ? planned : null;
+
   const form = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: {
-      techniqueId: record?.techniqueId ?? "",
+      techniqueId: record?.techniqueId ?? suggested?.id ?? "",
       notes: record?.notes ?? "",
     },
   });
@@ -86,10 +97,10 @@ export default function NeuteringStep({
               value={field.value ?? ""}
               onValueChange={field.onChange}
               items={techniqueItems(options.neuteringTechniques, {
-                current: {
-                  id: record?.techniqueId ?? null,
-                  name: record?.techniqueName ?? null,
-                },
+                // Mostra o nome já gravado (ou o previsto) antes de as opções chegarem.
+                current: record
+                  ? { id: record.techniqueId, name: record.techniqueName }
+                  : suggested,
               })}
               placeholder="Selecione..."
               className="w-full max-w-80"
