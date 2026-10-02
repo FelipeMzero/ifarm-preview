@@ -50,8 +50,17 @@ export type SessionAnimal = {
   currentBatch: Ref | null;
 };
 
+// Brinco, RFID e peso registrados no animal nesta sessão (ainda não consolidados).
+// Vazios fora de uma sessão aberta.
+export type SessionValues = {
+  earTag: string | null;
+  rfid: string | null;
+  weightKg: number | null;
+};
+
 export type SessionParticipant = {
   animal: SessionAnimal;
+  sessionValues: SessionValues;
   status: ParticipantStatus;
   doneKeys: string[];
   lastHandledAt: string | null;
@@ -116,6 +125,7 @@ export type SessionAnimalContext = {
   steps: SessionStepView[];
   animal: StepAnimalDetail;
   records: Record<string, unknown>;
+  sessionValues: SessionValues;
   status: ParticipantStatus;
 };
 

@@ -31,17 +31,32 @@ export const SEX_ICON: Record<string, React.ReactNode> = {
   [EnumSex.FEMALE]: <Venus className="size-5 text-pink-700" />,
 };
 
+// Marca um valor registrado na sessão de manejo e que ainda não vale fora dela.
+export function NewValueMark() {
+  return (
+    <span
+      className="shrink-0 rounded-sm bg-primary/10 px-1 text-[10px] font-medium uppercase leading-4 text-primary"
+      title="Registrado nesta sessão; passa a valer na consolidação"
+    >
+      novo
+    </span>
+  );
+}
+
 // Destaca o identificador principal (brinco → RFID → ID) e mantém o ID sempre visível.
+// `fresh` marca os identificadores registrados na sessão de manejo em andamento.
 export function AnimalIdentification({
   animal,
+  fresh,
 }: {
   animal: { code: number; earTag: string | null; rfid: string | null };
+  fresh?: { earTag?: boolean; rfid?: boolean };
 }) {
   const { code, earTag, rfid } = animal;
   const primary = earTag
-    ? { label: "Brinco", value: earTag, icon: Tag }
+    ? { label: "Brinco", value: earTag, icon: Tag, fresh: fresh?.earTag }
     : rfid
-      ? { label: "RFID", value: rfid, icon: Nfc }
+      ? { label: "RFID", value: rfid, icon: Nfc, fresh: fresh?.rfid }
       : null;
 
   if (!primary) {
@@ -60,6 +75,7 @@ export function AnimalIdentification({
         <span className="max-w-40 truncate font-medium" title={primary.value}>
           {primary.value}
         </span>
+        {primary.fresh && <NewValueMark />}
         {earTag && rfid && (
           <Tooltip>
             <TooltipTrigger asChild>
@@ -73,6 +89,7 @@ export function AnimalIdentification({
             </TooltipTrigger>
             <TooltipContent>
               RFID <span className="font-mono">{rfid}</span>
+              {fresh?.rfid && " (novo, desta sessão)"}
             </TooltipContent>
           </Tooltip>
         )}

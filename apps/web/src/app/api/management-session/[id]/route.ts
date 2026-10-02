@@ -19,7 +19,13 @@ import {
   validationErrors,
   type LoadedSession,
 } from "../shared";
-import { countDone, describeSteps, loadStepRecords } from "../steps";
+import {
+  countDone,
+  describeSteps,
+  loadStepRecords,
+  NO_SESSION_VALUES,
+  sessionValues,
+} from "../steps";
 import type { Tx } from "../steps/types";
 import { describeReception, findReception } from "../../purchase/reception";
 
@@ -67,6 +73,9 @@ export async function GET(_request: NextRequest, { params }: Params) {
       describeReception(prisma, id),
     ]);
 
+    const open =
+      session.status === "planned" || session.status === "in_progress";
+
     return NextResponse.json({
       id: session.id,
       status: session.status,
@@ -100,6 +109,11 @@ export async function GET(_request: NextRequest, { params }: Params) {
             currentBatch: animal.currentBatch,
           },
           status: participantStatus(done, steps.length),
+          // Só com a sessão aberta: consolidada, os valores já são os atuais (ou foram
+          // substituídos depois); cancelada, nunca valeram.
+          sessionValues: open
+            ? sessionValues(records, animal.id)
+            : NO_SESSION_VALUES,
           doneKeys,
           lastHandledAt: lastHandledAt?.toISOString() ?? null,
           categoryId: reception?.categoryOfAnimal[animal.id] ?? null,

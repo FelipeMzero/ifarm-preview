@@ -17,9 +17,17 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Pagination } from "@/components/our/Pagination";
-import { AnimalIdentification, SEX_ICON } from "@/features/animal/display";
+import {
+  AnimalIdentification,
+  NewValueMark,
+  SEX_ICON,
+} from "@/features/animal/display";
 import { ParticipantStatusBadge, STEP_ICONS, todayIso } from "./display";
-import type { SessionParticipant, SessionStepView } from "./services";
+import type {
+  SessionParticipant,
+  SessionStepView,
+  SessionValues,
+} from "./services";
 
 // Partes do registro de uma sessão compartilhadas entre o registro de manejo e a
 // recepção de compra (que também é uma sessão de manejo por baixo).
@@ -29,13 +37,43 @@ const PAGE_SIZE = 10;
 
 const TABS: ParticipantStatus[] = ["pending", "partial", "done"];
 
+// O que está no animal agora: o brinco, o RFID e o peso registrados na sessão, quando
+// houver, ou os atuais. Os da sessão ainda não valem fora dela e vão marcados.
+export function sessionView(
+  animal: {
+    code: number;
+    earTag: string | null;
+    rfid: string | null;
+    currentWeightKg: number | null;
+  },
+  values: SessionValues,
+) {
+  return {
+    identity: {
+      code: animal.code,
+      earTag: values.earTag ?? animal.earTag,
+      rfid: values.rfid ?? animal.rfid,
+    },
+    fresh: { earTag: values.earTag != null, rfid: values.rfid != null },
+    weightKg: values.weightKg ?? animal.currentWeightKg,
+    freshWeight: values.weightKg != null,
+  };
+}
+
+// Encontra pelo identificador atual e também pelo registrado na sessão (o leitor lê o
+// brinco que acabou de ser colocado).
 export function matchesParticipant(p: SessionParticipant, query: string) {
   const q = query.trim().toLowerCase();
   if (!q) return true;
-  const { animal } = p;
-  return [animal.earTag, animal.rfid, animal.name, String(animal.code)].some(
-    (v) => v?.toLowerCase().includes(q),
-  );
+  const { animal, sessionValues } = p;
+  return [
+    animal.earTag,
+    animal.rfid,
+    sessionValues.earTag,
+    sessionValues.rfid,
+    animal.name,
+    String(animal.code),
+  ].some((v) => v?.toLowerCase().includes(q));
 }
 
 // Participantes por situação; parciais e completos com o último registrado primeiro.
@@ -101,6 +139,7 @@ function ParticipantRow({
   onRemove: () => void;
 }) {
   const { animal } = participant;
+  const view = sessionView(animal, participant.sessionValues);
   return (
     <li
       className={cn(
@@ -125,7 +164,7 @@ function ParticipantRow({
         )}
       >
         <div className="min-w-32">
-          <AnimalIdentification animal={animal} />
+          <AnimalIdentification animal={view.identity} fresh={view.fresh} />
         </div>
         <span className="shrink-0">{SEX_ICON[animal.sex] ?? animal.sex}</span>
         <span className="max-w-40 truncate text-sm text-muted-foreground">
@@ -136,10 +175,9 @@ function ParticipantRow({
             {tag}
           </span>
         )}
-        <span className="text-sm tabular-nums text-muted-foreground">
-          {animal.currentWeightKg != null
-            ? `${animal.currentWeightKg} kg`
-            : "—"}
+        <span className="flex items-center gap-1.5 text-sm tabular-nums text-muted-foreground">
+          {view.weightKg != null ? `${view.weightKg} kg` : "—"}
+          {view.freshWeight && <NewValueMark />}
         </span>
         <span className="ml-auto flex items-center gap-2">
           {participant.status !== "pending" && steps.length > 0 && (

@@ -1,7 +1,13 @@
 import { participantStatus } from "@/lib/management-steps";
 import { effectiveNeutering, effectiveWeighing } from "./effective";
 import { loadSession, toDateOnly } from "./shared";
-import { countDone, describeSteps, loadStepRecords } from "./steps";
+import {
+  countDone,
+  describeSteps,
+  loadStepRecords,
+  NO_SESSION_VALUES,
+  sessionValues,
+} from "./steps";
 import type { Tx } from "./steps/types";
 
 // Tudo o que as telas de etapa precisam de um animal da sessão: dados atuais do animal,
@@ -62,6 +68,11 @@ export async function loadAnimalContext(db: Tx, id: string, animalId: string) {
     records: Object.fromEntries(
       steps.map((s) => [s.key, records.get(s.key)?.get(animalId) ?? null]),
     ),
+    // Para o cabeçalho; as telas de etapa seguem usando os valores atuais de `animal`.
+    sessionValues:
+      session.status === "planned" || session.status === "in_progress"
+        ? sessionValues(records, animalId)
+        : NO_SESSION_VALUES,
     status: participantStatus(countDone(records, animalId), steps.length),
   };
 }

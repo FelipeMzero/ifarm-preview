@@ -20,7 +20,11 @@ import { ConfirmDialog } from "@/components/our/ConfirmDialog";
 import { ErrorPage } from "@/components/our/ErrorPage";
 import { FormActionBar } from "@/components/our/FormActionBar";
 import FormSkeleton from "@/components/our/FormSkeleton";
-import { AnimalIdentification, SEX_ICON } from "@/features/animal/display";
+import {
+  AnimalIdentification,
+  NewValueMark,
+  SEX_ICON,
+} from "@/features/animal/display";
 import { useCurrentProperty } from "@/features/shell/CurrentPropertyProvider";
 import {
   ParticipantStatusBadge,
@@ -35,6 +39,7 @@ import {
   type ManagementOptions,
   type SessionAnimalContext,
 } from "./services";
+import { sessionView } from "./SessionParticipants";
 import { clientStepModule } from "./steps/registry";
 import { formatKg } from "./steps/formHelpers";
 
@@ -169,6 +174,7 @@ export function AnimalStepPage({
   if (!context) return <FormSkeleton />;
 
   const { steps, animal, records } = context;
+  const view = sessionView(animal, context.sessionValues);
   const current = steps[index];
   const readOnly = context.session.status !== "in_progress";
   const isLast = index === steps.length - 1;
@@ -240,7 +246,7 @@ export function AnimalStepPage({
 
       <div className="flex flex-wrap items-center gap-x-6 gap-y-2 rounded-lg border border-border bg-card p-4">
         <div className="scale-110 origin-left">
-          <AnimalIdentification animal={animal} />
+          <AnimalIdentification animal={view.identity} fresh={view.fresh} />
         </div>
         {animal.name && (
           <span className="text-sm text-muted-foreground">{animal.name}</span>
@@ -250,11 +256,10 @@ export function AnimalStepPage({
           <span className="text-muted-foreground">Lote: </span>
           {animal.currentBatch?.name ?? "Sem lote"}
         </span>
-        <span className="text-sm tabular-nums">
+        <span className="flex items-center gap-1.5 text-sm tabular-nums">
           <span className="text-muted-foreground">Peso: </span>
-          {animal.currentWeightKg != null
-            ? formatKg(animal.currentWeightKg)
-            : "—"}
+          {view.weightKg != null ? formatKg(view.weightKg) : "—"}
+          {view.freshWeight && <NewValueMark />}
         </span>
         {animal.neutered && <Badge variant="secondary">Castrado</Badge>}
         <span className="ml-auto">
