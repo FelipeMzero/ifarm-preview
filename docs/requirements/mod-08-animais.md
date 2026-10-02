@@ -62,6 +62,8 @@ Permite consultar os animais da propriedade selecionada, com busca, filtros e ac
 | **Regras Vinculadas** | `RN-ANIMAL-03`, `RN-ANIMAL-04`                                                                                                                                                           |
 | **Atores**            | Administrador, Gerente                                                                                                                                                                   |
 | **Plataformas**       | Web                                                                                                                                                                                      |
+| **Versão**            | 1                                                                                                                                                                                        |
+| **Status**            | ✅ Aprovado                                                                                                                                                                              |
 
 ### 2.1.2 - Critérios de Aceitação
 
@@ -139,6 +141,8 @@ Permite cadastrar individualmente um animal na propriedade selecionada, já com 
 | **Regras Vinculadas** | `RN-ANIMAL-01`, `RN-ANIMAL-03`, `RN-ANIMAL-05`, `RN-ANIMAL-06`, `RN-ANIMAL-08`, `RN-LOTE-10`                                                 |
 | **Atores**            | Administrador, Gerente                                                                                                                       |
 | **Plataformas**       | Web                                                                                                                                          |
+| **Versão**            | 1                                                                                                                                            |
+| **Status**            | ✅ Aprovado                                                                                                                                  |
 
 ### 2.2.2 - Critérios de Aceitação
 
@@ -221,6 +225,8 @@ Permite editar os dados cadastrais de um animal. Os dados que dependem de manejo
 | **Regras Vinculadas** | `RN-ANIMAL-02`, `RN-ANIMAL-09`                                                                                       |
 | **Atores**            | Administrador, Gerente                                                                                               |
 | **Plataformas**       | Web                                                                                                                  |
+| **Versão**            | 1                                                                                                                    |
+| **Status**            | ✅ Aprovado                                                                                                          |
 
 ### 2.3.2 - Critérios de Aceitação
 
@@ -267,6 +273,8 @@ Permite mover um animal para outro lote da mesma propriedade, acionada durante a
 | **Regras Vinculadas** | `RN-ANIMAL-03`, `RN-ANIMAL-10`, `RN-LOTE-10`                                                                                                     |
 | **Atores**            | Administrador, Gerente                                                                                                                           |
 | **Plataformas**       | Web                                                                                                                                              |
+| **Versão**            | 1                                                                                                                                                |
+| **Status**            | ✅ Aprovado                                                                                                                                      |
 
 ### 2.4.2 - Critérios de Aceitação
 
@@ -318,6 +326,8 @@ Permite consultar o histórico de pesagens de um animal, registrar uma nova pesa
 | **Regras Vinculadas** | `RN-ANIMAL-06`, `RN-ANIMAL-07`, `RN-ANIMAL-09`, `RN-ANIMAL-10`                                                                                         |
 | **Atores**            | Administrador, Gerente                                                                                                                                 |
 | **Plataformas**       | Web                                                                                                                                                    |
+| **Versão**            | 1                                                                                                                                                      |
+| **Status**            | ✅ Aprovado                                                                                                                                            |
 
 ### 2.5.2 - Critérios de Aceitação
 
@@ -386,6 +396,8 @@ Permite consultar o histórico de brincos e de RFID de um animal, registrar uma 
 | **Regras Vinculadas** | `RN-ANIMAL-01`, `RN-ANIMAL-02`, `RN-ANIMAL-09`, `RN-ANIMAL-10`                                                                                                     |
 | **Atores**            | Administrador, Gerente                                                                                                                                             |
 | **Plataformas**       | Web                                                                                                                                                                |
+| **Versão**            | 1                                                                                                                                                                  |
+| **Status**            | ✅ Aprovado                                                                                                                                                        |
 
 ### 2.6.2 - Critérios de Aceitação
 
@@ -470,6 +482,8 @@ Permite consultar o histórico de castrações de um animal, registrar uma castr
 | **Regras Vinculadas** | `RN-ANIMAL-06`, `RN-ANIMAL-08`, `RN-ANIMAL-09`, `RN-ANIMAL-10`                                                                                         |
 | **Atores**            | Administrador, Gerente                                                                                                                                 |
 | **Plataformas**       | Web                                                                                                                                                    |
+| **Versão**            | 1                                                                                                                                                      |
+| **Status**            | ✅ Aprovado                                                                                                                                            |
 
 ### 2.7.2 - Critérios de Aceitação
 
@@ -549,6 +563,8 @@ Permite consultar as informações detalhadas de um animal: dados cadastrais, in
 | **Regras Vinculadas** | `RN-ANIMAL-02`, `RN-ANIMAL-03`, `RN-ANIMAL-07`, `RN-LOTE-08`                                                                                           |
 | **Atores**            | Administrador, Gerente                                                                                                                                 |
 | **Plataformas**       | Web                                                                                                                                                    |
+| **Versão**            | 1                                                                                                                                                      |
+| **Status**            | 📝 Rascunho                                                                                                                                            |
 
 ### 2.8.2 - Critérios de Aceitação
 
@@ -604,6 +620,8 @@ Permite desfazer o cadastro de um animal feito por engano (duplicado, com dados 
 | **Regras Vinculadas** | —                                                                                                                                       |
 | **Atores**            | Administrador, Gerente                                                                                                                  |
 | **Plataformas**       | Web                                                                                                                                     |
+| **Versão**            | 1                                                                                                                                       |
+| **Status**            | 📝 Rascunho                                                                                                                             |
 
 ### 2.9.2 - Critérios de Aceitação
 
@@ -649,7 +667,7 @@ Permite desfazer o cadastro de um animal feito por engano (duplicado, com dados 
 
 </div>
 
-## 🚧 2.10 - `RF-ANIMAL-10`: Registrar Saída do Animal (INCOMPLETO)
+## 2.10 - `RF-ANIMAL-10`: Registrar Saída do Animal
 
 <div style="border:1px solid #ccc; padding:16px; border-radius:8px;">
 
@@ -664,6 +682,8 @@ Permite registrar a saída de um animal do rebanho, por venda, doação, morte, 
 | **Regras Vinculadas** | `RN-ANIMAL-01`, `RN-ANIMAL-04`                                                                                                                        |
 | **Atores**            | Administrador, Gerente                                                                                                                                |
 | **Plataformas**       | Web                                                                                                                                                   |
+| **Versão**            | 1                                                                                                                                                     |
+| **Status**            | 📝 Rascunho                                                                                                                                           |
 
 ### 2.10.2 - Critérios de Aceitação
 

@@ -54,6 +54,8 @@ Permite consultar as áreas de pastagem da propriedade selecionada, desenhadas s
 | **Regras Vinculadas** | `RN-AREA-04`, `RN-AREA-06`, `RN-AREA-07`                                                                                                                                                                                                                                               |
 | **Atores**            | Administrador, Gerente, Funcionário                                                                                                                                                                                                                                                    |
 | **Plataformas**       | Web                                                                                                                                                                                                                                                                                    |
+| **Versão**            | 1                                                                                                                                                                                                                                                                                      |
+| **Status**            | ✅ Aprovado                                                                                                                                                                                                                                                                            |
 
 ### 2.1.2 - Critérios de Aceitação
 
@@ -137,6 +139,8 @@ Permite cadastrar áreas de pastagem, desenhando o contorno da área sobre o map
 | **Regras Vinculadas** | `RN-AREA-01`, `RN-AREA-08`                                                                                                                                                            |
 | **Atores**            | Administrador, Gerente, Funcionário                                                                                                                                                   |
 | **Plataformas**       | Web                                                                                                                                                                                   |
+| **Versão**            | 1                                                                                                                                                                                     |
+| **Status**            | ✅ Aprovado                                                                                                                                                                           |
 
 ### 2.2.2 - Critérios de Aceitação
 
@@ -200,6 +204,8 @@ Permite editar os dados de uma área de pastagem já cadastrada, incluindo o aju
 | **Regras Vinculadas** | `RN-AREA-01`, `RN-AREA-08`                                                                                                                                                               |
 | **Atores**            | Administrador, Gerente, Funcionário                                                                                                                                                      |
 | **Plataformas**       | Web                                                                                                                                                                                      |
+| **Versão**            | 1                                                                                                                                                                                        |
+| **Status**            | ✅ Aprovado                                                                                                                                                                              |
 
 ### 2.3.2 - Critérios de Aceitação
 
@@ -259,6 +265,8 @@ Permite consultar as informações detalhadas de uma área de pastagem: dados ca
 | **Regras Vinculadas** | `RN-AREA-04`, `RN-AREA-06`                                                                                                                                                                                       |
 | **Atores**            | Administrador, Gerente, Funcionário                                                                                                                                                                              |
 | **Plataformas**       | Web                                                                                                                                                                                                              |
+| **Versão**            | 1                                                                                                                                                                                                                |
+| **Status**            | 📝 Rascunho                                                                                                                                                                                                      |
 
 ### 2.4.2 - Critérios de Aceitação
 
@@ -309,6 +317,8 @@ Permite excluir uma área de pastagem, desde que ela não tenha qualquer outro r
 | **Regras Vinculadas** | —                                                                                                                                                    |
 | **Atores**            | Administrador, Gerente, Funcionário                                                                                                                  |
 | **Plataformas**       | Web                                                                                                                                                  |
+| **Versão**            | 1                                                                                                                                                    |
+| **Status**            | 📝 Rascunho                                                                                                                                          |
 
 ### 2.5.2 - Critérios de Aceitação
 
@@ -354,6 +364,8 @@ Permite ativar/desativar uma área de pastagem, retirando de uso as áreas que n
 | **Regras Vinculadas** | `RN-AREA-03`, `RN-AREA-05`                                                                                                                                                                                                                          |
 | **Atores**            | Administrador, Gerente, Funcionário                                                                                                                                                                                                                 |
 | **Plataformas**       | Web                                                                                                                                                                                                                                                 |
+| **Versão**            | 1                                                                                                                                                                                                                                                   |
+| **Status**            | ✅ Aprovado                                                                                                                                                                                                                                         |
 
 ### 2.6.2 - Critérios de Aceitação
 

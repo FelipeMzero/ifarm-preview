@@ -50,6 +50,8 @@ Permite consultar as pessoas físicas e jurídicas cadastradas, com busca, filtr
 | **Regras Vinculadas** | —                                                                                                                                                                                       |
 | **Atores**            | Administrador, Gerente                                                                                                                                                                  |
 | **Plataformas**       | Web                                                                                                                                                                                     |
+| **Versão**            | 1                                                                                                                                                                                       |
+| **Status**            | ✅ Aprovado                                                                                                                                                                             |
 
 ### 2.1.2 - Critérios de Aceitação
 
@@ -111,6 +113,8 @@ Permite cadastrar pessoas físicas ou jurídicas, registrando novos agentes que 
 | **Regras Vinculadas** | `RN-PESSOA-01`, `RN-PESSOA-02`                                                                                                                                                                                      |
 | **Atores**            | Administrador, Gerente                                                                                                                                                                                              |
 | **Plataformas**       | Web                                                                                                                                                                                                                 |
+| **Versão**            | 1                                                                                                                                                                                                                   |
+| **Status**            | ✅ Aprovado                                                                                                                                                                                                         |
 
 ### 2.2.2 - Critérios de Aceitação
 
@@ -200,6 +204,8 @@ Permite editar os dados cadastrais de uma pessoa física ou jurídica já regist
 | **Regras Vinculadas** | `RN-PESSOA-02`                                                                                                                                                |
 | **Atores**            | Administrador, Gerente                                                                                                                                        |
 | **Plataformas**       | Web                                                                                                                                                           |
+| **Versão**            | 1                                                                                                                                                             |
+| **Status**            | ✅ Aprovado                                                                                                                                                   |
 
 ### 2.3.2 - Critérios de Aceitação
 
@@ -246,7 +252,7 @@ Permite editar os dados cadastrais de uma pessoa física ou jurídica já regist
 
 </div>
 
-## 🚧 2.4 - `RF-PESSOA-04`: Detalhes da Pessoa (INCOMPLETO)
+## 2.4 - `RF-PESSOA-04`: Detalhes da Pessoa
 
 <div style="border:1px solid #ccc; padding:16px; border-radius:8px;">
 
@@ -261,6 +267,8 @@ Permite consultar as informações detalhadas de uma pessoa: dados cadastrais e 
 | **Regras Vinculadas** | `RN-PESSOA-03`                                                                                                                                               |
 | **Atores**            | Administrador, Gerente                                                                                                                                       |
 | **Plataformas**       | Web                                                                                                                                                          |
+| **Versão**            | 1                                                                                                                                                            |
+| **Status**            | 📝 Rascunho                                                                                                                                                  |
 
 ### 2.4.2 - Critérios de Aceitação
 
@@ -292,7 +300,7 @@ Permite consultar as informações detalhadas de uma pessoa: dados cadastrais e 
 
 </div>
 
-## 🚧 2.5 - `RF-PESSOA-05`: Excluir Pessoa (INCOMPLETO)
+## 2.5 - `RF-PESSOA-05`: Excluir Pessoa
 
 <div style="border:1px solid #ccc; padding:16px; border-radius:8px;">
 
@@ -307,6 +315,8 @@ Permite excluir uma pessoa física ou jurídica, desde que ela não tenha qualqu
 | **Regras Vinculadas** | —                                                                                                                                     |
 | **Atores**            | Administrador, Gerente                                                                                                                |
 | **Plataformas**       | Web                                                                                                                                   |
+| **Versão**            | 1                                                                                                                                     |
+| **Status**            | 📝 Rascunho                                                                                                                           |
 
 ### 2.5.2 - Critérios de Aceitação
 
@@ -352,6 +362,8 @@ Permite ativar/desativar uma pessoa física ou jurídica, marcando como inativos
 | **Regras Vinculadas** | —                                                                                                                                                                                                           |
 | **Atores**            | Administrador, Gerente                                                                                                                                                                                      |
 | **Plataformas**       | Web                                                                                                                                                                                                         |
+| **Versão**            | 1                                                                                                                                                                                                           |
+| **Status**            | ✅ Aprovado                                                                                                                                                                                                 |
 
 ### 2.6.2 - Critérios de Aceitação
 

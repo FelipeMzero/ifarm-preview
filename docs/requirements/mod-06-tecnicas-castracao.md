@@ -34,6 +34,8 @@ Permite listar, criar, editar, ativar/desativar e excluir, em uma tela única, a
 | **Regras Vinculadas** | —                                                                                                                                                                           |
 | **Atores**            | Administrador, Gerente                                                                                                                                                      |
 | **Plataformas**       | Web                                                                                                                                                                         |
+| **Versão**            | 1                                                                                                                                                                           |
+| **Status**            | ✅ Aprovado                                                                                                                                                                 |
 
 ### 2.1.2 - Critérios de Aceitação
 

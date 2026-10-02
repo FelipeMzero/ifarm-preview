@@ -2,7 +2,7 @@
 
 Módulo responsável pelas sessões de manejo: o trabalho feito em um grupo de animais no curral, em que cada animal passa, um de cada vez, por uma sequência de manejos (pesagem, castração, identificação, procedimentos sanitários e apartação).
 
-Uma sessão é planejada (o que será feito e em quais animais), executada animal por animal e, ao final, consolidada, quando os seus registros passam a valer no histórico dos animais. A recepção de animais comprados também usa uma sessão de manejo, especificada no módulo de compras.
+Uma sessão é planejada (o que será feito e em quais animais), executada animal por animal e, ao final, consolidada, quando os seus registros passam a valer no histórico dos animais. A recepção de animais comprados também usa uma sessão de manejo, especificada no [módulo de recepções](mod-11-recepcoes.md).
 
 ## Dicionário de dados conceitual
 
@@ -52,6 +52,8 @@ Permite consultar as sessões de manejo da propriedade selecionada, com busca, f
 | **Regras Vinculadas** | `RN-MANEJO-03`                                                                                                                                                    |
 | **Atores**            | Administrador, Gerente, Funcionário                                                                                                                               |
 | **Plataformas**       | Web                                                                                                                                                               |
+| **Versão**            | 1                                                                                                                                                                 |
+| **Status**            | ✅ Aprovado                                                                                                                                                       |
 
 ### 2.1.2 - Critérios de Aceitação
 
@@ -117,6 +119,8 @@ Permite criar e alterar o planejamento de uma sessão: data prevista, manejos a 
 | **Regras Vinculadas** | `RN-MANEJO-02`, `RN-MANEJO-03`, `RN-MANEJO-04`                                                                                                       |
 | **Atores**            | Administrador, Gerente, Funcionário                                                                                                                  |
 | **Plataformas**       | Web                                                                                                                                                  |
+| **Versão**            | 1                                                                                                                                                    |
+| **Status**            | ✅ Aprovado                                                                                                                                          |
 
 ### 2.2.2 - Critérios de Aceitação
 
@@ -201,6 +205,8 @@ Permite iniciar a execução de uma sessão planejada, definindo a data em que o
 | **Regras Vinculadas** | `RN-MANEJO-01`, `RN-MANEJO-03`                                                                                                                   |
 | **Atores**            | Administrador, Gerente, Funcionário                                                                                                              |
 | **Plataformas**       | Web                                                                                                                                              |
+| **Versão**            | 1                                                                                                                                                |
+| **Status**            | ✅ Aprovado                                                                                                                                      |
 
 ### 2.3.2 - Critérios de Aceitação
 
@@ -245,6 +251,8 @@ Permite acompanhar a execução de uma sessão em andamento: localizar o próxim
 | **Regras Vinculadas** | `RN-MANEJO-04`, `RN-MANEJO-05`                                                                                                                                          |
 | **Atores**            | Administrador, Gerente, Funcionário                                                                                                                                     |
 | **Plataformas**       | Web                                                                                                                                                                     |
+| **Versão**            | 1                                                                                                                                                                       |
+| **Status**            | ✅ Aprovado                                                                                                                                                             |
 
 ### 2.4.2 - Critérios de Aceitação
 
@@ -310,6 +318,8 @@ Permite registrar, em um animal, as etapas da sessão, na ordem planejada, enqua
 | **Regras Vinculadas** | `RN-MANEJO-05`                                                                                                                                                   |
 | **Atores**            | Administrador, Gerente, Funcionário                                                                                                                              |
 | **Plataformas**       | Web                                                                                                                                                              |
+| **Versão**            | 1                                                                                                                                                                |
+| **Status**            | ✅ Aprovado                                                                                                                                                      |
 
 ### 2.5.2 - Critérios de Aceitação
 
@@ -373,6 +383,8 @@ Permite registrar a etapa em que o animal é pesado individualmente.
 | **Regras Vinculadas** | `RN-MANEJO-06`, `RN-ANIMAL-07`                                                                                                           |
 | **Atores**            | Administrador, Gerente, Funcionário                                                                                                      |
 | **Plataformas**       | Web                                                                                                                                      |
+| **Versão**            | 1                                                                                                                                        |
+| **Status**            | ✅ Aprovado                                                                                                                              |
 
 ### 2.6.2 - Critérios de Aceitação
 
@@ -424,6 +436,8 @@ Permite registrar a etapa em que o animal é castrado.
 | **Regras Vinculadas** | `RN-MANEJO-07`, `RN-ANIMAL-08`                                                                                                                                  |
 | **Atores**            | Administrador, Gerente, Funcionário                                                                                                                             |
 | **Plataformas**       | Web                                                                                                                                                             |
+| **Versão**            | 1                                                                                                                                                               |
+| **Status**            | ✅ Aprovado                                                                                                                                                     |
 
 ### 2.7.2 - Critérios de Aceitação
 
@@ -485,6 +499,8 @@ Permite registrar as etapas em que o animal recebe um brinco ou um RFID, novo ou
 | **Regras Vinculadas** | `RN-MANEJO-08`, `RN-ANIMAL-01`, `RN-ANIMAL-02`                                                                                                            |
 | **Atores**            | Administrador, Gerente, Funcionário                                                                                                                       |
 | **Plataformas**       | Web                                                                                                                                                       |
+| **Versão**            | 1                                                                                                                                                         |
+| **Status**            | ✅ Aprovado                                                                                                                                               |
 
 ### 2.8.2 - Critérios de Aceitação
 
@@ -560,6 +576,8 @@ Permite registrar a etapa em que o animal recebe um procedimento sanitário (vac
 | **Regras Vinculadas** | `RN-MANEJO-02`, `RN-MANEJO-09`, `RN-MANEJO-10`                                                                                                                                                        |
 | **Atores**            | Administrador, Gerente, Funcionário                                                                                                                                                                   |
 | **Plataformas**       | Web                                                                                                                                                                                                   |
+| **Versão**            | 1                                                                                                                                                                                                     |
+| **Status**            | ✅ Aprovado                                                                                                                                                                                           |
 
 ### 2.9.2 - Critérios de Aceitação
 
@@ -617,6 +635,8 @@ Permite registrar a etapa em que se define para qual lote o animal vai ao sair d
 | **Regras Vinculadas** | `RN-MANEJO-02`, `RN-MANEJO-11`, `RN-ANIMAL-03`                                                                                                                                  |
 | **Atores**            | Administrador, Gerente, Funcionário                                                                                                                                             |
 | **Plataformas**       | Web                                                                                                                                                                             |
+| **Versão**            | 1                                                                                                                                                                               |
+| **Status**            | ✅ Aprovado                                                                                                                                                                     |
 
 ### 2.10.2 - Critérios de Aceitação
 
@@ -660,6 +680,8 @@ Permite encerrar a execução de uma sessão, fazendo os seus registros passarem
 | **Regras Vinculadas** | `RN-MANEJO-01`, `RN-MANEJO-03`, `RN-MANEJO-04`, `RN-MANEJO-05`, `RN-MANEJO-08`                                                                           |
 | **Atores**            | Administrador, Gerente, Funcionário                                                                                                                      |
 | **Plataformas**       | Web                                                                                                                                                      |
+| **Versão**            | 1                                                                                                                                                        |
+| **Status**            | ✅ Aprovado                                                                                                                                              |
 
 ### 2.11.2 - Critérios de Aceitação
 
@@ -718,6 +740,8 @@ Permite cancelar uma sessão que não será concluída. Os registros feitos nela
 | **Regras Vinculadas** | `RN-MANEJO-03`                                                                                                                       |
 | **Atores**            | Administrador, Gerente, Funcionário                                                                                                  |
 | **Plataformas**       | Web                                                                                                                                  |
+| **Versão**            | 1                                                                                                                                    |
+| **Status**            | ✅ Aprovado                                                                                                                          |
 
 ### 2.12.2 - Critérios de Aceitação
 

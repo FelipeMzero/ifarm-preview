@@ -58,6 +58,8 @@ Permite consultar os lotes da propriedade selecionada, com busca, filtro e acess
 | **Regras Vinculadas** | `RN-LOTE-01`                                                                                                                                                                           |
 | **Atores**            | Administrador, Gerente, Funcionário                                                                                                                                                    |
 | **Plataformas**       | Web                                                                                                                                                                                    |
+| **Versão**            | 1                                                                                                                                                                                      |
+| **Status**            | ✅ Aprovado                                                                                                                                                                            |
 
 ### 2.1.2 - Critérios de Aceitação
 
@@ -121,6 +123,8 @@ Permite cadastrar lotes, definindo a área de pastagem que cada lote passa a ocu
 | **Regras Vinculadas** | `RN-LOTE-01`, `RN-LOTE-02`, `RN-LOTE-03`, `RN-LOTE-04`                                                                                                                     |
 | **Atores**            | Administrador, Gerente, Funcionário                                                                                                                                        |
 | **Plataformas**       | Web                                                                                                                                                                        |
+| **Versão**            | 1                                                                                                                                                                          |
+| **Status**            | ✅ Aprovado                                                                                                                                                                |
 
 ### 2.2.2 - Critérios de Aceitação
 
@@ -181,6 +185,8 @@ Permite editar os dados de um lote. Diferentemente da criação, a área não é
 | **Regras Vinculadas** | `RN-LOTE-02`, `RN-LOTE-03`, `RN-LOTE-04`                                                                                                                                    |
 | **Atores**            | Administrador, Gerente, Funcionário                                                                                                                                         |
 | **Plataformas**       | Web                                                                                                                                                                         |
+| **Versão**            | 1                                                                                                                                                                           |
+| **Status**            | ✅ Aprovado                                                                                                                                                                 |
 
 ### 2.3.2 - Critérios de Aceitação
 
@@ -235,6 +241,8 @@ Permite trocar a área de um lote, acionada durante a edição do lote.
 | **Regras Vinculadas** | `RN-LOTE-02`, `RN-LOTE-03`, `RN-LOTE-10`                                                                                                                                          |
 | **Atores**            | Administrador, Gerente, Funcionário                                                                                                                                               |
 | **Plataformas**       | Web                                                                                                                                                                               |
+| **Versão**            | 1                                                                                                                                                                                 |
+| **Status**            | ✅ Aprovado                                                                                                                                                                       |
 
 ### 2.4.2 - Critérios de Aceitação
 
@@ -285,6 +293,8 @@ Permite consultar as informações detalhadas de um lote: dados cadastrais, indi
 | **Regras Vinculadas** | `RN-LOTE-03`, `RN-LOTE-08`, `RN-LOTE-09`, `RN-LOTE-10`                                                                                                                          |
 | **Atores**            | Administrador, Gerente, Funcionário                                                                                                                                             |
 | **Plataformas**       | Web                                                                                                                                                                             |
+| **Versão**            | 1                                                                                                                                                                               |
+| **Status**            | 📝 Rascunho                                                                                                                                                                     |
 
 ### 2.5.2 - Critérios de Aceitação
 
@@ -367,6 +377,8 @@ Permite excluir um lote cadastrado por engano. Um lote que já cumpriu sua funç
 | **Regras Vinculadas** | —                                                                                                                                                     |
 | **Atores**            | Administrador, Gerente, Funcionário                                                                                                                   |
 | **Plataformas**       | Web                                                                                                                                                   |
+| **Versão**            | 1                                                                                                                                                     |
+| **Status**            | 📝 Rascunho                                                                                                                                           |
 
 ### 2.6.2 - Critérios de Aceitação
 
@@ -413,6 +425,8 @@ Permite encerrar um lote depois de ele ter cumprido seu objetivo. Isso mantém o
 | **Regras Vinculadas** | `RN-LOTE-05`, `RN-LOTE-06`                                                                                                                                                |
 | **Atores**            | Administrador, Gerente, Funcionário                                                                                                                                       |
 | **Plataformas**       | Web                                                                                                                                                                       |
+| **Versão**            | 1                                                                                                                                                                         |
+| **Status**            | ✅ Aprovado                                                                                                                                                               |
 
 ### 2.7.2 - Critérios de Aceitação
 
@@ -467,6 +481,8 @@ Permite reativar um lote encerrado, por exemplo quando ele foi encerrado por eng
 | **Regras Vinculadas** | `RN-LOTE-02`, `RN-LOTE-07`, `RN-LOTE-10`                                                                                                             |
 | **Atores**            | Administrador, Gerente, Funcionário                                                                                                                  |
 | **Plataformas**       | Web                                                                                                                                                  |
+| **Versão**            | 1                                                                                                                                                    |
+| **Status**            | ✅ Aprovado                                                                                                                                          |
 
 ### 2.8.2 - Critérios de Aceitação
 
@@ -501,12 +517,17 @@ Permite reativar um lote encerrado, por exemplo quando ele foi encerrado por eng
 
 </div>
 
-## 🚧 2.9 - `RF-LOTE-09`: Criar animais no lote (INCOMPLETO)
+## 2.9 - `RF-LOTE-09`: Criar animais no lote
 
 <div style="border:1px solid #ccc; padding:16px; border-radius:8px;">
 
 ### 2.9.1 - Descrição
 
 Permite criar um grupo de animais diretamente no lote: em vez de serem cadastrados no módulo de animais e depois vinculados ao lote, os animais são criados em grande quantidade e com poucos detalhes já dentro do lote. A ideia é que o lote que use esse recurso passe logo em seguida por um manejo de identificação e pesagem.
+
+|            |             |
+| :--------- | :---------- |
+| **Versão** | 1           |
+| **Status** | 📝 Rascunho |
 
 </div>

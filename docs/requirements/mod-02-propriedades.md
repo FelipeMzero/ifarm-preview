@@ -47,6 +47,8 @@ Permite consultar as propriedades cadastradas, com busca, filtro e acesso às a�
 | **Regras Vinculadas** | —                                                                                                                                                                                            |
 | **Atores**            | Administrador, Gerente                                                                                                                                                                       |
 | **Plataformas**       | Web                                                                                                                                                                                          |
+| **Versão**            | 1                                                                                                                                                                                            |
+| **Status**            | ✅ Aprovado                                                                                                                                                                                  |
 
 ### 2.1.2 - Critérios de Aceitação
 
@@ -107,6 +109,8 @@ Permite cadastrar propriedades (fazendas), registrando novos imóveis rurais par
 | **Regras Vinculadas** | `RN-PROPRIEDADE-01`, `RN-PROPRIEDADE-02`, `RN-PROPRIEDADE-03`                                                                                                               |
 | **Atores**            | Administrador, Gerente                                                                                                                                                      |
 | **Plataformas**       | Web                                                                                                                                                                         |
+| **Versão**            | 1                                                                                                                                                                           |
+| **Status**            | ✅ Aprovado                                                                                                                                                                 |
 
 ### 2.2.2 - Critérios de Aceitação
 
@@ -186,6 +190,8 @@ Permite editar os dados cadastrais de uma propriedade já registrada.
 | **Regras Vinculadas** | `RN-PROPRIEDADE-01`, `RN-PROPRIEDADE-02`, `RN-PROPRIEDADE-03`                                                                                                      |
 | **Atores**            | Administrador, Gerente                                                                                                                                             |
 | **Plataformas**       | Web                                                                                                                                                                |
+| **Versão**            | 1                                                                                                                                                                  |
+| **Status**            | ✅ Aprovado                                                                                                                                                        |
 
 ### 2.3.2 - Critérios de Aceitação
 
@@ -252,6 +258,8 @@ Permite consultar as informações detalhadas de uma propriedade: dados cadastra
 | **Regras Vinculadas** | —                                                                                                                                                         |
 | **Atores**            | Administrador, Gerente                                                                                                                                    |
 | **Plataformas**       | Web                                                                                                                                                       |
+| **Versão**            | 1                                                                                                                                                         |
+| **Status**            | 📝 Rascunho                                                                                                                                               |
 
 ### 2.4.2 - Critérios de Aceitação
 
@@ -295,6 +303,8 @@ Permite excluir uma propriedade, desde que ela não tenha qualquer outro registr
 | **Regras Vinculadas** | —                                                                                                                                         |
 | **Atores**            | Administrador, Gerente                                                                                                                    |
 | **Plataformas**       | Web                                                                                                                                       |
+| **Versão**            | 1                                                                                                                                         |
+| **Status**            | 📝 Rascunho                                                                                                                               |
 
 ### 2.5.2 - Critérios de Aceitação
 
@@ -340,6 +350,8 @@ Permite ativar/desativar uma propriedade, retirando de uso as propriedades que n
 | **Regras Vinculadas** | —                                                                                                                                                                                                                             |
 | **Atores**            | Administrador, Gerente                                                                                                                                                                                                        |
 | **Plataformas**       | Web                                                                                                                                                                                                                           |
+| **Versão**            | 1                                                                                                                                                                                                                             |
+| **Status**            | ✅ Aprovado                                                                                                                                                                                                                   |
 
 ### 2.6.2 - Critérios de Aceitação
 
