@@ -732,7 +732,7 @@ add(1, () => ({
     notes: "Não encontrada na contagem do pasto",
   },
 }));
-// Reprodução: 3 vacas de descarte abatidas juntas.
+// Reprodução: 3 vacas de descarte vendidas juntas para o frigorífico.
 add(3, (i) => ({
   sex: "FEMALE",
   breed: i === 0 ? "Gir" : "Nelore",
@@ -746,8 +746,9 @@ add(3, (i) => ({
   weight: { current: between(420, 450), adg: between(0.03, 0.08) },
   exit: {
     daysAgo: 60,
-    status: "SLAUGHTERED",
-    notes: "Vacas de descarte: idade avançada e falhas reprodutivas",
+    status: "SOLD",
+    notes:
+      "Vacas de descarte vendidas para frigorífico: idade avançada e falhas reprodutivas",
   },
 }));
 // Reprodução: 6 vacas vindas da cria, 1 doada e 1 touro comprado por valor fechado.
@@ -837,7 +838,7 @@ add(1, () => ({
     notes: "Óbito por picada de cobra",
   },
 }));
-// Engorda: meta de peso sem data (um descartado e abatido).
+// Engorda: meta de peso sem data (um abatido na fazenda para consumo).
 add(8, (i) => ({
   sex: "MALE",
   breed: i % 2 === 0 ? "Nelore" : "Brahman",
@@ -852,7 +853,7 @@ add(8, (i) => ({
       ? {
           daysAgo: 40,
           status: "SLAUGHTERED",
-          notes: "Descarte por problema de casco",
+          notes: "Abatido para consumo da sede (problema de casco)",
         }
       : undefined,
 }));
@@ -1319,13 +1320,18 @@ async function seedAnimals(ctx: Ctx) {
   return seeded;
 }
 
-// Perdas (morte, desaparecimento) e abates dos animais que saíram do rebanho, já
-// consolidados: o status final do animal vem deles. Um evento por saída.
+// Perdas (morte, desaparecimento) e abates na fazenda (consumo) dos animais que saíram
+// do rebanho, já consolidados: o status final do animal vem deles. Cada item guarda o
+// lote de onde o animal saiu, como na consolidação.
 async function seedLossesAndSlaughters(ctx: Ctx, animals: SeededAnimal[]) {
   // Saídas do mesmo tipo, dia, fazenda e motivo formam um único evento.
   const groups = new Map<
     string,
-    { exit: NonNullable<AnimalSpec["exit"]>; prop: PropKey; ids: string[] }
+    {
+      exit: NonNullable<AnimalSpec["exit"]>;
+      prop: PropKey;
+      items: { animalId: string; originBatchId: string }[];
+    }
   >();
   for (const { id, spec } of animals) {
     const exit = spec.exit;
@@ -1333,25 +1339,30 @@ async function seedLossesAndSlaughters(ctx: Ctx, animals: SeededAnimal[]) {
       continue;
     const prop = finalProp(spec);
     const key = `${exit.status}|${exit.daysAgo}|${prop}|${exit.notes}`;
-    const group = groups.get(key) ?? { exit, prop, ids: [] };
-    group.ids.push(id);
+    const group = groups.get(key) ?? { exit, prop, items: [] };
+    group.items.push({
+      animalId: id,
+      originBatchId: ctx.batches[finalBatch(spec)],
+    });
     groups.set(key, group);
   }
 
   let losses = 0;
   let slaughters = 0;
-  for (const { exit, prop, ids } of groups.values()) {
+  for (const { exit, prop, items } of groups.values()) {
     const date = ago(exit.daysAgo);
     const propertyId = ctx.properties[prop];
     if (exit.status === "SLAUGHTERED") {
+      // Planejado para dois dias antes do que de fato aconteceu.
       await prisma.slaughterEvent.create({
         data: {
-          title: "Abate de descarte",
+          title: "Abate para consumo",
           description: exit.notes,
+          scheduledDate: ago(exit.daysAgo + 2),
           slaughterDate: date,
           confirmedAt: date,
           propertyId,
-          items: { create: ids.map((animalId) => ({ animalId })) },
+          items: { create: items },
         },
       });
       slaughters++;
@@ -1364,7 +1375,7 @@ async function seedLossesAndSlaughters(ctx: Ctx, animals: SeededAnimal[]) {
           lossDate: date,
           confirmedAt: date,
           propertyId,
-          items: { create: ids.map((animalId) => ({ animalId, type })) },
+          items: { create: items.map((item) => ({ ...item, type })) },
         },
       });
       losses++;

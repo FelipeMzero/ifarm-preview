@@ -44,6 +44,7 @@ import {
 import {
   ParticipantTabs,
   SessionDateDialog,
+  UnavailableNotice,
   groupParticipants,
   matchesParticipant,
 } from "./SessionParticipants";
@@ -122,6 +123,9 @@ export function RegistrationBoard({ id }: { id: string }) {
     partial: detail.participants.filter((p) => p.status === "partial").length,
   };
   const notHandled = counts.total - counts.done - counts.partial;
+  const hasUnavailable = detail.participants.some(
+    (p) => p.animal.unavailableReason,
+  );
   const progress = counts.total
     ? ((counts.done + counts.partial) / counts.total) * 100
     : 0;
@@ -157,7 +161,11 @@ export function RegistrationBoard({ id }: { id: string }) {
         : filtered.length === 1
           ? filtered[0]
           : null;
-    if (target) openAnimal(target.animal.id);
+    if (target?.animal.unavailableReason)
+      toast.warning(
+        `Animal ${target.animal.unavailableReason.toLowerCase()}: remova-o da sessão.`,
+      );
+    else if (target) openAnimal(target.animal.id);
     else if (!filtered.length)
       toast.warning("Nenhum animal da sessão encontrado.");
   }
@@ -256,7 +264,16 @@ export function RegistrationBoard({ id }: { id: string }) {
           {inProgress && (
             <Button
               onClick={() => setConfirming(true)}
-              disabled={consolidating || counts.done + counts.partial === 0}
+              disabled={
+                consolidating ||
+                hasUnavailable ||
+                counts.done + counts.partial === 0
+              }
+              title={
+                hasUnavailable
+                  ? "Remova os animais que não estão mais ativos para consolidar."
+                  : undefined
+              }
             >
               {consolidating ? (
                 <Loader2 className="animate-spin" />
@@ -365,6 +382,8 @@ export function RegistrationBoard({ id }: { id: string }) {
           </Button>
         )}
       </div>
+
+      <UnavailableNotice participants={detail.participants} />
 
       <ParticipantTabs
         participants={detail.participants}

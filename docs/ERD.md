@@ -506,6 +506,7 @@ erDiagram
     String notes "❓"
     String event_id 
     String animal_id 
+    String origin_batch_id "❓"
     DateTime created_at 
     }
   
@@ -514,7 +515,8 @@ erDiagram
     String id "🗝️"
     String title 
     String description "❓"
-    DateTime slaughter_date 
+    DateTime scheduled_date 
+    DateTime slaughter_date "❓"
     DateTime confirmed_at "❓"
     DateTime cancelled_at "❓"
     String property_id 
@@ -528,6 +530,7 @@ erDiagram
     String notes "❓"
     String event_id 
     String animal_id 
+    String origin_batch_id "❓"
     DateTime created_at 
     }
   
@@ -610,8 +613,10 @@ erDiagram
     "purchased_animal" }o--|| animal : "animal"
     "loss_event" }o--|| property : "property"
     "loss_event_item" }o--|| loss_event : "event"
-    "loss_event_item" |o--|| animal : "animal"
+    "loss_event_item" }o--|| animal : "animal"
+    "loss_event_item" }o--|o batch : "originBatch"
     "slaughter_event" }o--|| property : "property"
     "slaughter_event_item" }o--|| slaughter_event : "event"
-    "slaughter_event_item" |o--|| animal : "animal"
+    "slaughter_event_item" }o--|| animal : "animal"
+    "slaughter_event_item" }o--|o batch : "originBatch"
 ```

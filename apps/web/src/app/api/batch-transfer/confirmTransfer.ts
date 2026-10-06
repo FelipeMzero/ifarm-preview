@@ -1,3 +1,7 @@
+import {
+  unavailableAnimalsMessage,
+  unavailableReason,
+} from "@/lib/animal-availability";
 import { Prisma } from "@/lib/prisma";
 import { animalLabel, summarize, transferStatus } from "./shared";
 
@@ -79,16 +83,14 @@ export async function confirmTransferInTx(tx: Tx, id: string) {
       ? now
       : transfer.transferDate;
 
-  const inactive = transfer.items.filter(
-    ({ animal }) =>
-      animal.status !== "ACTIVE" ||
-      animal.currentPropertyId !== transfer.propertyId,
+  const inactive = transfer.items.filter(({ animal }) =>
+    unavailableReason(animal, transfer.propertyId),
   );
   if (inactive.length) {
     throw new ConfirmError(
-      `Animais que não estão mais ativos na propriedade: ${summarize(
-        inactive.map(({ animal }) => animalLabel(animal)),
-      )}. Remova-os da transferência antes de confirmar.`,
+      unavailableAnimalsMessage(
+        summarize(inactive.map(({ animal }) => animalLabel(animal))),
+      ),
     );
   }
 

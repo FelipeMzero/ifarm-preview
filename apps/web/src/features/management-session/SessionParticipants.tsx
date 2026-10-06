@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronRight, Loader2, Trash2 } from "lucide-react";
+import { ChevronRight, CircleAlert, Loader2, Trash2 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import type { ParticipantStatus } from "@/lib/management-steps";
@@ -87,6 +87,26 @@ export function groupParticipants(list: SessionParticipant[]) {
   } satisfies Record<ParticipantStatus, SessionParticipant[]>;
 }
 
+// Aviso acima da lista quando há animais que impedem a consolidação.
+export function UnavailableNotice({
+  participants,
+  action = "consolidar",
+}: {
+  participants: SessionParticipant[];
+  /** Verbo da ação bloqueada (ex.: "concluir", na recepção). */
+  action?: string;
+}) {
+  const count = participants.filter((p) => p.animal.unavailableReason).length;
+  if (!count) return null;
+  return (
+    <div className="flex items-start gap-2 rounded-md border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
+      <CircleAlert className="mt-0.5 size-4 shrink-0" />
+      {count} animal(is) não estão mais ativos na propriedade e estão destacados
+      na lista. Remova-os antes de {action}.
+    </div>
+  );
+}
+
 export function StepProgress({
   steps,
   doneKeys,
@@ -140,12 +160,21 @@ function ParticipantRow({
 }) {
   const { animal } = participant;
   const view = sessionView(animal, participant.sessionValues);
+  const unavailable = animal.unavailableReason;
   return (
     <li
       className={cn(
-        "flex items-center gap-2 rounded-lg border border-border bg-card pr-2 transition-colors",
+        "flex items-center gap-2 rounded-lg border bg-card pr-2 transition-colors",
+        unavailable
+          ? "border-destructive/50 bg-destructive/5"
+          : "border-border",
         onOpen && "hover:bg-accent/40",
       )}
+      title={
+        unavailable
+          ? `${unavailable}: remova o animal para poder consolidar.`
+          : undefined
+      }
     >
       {/* div em vez de <button>: a identificação do animal já contém um botão (RFID). */}
       <div
@@ -180,6 +209,11 @@ function ParticipantRow({
           {view.freshWeight && <NewValueMark />}
         </span>
         <span className="ml-auto flex items-center gap-2">
+          {unavailable && (
+            <span className="flex items-center gap-1 rounded-md bg-destructive/10 px-2 py-0.5 text-xs font-medium text-destructive">
+              <CircleAlert className="size-3.5" /> {unavailable}
+            </span>
+          )}
           {participant.status !== "pending" && steps.length > 0 && (
             <ParticipantStatusBadge status={participant.status} />
           )}
@@ -288,7 +322,12 @@ export function ParticipantTabs({
                 tag={tagOf?.(p)}
                 canRemove={editable}
                 removeTitle={removeTitle}
-                onOpen={hasSteps ? () => onOpen(p) : undefined}
+                // Animal que não pode mais participar não abre o registro, só sai.
+                onOpen={
+                  hasSteps && !p.animal.unavailableReason
+                    ? () => onOpen(p)
+                    : undefined
+                }
                 onRemove={() => onRemove(p)}
               />
             ))}

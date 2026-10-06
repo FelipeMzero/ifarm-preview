@@ -39,6 +39,8 @@ export type TransferAnimal = {
   currentBatch: BatchRef | null;
   // Lote de onde o animal saiu; só é preenchido quando a transferência é confirmada.
   originBatch?: BatchRef | null;
+  // Situação que impede o animal de continuar na transferência pendente (ex.: "Morto").
+  unavailableReason?: string | null;
 };
 
 export type BatchTransferDetail = {

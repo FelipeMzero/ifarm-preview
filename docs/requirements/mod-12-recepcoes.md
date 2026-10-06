@@ -60,7 +60,7 @@ Permite consultar, na área de recepções, as compras da propriedade selecionad
 | **Atores**            | Administrador, Gerente, Funcionário                                                                                                                    |
 | **Plataformas**       | Web                                                                                                                                                    |
 | **Versão**            | 1                                                                                                                                                      |
-| **Especificação**     | 📝 Rascunho                                                                                                                                            |
+| **Especificação**     | 📌 Definida                                                                                                                                            |
 
 ### 2.1.2 - Critérios de Aceitação
 
@@ -122,7 +122,7 @@ Permite acompanhar, na área de recepções, o recebimento de uma compra: o que 
 | **Atores**            | Administrador, Gerente, Funcionário                                                                                                                                                    |
 | **Plataformas**       | Web                                                                                                                                                                                    |
 | **Versão**            | 1                                                                                                                                                                                      |
-| **Especificação**     | 📝 Rascunho                                                                                                                                                                            |
+| **Especificação**     | 📌 Definida                                                                                                                                                                            |
 
 ### 2.2.2 - Critérios de Aceitação
 
@@ -174,7 +174,7 @@ Permite abrir uma recepção para uma carga que chegou, definindo o lote de entr
 | **Atores**            | Administrador, Gerente, Funcionário                                                                                                                                  |
 | **Plataformas**       | Web                                                                                                                                                                  |
 | **Versão**            | 1                                                                                                                                                                    |
-| **Especificação**     | 📝 Rascunho                                                                                                                                                          |
+| **Especificação**     | 📌 Definida                                                                                                                                                          |
 
 ### 2.3.2 - Critérios de Aceitação
 
@@ -234,7 +234,7 @@ Permite conduzir uma recepção: receber os animais conforme descem do caminhão
 | **Atores**            | Administrador, Gerente, Funcionário                                                                                                                                     |
 | **Plataformas**       | Web                                                                                                                                                                     |
 | **Versão**            | 1                                                                                                                                                                       |
-| **Especificação**     | 📝 Rascunho                                                                                                                                                             |
+| **Especificação**     | 📌 Definida                                                                                                                                                             |
 
 ### 2.4.2 - Critérios de Aceitação
 
@@ -321,7 +321,7 @@ Permite cadastrar, na recepção, um animal que desceu do caminhão, classifican
 | **Atores**            | Administrador, Gerente, Funcionário                                                                                                                                         |
 | **Plataformas**       | Web                                                                                                                                                                         |
 | **Versão**            | 1                                                                                                                                                                           |
-| **Especificação**     | 📝 Rascunho                                                                                                                                                                 |
+| **Especificação**     | 📌 Definida                                                                                                                                                                 |
 
 ### 2.5.2 - Critérios de Aceitação
 
@@ -385,7 +385,7 @@ Permite encerrar uma recepção, fazendo os manejos registrados passarem a valer
 | **Atores**            | Administrador, Gerente, Funcionário                                                                                                                                |
 | **Plataformas**       | Web                                                                                                                                                                |
 | **Versão**            | 1                                                                                                                                                                  |
-| **Especificação**     | 📝 Rascunho                                                                                                                                                        |
+| **Especificação**     | 📌 Definida                                                                                                                                                        |
 
 ### 2.6.2 - Critérios de Aceitação
 

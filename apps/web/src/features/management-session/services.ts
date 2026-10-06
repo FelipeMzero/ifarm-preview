@@ -48,6 +48,8 @@ export type SessionAnimal = {
   neutered: boolean;
   currentWeightKg: number | null;
   currentBatch: Ref | null;
+  /** Situação que impede o animal de continuar na sessão aberta (ex.: "Morto"). */
+  unavailableReason?: string | null;
 };
 
 // Brinco, RFID e peso registrados no animal nesta sessão (ainda não consolidados).

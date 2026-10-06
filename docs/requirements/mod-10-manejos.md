@@ -260,6 +260,7 @@ Permite acompanhar a execução de uma sessão em andamento: localizar o próxim
 - [ ] Exibir os animais da sessão separados pela situação no manejo: a manejar (nenhuma etapa registrada), parcial (algumas etapas) e completo (todas as etapas). Os parciais e completos devem aparecer do manejado mais recentemente para o mais antigo.
 - [ ] Deve ser possível localizar um animal da sessão por `ID`, `Brinco`, `RFID` ou `Apelido` e abrir diretamente o seu registro (`RF-MANEJO-05`), inclusive pela leitura do brinco ou do RFID.
 - [ ] Deve ser possível incluir na sessão animais que chegaram ao curral sem estar planejados, com as mesmas regras do planejamento (`RN-MANEJO-04`).
+- [ ] Animais da sessão que não estão mais ativos na propriedade devem ser destacados, com a sua situação atual, conforme [Operações com animais selecionados](comum.md#operações-com-animais-selecionados).
 - [ ] Deve ser possível remover um animal da sessão, mediante confirmação; se o animal já tiver registros, eles devem ser desfeitos, e a confirmação deve informar isso.
 - [ ] Deve ser possível alterar a `Data do Manejo` (`RF-MANEJO-03`).
 - [ ] Deve ser possível acionar a consolidação (`RF-MANEJO-12`).
@@ -682,7 +683,7 @@ Permite registrar a etapa em que o animal é marcado a ferro com uma marca cadas
 | **Atores**            | Administrador, Gerente, Funcionário                                                                                                                    |
 | **Plataformas**       | Web                                                                                                                                                    |
 | **Versão**            | 1                                                                                                                                                      |
-| **Especificação**     | 📝 Rascunho                                                                                                                                            |
+| **Especificação**     | 📌 Definida                                                                                                                                            |
 
 ### 2.11.2 - Critérios de Aceitação
 
@@ -759,7 +760,7 @@ Permite encerrar a execução de uma sessão, fazendo os seus registros passarem
 
 - [ ] Somente sessões em andamento podem ser consolidadas.
 - [ ] A consolidação exige confirmação do usuário, informando que a sessão não poderá mais ser alterada e, se houver, quantos animais não foram manejados e serão removidos da sessão (`RN-MANEJO-05`).
-- [ ] A consolidação deve ser impedida se: nenhum animal tiver sido manejado; a `Data do Manejo` for futura; algum animal manejado não estiver mais ativo na propriedade; houver compromisso conflitante com outra operação aberta (`RN-MANEJO-04`); ou um brinco (ou RFID) registrado estiver em uso por outro animal (`RN-MANEJO-08`).
+- [ ] A consolidação deve ser impedida se: nenhum animal tiver sido manejado; a `Data do Manejo` for futura; algum animal da sessão não estiver mais ativo na propriedade (ver [Operações com animais selecionados](comum.md#operações-com-animais-selecionados)); houver compromisso conflitante com outra operação aberta (`RN-MANEJO-04`); ou um brinco (ou RFID) registrado estiver em uso por outro animal (`RN-MANEJO-08`).
 - [ ] Na consolidação, os registros passam a valer com a `Data do Manejo` (ou com o horário da consolidação, se o manejo for de hoje), e cada manejo produz o seu efeito nos animais, conforme `RF-MANEJO-06` a `RF-MANEJO-11`.
 
 ### 2.12.3 - Fluxos
@@ -786,8 +787,8 @@ Permite encerrar a execução de uma sessão, fazendo os seus registros passarem
   3. O fluxo termina com falha.
 
 - **A3 – Animal que saiu do rebanho (passo 4):**
-  1. Um animal manejado deixou de estar ativo na propriedade depois do registro (`RN-MANEJO-04`).
-  2. O sistema impede a consolidação e exibe a mensagem: _"Animais manejados que não estão mais ativos na propriedade: {animais}. Remova-os da sessão antes de consolidar."_
+  1. Um animal da sessão deixou de estar ativo na propriedade depois de ser incluído nela (ver [Operações com animais selecionados](comum.md#operações-com-animais-selecionados)).
+  2. O sistema impede a consolidação e exibe a mensagem: _"Animais que não estão mais ativos na propriedade: {animais}. Remova-os antes de consolidar."_
   3. O fluxo termina com falha.
 
 - **A4 – Outro impedimento (passo 4):**

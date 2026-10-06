@@ -194,8 +194,12 @@ export function SelectedAnimalsTable({
                 <div className="flex items-center gap-2">
                   <AnimalIdentification animal={animal} />
                   {!readOnly && isInvalid?.(animal) && (
-                    <span title={invalidTitle} className="text-destructive">
+                    <span
+                      title={invalidTitle}
+                      className="flex items-center gap-1 text-xs font-medium text-destructive"
+                    >
                       <CircleAlert className="size-4" />
+                      {animal.unavailableReason}
                     </span>
                   )}
                 </div>

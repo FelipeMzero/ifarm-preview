@@ -67,3 +67,14 @@ Toda listagem do sistema deve:
 - Permitir ordenar por qualquer coluna visível.
 - Ser paginada, permitindo escolher a quantidade de registros por página.
 - Exibir _"Nenhum registro encontrado."_ quando a pesquisa ou o filtro não retornar resultados.
+
+## Operações com animais selecionados
+
+Algumas operações reúnem animais selecionados e só passam a valer quando são consolidadas, depois de um tempo em aberto: sessões de manejo, recepções, transferências, perdas, abates e vendas. Os animais são selecionados entre os animais ativos da propriedade (`RN-ANIMAL-04`), mas podem deixar de poder participar da operação enquanto ela está em aberto, por exemplo porque morreram ou saíram da propriedade por outra operação já consolidada.
+
+Toda operação desse tipo deve:
+
+- Destacar os animais que não podem mais participar dela, informando a sua situação atual (ex.: _Morto_, _Vendido_), e permitir removê-los.
+- Impedir a consolidação enquanto houver esses animais, exibindo a mensagem: _"Animais que não estão mais ativos na propriedade: {animais}. Remova-os antes de consolidar."_
+
+Cada operação verifica apenas os seus próprios animais: uma operação não é impedida pelo fato de um animal também estar em outra operação em aberto, salvo quando o seu módulo disser o contrário.

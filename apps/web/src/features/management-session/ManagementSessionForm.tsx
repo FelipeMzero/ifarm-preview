@@ -480,6 +480,8 @@ export function ManagementSessionForm({
             <SelectedAnimalsTable
               animals={selected}
               pageAnimals={selectedPagination.pageAnimals}
+              isInvalid={(a) => !!a.unavailableReason}
+              invalidTitle="Este animal não está mais ativo na propriedade. Remova-o para poder consolidar a sessão."
               removeTitle="Remover do manejo"
               readOnly={readOnly}
               onRemove={(animalId) => removeAnimals([animalId])}

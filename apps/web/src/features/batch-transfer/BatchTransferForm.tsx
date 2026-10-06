@@ -357,7 +357,9 @@ export function BatchTransferForm({
 
   // Ex.: animal vendido ou movido para o destino depois de entrar no plano.
   const isInvalid = (a: TransferAnimal) =>
-    a.status !== "ACTIVE" || a.currentBatch?.id === destinationBatchId;
+    !!a.unavailableReason ||
+    a.status !== "ACTIVE" ||
+    a.currentBatch?.id === destinationBatchId;
 
   // Depois de confirmada, o lote que interessa é o de onde o animal saiu.
   const showOrigin = detail?.status === "confirmed";

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/api-auth";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
+import { unavailableReason } from "@/lib/animal-availability";
 import { participantStatus, stepKey } from "@/lib/management-steps";
 import { assertNoConflicts } from "../../animal/commitments";
 import { animalLabel, summarize } from "../../batch-transfer/shared";
@@ -61,6 +62,7 @@ export async function GET(_request: NextRequest, { params }: Params) {
               name: true,
               sex: true,
               status: true,
+              currentPropertyId: true,
               neutered: true,
               currentWeight: true,
               currentBatch: { select: { id: true, name: true } },
@@ -107,6 +109,10 @@ export async function GET(_request: NextRequest, { params }: Params) {
             neutered: animal.neutered,
             currentWeightKg: animal.currentWeight?.toNumber() ?? null,
             currentBatch: animal.currentBatch,
+            // Só com a sessão aberta: depois de encerrada, não há o que remover.
+            unavailableReason: open
+              ? unavailableReason(animal, session.propertyId)
+              : null,
           },
           status: participantStatus(done, steps.length),
           // Só com a sessão aberta: consolidada, os valores já são os atuais (ou foram

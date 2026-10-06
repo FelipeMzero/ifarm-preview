@@ -1,3 +1,7 @@
+import {
+  unavailableAnimalsMessage,
+  unavailableReason,
+} from "@/lib/animal-availability";
 import { assertNoConflicts } from "../animal/commitments";
 import { animalLabel, summarize } from "../batch-transfer/shared";
 import { findReception } from "../purchase/reception";
@@ -67,16 +71,16 @@ export async function consolidateSession(tx: Tx, id: string, at?: Date) {
     );
   }
 
-  const inactive = handled.filter(
-    ({ animal }) =>
-      animal.status !== "ACTIVE" ||
-      animal.currentPropertyId !== session.propertyId,
+  // Vale para todos os animais da sessão, manejados ou não: quem deixou de poder
+  // participar precisa ser removido antes (Operações com animais selecionados).
+  const inactive = participants.filter(({ animal }) =>
+    unavailableReason(animal, session.propertyId),
   );
   if (inactive.length) {
     throw new StepError(
-      `Animais manejados que não estão mais ativos na propriedade: ${summarize(
-        inactive.map(({ animal }) => animalLabel(animal)),
-      )}. Remova-os da sessão antes de consolidar.`,
+      unavailableAnimalsMessage(
+        summarize(inactive.map(({ animal }) => animalLabel(animal))),
+      ),
     );
   }
 

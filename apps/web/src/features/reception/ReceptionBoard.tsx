@@ -28,6 +28,7 @@ import {
 import {
   ParticipantTabs,
   SessionDateDialog,
+  UnavailableNotice,
   groupParticipants,
   matchesParticipant,
 } from "@/features/management-session/SessionParticipants";
@@ -123,6 +124,9 @@ export function ReceptionBoard({ id }: { id: string }) {
     partial: detail.participants.filter((p) => p.status === "partial").length,
   };
   const withPending = counts.total - counts.done;
+  const hasUnavailable = detail.participants.some(
+    (p) => p.animal.unavailableReason,
+  );
 
   function openAnimal(animalId: string) {
     router.push(`${boardPath}/${animalId}`);
@@ -139,7 +143,11 @@ export function ReceptionBoard({ id }: { id: string }) {
         : filtered.length === 1
           ? filtered[0]
           : null;
-    if (target) openAnimal(target.animal.id);
+    if (target?.animal.unavailableReason)
+      toast.warning(
+        `Animal ${target.animal.unavailableReason.toLowerCase()}: remova-o da recepção.`,
+      );
+    else if (target) openAnimal(target.animal.id);
     else if (!filtered.length)
       toast.warning("Nenhum animal da recepção encontrado.");
   }
@@ -234,7 +242,12 @@ export function ReceptionBoard({ id }: { id: string }) {
             <Button
               className="w-auto"
               onClick={() => setConfirming(true)}
-              disabled={consolidating || counts.total === 0}
+              disabled={consolidating || hasUnavailable || counts.total === 0}
+              title={
+                hasUnavailable
+                  ? "Remova os animais que não estão mais ativos para concluir."
+                  : undefined
+              }
             >
               {consolidating ? (
                 <Loader2 className="animate-spin" />
@@ -324,6 +337,8 @@ export function ReceptionBoard({ id }: { id: string }) {
           />
         </div>
       </div>
+
+      <UnavailableNotice participants={detail.participants} action="concluir" />
 
       <ParticipantTabs
         participants={detail.participants}

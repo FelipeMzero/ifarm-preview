@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/api-auth";
+import { unavailableReason } from "@/lib/animal-availability";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
 import { batchTransferApiSchema } from "../../schemas";
 import {
@@ -37,6 +38,7 @@ export async function GET(
                 name: true,
                 sex: true,
                 status: true,
+                currentPropertyId: true,
                 currentWeight: true,
                 currentBatch: { select: { id: true, name: true } },
               },
@@ -74,6 +76,11 @@ export async function GET(
         currentWeightKg: animal.currentWeight?.toNumber() ?? null,
         currentBatch: animal.currentBatch,
         originBatch,
+        // Só pendente: depois de encerrada, não há o que remover.
+        unavailableReason:
+          transferStatus(transfer) === "pending"
+            ? unavailableReason(animal, transfer.propertyId)
+            : null,
       })),
     });
   } catch (error) {

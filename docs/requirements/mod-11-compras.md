@@ -84,7 +84,7 @@ Permite consultar as compras de animais da propriedade selecionada, com busca, f
 | **Atores**            | Administrador, Gerente                                                                                                                    |
 | **Plataformas**       | Web                                                                                                                                       |
 | **Versão**            | 1                                                                                                                                         |
-| **Especificação**     | 📝 Rascunho                                                                                                                               |
+| **Especificação**     | 📌 Definida                                                                                                                               |
 
 ### 2.1.2 - Critérios de Aceitação
 
@@ -148,7 +148,7 @@ Permite registrar a negociação de uma compra de animais: o vendedor, a data e 
 | **Atores**            | Administrador, Gerente                                                                                                              |
 | **Plataformas**       | Web                                                                                                                                 |
 | **Versão**            | 1                                                                                                                                   |
-| **Especificação**     | 📝 Rascunho                                                                                                                         |
+| **Especificação**     | 📌 Definida                                                                                                                         |
 
 ### 2.2.2 - Critérios de Aceitação
 
@@ -224,7 +224,7 @@ Permite acompanhar uma compra, com os animais recebidos, o valor e as recepçõe
 | **Atores**            | Administrador, Gerente                                                                                                                                  |
 | **Plataformas**       | Web                                                                                                                                                     |
 | **Versão**            | 1                                                                                                                                                       |
-| **Especificação**     | 📝 Rascunho                                                                                                                                             |
+| **Especificação**     | 📌 Definida                                                                                                                                             |
 
 ### 2.3.2 - Critérios de Aceitação
 
@@ -309,7 +309,7 @@ Permite registrar o pagamento de uma compra em andamento e desfazê-lo, para cor
 | **Atores**            | Administrador, Gerente                                                                                                             |
 | **Plataformas**       | Web                                                                                                                                |
 | **Versão**            | 1                                                                                                                                  |
-| **Especificação**     | 📝 Rascunho                                                                                                                        |
+| **Especificação**     | 📌 Definida                                                                                                                        |
 
 ### 2.4.2 - Critérios de Aceitação
 
@@ -373,7 +373,7 @@ Permite encerrar uma compra paga e com todas as recepções concluídas, rateand
 | **Atores**            | Administrador, Gerente                                                                                                                 |
 | **Plataformas**       | Web                                                                                                                                    |
 | **Versão**            | 1                                                                                                                                      |
-| **Especificação**     | 📝 Rascunho                                                                                                                            |
+| **Especificação**     | 📌 Definida                                                                                                                            |
 
 ### 2.5.2 - Critérios de Aceitação
 
