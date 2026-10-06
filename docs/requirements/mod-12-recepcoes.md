@@ -375,12 +375,12 @@ Permite cadastrar, na recepção, um animal que desceu do caminhão, classifican
 
 ### 2.6.1 - Descrição
 
-Permite encerrar uma recepção, fazendo os manejos registrados passarem a valer. A conclusão segue a consolidação de uma sessão de manejo (`RF-MANEJO-11`), com as diferenças descritas aqui.
+Permite encerrar uma recepção, fazendo os manejos registrados passarem a valer. A conclusão segue a consolidação de uma sessão de manejo (`RF-MANEJO-12`), com as diferenças descritas aqui.
 
 |                       |                                                                                                                                                                    |
 | :-------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **User Story**        | Como **Administrador**, **Gerente** ou **Funcionário**, quero **concluir uma recepção** para que os animais recebidos e os seus manejos de chegada passem a valer. |
-| **Dependências**      | `RF-RECEPCAO-04`, `RF-MANEJO-11`                                                                                                                                   |
+| **Dependências**      | `RF-RECEPCAO-04`, `RF-MANEJO-12`                                                                                                                                   |
 | **Regras Vinculadas** | `RN-RECEPCAO-04`, `RN-MANEJO-03`                                                                                                                                   |
 | **Atores**            | Administrador, Gerente, Funcionário                                                                                                                                |
 | **Plataformas**       | Web                                                                                                                                                                |
@@ -389,7 +389,7 @@ Permite encerrar uma recepção, fazendo os manejos registrados passarem a valer
 
 ### 2.6.2 - Critérios de Aceitação
 
-- [ ] A conclusão segue os critérios da consolidação de uma sessão de manejo (`RF-MANEJO-11`), exceto:
+- [ ] A conclusão segue os critérios da consolidação de uma sessão de manejo (`RF-MANEJO-12`), exceto:
   - todos os animais recebidos permanecem na recepção, mesmo sem manejos registrados (`RN-RECEPCAO-04`);
   - a conclusão é impedida se nenhum animal tiver sido recebido.
 - [ ] A confirmação deve informar quantos animais foram recebidos e, se houver, quantos têm manejos pendentes, deixando claro que só o que foi registrado será aplicado e que nenhum animal recebido sai da recepção.
@@ -402,7 +402,7 @@ Permite encerrar uma recepção, fazendo os manejos registrados passarem a valer
 1. O fluxo começa quando o usuário aciona a ação "Concluir recepção" de uma recepção em andamento com animais recebidos (`RF-RECEPCAO-04`).
 2. O sistema solicita a confirmação, informando quantos animais foram recebidos e, se houver, quantos têm manejos pendentes, e que a recepção não poderá mais ser alterada.
 3. O usuário confirma a conclusão.
-4. O sistema verifica os impedimentos da consolidação de uma sessão (`RF-MANEJO-11`).
+4. O sistema verifica os impedimentos da consolidação de uma sessão (`RF-MANEJO-12`).
 5. O sistema conclui a recepção, aplica os manejos registrados nos animais (`RN-MANEJO-03`) e exibe a mensagem: _"Recepção concluída: {quantidade} animal(is) recebido(s)."_
 6. O fluxo continua em `RF-RECEPCAO-04`, com a recepção apenas para consulta.
 
@@ -419,7 +419,7 @@ Permite encerrar uma recepção, fazendo os manejos registrados passarem a valer
   3. O fluxo continua em `RF-RECEPCAO-04`.
 
 - **A3 – Outro impedimento (passo 4):**
-  1. A conclusão tem um dos impedimentos da consolidação de uma sessão, como a data futura ou um brinco em uso por outro animal (`RF-MANEJO-11`).
+  1. A conclusão tem um dos impedimentos da consolidação de uma sessão, como a data futura ou um brinco em uso por outro animal (`RF-MANEJO-12`).
   2. O sistema impede a conclusão e informa o motivo, como na consolidação de uma sessão.
   3. O fluxo continua em `RF-RECEPCAO-04`.
 
@@ -431,12 +431,12 @@ Permite encerrar uma recepção, fazendo os manejos registrados passarem a valer
 
 ### 2.7.1 - Descrição
 
-Permite cancelar uma recepção aberta sem que nenhum animal tenha sido recebido, por exemplo, quando a carga não chegou. O cancelamento segue o cancelamento de uma sessão de manejo (`RF-MANEJO-12`), com as diferenças descritas aqui.
+Permite cancelar uma recepção aberta sem que nenhum animal tenha sido recebido, por exemplo, quando a carga não chegou. O cancelamento segue o cancelamento de uma sessão de manejo (`RF-MANEJO-13`), com as diferenças descritas aqui.
 
 |                       |                                                                                                                                                                               |
 | :-------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **User Story**        | Como **Administrador**, **Gerente** ou **Funcionário**, quero **cancelar uma recepção aberta por engano ou cuja carga não chegou** para que ela não fique pendente na compra. |
-| **Dependências**      | `RF-RECEPCAO-04`, `RF-MANEJO-12`                                                                                                                                              |
+| **Dependências**      | `RF-RECEPCAO-04`, `RF-MANEJO-13`                                                                                                                                              |
 | **Regras Vinculadas** | `RN-RECEPCAO-04`                                                                                                                                                              |
 | **Atores**            | Administrador, Gerente, Funcionário                                                                                                                                           |
 | **Plataformas**       | Web                                                                                                                                                                           |
@@ -445,7 +445,7 @@ Permite cancelar uma recepção aberta sem que nenhum animal tenha sido recebido
 
 ### 2.7.2 - Critérios de Aceitação
 
-- [ ] O cancelamento segue os critérios do cancelamento de uma sessão de manejo (`RF-MANEJO-12`), exceto que só é possível em uma recepção sem animais recebidos (`RN-RECEPCAO-04`).
+- [ ] O cancelamento segue os critérios do cancelamento de uma sessão de manejo (`RF-MANEJO-13`), exceto que só é possível em uma recepção sem animais recebidos (`RN-RECEPCAO-04`).
 - [ ] A confirmação deve informar que nenhum animal foi recebido e que a recepção continuará visível na compra.
 
 ### 2.7.3 - Fluxos

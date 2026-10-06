@@ -122,7 +122,7 @@ Permite cadastrar as marcas de ferro dos titulares, para que possam ser aplicada
 - [ ] A `UF` deve ser escolhida entre as Unidades Federativas do Brasil.
 - [ ] A `Data de Registro`, quando informada, não pode ser futura.
 - [ ] A marca é criada com `Status` `Ativo`.
-- [ ] A criação pode ser acionada a partir de outros cadastros que referenciam uma marca (ex: marca sugerida no manejo de ferra), sem sair deles.
+- [ ] A criação pode ser acionada a partir de outros cadastros que referenciam uma marca (ex: marca prevista no manejo de ferra, `RF-MANEJO-11`), sem sair deles.
 
 ### 2.2.3 - Fluxos
 
@@ -154,7 +154,7 @@ Permite cadastrar as marcas de ferro dos titulares, para que possam ser aplicada
   3. O fluxo retorna ao passo 3.
 
 - **A4 – Cadastro a partir de outro cadastro (passo 1):**
-  1. O usuário aciona a criação de uma nova marca a partir de outro cadastro que referencia uma marca (ex: marca sugerida no manejo de ferra).
+  1. O usuário aciona a criação de uma nova marca a partir de outro cadastro que referencia uma marca (ex: marca prevista no manejo de ferra, `RF-MANEJO-11`).
   2. O fluxo segue do passo 2 ao 5.
   3. O sistema retorna ao cadastro de origem, com a nova marca já selecionada.
   4. O fluxo termina.
@@ -361,7 +361,7 @@ Permite ativar/desativar uma marca, retirando de uso as marcas que não são mai
 
 - [ ] A ação deve alternar o status da marca entre `Ativo` e `Inativo` (ver [Exclusão vs Inativação](comum.md#exclusão-vs-inativação)).
 - [ ] A ativação e a desativação exigem confirmação do usuário; a confirmação da desativação deve informar que a marca não poderá mais ser aplicada em novos animais.
-- [ ] Uma marca inativa não pode ser escolhida em novas marcações, avulsas ou em sessão de manejo, nem como marca sugerida em um manejo de ferra (`RN-MARCA-03`).
+- [ ] Uma marca inativa não pode ser escolhida em novas marcações, avulsas ou em sessão de manejo, nem como marca prevista em um manejo de ferra (`RF-MANEJO-11`, `RN-MARCA-03`).
 - [ ] A desativação não altera a marca atual dos animais que já a receberam nem as marcações já registradas (`RN-MARCA-03`).
 
 ### 2.6.3 - Fluxos

@@ -1,8 +1,8 @@
 # 📦 Módulo: `MOD-MANEJOS`
 
-Módulo responsável pelas sessões de manejo: o trabalho feito em um grupo de animais no curral, em que cada animal passa, um de cada vez, por uma sequência de manejos (pesagem, castração, identificação, procedimentos sanitários e apartação).
+Módulo responsável pelas sessões de manejo: o trabalho feito em um grupo de animais no curral, em que cada animal passa, um de cada vez, por uma sequência de manejos (pesagem, castração, identificação, ferra, procedimentos sanitários e apartação).
 
-Uma sessão é planejada (o que será feito e em quais animais), executada animal por animal e, ao final, consolidada, quando os seus registros passam a valer no histórico dos animais. A recepção de animais comprados também usa uma sessão de manejo, especificada no [módulo de recepções](mod-11-recepcoes.md).
+Uma sessão é planejada (o que será feito e em quais animais), executada animal por animal e, ao final, consolidada, quando os seus registros passam a valer no histórico dos animais. A recepção de animais comprados também usa uma sessão de manejo, especificada no [módulo de recepções](mod-12-recepcoes.md).
 
 ## Dicionário de dados conceitual
 
@@ -22,7 +22,7 @@ Uma sessão é planejada (o que será feito e em quais animais), executada anima
 # 1 - Regras de Negócio do Módulo (RN)
 
 - **`RN-MANEJO-01` - Sessão de Manejo:** Uma sessão de manejo reúne o trabalho feito em um grupo de animais de uma mesma propriedade, em uma mesma data. Todos os manejos da sessão têm a data do manejo, que não pode ser futura.
-- **`RN-MANEJO-02` - Etapas:** Os manejos possíveis em uma sessão são pesagem, castração, brinco, RFID, procedimento sanitário e apartação. Cada tipo aparece no máximo uma vez, exceto o procedimento sanitário, que pode se repetir com procedimentos diferentes (ex.: vacina e vermífugo). A ordem das etapas é a ordem em que elas são feitas em cada animal, e a apartação, quando existe, é sempre a última, pois define para onde o animal vai ao sair do curral.
+- **`RN-MANEJO-02` - Etapas:** Os manejos possíveis em uma sessão são pesagem, castração, brinco, RFID, ferra, procedimento sanitário e apartação. Cada tipo aparece no máximo uma vez, exceto o procedimento sanitário, que pode se repetir com procedimentos diferentes (ex.: vacina e vermífugo). A ordem das etapas é a ordem em que elas são feitas em cada animal, e a apartação, quando existe, é sempre a última, pois define para onde o animal vai ao sair do curral.
 - **`RN-MANEJO-03` - Ciclo da Sessão:** Uma sessão é planejada, depois executada e, por fim, consolidada ou cancelada. Os manejos de uma sessão só têm efeito sobre os animais quando ela é consolidada; uma sessão cancelada não tem efeito sobre eles. Uma sessão consolidada ou cancelada não muda mais.
 - **`RN-MANEJO-04` - Participantes:** Só participam de uma sessão os animais ativos da propriedade que não tenham compromisso conflitante com as etapas dela (`RN-ANIMAL-10`). Duas sessões abertas não podem ter o mesmo animal na mesma etapa, exceto a pesagem.
 - **`RN-MANEJO-05` - Animal Manejado:** Um animal está manejado quando passou por ao menos uma etapa da sessão; as etapas não feitas nele não têm efeito. Um animal que não foi manejado deixa a sessão na consolidação.
@@ -32,6 +32,7 @@ Uma sessão é planejada (o que será feito e em quais animais), executada anima
 - **`RN-MANEJO-09` - Dose do Procedimento Sanitário:** A dose aplicada em cada animal segue a regra de dose do procedimento: sem dose (ex.: exame, banho); dose fixa por animal; ou dose por peso, calculada como dose (ml) × peso do animal ÷ peso de referência, com uma casa decimal, usando o peso tomado na sessão ou, sem ele, o peso atual. A dose efetivamente aplicada pode diferir da calculada e é a que vale.
 - **`RN-MANEJO-10` - Carência:** Até o fim do período de carência de um procedimento, o animal que o recebeu não pode ser abatido nem ter o leite comercializado.
 - **`RN-MANEJO-11` - Apartação:** Na apartação, o animal permanece no seu lote atual ou vai para outro lote vigente da propriedade. A mudança de lote só acontece quando a sessão é consolidada.
+- **`RN-MANEJO-12` - Ferra:** A ferra feita na sessão exige a marca aplicada, que passa a ser a marca atual do animal. Ferrar um animal com a marca que ele já tem é atípico, mas pode ocorrer no caso de alguma correção.
 
 ---
 
@@ -63,7 +64,7 @@ Permite consultar as sessões de manejo da propriedade selecionada, com busca, f
 - [ ] A ordenação inicial é pela data prevista, da mais recente para a mais antiga.
 - [ ] A pesquisa deve considerar `Título` e `Observação`.
 - [ ] Os filtros disponíveis são: abertas (planejadas e em andamento), consolidadas, canceladas e todas. O filtro inicial é "abertas".
-- [ ] As ações disponíveis para cada sessão dependem da sua situação: de uma planejada, editar o planejamento (`RF-MANEJO-02`) e iniciar o registro (`RF-MANEJO-03`); de uma em andamento, editar o planejamento (`RF-MANEJO-02`) e continuar o registro (`RF-MANEJO-04`); de uma aberta, cancelá-la (`RF-MANEJO-12`); de uma consolidada ou cancelada, consultá-la (`RF-MANEJO-02`).
+- [ ] As ações disponíveis para cada sessão dependem da sua situação: de uma planejada, editar o planejamento (`RF-MANEJO-02`) e iniciar o registro (`RF-MANEJO-03`); de uma em andamento, editar o planejamento (`RF-MANEJO-02`) e continuar o registro (`RF-MANEJO-04`); de uma aberta, cancelá-la (`RF-MANEJO-13`); de uma consolidada ou cancelada, consultá-la (`RF-MANEJO-02`).
 - [ ] Deve permitir acionar o planejamento de uma nova sessão (`RF-MANEJO-02`).
 
 ### 2.1.3 - Fluxos
@@ -115,7 +116,7 @@ Permite criar e alterar o planejamento de uma sessão: data prevista, manejos a 
 |                       |                                                                                                                                                      |
 | :-------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **User Story**        | Como **Administrador**, **Gerente** ou **Funcionário**, quero **planejar uma sessão de manejo** para organizar antecipadamente o trabalho do curral. |
-| **Dependências**      | `RF-MANEJO-01`, `RF-ANIMAL-02`, `RF-CAST-01` (para a castração), `RF-TSAN-01` (para procedimentos sanitários)                                        |
+| **Dependências**      | `RF-MANEJO-01`, `RF-ANIMAL-02`, `RF-CAST-01` (para a castração), `RF-MARCA-02` (para a ferra), `RF-TSAN-01` (para procedimentos sanitários)          |
 | **Regras Vinculadas** | `RN-MANEJO-02`, `RN-MANEJO-03`, `RN-MANEJO-04`                                                                                                       |
 | **Atores**            | Administrador, Gerente, Funcionário                                                                                                                  |
 | **Plataformas**       | Web                                                                                                                                                  |
@@ -127,7 +128,7 @@ Permite criar e alterar o planejamento de uma sessão: data prevista, manejos a 
 - [ ] O planejamento deve permitir informar `Título`, `Data Prevista`, `Observação`, os manejos e os animais.
 - [ ] Os campos `Título` e `Data Prevista` são obrigatórios, e deve haver ao menos um manejo.
 - [ ] Os manejos devem respeitar `RN-MANEJO-02`, e o usuário pode reordená-los.
-- [ ] A castração, o procedimento sanitário e a apartação têm dados próprios no planejamento, especificados em `RF-MANEJO-07`, `RF-MANEJO-09` e `RF-MANEJO-10`.
+- [ ] A castração, o procedimento sanitário, a apartação e a ferra têm dados próprios no planejamento, especificados em `RF-MANEJO-07`, `RF-MANEJO-09`, `RF-MANEJO-10` e `RF-MANEJO-11`.
 - [ ] Os animais devem ser escolhidos entre os animais ativos da propriedade, com busca por `ID`, `Brinco`, `RFID` ou `Apelido` e filtros por lote, sexo e faixa de peso. Deve ser possível selecionar individualmente ou todos os animais filtrados.
 - [ ] Animais com compromisso conflitante devem aparecer indisponíveis, com o motivo, e não entram na seleção de todos os filtrados (`RN-MANEJO-04`).
 - [ ] O planejamento pode ser alterado enquanto a sessão estiver planejada ou em andamento.
@@ -142,7 +143,7 @@ Permite criar e alterar o planejamento de uma sessão: data prevista, manejos a 
 
 1. O fluxo começa quando o usuário aciona o planejamento de uma nova sessão na listagem (`RF-MANEJO-01`).
 2. O sistema exibe o formulário de planejamento.
-3. O usuário informa `Título`, `Data Prevista` e `Observação`, adiciona os manejos na ordem em que serão feitos, podendo reordená-los e informar os dados próprios da castração, do procedimento sanitário e da apartação (`RF-MANEJO-07`, `RF-MANEJO-09`, `RF-MANEJO-10`), e seleciona os animais (ver fluxos alternativos).
+3. O usuário informa `Título`, `Data Prevista` e `Observação`, adiciona os manejos na ordem em que serão feitos, podendo reordená-los e informar os dados próprios da castração, do procedimento sanitário, da apartação e da ferra (`RF-MANEJO-07`, `RF-MANEJO-09`, `RF-MANEJO-10`, `RF-MANEJO-11`), e seleciona os animais (ver fluxos alternativos).
 4. O usuário aciona a ação "Salvar".
 5. O sistema valida os dados (`RN-MANEJO-02`, `RN-MANEJO-04`), cria a sessão com a situação `Planejada` e exibe a mensagem: _"Sessão de manejo planejada!"_
 6. O fluxo termina.
@@ -261,7 +262,7 @@ Permite acompanhar a execução de uma sessão em andamento: localizar o próxim
 - [ ] Deve ser possível incluir na sessão animais que chegaram ao curral sem estar planejados, com as mesmas regras do planejamento (`RN-MANEJO-04`).
 - [ ] Deve ser possível remover um animal da sessão, mediante confirmação; se o animal já tiver registros, eles devem ser desfeitos, e a confirmação deve informar isso.
 - [ ] Deve ser possível alterar a `Data do Manejo` (`RF-MANEJO-03`).
-- [ ] Deve ser possível acionar a consolidação (`RF-MANEJO-11`).
+- [ ] Deve ser possível acionar a consolidação (`RF-MANEJO-12`).
 
 ### 2.4.3 - Fluxos
 
@@ -299,7 +300,7 @@ Permite acompanhar a execução de uma sessão em andamento: localizar o próxim
 
 - **A5 – Consolidação (passo 3):**
   1. O usuário aciona a consolidação da sessão.
-  2. O fluxo continua em `RF-MANEJO-11`.
+  2. O fluxo continua em `RF-MANEJO-12`.
 
 </div>
 
@@ -309,7 +310,7 @@ Permite acompanhar a execução de uma sessão em andamento: localizar o próxim
 
 ### 2.5.1 - Descrição
 
-Permite registrar, em um animal, as etapas da sessão, na ordem planejada, enquanto ele passa pelo curral. Este requisito trata do que é comum a todas as etapas; o que é próprio de cada tipo de manejo está em `RF-MANEJO-06` a `RF-MANEJO-10`.
+Permite registrar, em um animal, as etapas da sessão, na ordem planejada, enquanto ele passa pelo curral. Este requisito trata do que é comum a todas as etapas; o que é próprio de cada tipo de manejo está em `RF-MANEJO-06` a `RF-MANEJO-11`.
 
 |                       |                                                                                                                                                                  |
 | :-------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -337,7 +338,7 @@ Permite registrar, em um animal, as etapas da sessão, na ordem planejada, enqua
 1. O fluxo começa quando o sistema abre o registro de um animal de uma sessão em andamento (`RF-MANEJO-04`).
 2. O sistema exibe a identificação do animal, a sua situação no manejo e as etapas da sessão, indicando as já registradas.
 3. O sistema apresenta a próxima etapa, na ordem planejada.
-4. O usuário registra a etapa, conforme o tipo de manejo (`RF-MANEJO-06` a `RF-MANEJO-10`), podendo informar uma observação sobre o animal (ver fluxos alternativos).
+4. O usuário registra a etapa, conforme o tipo de manejo (`RF-MANEJO-06` a `RF-MANEJO-11`), podendo informar uma observação sobre o animal (ver fluxos alternativos).
 5. O sistema registra a etapa. Se houver uma próxima etapa, o fluxo retorna ao passo 3.
 6. Ao concluir a última etapa, o animal passa à situação "completo", e o sistema exibe a mensagem: _"Registro do animal concluído."_
 7. O fluxo continua em `RF-MANEJO-04`.
@@ -665,11 +666,82 @@ Permite registrar a etapa em que se define para qual lote o animal vai ao sair d
 
 </div>
 
-## 2.11 - `RF-MANEJO-11`: Consolidar Sessão
+## 2.11 - `RF-MANEJO-11`: Manejo de Ferra
 
 <div style="border:1px solid #ccc; padding:16px; border-radius:8px;">
 
 ### 2.11.1 - Descrição
+
+Permite registrar a etapa em que o animal é marcado a ferro com uma marca cadastrada (`MOD-MARCAS`).
+
+|                       |                                                                                                                                                        |
+| :-------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **User Story**        | Como **Administrador**, **Gerente** ou **Funcionário**, quero **ferrar os animais na sessão** para identificar a quem cada animal do rebanho pertence. |
+| **Dependências**      | `RF-MANEJO-05`, `RF-MARCA-02`                                                                                                                          |
+| **Regras Vinculadas** | `RN-MANEJO-12`, `RN-MARCA-03`                                                                                                                          |
+| **Atores**            | Administrador, Gerente, Funcionário                                                                                                                    |
+| **Plataformas**       | Web                                                                                                                                                    |
+| **Versão**            | 1                                                                                                                                                      |
+| **Especificação**     | 📝 Rascunho                                                                                                                                            |
+
+### 2.11.2 - Critérios de Aceitação
+
+**No planejamento**
+
+- [ ] Pode ser indicada a marca prevista, entre as marcas ativas, para agilizar o registro.
+- [ ] A marca prevista deve ser apresentada com a sua imagem, o seu `Nome` e o seu `Titular`.
+- [ ] Deve ser possível cadastrar uma nova marca a partir da escolha da marca prevista, sem sair do planejamento (`RF-MARCA-02`); a marca cadastrada passa a ser a prevista.
+
+**No registro**
+
+- [ ] Exibir a marca atual do animal, com a sua imagem, ou indicar que o animal não tem marca.
+- [ ] A marca é obrigatória e deve ser escolhida entre as marcas ativas (`RN-MANEJO-12`, `RN-MARCA-03`), apresentadas com a imagem, o `Nome` e o `Titular`.
+- [ ] A marca prevista no planejamento vem pré-selecionada, se ainda estiver ativa, e pode ser trocada por outra.
+- [ ] Alertar, sem impedir o registro, quando a marca escolhida for a marca atual do animal (`RN-MANEJO-12`).
+
+**Na consolidação**
+
+- [ ] A ferra entra no histórico de marcações do animal e a marca aplicada passa a ser a sua marca atual (`RN-MANEJO-12`).
+
+### 2.11.3 - Fluxos
+
+**Fluxo principal**
+
+1. O fluxo começa quando a etapa de ferra é apresentada no registro do animal (`RF-MANEJO-05`).
+2. O sistema exibe a marca atual do animal e a marca prevista no planejamento já selecionada, se houver e se ainda estiver ativa.
+3. O usuário mantém a marca selecionada ou escolhe outra, entre as marcas ativas.
+4. O sistema valida os dados (`RN-MANEJO-12`) e registra a ferra na sessão.
+5. O fluxo continua em `RF-MANEJO-05`.
+
+**Fluxos alternativos**
+
+- **A1 – Animal sem marca (passo 2):**
+  1. O animal ainda não tem marca.
+  2. O sistema exibe a mensagem: _"Animal sem marca."_
+  3. O fluxo continua no passo 3.
+
+- **A2 – Marca igual à atual (passo 3):**
+  1. A marca escolhida é a marca atual do animal (`RN-MANEJO-12`).
+  2. O sistema exibe o alerta: _"O animal já tem esta marca."_, sem impedir o registro.
+  3. O fluxo continua no passo 4.
+
+- **A3 – Ferra sem marca (passo 4):**
+  1. A marca não foi escolhida (`RN-MANEJO-12`).
+  2. O sistema impede o registro e exibe a mensagem: _"Informe a marca."_
+  3. O fluxo retorna ao passo 3.
+
+- **A4 – Animal já registrado (passo 2):**
+  1. A ferra já foi registrada neste animal na sessão.
+  2. O sistema exibe a marca registrada, em vez da prevista.
+  3. O fluxo continua no passo 3.
+
+</div>
+
+## 2.12 - `RF-MANEJO-12`: Consolidar Sessão
+
+<div style="border:1px solid #ccc; padding:16px; border-radius:8px;">
+
+### 2.12.1 - Descrição
 
 Permite encerrar a execução de uma sessão, fazendo os seus registros passarem a valer no histórico dos animais.
 
@@ -683,14 +755,14 @@ Permite encerrar a execução de uma sessão, fazendo os seus registros passarem
 | **Versão**            | 1                                                                                                                                                        |
 | **Especificação**     | 📌 Definida                                                                                                                                              |
 
-### 2.11.2 - Critérios de Aceitação
+### 2.12.2 - Critérios de Aceitação
 
 - [ ] Somente sessões em andamento podem ser consolidadas.
 - [ ] A consolidação exige confirmação do usuário, informando que a sessão não poderá mais ser alterada e, se houver, quantos animais não foram manejados e serão removidos da sessão (`RN-MANEJO-05`).
 - [ ] A consolidação deve ser impedida se: nenhum animal tiver sido manejado; a `Data do Manejo` for futura; algum animal manejado não estiver mais ativo na propriedade; houver compromisso conflitante com outra operação aberta (`RN-MANEJO-04`); ou um brinco (ou RFID) registrado estiver em uso por outro animal (`RN-MANEJO-08`).
-- [ ] Na consolidação, os registros passam a valer com a `Data do Manejo` (ou com o horário da consolidação, se o manejo for de hoje), e cada manejo produz o seu efeito nos animais, conforme `RF-MANEJO-06` a `RF-MANEJO-10`.
+- [ ] Na consolidação, os registros passam a valer com a `Data do Manejo` (ou com o horário da consolidação, se o manejo for de hoje), e cada manejo produz o seu efeito nos animais, conforme `RF-MANEJO-06` a `RF-MANEJO-11`.
 
-### 2.11.3 - Fluxos
+### 2.12.3 - Fluxos
 
 **Fluxo principal**
 
@@ -698,7 +770,7 @@ Permite encerrar a execução de uma sessão, fazendo os seus registros passarem
 2. O sistema solicita a confirmação, informando que a sessão não poderá mais ser alterada e, se houver, quantos animais não foram manejados e serão removidos da sessão (`RN-MANEJO-05`).
 3. O usuário confirma a consolidação.
 4. O sistema verifica que a consolidação não tem impedimentos (`RN-MANEJO-01`, `RN-MANEJO-04`, `RN-MANEJO-05`, `RN-MANEJO-08`).
-5. O sistema altera a situação da sessão para `Consolidada`, remove os animais não manejados e aplica os registros nos animais com a `Data do Manejo` (ou com o horário da consolidação, se o manejo for de hoje), cada manejo produzindo o seu efeito conforme `RF-MANEJO-06` a `RF-MANEJO-10`.
+5. O sistema altera a situação da sessão para `Consolidada`, remove os animais não manejados e aplica os registros nos animais com a `Data do Manejo` (ou com o horário da consolidação, se o manejo for de hoje), cada manejo produzindo o seu efeito conforme `RF-MANEJO-06` a `RF-MANEJO-11`.
 6. O fluxo termina.
 
 **Fluxos alternativos**
@@ -725,11 +797,11 @@ Permite encerrar a execução de uma sessão, fazendo os seus registros passarem
 
 </div>
 
-## 2.12 - `RF-MANEJO-12`: Cancelar Sessão
+## 2.13 - `RF-MANEJO-13`: Cancelar Sessão
 
 <div style="border:1px solid #ccc; padding:16px; border-radius:8px;">
 
-### 2.12.1 - Descrição
+### 2.13.1 - Descrição
 
 Permite cancelar uma sessão que não será concluída. Os registros feitos nela ficam guardados, mas nenhum passa a valer.
 
@@ -743,14 +815,14 @@ Permite cancelar uma sessão que não será concluída. Os registros feitos nela
 | **Versão**            | 1                                                                                                                                    |
 | **Especificação**     | 📌 Definida                                                                                                                          |
 
-### 2.12.2 - Critérios de Aceitação
+### 2.13.2 - Critérios de Aceitação
 
 - [ ] Somente sessões planejadas ou em andamento podem ser canceladas.
 - [ ] O cancelamento exige confirmação do usuário, informando que nenhum registro da sessão passará a valer.
 - [ ] Uma sessão cancelada continua disponível para consulta, com os seus registros.
 - [ ] O cancelamento libera os animais dos compromissos da sessão (`RN-ANIMAL-10`).
 
-### 2.12.3 - Fluxos
+### 2.13.3 - Fluxos
 
 **Fluxo principal**
 
