@@ -321,7 +321,6 @@ model Brand {
   suggestedIn       BrandManagement[] @relation("BrandSuggestedBrand")
   animals           Animal[]          @relation("AnimalCurrentBrand")
 
-  @@unique([registrationNumber, registrationState, registrationCity])
   @@index([ownerId])
   @@map("brand")
 }
