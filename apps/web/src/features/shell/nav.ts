@@ -1,13 +1,17 @@
 import {
   ArrowLeftRight,
+  Beef,
   Boxes,
   ClipboardList,
   Dna,
   Fence,
+  HandCoins,
+  HeartCrack,
   LayoutDashboard,
   Map,
   Scissors,
   ShoppingCart,
+  Stamp,
   Syringe,
   Truck,
   UserCog,
@@ -34,6 +38,8 @@ export const NAV = [
         label: "Transferências",
         icon: ArrowLeftRight,
       },
+      { href: "/perdas", label: "Perdas", icon: HeartCrack },
+      { href: "/abates", label: "Abates", icon: Beef },
     ],
   },
   {
@@ -49,7 +55,10 @@ export const NAV = [
   },
   {
     label: "Comercial",
-    items: [{ href: "/compras", label: "Compras", icon: ShoppingCart }],
+    items: [
+      { href: "/compras", label: "Compras", icon: ShoppingCart },
+      { href: "/vendas", label: "Vendas", icon: HandCoins },
+    ],
   },
   {
     label: "Cadastros",
@@ -66,6 +75,7 @@ export const NAV = [
         label: "Técnicas de castração",
         icon: Scissors,
       },
+      { href: "/marcas", label: "Marcas", icon: Stamp },
     ],
   },
   {

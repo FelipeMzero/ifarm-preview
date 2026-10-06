@@ -6,18 +6,18 @@ Este documento reúne estruturas de dados reutilizadas por mais de um módulo do
 
 Endereços para propriedades, compradores, fornecedores ou qualquer outra entidade que precise de localização. Os campos previstos para endereços são:
 
-| Campo         | Tipo  | Descrição                                                                                    |
-| ------------- | ----- | -------------------------------------------------------------------------------------------- |
-| `CEP*`        | Texto | CEP, no formato 99999-999                                                                    |
-| `Logradouro*` | Texto | Nome da rua, avenida, rodovia ou estrada de acesso. Até 150 caracteres                       |
-| `Número`      | Texto | Número do imóvel ou ponto de referência na via, quando houver. Até 15 caracteres             |
-| `Complemento` | Texto | Informação adicional para localização, como "Km 15" ou "Próximo à ponte". Até 100 caracteres |
-| `Bairro`      | Texto | Bairro ou zona rural. Até 100 caracteres                                                     |
-| `Município*`  | Texto | Município. Até 60 caracteres                                                                 |
-| `UF*`         | Texto | Unidade Federativa (estado), sigla de 2 letras, por exemplo MT                               |
-| `País`        | Texto | País. Sempre Brasil                                                                          |
+| Campo         | Descrição                                                                | Tipo  | Obrig. | Restrições                        |
+| ------------- | ------------------------------------------------------------------------ | ----- | ------ | --------------------------------- |
+| `CEP`         | Código de Endereçamento Postal                                           | Texto | Sim    | Formato 99999-999                 |
+| `Logradouro`  | Nome da rua, avenida, rodovia ou estrada de acesso                       | Texto | Sim    | Até 150 caracteres                |
+| `Número`      | Número do imóvel ou ponto de referência na via, quando houver            | Texto | Não    | Até 15 caracteres                 |
+| `Complemento` | Informação adicional para localização, como "Km 15" ou "Próximo à ponte" | Texto | Não    | Até 100 caracteres                |
+| `Bairro`      | Bairro ou zona rural                                                     | Texto | Não    | Até 100 caracteres                |
+| `Município`   | Município                                                                | Texto | Sim    | Até 60 caracteres                 |
+| `UF`          | Unidade Federativa (estado)                                              | Texto | Sim    | Sigla de 2 letras, por exemplo MT |
+| `País`        | País                                                                     | Texto | Não    | Sempre Brasil                     |
 
-O endereço é opcional para as entidades que o possuem. Quando informado, os campos marcados com `*` são obrigatórios.
+O endereço é opcional para as entidades que o possuem. Quando informado, os campos marcados como obrigatórios devem ser preenchidos.
 
 Ao ser informado um CEP válido, o sistema deve consultar o serviço ViaCEP e preencher automaticamente `Logradouro`, `Bairro`, `Município` e `UF`. Se o CEP não for encontrado, deve exibir a mensagem: _"CEP não encontrado."_.
 
