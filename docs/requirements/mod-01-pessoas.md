@@ -51,7 +51,7 @@ Permite consultar as pessoas físicas e jurídicas cadastradas, com busca, filtr
 | **Atores**            | Administrador, Gerente                                                                                                                                                                  |
 | **Plataformas**       | Web                                                                                                                                                                                     |
 | **Versão**            | 1                                                                                                                                                                                       |
-| **Status**            | ✅ Aprovado                                                                                                                                                                             |
+| **Especificação**     | 📌 Definida                                                                                                                                                                             |
 
 ### 2.1.2 - Critérios de Aceitação
 
@@ -114,7 +114,7 @@ Permite cadastrar pessoas físicas ou jurídicas, registrando novos agentes que 
 | **Atores**            | Administrador, Gerente                                                                                                                                                                                              |
 | **Plataformas**       | Web                                                                                                                                                                                                                 |
 | **Versão**            | 1                                                                                                                                                                                                                   |
-| **Status**            | ✅ Aprovado                                                                                                                                                                                                         |
+| **Especificação**     | 📌 Definida                                                                                                                                                                                                         |
 
 ### 2.2.2 - Critérios de Aceitação
 
@@ -205,7 +205,7 @@ Permite editar os dados cadastrais de uma pessoa física ou jurídica já regist
 | **Atores**            | Administrador, Gerente                                                                                                                                        |
 | **Plataformas**       | Web                                                                                                                                                           |
 | **Versão**            | 1                                                                                                                                                             |
-| **Status**            | ✅ Aprovado                                                                                                                                                   |
+| **Especificação**     | 📌 Definida                                                                                                                                                   |
 
 ### 2.3.2 - Critérios de Aceitação
 
@@ -268,7 +268,7 @@ Permite consultar as informações detalhadas de uma pessoa: dados cadastrais e 
 | **Atores**            | Administrador, Gerente                                                                                                                                       |
 | **Plataformas**       | Web                                                                                                                                                          |
 | **Versão**            | 1                                                                                                                                                            |
-| **Status**            | 📝 Rascunho                                                                                                                                                  |
+| **Especificação**     | 📝 Rascunho                                                                                                                                                  |
 
 ### 2.4.2 - Critérios de Aceitação
 
@@ -316,7 +316,7 @@ Permite excluir uma pessoa física ou jurídica, desde que ela não tenha qualqu
 | **Atores**            | Administrador, Gerente                                                                                                                |
 | **Plataformas**       | Web                                                                                                                                   |
 | **Versão**            | 1                                                                                                                                     |
-| **Status**            | 📝 Rascunho                                                                                                                           |
+| **Especificação**     | 📝 Rascunho                                                                                                                           |
 
 ### 2.5.2 - Critérios de Aceitação
 
@@ -363,7 +363,7 @@ Permite ativar/desativar uma pessoa física ou jurídica, marcando como inativos
 | **Atores**            | Administrador, Gerente                                                                                                                                                                                      |
 | **Plataformas**       | Web                                                                                                                                                                                                         |
 | **Versão**            | 1                                                                                                                                                                                                           |
-| **Status**            | ✅ Aprovado                                                                                                                                                                                                 |
+| **Especificação**     | 📌 Definida                                                                                                                                                                                                 |
 
 ### 2.6.2 - Critérios de Aceitação
 

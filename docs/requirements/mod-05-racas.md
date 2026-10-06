@@ -19,7 +19,7 @@ Não há regras de negócio específicas deste módulo.
 
 # 2 - Requisitos Funcionais (RF)
 
-## ✅ 2.1 - `RF-RACA-01`: Gerenciar Raças
+## 2.1 - `RF-RACA-01`: Gerenciar Raças
 
 <div style="border:1px solid #ccc; padding:16px; border-radius:8px;">
 
@@ -35,7 +35,7 @@ Permite listar, criar, editar, ativar/desativar e excluir, em uma tela única, a
 | **Atores**            | Administrador, Gerente                                                                                                                          |
 | **Plataformas**       | Web                                                                                                                                             |
 | **Versão**            | 1                                                                                                                                               |
-| **Status**            | ✅ Aprovado                                                                                                                                     |
+| **Especificação**     | 📌 Definida                                                                                                                                     |
 
 ### 2.1.2 - Critérios de Aceitação
 

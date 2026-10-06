@@ -59,7 +59,7 @@ Permite consultar os lotes da propriedade selecionada, com busca, filtro e acess
 | **Atores**            | Administrador, Gerente, Funcionário                                                                                                                                                    |
 | **Plataformas**       | Web                                                                                                                                                                                    |
 | **Versão**            | 1                                                                                                                                                                                      |
-| **Status**            | ✅ Aprovado                                                                                                                                                                            |
+| **Especificação**     | 📌 Definida                                                                                                                                                                            |
 
 ### 2.1.2 - Critérios de Aceitação
 
@@ -124,7 +124,7 @@ Permite cadastrar lotes, definindo a área de pastagem que cada lote passa a ocu
 | **Atores**            | Administrador, Gerente, Funcionário                                                                                                                                        |
 | **Plataformas**       | Web                                                                                                                                                                        |
 | **Versão**            | 1                                                                                                                                                                          |
-| **Status**            | ✅ Aprovado                                                                                                                                                                |
+| **Especificação**     | 📌 Definida                                                                                                                                                                |
 
 ### 2.2.2 - Critérios de Aceitação
 
@@ -186,7 +186,7 @@ Permite editar os dados de um lote. Diferentemente da criação, a área não é
 | **Atores**            | Administrador, Gerente, Funcionário                                                                                                                                         |
 | **Plataformas**       | Web                                                                                                                                                                         |
 | **Versão**            | 1                                                                                                                                                                           |
-| **Status**            | ✅ Aprovado                                                                                                                                                                 |
+| **Especificação**     | 📌 Definida                                                                                                                                                                 |
 
 ### 2.3.2 - Critérios de Aceitação
 
@@ -242,7 +242,7 @@ Permite trocar a área de um lote, acionada durante a edição do lote.
 | **Atores**            | Administrador, Gerente, Funcionário                                                                                                                                               |
 | **Plataformas**       | Web                                                                                                                                                                               |
 | **Versão**            | 1                                                                                                                                                                                 |
-| **Status**            | ✅ Aprovado                                                                                                                                                                       |
+| **Especificação**     | 📌 Definida                                                                                                                                                                       |
 
 ### 2.4.2 - Critérios de Aceitação
 
@@ -294,7 +294,7 @@ Permite consultar as informações detalhadas de um lote: dados cadastrais, indi
 | **Atores**            | Administrador, Gerente, Funcionário                                                                                                                                             |
 | **Plataformas**       | Web                                                                                                                                                                             |
 | **Versão**            | 1                                                                                                                                                                               |
-| **Status**            | 📝 Rascunho                                                                                                                                                                     |
+| **Especificação**     | 📝 Rascunho                                                                                                                                                                     |
 
 ### 2.5.2 - Critérios de Aceitação
 
@@ -378,7 +378,7 @@ Permite excluir um lote cadastrado por engano. Um lote que já cumpriu sua funç
 | **Atores**            | Administrador, Gerente, Funcionário                                                                                                                   |
 | **Plataformas**       | Web                                                                                                                                                   |
 | **Versão**            | 1                                                                                                                                                     |
-| **Status**            | 📝 Rascunho                                                                                                                                           |
+| **Especificação**     | 📝 Rascunho                                                                                                                                           |
 
 ### 2.6.2 - Critérios de Aceitação
 
@@ -426,7 +426,7 @@ Permite encerrar um lote depois de ele ter cumprido seu objetivo. Isso mantém o
 | **Atores**            | Administrador, Gerente, Funcionário                                                                                                                                       |
 | **Plataformas**       | Web                                                                                                                                                                       |
 | **Versão**            | 1                                                                                                                                                                         |
-| **Status**            | ✅ Aprovado                                                                                                                                                               |
+| **Especificação**     | 📌 Definida                                                                                                                                                               |
 
 ### 2.7.2 - Critérios de Aceitação
 
@@ -482,7 +482,7 @@ Permite reativar um lote encerrado, por exemplo quando ele foi encerrado por eng
 | **Atores**            | Administrador, Gerente, Funcionário                                                                                                                  |
 | **Plataformas**       | Web                                                                                                                                                  |
 | **Versão**            | 1                                                                                                                                                    |
-| **Status**            | ✅ Aprovado                                                                                                                                          |
+| **Especificação**     | 📌 Definida                                                                                                                                          |
 
 ### 2.8.2 - Critérios de Aceitação
 
@@ -528,6 +528,6 @@ Permite criar um grupo de animais diretamente no lote: em vez de serem cadastrad
 |            |             |
 | :--------- | :---------- |
 | **Versão** | 1           |
-| **Status** | 📝 Rascunho |
+| **Especificação** | 📝 Rascunho |
 
 </div>

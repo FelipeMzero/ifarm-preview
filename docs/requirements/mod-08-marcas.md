@@ -46,7 +46,7 @@ Permite consultar as marcas cadastradas, com busca, filtro e acesso às ações 
 | **Atores**            | Administrador, Gerente                                                                                                                                                                 |
 | **Plataformas**       | Web                                                                                                                                                                                    |
 | **Versão**            | 1                                                                                                                                                                                      |
-| **Status**            | ✅ Aprovado                                                                                                                                                                            |
+| **Especificação**     | 📌 Definida                                                                                                                                                                            |
 
 ### 2.1.2 - Critérios de Aceitação
 
@@ -109,7 +109,7 @@ Permite cadastrar as marcas de ferro dos titulares, para que possam ser aplicada
 | **Atores**            | Administrador, Gerente                                                                                                               |
 | **Plataformas**       | Web                                                                                                                                  |
 | **Versão**            | 1                                                                                                                                    |
-| **Status**            | ✅ Aprovado                                                                                                                          |
+| **Especificação**     | 📌 Definida                                                                                                                          |
 
 ### 2.2.2 - Critérios de Aceitação
 
@@ -192,7 +192,7 @@ Permite editar os dados cadastrais de uma marca já registrada.
 | **Atores**            | Administrador, Gerente                                                                                                                                       |
 | **Plataformas**       | Web                                                                                                                                                          |
 | **Versão**            | 1                                                                                                                                                            |
-| **Status**            | ✅ Aprovado                                                                                                                                                  |
+| **Especificação**     | 📌 Definida                                                                                                                                                  |
 
 ### 2.3.2 - Critérios de Aceitação
 
@@ -261,7 +261,7 @@ Permite consultar as informações detalhadas de uma marca: dados cadastrais, im
 | **Atores**            | Administrador, Gerente                                                                                                                               |
 | **Plataformas**       | Web                                                                                                                                                  |
 | **Versão**            | 1                                                                                                                                                    |
-| **Status**            | 📝 Rascunho                                                                                                                                          |
+| **Especificação**     | 📝 Rascunho                                                                                                                                          |
 
 ### 2.4.2 - Critérios de Aceitação
 
@@ -308,7 +308,7 @@ Permite excluir uma marca, desde que ela não tenha qualquer outro registro vinc
 | **Atores**            | Administrador, Gerente                                                                                                                      |
 | **Plataformas**       | Web                                                                                                                                         |
 | **Versão**            | 1                                                                                                                                           |
-| **Status**            | 📝 Rascunho                                                                                                                                 |
+| **Especificação**     | 📝 Rascunho                                                                                                                                 |
 
 ### 2.5.2 - Critérios de Aceitação
 
@@ -355,7 +355,7 @@ Permite ativar/desativar uma marca, retirando de uso as marcas que não são mai
 | **Atores**            | Administrador, Gerente                                                                                                                                                                                |
 | **Plataformas**       | Web                                                                                                                                                                                                   |
 | **Versão**            | 1                                                                                                                                                                                                     |
-| **Status**            | ✅ Aprovado                                                                                                                                                                                           |
+| **Especificação**     | 📌 Definida                                                                                                                                                                                           |
 
 ### 2.6.2 - Critérios de Aceitação
 

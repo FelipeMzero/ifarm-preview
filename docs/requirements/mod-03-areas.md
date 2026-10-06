@@ -55,7 +55,7 @@ Permite consultar as áreas de pastagem da propriedade selecionada, desenhadas s
 | **Atores**            | Administrador, Gerente, Funcionário                                                                                                                                                                                                                                                    |
 | **Plataformas**       | Web                                                                                                                                                                                                                                                                                    |
 | **Versão**            | 1                                                                                                                                                                                                                                                                                      |
-| **Status**            | ✅ Aprovado                                                                                                                                                                                                                                                                            |
+| **Especificação**     | 📌 Definida                                                                                                                                                                                                                                                                            |
 
 ### 2.1.2 - Critérios de Aceitação
 
@@ -140,7 +140,7 @@ Permite cadastrar áreas de pastagem, desenhando o contorno da área sobre o map
 | **Atores**            | Administrador, Gerente, Funcionário                                                                                                                                                   |
 | **Plataformas**       | Web                                                                                                                                                                                   |
 | **Versão**            | 1                                                                                                                                                                                     |
-| **Status**            | ✅ Aprovado                                                                                                                                                                           |
+| **Especificação**     | 📌 Definida                                                                                                                                                                           |
 
 ### 2.2.2 - Critérios de Aceitação
 
@@ -205,7 +205,7 @@ Permite editar os dados de uma área de pastagem já cadastrada, incluindo o aju
 | **Atores**            | Administrador, Gerente, Funcionário                                                                                                                                                      |
 | **Plataformas**       | Web                                                                                                                                                                                      |
 | **Versão**            | 1                                                                                                                                                                                        |
-| **Status**            | ✅ Aprovado                                                                                                                                                                              |
+| **Especificação**     | 📌 Definida                                                                                                                                                                              |
 
 ### 2.3.2 - Critérios de Aceitação
 
@@ -266,7 +266,7 @@ Permite consultar as informações detalhadas de uma área de pastagem: dados ca
 | **Atores**            | Administrador, Gerente, Funcionário                                                                                                                                                                              |
 | **Plataformas**       | Web                                                                                                                                                                                                              |
 | **Versão**            | 1                                                                                                                                                                                                                |
-| **Status**            | 📝 Rascunho                                                                                                                                                                                                      |
+| **Especificação**     | 📝 Rascunho                                                                                                                                                                                                      |
 
 ### 2.4.2 - Critérios de Aceitação
 
@@ -318,7 +318,7 @@ Permite excluir uma área de pastagem, desde que ela não tenha qualquer outro r
 | **Atores**            | Administrador, Gerente, Funcionário                                                                                                                  |
 | **Plataformas**       | Web                                                                                                                                                  |
 | **Versão**            | 1                                                                                                                                                    |
-| **Status**            | 📝 Rascunho                                                                                                                                          |
+| **Especificação**     | 📝 Rascunho                                                                                                                                          |
 
 ### 2.5.2 - Critérios de Aceitação
 
@@ -365,7 +365,7 @@ Permite ativar/desativar uma área de pastagem, retirando de uso as áreas que n
 | **Atores**            | Administrador, Gerente, Funcionário                                                                                                                                                                                                                 |
 | **Plataformas**       | Web                                                                                                                                                                                                                                                 |
 | **Versão**            | 1                                                                                                                                                                                                                                                   |
-| **Status**            | ✅ Aprovado                                                                                                                                                                                                                                         |
+| **Especificação**     | 📌 Definida                                                                                                                                                                                                                                         |
 
 ### 2.6.2 - Critérios de Aceitação
 

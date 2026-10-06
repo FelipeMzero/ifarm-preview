@@ -35,7 +35,7 @@ Permite listar, criar, editar, ativar/desativar e excluir, em uma tela única, o
 | **Atores**            | Administrador, Gerente                                                                                                                                                               |
 | **Plataformas**       | Web                                                                                                                                                                                  |
 | **Versão**            | 1                                                                                                                                                                                    |
-| **Status**            | ✅ Aprovado                                                                                                                                                                          |
+| **Especificação**     | 📌 Definida                                                                                                                                                                          |
 
 ### 2.1.2 - Critérios de Aceitação
 

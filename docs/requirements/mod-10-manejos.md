@@ -53,7 +53,7 @@ Permite consultar as sessões de manejo da propriedade selecionada, com busca, f
 | **Atores**            | Administrador, Gerente, Funcionário                                                                                                                               |
 | **Plataformas**       | Web                                                                                                                                                               |
 | **Versão**            | 1                                                                                                                                                                 |
-| **Status**            | ✅ Aprovado                                                                                                                                                       |
+| **Especificação**     | 📌 Definida                                                                                                                                                       |
 
 ### 2.1.2 - Critérios de Aceitação
 
@@ -120,7 +120,7 @@ Permite criar e alterar o planejamento de uma sessão: data prevista, manejos a 
 | **Atores**            | Administrador, Gerente, Funcionário                                                                                                                  |
 | **Plataformas**       | Web                                                                                                                                                  |
 | **Versão**            | 1                                                                                                                                                    |
-| **Status**            | ✅ Aprovado                                                                                                                                          |
+| **Especificação**     | 📌 Definida                                                                                                                                          |
 
 ### 2.2.2 - Critérios de Aceitação
 
@@ -206,7 +206,7 @@ Permite iniciar a execução de uma sessão planejada, definindo a data em que o
 | **Atores**            | Administrador, Gerente, Funcionário                                                                                                              |
 | **Plataformas**       | Web                                                                                                                                              |
 | **Versão**            | 1                                                                                                                                                |
-| **Status**            | ✅ Aprovado                                                                                                                                      |
+| **Especificação**     | 📌 Definida                                                                                                                                      |
 
 ### 2.3.2 - Critérios de Aceitação
 
@@ -252,7 +252,7 @@ Permite acompanhar a execução de uma sessão em andamento: localizar o próxim
 | **Atores**            | Administrador, Gerente, Funcionário                                                                                                                                     |
 | **Plataformas**       | Web                                                                                                                                                                     |
 | **Versão**            | 1                                                                                                                                                                       |
-| **Status**            | ✅ Aprovado                                                                                                                                                             |
+| **Especificação**     | 📌 Definida                                                                                                                                                             |
 
 ### 2.4.2 - Critérios de Aceitação
 
@@ -319,7 +319,7 @@ Permite registrar, em um animal, as etapas da sessão, na ordem planejada, enqua
 | **Atores**            | Administrador, Gerente, Funcionário                                                                                                                              |
 | **Plataformas**       | Web                                                                                                                                                              |
 | **Versão**            | 1                                                                                                                                                                |
-| **Status**            | ✅ Aprovado                                                                                                                                                      |
+| **Especificação**     | 📌 Definida                                                                                                                                                      |
 
 ### 2.5.2 - Critérios de Aceitação
 
@@ -384,7 +384,7 @@ Permite registrar a etapa em que o animal é pesado individualmente.
 | **Atores**            | Administrador, Gerente, Funcionário                                                                                                      |
 | **Plataformas**       | Web                                                                                                                                      |
 | **Versão**            | 1                                                                                                                                        |
-| **Status**            | ✅ Aprovado                                                                                                                              |
+| **Especificação**     | 📌 Definida                                                                                                                              |
 
 ### 2.6.2 - Critérios de Aceitação
 
@@ -437,7 +437,7 @@ Permite registrar a etapa em que o animal é castrado.
 | **Atores**            | Administrador, Gerente, Funcionário                                                                                                                             |
 | **Plataformas**       | Web                                                                                                                                                             |
 | **Versão**            | 1                                                                                                                                                               |
-| **Status**            | ✅ Aprovado                                                                                                                                                     |
+| **Especificação**     | 📌 Definida                                                                                                                                                     |
 
 ### 2.7.2 - Critérios de Aceitação
 
@@ -500,7 +500,7 @@ Permite registrar as etapas em que o animal recebe um brinco ou um RFID, novo ou
 | **Atores**            | Administrador, Gerente, Funcionário                                                                                                                       |
 | **Plataformas**       | Web                                                                                                                                                       |
 | **Versão**            | 1                                                                                                                                                         |
-| **Status**            | ✅ Aprovado                                                                                                                                               |
+| **Especificação**     | 📌 Definida                                                                                                                                               |
 
 ### 2.8.2 - Critérios de Aceitação
 
@@ -577,7 +577,7 @@ Permite registrar a etapa em que o animal recebe um procedimento sanitário (vac
 | **Atores**            | Administrador, Gerente, Funcionário                                                                                                                                                                   |
 | **Plataformas**       | Web                                                                                                                                                                                                   |
 | **Versão**            | 1                                                                                                                                                                                                     |
-| **Status**            | ✅ Aprovado                                                                                                                                                                                           |
+| **Especificação**     | 📌 Definida                                                                                                                                                                                           |
 
 ### 2.9.2 - Critérios de Aceitação
 
@@ -636,7 +636,7 @@ Permite registrar a etapa em que se define para qual lote o animal vai ao sair d
 | **Atores**            | Administrador, Gerente, Funcionário                                                                                                                                             |
 | **Plataformas**       | Web                                                                                                                                                                             |
 | **Versão**            | 1                                                                                                                                                                               |
-| **Status**            | ✅ Aprovado                                                                                                                                                                     |
+| **Especificação**     | 📌 Definida                                                                                                                                                                     |
 
 ### 2.10.2 - Critérios de Aceitação
 
@@ -681,7 +681,7 @@ Permite encerrar a execução de uma sessão, fazendo os seus registros passarem
 | **Atores**            | Administrador, Gerente, Funcionário                                                                                                                      |
 | **Plataformas**       | Web                                                                                                                                                      |
 | **Versão**            | 1                                                                                                                                                        |
-| **Status**            | ✅ Aprovado                                                                                                                                              |
+| **Especificação**     | 📌 Definida                                                                                                                                              |
 
 ### 2.11.2 - Critérios de Aceitação
 
@@ -741,7 +741,7 @@ Permite cancelar uma sessão que não será concluída. Os registros feitos nela
 | **Atores**            | Administrador, Gerente, Funcionário                                                                                                  |
 | **Plataformas**       | Web                                                                                                                                  |
 | **Versão**            | 1                                                                                                                                    |
-| **Status**            | ✅ Aprovado                                                                                                                          |
+| **Especificação**     | 📌 Definida                                                                                                                          |
 
 ### 2.12.2 - Critérios de Aceitação
 

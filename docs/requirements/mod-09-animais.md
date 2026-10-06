@@ -63,7 +63,7 @@ Permite consultar os animais da propriedade selecionada, com busca, filtros e ac
 | **Atores**            | Administrador, Gerente                                                                                                                                                                   |
 | **Plataformas**       | Web                                                                                                                                                                                      |
 | **Versão**            | 1                                                                                                                                                                                        |
-| **Status**            | ✅ Aprovado                                                                                                                                                                              |
+| **Especificação**     | 📌 Definida                                                                                                                                                                              |
 
 ### 2.1.2 - Critérios de Aceitação
 
@@ -142,7 +142,7 @@ Permite cadastrar individualmente um animal na propriedade selecionada, já com 
 | **Atores**            | Administrador, Gerente                                                                                                                       |
 | **Plataformas**       | Web                                                                                                                                          |
 | **Versão**            | 1                                                                                                                                            |
-| **Status**            | ✅ Aprovado                                                                                                                                  |
+| **Especificação**     | 📌 Definida                                                                                                                                  |
 
 ### 2.2.2 - Critérios de Aceitação
 
@@ -226,7 +226,7 @@ Permite editar os dados cadastrais de um animal. Os dados que dependem de manejo
 | **Atores**            | Administrador, Gerente                                                                                               |
 | **Plataformas**       | Web                                                                                                                  |
 | **Versão**            | 1                                                                                                                    |
-| **Status**            | ✅ Aprovado                                                                                                          |
+| **Especificação**     | 📌 Definida                                                                                                          |
 
 ### 2.3.2 - Critérios de Aceitação
 
@@ -274,7 +274,7 @@ Permite mover um animal para outro lote da mesma propriedade, acionada durante a
 | **Atores**            | Administrador, Gerente                                                                                                                           |
 | **Plataformas**       | Web                                                                                                                                              |
 | **Versão**            | 1                                                                                                                                                |
-| **Status**            | ✅ Aprovado                                                                                                                                      |
+| **Especificação**     | 📌 Definida                                                                                                                                      |
 
 ### 2.4.2 - Critérios de Aceitação
 
@@ -327,7 +327,7 @@ Permite consultar o histórico de pesagens de um animal, registrar uma nova pesa
 | **Atores**            | Administrador, Gerente                                                                                                                                 |
 | **Plataformas**       | Web                                                                                                                                                    |
 | **Versão**            | 1                                                                                                                                                      |
-| **Status**            | ✅ Aprovado                                                                                                                                            |
+| **Especificação**     | 📌 Definida                                                                                                                                            |
 
 ### 2.5.2 - Critérios de Aceitação
 
@@ -397,7 +397,7 @@ Permite consultar o histórico de brincos e de RFID de um animal, registrar uma 
 | **Atores**            | Administrador, Gerente                                                                                                                                             |
 | **Plataformas**       | Web                                                                                                                                                                |
 | **Versão**            | 1                                                                                                                                                                  |
-| **Status**            | ✅ Aprovado                                                                                                                                                        |
+| **Especificação**     | 📌 Definida                                                                                                                                                        |
 
 ### 2.6.2 - Critérios de Aceitação
 
@@ -483,7 +483,7 @@ Permite consultar o histórico de castrações de um animal, registrar uma castr
 | **Atores**            | Administrador, Gerente                                                                                                                                 |
 | **Plataformas**       | Web                                                                                                                                                    |
 | **Versão**            | 1                                                                                                                                                      |
-| **Status**            | ✅ Aprovado                                                                                                                                            |
+| **Especificação**     | 📌 Definida                                                                                                                                            |
 
 ### 2.7.2 - Critérios de Aceitação
 
@@ -564,7 +564,7 @@ Permite consultar as informações detalhadas de um animal: dados cadastrais, in
 | **Atores**            | Administrador, Gerente                                                                                                                                 |
 | **Plataformas**       | Web                                                                                                                                                    |
 | **Versão**            | 1                                                                                                                                                      |
-| **Status**            | 📝 Rascunho                                                                                                                                            |
+| **Especificação**     | 📝 Rascunho                                                                                                                                            |
 
 ### 2.8.2 - Critérios de Aceitação
 
@@ -621,7 +621,7 @@ Permite desfazer o cadastro de um animal feito por engano (duplicado, com dados 
 | **Atores**            | Administrador, Gerente                                                                                                                  |
 | **Plataformas**       | Web                                                                                                                                     |
 | **Versão**            | 1                                                                                                                                       |
-| **Status**            | 📝 Rascunho                                                                                                                             |
+| **Especificação**     | 📝 Rascunho                                                                                                                             |
 
 ### 2.9.2 - Critérios de Aceitação
 
@@ -683,7 +683,7 @@ Permite registrar a saída de um animal do rebanho, por venda, doação, morte, 
 | **Atores**            | Administrador, Gerente                                                                                                                                |
 | **Plataformas**       | Web                                                                                                                                                   |
 | **Versão**            | 1                                                                                                                                                     |
-| **Status**            | 📝 Rascunho                                                                                                                                           |
+| **Especificação**     | 📝 Rascunho                                                                                                                                           |
 
 ### 2.10.2 - Critérios de Aceitação
 
