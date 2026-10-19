@@ -1,10 +1,16 @@
+import "server-only";
 import { z } from "zod";
-import { defineStep, StepError, stepNotesSchema, type Tx } from "./types";
+import {
+  defineStep,
+  StepError,
+  stepNotesSchema,
+  type Tx,
+} from "@/server/management-session/steps/types";
 import {
   INVALID_TECHNIQUE_MESSAGE,
   REQUIRED_TECHNIQUE_MESSAGE,
   isValidNeuteringTechnique,
-} from "../../animal/neuterings";
+} from "@/server/animal/neuterings";
 
 async function container(tx: Tx, sessionId: string) {
   return tx.neuteringManagement.findUnique({

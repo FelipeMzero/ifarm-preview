@@ -1,18 +1,21 @@
+import "server-only";
 import {
   unavailableAnimalsMessage,
   unavailableReason,
 } from "@/lib/animal-availability";
 import { Prisma } from "@/lib/prisma";
-import { animalLabel, summarize, transferStatus } from "./shared";
+import { BusinessError } from "@/server/errors";
+import {
+  animalLabel,
+  summarize,
+  transferStatus,
+} from "@/server/batch-transfer/shared";
 
 type Tx = Prisma.TransactionClient;
 
-export class ConfirmError extends Error {
-  constructor(
-    message: string,
-    public status = 409,
-  ) {
-    super(message);
+export class ConfirmError extends BusinessError {
+  constructor(message: string, status = 409) {
+    super(message, status);
   }
 }
 

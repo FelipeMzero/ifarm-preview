@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/api-auth";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
-import { findCommitments } from "../../commitments";
+import { findCommitments } from "@/server/animal/commitments";
 
 // Operações abertas que já contam com o animal, para as telas avisarem antes de
 // salvar (as regras de conflito ficam em lib/animal-commitments.ts).

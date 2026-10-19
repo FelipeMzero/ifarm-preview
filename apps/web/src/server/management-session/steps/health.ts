@@ -1,7 +1,12 @@
+import "server-only";
 import { z } from "zod";
 import { FIELD_LIMITS } from "@/lib/field-limits";
 import { HealthManagementDoseType } from "@/generated/prisma/enums";
-import { defineStep, StepError, stepNotesSchema } from "./types";
+import {
+  defineStep,
+  StepError,
+  stepNotesSchema,
+} from "@/server/management-session/steps/types";
 
 const optionalDate = z
   .string()

@@ -5,12 +5,13 @@ import { FIELD_LIMITS } from "@/lib/field-limits";
 import {
   effectiveRfidTagging,
   effectiveTagging,
-} from "../management-session/effective";
+} from "@/server/management-session/effective";
 import {
   assertNoConflicts,
   CommitmentError,
-  commitmentErrorResponse,
-} from "./commitments";
+} from "@/server/animal/commitments";
+import { errorResponse } from "@/app/api/http";
+import { BusinessError } from "@/server/errors";
 
 type Tx = Prisma.TransactionClient;
 
@@ -142,15 +143,7 @@ export function toIdentifierDto(r: IdentifierRecord) {
   };
 }
 
-class IdentifierError extends Error {
-  constructor(
-    message: string,
-    public status = 400,
-    public field?: string,
-  ) {
-    super(message);
-  }
-}
+class IdentifierError extends BusinessError {}
 
 // O identificador atual passa a ser o do registro válido mais recente (null = removido).
 async function recomputeCurrent(
@@ -191,24 +184,11 @@ async function recomputeCurrent(
   });
 }
 
-function errorResponse(error: unknown) {
-  if (error instanceof CommitmentError) {
-    return commitmentErrorResponse(error, null);
-  }
-  if (error instanceof IdentifierError) {
-    return NextResponse.json(
-      {
-        success: false,
-        message: error.message,
-        ...(error.field ? { errors: { [error.field]: error.message } } : {}),
-      },
-      { status: error.status },
-    );
-  }
-  console.error(error);
-  return NextResponse.json(
-    { success: false, message: "Ocorreu um erro interno no servidor." },
-    { status: 500 },
+// Conflito de compromisso aparece só como mensagem, sem campo do formulário.
+function identifierErrorResponse(error: unknown) {
+  return errorResponse(
+    error,
+    error instanceof CommitmentError ? { field: null } : {},
   );
 }
 
@@ -217,7 +197,7 @@ export async function listIdentifiers(kind: IdentifierKind, animalId: string) {
     const records = await ADAPTERS[kind].list(prisma, animalId);
     return NextResponse.json(records.map(toIdentifierDto));
   } catch (error) {
-    return errorResponse(error);
+    return identifierErrorResponse(error);
   }
 }
 
@@ -317,7 +297,7 @@ export async function correctIdentifier(
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    return errorResponse(error);
+    return identifierErrorResponse(error);
   }
 }
 
@@ -390,7 +370,7 @@ export async function addIdentifier(
 
     return NextResponse.json({ success: true }, { status: 201 });
   } catch (error) {
-    return errorResponse(error);
+    return identifierErrorResponse(error);
   }
 }
 
@@ -414,6 +394,6 @@ export async function cancelIdentifier(
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    return errorResponse(error);
+    return identifierErrorResponse(error);
   }
 }

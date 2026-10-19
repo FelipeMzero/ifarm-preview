@@ -2,9 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/api-auth";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
-import { sortWeighings, toWeighingDto } from "../../../animal/weighings";
+import { sortWeighings, toWeighingDto } from "@/server/animal/weighings";
 import { stockingPreview } from "@/server/stocking/queries";
-import { effectiveWeighing } from "../../../management-session/effective";
+import { effectiveWeighing } from "@/server/management-session/effective";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 // Janela usada no GMD de cada animal: reflete o ritmo recente, não a vida toda.

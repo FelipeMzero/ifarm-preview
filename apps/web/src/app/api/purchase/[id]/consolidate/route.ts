@@ -2,8 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/api-auth";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
-import { allocatePurchaseCosts } from "../../costs";
-import { errorResponse, PurchaseError } from "../../shared";
+import { allocatePurchaseCosts } from "@/server/purchase/costs";
+import { PurchaseError } from "@/server/purchase/shared";
+import { errorResponse } from "@/app/api/http";
 
 // Consolida a compra: fim do processo. Exige pagamento, ao menos um animal recebido e
 // nenhuma recepção em aberto. O custo de cada animal é rateado aqui, uma única vez; a

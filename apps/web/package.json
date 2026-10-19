@@ -8,10 +8,10 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
-    "check:commitments": "tsx scripts/commitment-conflicts.ts"
+    "check:commitments": "tsx --conditions=react-server scripts/commitment-conflicts.ts"
   },
   "prisma": {
-    "seed": "tsx prisma/seed.ts"
+    "seed": "tsx --conditions=react-server prisma/seed.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.6.0",

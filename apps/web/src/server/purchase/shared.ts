@@ -1,7 +1,6 @@
-import { NextResponse } from "next/server";
-import type { z } from "zod";
+import "server-only";
 import type { Prisma } from "@/lib/prisma";
-import { ReceptionError } from "./reception";
+import { BusinessError } from "@/server/errors";
 
 export type PurchaseStatus = "open" | "confirmed" | "cancelled";
 
@@ -16,15 +15,7 @@ export function purchaseStatus(e: {
   return "open";
 }
 
-export class PurchaseError extends Error {
-  constructor(
-    message: string,
-    public status = 400,
-    public field?: string,
-  ) {
-    super(message);
-  }
-}
+export class PurchaseError extends BusinessError {}
 
 // Arroba de peso vivo (rendimento de carcaça de ~50% sobre 15 kg).
 export const ARROBA_LIVE_KG = 30;
@@ -67,31 +58,4 @@ export function missingValue(c: CategoryPricing) {
     return "o peso faturado";
   }
   return null;
-}
-
-export function errorResponse(error: unknown) {
-  if (error instanceof PurchaseError || error instanceof ReceptionError) {
-    return NextResponse.json(
-      {
-        success: false,
-        message: error.message,
-        ...(error.field ? { errors: { [error.field]: error.message } } : {}),
-      },
-      { status: error.status },
-    );
-  }
-  console.error(error);
-  return NextResponse.json(
-    { success: false, message: "Ocorreu um erro interno no servidor." },
-    { status: 500 },
-  );
-}
-
-export function validationErrors(error: z.ZodError) {
-  const errors: Record<string, string> = {};
-  error.issues.forEach((issue) => {
-    const field = issue.path.join(".");
-    if (field && !errors[field]) errors[field] = issue.message;
-  });
-  return NextResponse.json({ success: false, errors }, { status: 400 });
 }

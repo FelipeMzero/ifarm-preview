@@ -1,6 +1,8 @@
+import "server-only";
 import { z } from "zod";
 import { Prisma } from "@/lib/prisma";
 import { FIELD_LIMITS } from "@/lib/field-limits";
+import { BusinessError } from "@/server/errors";
 
 type Tx = Prisma.TransactionClient;
 
@@ -9,15 +11,7 @@ type Tx = Prisma.TransactionClient;
 // rotas da sessão consultam este módulo para aplicar as regras de recepção (criar
 // animais no registro, não remover recebidos na consolidação).
 
-export class ReceptionError extends Error {
-  constructor(
-    message: string,
-    public status = 400,
-    public field?: string,
-  ) {
-    super(message);
-  }
-}
+export class ReceptionError extends BusinessError {}
 
 export const receptionInputSchema = z.object({
   purchaseEventId: z.uuid(),

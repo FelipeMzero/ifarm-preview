@@ -3,8 +3,8 @@ import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/api-auth";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
 import { weighingCorrectionApiSchema } from "../../../../schemas";
-import { recomputeCurrentWeight } from "../../../weighings";
-import { effectiveWeighing } from "../../../../management-session/effective";
+import { recomputeCurrentWeight } from "@/server/animal/weighings";
+import { effectiveWeighing } from "@/server/management-session/effective";
 
 type Params = { params: Promise<{ id: string; weighingId: string }> };
 

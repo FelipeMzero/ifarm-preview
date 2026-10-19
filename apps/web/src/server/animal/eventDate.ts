@@ -1,3 +1,4 @@
+import "server-only";
 import { prisma } from "@/lib/prisma";
 
 // Valida a data de um manejo avulso (pesagem, castração) e devolve o instante a gravar:

@@ -3,12 +3,11 @@ import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/api-auth";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
 import {
-  errorResponse,
   requireSessionIn,
   StepError,
-  validationErrors,
-} from "../../shared";
-import { receptionDocumentsSchema } from "../../../purchase/schemas";
+} from "@/server/management-session/shared";
+import { receptionDocumentsSchema } from "@/server/purchase/schemas";
+import { errorResponse, validationErrorResponse } from "@/app/api/http";
 
 // Documentos da carga (GTA e nota fiscal) de uma recepção em aberto.
 export async function PATCH(
@@ -24,7 +23,7 @@ export async function PATCH(
     const validation = receptionDocumentsSchema.safeParse(
       await request.json().catch(() => ({})),
     );
-    if (!validation.success) return validationErrors(validation.error);
+    if (!validation.success) return validationErrorResponse(validation.error);
 
     await prisma.$transaction(async (tx) => {
       await requireSessionIn(

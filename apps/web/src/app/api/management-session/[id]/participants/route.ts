@@ -2,18 +2,17 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/api-auth";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
-import { participantsApiSchema } from "../../schemas";
+import { participantsApiSchema } from "@/server/management-session/schemas";
 import {
-  errorResponse,
   invalidAnimals,
   invalidAnimalsMessage,
   requireSessionIn,
   sessionIntent,
   StepError,
-  validationErrors,
-} from "../../shared";
-import { assertNoConflicts } from "../../../animal/commitments";
-import { findReception } from "../../../purchase/reception";
+} from "@/server/management-session/shared";
+import { assertNoConflicts } from "@/server/animal/commitments";
+import { findReception } from "@/server/purchase/reception";
+import { errorResponse, validationErrorResponse } from "@/app/api/http";
 
 // Inclui na sessão animais que não estavam no planejamento (ex.: apareceram no curral).
 // Os que já participam são ignorados.
@@ -28,7 +27,7 @@ export async function POST(
 
   try {
     const validation = participantsApiSchema.safeParse(await request.json());
-    if (!validation.success) return validationErrors(validation.error);
+    if (!validation.success) return validationErrorResponse(validation.error);
 
     const animalIds = [...new Set(validation.data.animalIds)];
 

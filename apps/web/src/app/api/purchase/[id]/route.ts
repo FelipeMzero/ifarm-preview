@@ -3,16 +3,18 @@ import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/api-auth";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
 import { sessionStatus } from "@/lib/management-steps";
-import { arrivalWeightsByCategory } from "../costs";
-import { categoryLabel } from "../reception";
-import { purchaseApiSchema, type PurchaseCategoryApiData } from "../schemas";
+import { arrivalWeightsByCategory } from "@/server/purchase/costs";
+import { categoryLabel } from "@/server/purchase/reception";
+import {
+  purchaseApiSchema,
+  type PurchaseCategoryApiData,
+} from "@/server/purchase/schemas";
 import {
   categoryValue,
-  errorResponse,
   PurchaseError,
   purchaseStatus,
-  validationErrors,
-} from "../shared";
+} from "@/server/purchase/shared";
+import { errorResponse, validationErrorResponse } from "@/app/api/http";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -165,7 +167,7 @@ export async function PUT(request: NextRequest, { params }: Params) {
 
   try {
     const validation = purchaseApiSchema.safeParse(await request.json());
-    if (!validation.success) return validationErrors(validation.error);
+    if (!validation.success) return validationErrorResponse(validation.error);
     const data = validation.data;
 
     await prisma.$transaction(async (tx) => {

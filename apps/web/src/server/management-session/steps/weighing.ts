@@ -1,6 +1,12 @@
+import "server-only";
 import { z } from "zod";
-import { recomputeCurrentWeight } from "../../animal/weighings";
-import { defineStep, StepError, stepNotesSchema, type Tx } from "./types";
+import { recomputeCurrentWeight } from "@/server/animal/weighings";
+import {
+  defineStep,
+  StepError,
+  stepNotesSchema,
+  type Tx,
+} from "@/server/management-session/steps/types";
 
 async function container(tx: Tx, sessionId: string) {
   return tx.weighingManagement.findUnique({

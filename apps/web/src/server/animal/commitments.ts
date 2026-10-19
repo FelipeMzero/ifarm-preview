@@ -1,4 +1,5 @@
-import { NextResponse } from "next/server";
+import "server-only";
+import { BusinessError } from "@/server/errors";
 import { Prisma } from "@/lib/prisma";
 import {
   conflictsFor,
@@ -12,32 +13,19 @@ import {
   stepKey,
   toSessionSteps,
 } from "@/lib/management-steps";
-import { animalLabel, summarize } from "../batch-transfer/shared";
+import { animalLabel, summarize } from "@/server/batch-transfer/shared";
 
 // Compromissos pendentes dos animais (regras em lib/animal-commitments.ts e em
 // docs/data-dictionary.md, seção 2.9).
 
 type Tx = Prisma.TransactionClient;
 
-export class CommitmentError extends Error {
-  status = 409;
-  field = "animalIds";
-}
-
-// Resposta padrão para as rotas que não passam pelo errorResponse das sessões.
-// `field` é o campo do formulário que recebe o erro (null = só a mensagem).
-export function commitmentErrorResponse(
-  error: CommitmentError,
-  field: string | null = error.field,
-) {
-  return NextResponse.json(
-    {
-      success: false,
-      message: error.message,
-      ...(field ? { errors: { [field]: error.message } } : {}),
-    },
-    { status: error.status },
-  );
+// Conflito de compromisso: o animal já está em outra operação. Apresentado no campo dos
+// animais do formulário.
+export class CommitmentError extends BusinessError {
+  constructor(message: string) {
+    super(message, 409, "animalIds");
+  }
 }
 
 // Trava as linhas dos animais até o fim da transação: duas operações incluindo o

@@ -3,19 +3,18 @@ import { prisma, type Prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/api-auth";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
 import { getOrAssignCurrentProperty } from "@/server/current-property/queries";
-import { categoryLabel } from "./reception";
+import { categoryLabel } from "@/server/purchase/reception";
 import {
   purchaseApiSchema,
   purchaseQuerySchema,
   type PurchaseQueryData,
-} from "./schemas";
+} from "@/server/purchase/schemas";
 import {
-  errorResponse,
   categoryValue,
   PurchaseError,
   purchaseStatus,
-  validationErrors,
-} from "./shared";
+} from "@/server/purchase/shared";
+import { errorResponse, validationErrorResponse } from "@/app/api/http";
 
 function buildWhere(query: PurchaseQueryData, propertyId: string) {
   const where: Prisma.PurchaseEventWhereInput = {
@@ -144,7 +143,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const validation = purchaseApiSchema.safeParse(await request.json());
-    if (!validation.success) return validationErrors(validation.error);
+    if (!validation.success) return validationErrorResponse(validation.error);
     const data = validation.data;
 
     const propertyId =

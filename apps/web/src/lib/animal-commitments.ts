@@ -3,7 +3,7 @@
 // docs/data-dictionary.md, seção 2.9; ao mudar esta tabela, atualize a documentação
 // e os casos de animal-commitments.test.ts.
 //
-// Módulo puro (sem banco): a API busca os compromissos (app/api/animal/commitments.ts)
+// Módulo puro (sem banco): a API busca os compromissos (server/animal/commitments.ts)
 // e as telas usam as mesmas regras para avisar antes de salvar.
 
 import { STEP_TYPE_LABELS, type StepType } from "./management-steps";

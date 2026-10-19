@@ -1,5 +1,6 @@
+import "server-only";
 import type { Prisma } from "@/lib/prisma";
-import { categoryValue, PurchaseError } from "./shared";
+import { categoryValue, PurchaseError } from "@/server/purchase/shared";
 
 type Tx = Prisma.TransactionClient;
 

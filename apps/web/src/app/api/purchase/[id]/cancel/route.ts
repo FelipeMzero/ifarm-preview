@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/api-auth";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
-import { errorResponse, PurchaseError } from "../../shared";
+import { PurchaseError } from "@/server/purchase/shared";
+import { errorResponse } from "@/app/api/http";
 
 // Cancela (desconsidera) uma compra em andamento, ainda sem animais recebidos e não paga. As recepções em aberto
 // (vazias) são canceladas junto.

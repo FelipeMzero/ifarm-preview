@@ -7,9 +7,12 @@ import { batchTransferApiSchema } from "../../schemas";
 import {
   assertNoConflicts,
   CommitmentError,
-  commitmentErrorResponse,
-} from "../../animal/commitments";
-import { transferStatus, validateTransferPlan } from "../shared";
+} from "@/server/animal/commitments";
+import {
+  transferStatus,
+  validateTransferPlan,
+} from "@/server/batch-transfer/shared";
+import { errorResponse } from "@/app/api/http";
 
 export async function GET(
   _request: NextRequest,
@@ -210,7 +213,7 @@ export async function PUT(
     return NextResponse.json({ success: true });
   } catch (error) {
     if (error instanceof CommitmentError) {
-      return commitmentErrorResponse(error);
+      return errorResponse(error);
     }
     if (error instanceof TransferNotPendingError) {
       return NextResponse.json(

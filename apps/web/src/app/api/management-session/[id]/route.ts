@@ -4,12 +4,11 @@ import { requireSession } from "@/lib/api-auth";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
 import { unavailableReason } from "@/lib/animal-availability";
 import { participantStatus, stepKey } from "@/lib/management-steps";
-import { assertNoConflicts } from "../../animal/commitments";
-import { animalLabel, summarize } from "../../batch-transfer/shared";
-import { managementSessionApiSchema } from "../schemas";
+import { assertNoConflicts } from "@/server/animal/commitments";
+import { animalLabel, summarize } from "@/server/batch-transfer/shared";
+import { managementSessionApiSchema } from "@/server/management-session/schemas";
 import {
   applyPlanSteps,
-  errorResponse,
   invalidAnimals,
   invalidAnimalsMessage,
   loadSession,
@@ -17,18 +16,18 @@ import {
   sessionIntent,
   StepError,
   toDateOnly,
-  validationErrors,
   type LoadedSession,
-} from "../shared";
+} from "@/server/management-session/shared";
 import {
   countDone,
   describeSteps,
   loadStepRecords,
   NO_SESSION_VALUES,
   sessionValues,
-} from "../steps";
-import type { Tx } from "../steps/types";
-import { describeReception, findReception } from "../../purchase/reception";
+} from "@/server/management-session/steps";
+import type { Tx } from "@/server/management-session/steps/types";
+import { describeReception, findReception } from "@/server/purchase/reception";
+import { errorResponse, validationErrorResponse } from "@/app/api/http";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -147,7 +146,7 @@ export async function PUT(request: NextRequest, { params }: Params) {
     const validation = managementSessionApiSchema.safeParse(
       await request.json(),
     );
-    if (!validation.success) return validationErrors(validation.error);
+    if (!validation.success) return validationErrorResponse(validation.error);
 
     const data = validation.data;
     const animalIds = [...new Set(data.animalIds)];

@@ -1,15 +1,23 @@
+import "server-only";
 import { z } from "zod";
 import {
   stepKey,
   type SessionStep,
   type StepType,
 } from "@/lib/management-steps";
-import { batchStep } from "./batch";
-import { healthStep } from "./health";
-import { rfidStep, tagStep } from "./identifier";
-import { neuteringStep } from "./neutering";
-import type { SessionCtx, StepModule, Tx } from "./types";
-import { weighingStep } from "./weighing";
+import { batchStep } from "@/server/management-session/steps/batch";
+import { healthStep } from "@/server/management-session/steps/health";
+import {
+  rfidStep,
+  tagStep,
+} from "@/server/management-session/steps/identifier";
+import { neuteringStep } from "@/server/management-session/steps/neutering";
+import type {
+  SessionCtx,
+  StepModule,
+  Tx,
+} from "@/server/management-session/steps/types";
+import { weighingStep } from "@/server/management-session/steps/weighing";
 
 // Registro dos tipos de etapa. Um tipo novo entra aqui (e em lib/management-steps.ts).
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

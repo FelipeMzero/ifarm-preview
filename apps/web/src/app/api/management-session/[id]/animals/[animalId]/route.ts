@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/api-auth";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
-import { loadAnimalContext } from "../../../animalContext";
+import { loadAnimalContext } from "@/server/management-session/animalContext";
 
 // Tudo o que as telas de etapa precisam de um animal da sessão (ver loadAnimalContext).
 export async function GET(

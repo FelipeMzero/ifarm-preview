@@ -6,12 +6,12 @@ import {
   neuteringCancelApiSchema,
   neuteringCorrectionApiSchema,
 } from "../../../../schemas";
-import { effectiveNeutering } from "../../../../management-session/effective";
+import { effectiveNeutering } from "@/server/management-session/effective";
 import {
   INVALID_TECHNIQUE_MESSAGE,
   REQUIRED_TECHNIQUE_MESSAGE,
   isValidNeuteringTechnique,
-} from "../../../neuterings";
+} from "@/server/animal/neuterings";
 
 type Params = { params: Promise<{ id: string; neuteringId: string }> };
 

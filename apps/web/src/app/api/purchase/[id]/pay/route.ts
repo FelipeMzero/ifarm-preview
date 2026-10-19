@@ -2,14 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/api-auth";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
-import { categoryLabel } from "../../reception";
-import { purchasePayApiSchema } from "../../schemas";
-import {
-  errorResponse,
-  missingValue,
-  PurchaseError,
-  validationErrors,
-} from "../../shared";
+import { categoryLabel } from "@/server/purchase/reception";
+import { purchasePayApiSchema } from "@/server/purchase/schemas";
+import { missingValue, PurchaseError } from "@/server/purchase/shared";
+import { errorResponse, validationErrorResponse } from "@/app/api/http";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -25,7 +21,7 @@ export async function POST(request: NextRequest, { params }: Params) {
     const validation = purchasePayApiSchema.safeParse(
       await request.json().catch(() => ({})),
     );
-    if (!validation.success) return validationErrors(validation.error);
+    if (!validation.success) return validationErrorResponse(validation.error);
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);

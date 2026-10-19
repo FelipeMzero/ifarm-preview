@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/api-auth";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
-import { consolidateSession } from "../../consolidate";
-import { errorResponse } from "../../shared";
+import { consolidateSession } from "@/server/management-session/consolidate";
+import { errorResponse } from "@/app/api/http";
 
 // Consolida a sessão (ver consolidateSession).
 export async function POST(

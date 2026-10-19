@@ -4,17 +4,16 @@ import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/api-auth";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
 import {
-  errorResponse,
   requireManagementDate,
   requireSessionIn,
   StepError,
-  validationErrors,
-} from "../../../shared";
+} from "@/server/management-session/shared";
 import {
   findReception,
   receiveAnimal,
   receiveAnimalSchema,
-} from "../../../../purchase/reception";
+} from "@/server/purchase/reception";
+import { errorResponse, validationErrorResponse } from "@/app/api/http";
 
 // Recebe um animal que desceu do caminhão: cria o animal (ativo, no lote de entrada),
 // liga-o à categoria da compra e o inclui na sessão para os manejos da recepção.
@@ -31,7 +30,7 @@ export async function POST(
     const validation = receiveAnimalSchema.safeParse(
       await request.json().catch(() => ({})),
     );
-    if (!validation.success) return validationErrors(validation.error);
+    if (!validation.success) return validationErrorResponse(validation.error);
 
     const animalId = await prisma.$transaction(async (tx) => {
       const session = requireManagementDate(
@@ -54,7 +53,7 @@ export async function POST(
       { status: 201 },
     );
   } catch (error) {
-    if (error instanceof ZodError) return validationErrors(error);
+    if (error instanceof ZodError) return validationErrorResponse(error);
     return errorResponse(error);
   }
 }

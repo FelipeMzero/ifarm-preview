@@ -5,9 +5,12 @@ import { RESOURCE_ACCESS } from "@/lib/permissions";
 import {
   assertNoConflicts,
   CommitmentError,
-  commitmentErrorResponse,
-} from "../../../animal/commitments";
-import { ConfirmError, confirmTransferInTx } from "../../confirmTransfer";
+} from "@/server/animal/commitments";
+import {
+  ConfirmError,
+  confirmTransferInTx,
+} from "@/server/batch-transfer/confirmTransfer";
+import { errorResponse } from "@/app/api/http";
 
 // Efetiva o plano (ver confirmTransferInTx). Transferências geradas por uma sessão de
 // manejo só são efetivadas pela consolidação da sessão.
@@ -47,7 +50,7 @@ export async function POST(
     return NextResponse.json({ success: true });
   } catch (error) {
     if (error instanceof CommitmentError) {
-      return commitmentErrorResponse(error);
+      return errorResponse(error);
     }
     if (error instanceof ConfirmError) {
       return NextResponse.json(

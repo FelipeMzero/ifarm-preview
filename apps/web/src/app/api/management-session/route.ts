@@ -8,23 +8,22 @@ import {
   STEP_TYPE_LABELS,
   toSessionSteps,
 } from "@/lib/management-steps";
-import { assertNoConflicts } from "../animal/commitments";
+import { assertNoConflicts } from "@/server/animal/commitments";
 import { getOrAssignCurrentProperty } from "@/server/current-property/queries";
 import {
   managementSessionApiSchema,
   managementSessionQuerySchema,
   type ManagementSessionQueryData,
-} from "./schemas";
+} from "@/server/management-session/schemas";
 import {
   applyPlanSteps,
-  errorResponse,
   invalidAnimals,
   invalidAnimalsMessage,
   sessionIntent,
   StepError,
   toDateOnly,
-  validationErrors,
-} from "./shared";
+} from "@/server/management-session/shared";
+import { errorResponse, validationErrorResponse } from "@/app/api/http";
 
 function buildWhere(query: ManagementSessionQueryData, propertyId: string) {
   // Recepções de compra ficam na área de recepções, não na lista de manejos.
@@ -154,7 +153,7 @@ export async function POST(request: NextRequest) {
     const validation = managementSessionApiSchema.safeParse(
       await request.json(),
     );
-    if (!validation.success) return validationErrors(validation.error);
+    if (!validation.success) return validationErrorResponse(validation.error);
 
     const data = validation.data;
 

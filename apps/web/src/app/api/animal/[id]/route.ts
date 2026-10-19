@@ -6,17 +6,17 @@ import type { CommitmentIntent } from "@/lib/animal-commitments";
 import {
   assertNoConflicts,
   CommitmentError,
-  commitmentErrorResponse,
-} from "../commitments";
+} from "@/server/animal/commitments";
 import { uniqueConstraintErrors } from "@/server/db-errors";
-import { deleteRecord, DeletionBlockedError } from "../../deletion";
-import { animalDeletionPolicy } from "../deletion-policy";
+import { deleteRecord, DeletionBlockedError } from "@/server/deletion";
+import { animalDeletionPolicy } from "@/server/animal/deletion-policy";
 import { animalUpdateApiSchema } from "../../schemas";
-import { effectiveNeutering } from "../../management-session/effective";
+import { effectiveNeutering } from "@/server/management-session/effective";
 import {
   INVALID_TECHNIQUE_MESSAGE,
   isValidNeuteringTechnique,
-} from "../neuterings";
+} from "@/server/animal/neuterings";
+import { errorResponse } from "@/app/api/http";
 
 // Com recastração há mais de um registro: vale o mais recente.
 function latestNeuteringDate(items: { neuteredAt: Date }[]): string | null {
@@ -265,7 +265,7 @@ export async function PUT(
     return NextResponse.json({ success: true });
   } catch (error) {
     if (error instanceof CommitmentError) {
-      return commitmentErrorResponse(error, null);
+      return errorResponse(error, { field: null });
     }
     const errors = uniqueConstraintErrors(error);
     if (errors) {

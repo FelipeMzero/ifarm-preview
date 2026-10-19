@@ -1,13 +1,14 @@
+import "server-only";
 import { z } from "zod";
 import { FIELD_LIMITS } from "@/lib/field-limits";
-import { animalLabel, summarize } from "../../batch-transfer/shared";
+import { animalLabel, summarize } from "@/server/batch-transfer/shared";
 import {
   defineStep,
   StepError,
   stepNotesSchema,
   type StepAnimal,
   type Tx,
-} from "./types";
+} from "@/server/management-session/steps/types";
 
 type IdentifierItem = {
   id: number;

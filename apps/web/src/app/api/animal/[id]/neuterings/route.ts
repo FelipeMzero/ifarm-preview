@@ -5,17 +5,17 @@ import { RESOURCE_ACCESS } from "@/lib/permissions";
 import {
   assertNoConflicts,
   CommitmentError,
-  commitmentErrorResponse,
-} from "../../commitments";
+} from "@/server/animal/commitments";
 import { neuteringCreateApiSchema } from "../../../schemas";
-import { resolveEventDate } from "../../eventDate";
+import { resolveEventDate } from "@/server/animal/eventDate";
 import {
   INVALID_TECHNIQUE_MESSAGE,
   isValidNeuteringTechnique,
   neuteringInclude,
   toNeuteringDto,
-} from "../../neuterings";
-import { effectiveNeutering } from "../../../management-session/effective";
+} from "@/server/animal/neuterings";
+import { effectiveNeutering } from "@/server/management-session/effective";
+import { errorResponse } from "@/app/api/http";
 
 // Castrações válidas (não canceladas), da mais recente para a mais antiga.
 export async function GET(
@@ -126,7 +126,7 @@ export async function POST(
     return NextResponse.json({ success: true }, { status: 201 });
   } catch (error) {
     if (error instanceof CommitmentError) {
-      return commitmentErrorResponse(error, null);
+      return errorResponse(error, { field: null });
     }
     console.error(error);
     return NextResponse.json(

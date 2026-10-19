@@ -1,6 +1,7 @@
+import "server-only";
 import { sessionStatus } from "@/lib/management-steps";
 import type { Prisma } from "@/lib/prisma";
-import { categoryLabel } from "../purchase/reception";
+import { categoryLabel } from "@/server/purchase/reception";
 
 // Área de recepções: dados físicos da compra (quem vende, o que foi negociado em
 // quantidade, o que já chegou). Nada de preços, custos ou situação financeira.

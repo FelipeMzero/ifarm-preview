@@ -15,15 +15,12 @@ import {
   toStepRows,
   type SessionStep,
 } from "../src/lib/management-steps";
-import { consolidateSession } from "../src/app/api/management-session/consolidate";
-import { findCommitments } from "../src/app/api/animal/commitments";
-import { saveAnimalStep } from "../src/app/api/management-session/records";
-import { applyPlanSteps } from "../src/app/api/management-session/shared";
-import { planStepSchema } from "../src/app/api/management-session/steps";
-import {
-  findReception,
-  receiveAnimal,
-} from "../src/app/api/purchase/reception";
+import { consolidateSession } from "../src/server/management-session/consolidate";
+import { findCommitments } from "../src/server/animal/commitments";
+import { saveAnimalStep } from "../src/server/management-session/records";
+import { applyPlanSteps } from "../src/server/management-session/shared";
+import { planStepSchema } from "../src/server/management-session/steps";
+import { findReception, receiveAnimal } from "../src/server/purchase/reception";
 
 // ---------------------------------------------------------------------------
 // Datas relativas ao dia do seed

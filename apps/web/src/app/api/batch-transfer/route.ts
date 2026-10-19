@@ -11,9 +11,12 @@ import { getOrAssignCurrentProperty } from "@/server/current-property/queries";
 import {
   assertNoConflicts,
   CommitmentError,
-  commitmentErrorResponse,
-} from "../animal/commitments";
-import { transferStatus, validateTransferPlan } from "./shared";
+} from "@/server/animal/commitments";
+import {
+  transferStatus,
+  validateTransferPlan,
+} from "@/server/batch-transfer/shared";
+import { errorResponse } from "@/app/api/http";
 
 function buildWhere(query: BatchTransferQueryData, propertyId: string) {
   const where: Record<string, unknown> = {
@@ -202,7 +205,7 @@ export async function POST(request: NextRequest) {
     );
   } catch (error) {
     if (error instanceof CommitmentError) {
-      return commitmentErrorResponse(error);
+      return errorResponse(error);
     }
     console.error(error);
     return NextResponse.json(

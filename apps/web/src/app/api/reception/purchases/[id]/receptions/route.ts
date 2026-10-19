@@ -5,14 +5,13 @@ import { requireSession } from "@/lib/api-auth";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
 import {
   applyPlanSteps,
-  errorResponse,
   startOfToday,
   StepError,
-  validationErrors,
-} from "../../../../management-session/shared";
-import { planStepSchema } from "../../../../management-session/steps";
-import { validateReceptionInput } from "../../../../purchase/reception";
-import { receptionDocumentsSchema } from "../../../../purchase/schemas";
+} from "@/server/management-session/shared";
+import { planStepSchema } from "@/server/management-session/steps";
+import { validateReceptionInput } from "@/server/purchase/reception";
+import { receptionDocumentsSchema } from "@/server/purchase/schemas";
+import { errorResponse, validationErrorResponse } from "@/app/api/http";
 
 const createSchema = receptionDocumentsSchema.extend({
   entryBatchId: z.uuid("Selecione o lote de entrada."),
@@ -36,7 +35,7 @@ export async function POST(
     const validation = createSchema.safeParse(
       await request.json().catch(() => ({})),
     );
-    if (!validation.success) return validationErrors(validation.error);
+    if (!validation.success) return validationErrorResponse(validation.error);
     const data = validation.data;
 
     const result = await prisma.$transaction(async (tx) => {

@@ -1,5 +1,6 @@
+import "server-only";
 import type { Prisma } from "@/lib/prisma";
-import type { DeletionPolicy } from "../deletion";
+import type { DeletionPolicy } from "@/server/deletion";
 
 type Tx = Prisma.TransactionClient;
 
@@ -17,7 +18,11 @@ async function standalonePurchase(tx: Tx, animalId: string) {
         select: {
           id: true,
           _count: {
-            select: { categories: true, receptions: true, purchasedAnimals: true },
+            select: {
+              categories: true,
+              receptions: true,
+              purchasedAnimals: true,
+            },
           },
         },
       },
@@ -146,7 +151,12 @@ export const animalDeletionPolicy: DeletionPolicy = {
     const rfidTaggings = await tx.animalRfidTagging.findMany({ where, select });
     const neuterings = await tx.animalNeutering.findMany({ where, select });
 
-    const hasLaterRecords = [weighings, taggings, rfidTaggings, neuterings].some(
+    const hasLaterRecords = [
+      weighings,
+      taggings,
+      rfidTaggings,
+      neuterings,
+    ].some(
       (records) =>
         records.length > 1 || records.some((r) => r.managementId !== null),
     );
@@ -160,8 +170,12 @@ export const animalDeletionPolicy: DeletionPolicy = {
   async remove(tx, id) {
     const purchase = await standalonePurchase(tx, id);
     if (purchase) {
-      await tx.purchasedAnimal.delete({ where: { id: purchase.purchasedAnimalId } });
-      await tx.purchaseReception.delete({ where: { id: purchase.receptionId } });
+      await tx.purchasedAnimal.delete({
+        where: { id: purchase.purchasedAnimalId },
+      });
+      await tx.purchaseReception.delete({
+        where: { id: purchase.receptionId },
+      });
       await tx.managementParticipant.deleteMany({
         where: { managementSessionId: purchase.sessionId },
       });

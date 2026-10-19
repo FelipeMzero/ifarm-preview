@@ -2,7 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/api-auth";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
-import { receptionPurchaseInclude, toReceptionPurchaseDto } from "../../shared";
+import {
+  receptionPurchaseInclude,
+  toReceptionPurchaseDto,
+} from "@/server/reception/shared";
 
 // Uma compra vista pela área de recepções: categorias com recebidos/esperados e as
 // recepções (viagens), sem valores.

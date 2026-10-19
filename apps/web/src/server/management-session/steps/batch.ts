@@ -1,12 +1,13 @@
+import "server-only";
 import { z } from "zod";
-import { confirmTransferInTx } from "../../batch-transfer/confirmTransfer";
+import { confirmTransferInTx } from "@/server/batch-transfer/confirmTransfer";
 import {
   defineStep,
   StepError,
   stepNotesSchema,
   type SessionCtx,
   type Tx,
-} from "./types";
+} from "@/server/management-session/steps/types";
 
 // Transferências da sessão ainda abertas (uma por lote de destino).
 const openTransfers = (sessionId: string) => ({

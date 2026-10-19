@@ -1,3 +1,4 @@
+import "server-only";
 import { Prisma } from "@/lib/prisma";
 import { ConflictError } from "./errors";
 

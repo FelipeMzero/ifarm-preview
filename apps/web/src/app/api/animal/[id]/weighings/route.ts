@@ -3,18 +3,18 @@ import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/api-auth";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
 import { weighingCreateApiSchema } from "../../../schemas";
-import { resolveEventDate } from "../../eventDate";
+import { resolveEventDate } from "@/server/animal/eventDate";
 import {
   recomputeCurrentWeight,
   sortWeighings,
   toWeighingDto,
-} from "../../weighings";
-import { effectiveWeighing } from "../../../management-session/effective";
+} from "@/server/animal/weighings";
+import { effectiveWeighing } from "@/server/management-session/effective";
 import {
   assertNoConflicts,
   CommitmentError,
-  commitmentErrorResponse,
-} from "../../commitments";
+} from "@/server/animal/commitments";
+import { errorResponse } from "@/app/api/http";
 
 export async function GET(
   _request: NextRequest,
@@ -88,7 +88,7 @@ export async function POST(
     return NextResponse.json({ success: true }, { status: 201 });
   } catch (error) {
     if (error instanceof CommitmentError) {
-      return commitmentErrorResponse(error, null);
+      return errorResponse(error, { field: null });
     }
     console.error(error);
     return NextResponse.json(

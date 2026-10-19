@@ -1,6 +1,7 @@
+import "server-only";
 import { Prisma } from "@/lib/prisma";
 import type { AnimalWeighing } from "@/generated/prisma/client";
-import { effectiveWeighing } from "../management-session/effective";
+import { effectiveWeighing } from "@/server/management-session/effective";
 
 type Tx = Prisma.TransactionClient;
 

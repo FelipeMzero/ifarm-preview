@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { FIELD_LIMITS } from "@/lib/field-limits";
-import { dateOnlySchema } from "./shared";
-import { planStepSchema } from "./steps";
+import { dateOnlySchema } from "@/server/management-session/shared";
+import { planStepSchema } from "@/server/management-session/steps";
 
 export const managementSessionQuerySchema = z.object({
   propertyId: z.uuid().optional(),

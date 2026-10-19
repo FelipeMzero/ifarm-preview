@@ -3,9 +3,12 @@ import { ZodError } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/api-auth";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
-import { loadAnimalContext } from "../../../../../animalContext";
-import { clearAnimalStep, saveAnimalStep } from "../../../../../records";
-import { errorResponse, validationErrors } from "../../../../../shared";
+import { loadAnimalContext } from "@/server/management-session/animalContext";
+import {
+  clearAnimalStep,
+  saveAnimalStep,
+} from "@/server/management-session/records";
+import { errorResponse, validationErrorResponse } from "@/app/api/http";
 
 type Params = {
   params: Promise<{ id: string; animalId: string; key: string }>;
@@ -27,7 +30,7 @@ export async function PUT(request: NextRequest, { params }: Params) {
     const data = await loadAnimalContext(prisma, id, animalId);
     return NextResponse.json({ success: true, data });
   } catch (error) {
-    if (error instanceof ZodError) return validationErrors(error);
+    if (error instanceof ZodError) return validationErrorResponse(error);
     return errorResponse(error);
   }
 }

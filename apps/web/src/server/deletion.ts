@@ -1,4 +1,6 @@
+import "server-only";
 import { prisma, Prisma } from "@/lib/prisma";
+import { BusinessError } from "@/server/errors";
 
 type Tx = Prisma.TransactionClient;
 
@@ -11,10 +13,9 @@ export type DeletionPolicy = {
   remove: (tx: Tx, id: string) => Promise<void>;
 };
 
-export class DeletionBlockedError extends Error {
+export class DeletionBlockedError extends BusinessError {
   constructor(message: string) {
-    super(message);
-    this.name = "DeletionBlockedError";
+    super(message, 409);
   }
 }
 

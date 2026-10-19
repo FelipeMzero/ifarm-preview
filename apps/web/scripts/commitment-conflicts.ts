@@ -11,8 +11,8 @@ import {
   type Commitment,
   type CommitmentIntent,
 } from "../src/lib/animal-commitments";
-import { findCommitments } from "../src/app/api/animal/commitments";
-import { animalLabel } from "../src/app/api/batch-transfer/shared";
+import { findCommitments } from "../src/server/animal/commitments";
+import { animalLabel } from "../src/server/batch-transfer/shared";
 
 // A intenção que cada compromisso representou quando foi criado.
 function intentOf(commitment: Commitment): CommitmentIntent {

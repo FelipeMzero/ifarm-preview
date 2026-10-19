@@ -2,14 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/api-auth";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
-import { managementSessionStartApiSchema } from "../../schemas";
+import { managementSessionStartApiSchema } from "@/server/management-session/schemas";
 import {
-  errorResponse,
   requireSessionIn,
   startOfToday,
   StepError,
-  validationErrors,
-} from "../../shared";
+} from "@/server/management-session/shared";
+import { errorResponse, validationErrorResponse } from "@/app/api/http";
 
 // Inicia o registro informando a data em que o manejo acontece. Também serve para
 // corrigir essa data enquanto a sessão não for consolidada: os registros recebem a
@@ -27,7 +26,7 @@ export async function POST(
     const validation = managementSessionStartApiSchema.safeParse(
       await request.json(),
     );
-    if (!validation.success) return validationErrors(validation.error);
+    if (!validation.success) return validationErrorResponse(validation.error);
 
     const { managementDate } = validation.data;
     if (managementDate > startOfToday()) {

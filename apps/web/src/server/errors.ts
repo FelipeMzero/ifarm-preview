@@ -31,3 +31,18 @@ export class ValidationError extends Error {
     this.name = "ValidationError";
   }
 }
+
+/**
+ * Regra de negócio violada, com o status HTTP e, quando houver, o campo do formulário que recebe
+ * a mensagem. Base dos erros específicos das features (StepError, PurchaseError...).
+ */
+export class BusinessError extends Error {
+  constructor(
+    message: string,
+    readonly status = 400,
+    readonly field?: string,
+  ) {
+    super(message);
+    this.name = new.target.name;
+  }
+}

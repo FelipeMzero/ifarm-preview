@@ -1,6 +1,6 @@
 // Tipos de etapa de uma sessão de manejo, compartilhados entre a API e as telas.
 // Cada tipo é implementado como um módulo próprio (servidor em
-// app/api/management-session/steps, tela em features/management-session/steps);
+// server/management-session/steps, tela em features/management-session/steps);
 // para incluir um tipo novo, acrescente-o aqui e registre os dois módulos.
 
 export const STEP_TYPES = [
@@ -72,8 +72,7 @@ export function toStepRows(steps: SessionStep[]) {
   return steps.map((step, position) => ({
     type: step.type.toUpperCase() as Uppercase<StepType>,
     position,
-    healthManagementId:
-      step.type === "health" ? step.healthManagementId : null,
+    healthManagementId: step.type === "health" ? step.healthManagementId : null,
   }));
 }
 

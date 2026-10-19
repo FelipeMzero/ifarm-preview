@@ -1,19 +1,24 @@
+import "server-only";
 import {
   unavailableAnimalsMessage,
   unavailableReason,
 } from "@/lib/animal-availability";
-import { assertNoConflicts } from "../animal/commitments";
-import { animalLabel, summarize } from "../batch-transfer/shared";
-import { findReception } from "../purchase/reception";
+import { assertNoConflicts } from "@/server/animal/commitments";
+import { animalLabel, summarize } from "@/server/batch-transfer/shared";
+import { findReception } from "@/server/purchase/reception";
 import {
   requireManagementDate,
   requireSessionIn,
   sessionIntent,
   startOfToday,
   StepError,
-} from "./shared";
-import { countDone, loadStepRecords, stepModule } from "./steps";
-import type { Tx } from "./steps/types";
+} from "@/server/management-session/shared";
+import {
+  countDone,
+  loadStepRecords,
+  stepModule,
+} from "@/server/management-session/steps";
+import type { Tx } from "@/server/management-session/steps/types";
 
 /**
  * Consolida a sessão: os animais sem nenhum registro saem da sessão e os registros

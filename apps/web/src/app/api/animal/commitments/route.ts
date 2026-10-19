@@ -3,7 +3,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/api-auth";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
-import { findCommitments } from "../commitments";
+import { findCommitments } from "@/server/animal/commitments";
 
 // Mesmo teto do "adicionar todos os filtrados" do seletor de animais.
 const MAX_ANIMALS = 2000;

@@ -1,3 +1,4 @@
+import "server-only";
 import type { Prisma } from "@/lib/prisma";
 
 // Registros feitos numa sessão de manejo ficam gravados nas tabelas definitivas desde o

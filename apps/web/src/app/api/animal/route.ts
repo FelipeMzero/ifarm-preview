@@ -8,7 +8,7 @@ import { getOrAssignCurrentProperty } from "@/server/current-property/queries";
 import {
   INVALID_TECHNIQUE_MESSAGE,
   isValidNeuteringTechnique,
-} from "./neuterings";
+} from "@/server/animal/neuterings";
 
 // Limites de data de nascimento para cada faixa etária (idade em meses completos).
 function birthDateFilter(range: "upTo12" | "12to24" | "over24" | "unknown") {

@@ -1,7 +1,9 @@
+import "server-only";
 import { z } from "zod";
 import { FIELD_LIMITS } from "@/lib/field-limits";
 import type { Prisma } from "@/lib/prisma";
 import type { SessionStep, StepType } from "@/lib/management-steps";
+import { BusinessError } from "@/server/errors";
 
 export type Tx = Prisma.TransactionClient;
 
@@ -26,15 +28,7 @@ export type StepAnimal = {
 export type StepView = { label: string; config?: Record<string, unknown> };
 
 // Erro de regra de negócio, exibido ao usuário (no campo `field`, quando houver).
-export class StepError extends Error {
-  constructor(
-    message: string,
-    public status = 400,
-    public field?: string,
-  ) {
-    super(message);
-  }
-}
+export class StepError extends BusinessError {}
 
 /**
  * Contrato de um tipo de etapa. Cada tipo de manejo implementa este módulo e é

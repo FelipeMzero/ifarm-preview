@@ -2,8 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/api-auth";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
-import { errorResponse, StepError } from "../../shared";
-import { findReception } from "../../../purchase/reception";
+import { StepError } from "@/server/management-session/shared";
+import { findReception } from "@/server/purchase/reception";
+import { errorResponse } from "@/app/api/http";
 
 // Cancela a sessão. Os registros feitos continuam gravados (para auditoria), mas como a
 // sessão nunca será consolidada eles não passam a valer.

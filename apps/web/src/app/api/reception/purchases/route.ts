@@ -8,7 +8,7 @@ import {
   isPending,
   receptionPurchaseInclude,
   toReceptionPurchaseDto,
-} from "../shared";
+} from "@/server/reception/shared";
 
 const querySchema = z.object({
   propertyId: z.uuid().optional(),

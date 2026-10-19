@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import "server-only";
 import { z } from "zod";
 import {
   normalizeStepOrder,
@@ -14,12 +14,13 @@ import {
   type StepType,
 } from "@/lib/management-steps";
 import type { CommitmentIntent } from "@/lib/animal-commitments";
-import { CommitmentError } from "../animal/commitments";
-import { ConfirmError } from "../batch-transfer/confirmTransfer";
-import { ReceptionError } from "../purchase/reception";
-import { animalLabel, summarize } from "../batch-transfer/shared";
-import { stepModule } from "./steps";
-import { StepError, type SessionCtx, type Tx } from "./steps/types";
+import { animalLabel, summarize } from "@/server/batch-transfer/shared";
+import { stepModule } from "@/server/management-session/steps";
+import {
+  StepError,
+  type SessionCtx,
+  type Tx,
+} from "@/server/management-session/steps/types";
 
 export { StepError };
 
@@ -173,34 +174,6 @@ export function findStep(steps: SessionStep[], key: string) {
   return step;
 }
 
-export function errorResponse(error: unknown) {
-  if (
-    error instanceof StepError ||
-    error instanceof ReceptionError ||
-    error instanceof CommitmentError
-  ) {
-    return NextResponse.json(
-      {
-        success: false,
-        message: error.message,
-        ...(error.field ? { errors: { [error.field]: error.message } } : {}),
-      },
-      { status: error.status },
-    );
-  }
-  if (error instanceof ConfirmError) {
-    return NextResponse.json(
-      { success: false, message: error.message },
-      { status: error.status },
-    );
-  }
-  console.error(error);
-  return NextResponse.json(
-    { success: false, message: "Ocorreu um erro interno no servidor." },
-    { status: 500 },
-  );
-}
-
 // Intenção de participar desta sessão, para a checagem de compromissos dos animais
 // (a recepção de compra é exclusiva; as demais conflitam pelas etapas).
 export function sessionIntent(
@@ -210,13 +183,4 @@ export function sessionIntent(
   return isReception
     ? { kind: "reception" }
     : { kind: "session", stepKeys: steps.map(stepKey) };
-}
-
-export function validationErrors(error: z.ZodError) {
-  const errors: Record<string, string> = {};
-  error.issues.forEach((issue) => {
-    const field = issue.path.join(".");
-    if (field && !errors[field]) errors[field] = issue.message;
-  });
-  return NextResponse.json({ success: false, errors }, { status: 400 });
 }

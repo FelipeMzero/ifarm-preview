@@ -2,12 +2,16 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/api-auth";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
-import { errorResponse, requireSessionIn, StepError } from "../../../shared";
-import { stepModule } from "../../../steps";
+import {
+  requireSessionIn,
+  StepError,
+} from "@/server/management-session/shared";
+import { stepModule } from "@/server/management-session/steps";
 import {
   findReception,
   removeReceivedAnimal,
-} from "../../../../purchase/reception";
+} from "@/server/purchase/reception";
+import { errorResponse } from "@/app/api/http";
 
 // Tira o animal da sessão, desfazendo os registros que ele já tinha. Numa recepção de
 // compra, o animal recebido é apagado.
