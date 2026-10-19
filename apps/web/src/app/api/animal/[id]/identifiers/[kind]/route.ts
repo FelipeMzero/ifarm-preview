@@ -1,42 +1,61 @@
 import { NextRequest, NextResponse } from "next/server";
+import { identifierChangeSchema } from "@ifarm/shared";
 import { requireSession } from "@/lib/api-auth";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
+import { CommitmentError } from "@/server/animal/commitments";
 import {
   addIdentifier,
   isIdentifierKind,
   listIdentifiers,
-} from "../../../identifiers";
+} from "@/server/animal/identifiers";
+import { errorResponse } from "../../../../http";
+
+type Params = { params: Promise<{ id: string; kind: string }> };
+
+const notFound = () =>
+  NextResponse.json({ message: "Não encontrado." }, { status: 404 });
 
 // Histórico válido (não excluído) de brincos ou RFIDs do animal, do mais recente
 // para o mais antigo.
-export async function GET(
-  _request: NextRequest,
-  { params }: { params: Promise<{ id: string; kind: string }> },
-) {
+export async function GET(_request: NextRequest, { params }: Params) {
   const { response } = await requireSession(RESOURCE_ACCESS.animais);
   if (response) return response;
 
-  const { id, kind } = await params;
-  if (!isIdentifierKind(kind)) {
-    return NextResponse.json({ message: "Não encontrado." }, { status: 404 });
+  try {
+    const { id, kind } = await params;
+    if (!isIdentifierKind(kind)) return notFound();
+    return NextResponse.json(await listIdentifiers(kind, id));
+  } catch (error) {
+    return errorResponse(error);
   }
-
-  return listIdentifiers(kind, id);
 }
 
 // Troca (ou remove, com value vazio) o identificador na hora.
-export async function POST(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string; kind: string }> },
-) {
+export async function POST(request: NextRequest, { params }: Params) {
   const { response } = await requireSession(RESOURCE_ACCESS.animais);
   if (response) return response;
 
-  const { id, kind } = await params;
-  if (!isIdentifierKind(kind)) {
-    return NextResponse.json({ message: "Não encontrado." }, { status: 404 });
-  }
+  try {
+    const { id, kind } = await params;
+    if (!isIdentifierKind(kind)) return notFound();
 
-  const body = await request.json().catch(() => ({}));
-  return addIdentifier(kind, id, body);
+    const validation = identifierChangeSchema.safeParse(
+      await request.json().catch(() => ({})),
+    );
+    if (!validation.success) {
+      return NextResponse.json(
+        { success: false, message: "Parâmetros inválidos." },
+        { status: 400 },
+      );
+    }
+
+    await addIdentifier(kind, id, validation.data);
+    return NextResponse.json({ success: true }, { status: 201 });
+  } catch (error) {
+    // Conflito de compromisso aparece só como mensagem, sem campo do formulário.
+    return errorResponse(
+      error,
+      error instanceof CommitmentError ? { field: null } : {},
+    );
+  }
 }

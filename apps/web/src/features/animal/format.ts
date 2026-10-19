@@ -1,12 +1,14 @@
+import { formatDate as formatDay, toLocalDay } from "@ifarm/shared";
+
 export function formatDate(iso: string | null | undefined): string {
   if (!iso) return "—";
   return new Date(iso).toLocaleDateString("pt-BR");
 }
 
-// Campos só de data (sem horário) chegam como "yyyy-mm-dd" e devem ser lidos no fuso local.
+// Campos só de data (sem horário) chegam como "yyyy-mm-dd".
 export function formatDateOnly(iso: string | null | undefined): string {
   if (!iso) return "—";
-  return new Date(`${iso}T00:00:00`).toLocaleDateString("pt-BR");
+  return formatDay(iso);
 }
 
 export function formatKg(value: number, fractionDigits = 2): string {
@@ -43,7 +45,7 @@ export function formatDuration(days: number): string {
 }
 
 export function formatAge(birthDate: string): string {
-  const birth = new Date(`${birthDate}T00:00:00`);
+  const birth = toLocalDay(birthDate);
   const now = new Date();
   let months =
     (now.getFullYear() - birth.getFullYear()) * 12 +

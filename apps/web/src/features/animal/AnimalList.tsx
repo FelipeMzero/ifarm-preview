@@ -38,7 +38,8 @@ import {
   filtersToQuery,
   useFilterOptions,
 } from "./AnimalFilters";
-import { AnimalRow, deleteAnimal, getAnimals } from "./services";
+import { animalClient } from "@/lib/clients";
+import { type AnimalRow } from "@ifarm/shared";
 import {
   AnimalIdentification,
   ORIGIN_VARIANT,
@@ -228,7 +229,7 @@ export default function AnimalList({
     async function load() {
       setLoading(true);
       try {
-        const result = await getAnimals({
+        const result = await animalClient.getAnimals({
           propertyId: currentProperty?.id,
           page: pageIndex,
           pageSize,
@@ -266,7 +267,7 @@ export default function AnimalList({
   async function confirmDelete() {
     if (pendingDeleteId === null) return;
     try {
-      await deleteAnimal(pendingDeleteId);
+      await animalClient.deleteAnimal(pendingDeleteId);
       setRefreshKey((k) => k + 1);
     } catch {
       // erro silencioso

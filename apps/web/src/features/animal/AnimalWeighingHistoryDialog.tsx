@@ -30,13 +30,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { ConfirmDialog } from "@/components/our/ConfirmDialog";
-import {
-  ApiError,
-  AnimalWeighing,
-  cancelWeighing,
-  createWeighing,
-  getWeighings,
-} from "./services";
+import { animalClient } from "@/lib/clients";
+import { ApiError, type AnimalWeighing } from "@ifarm/shared";
 import { AnimalWeighingCorrectionForm } from "./AnimalWeighingCorrectionForm";
 import { WeighingCorrectionNote } from "./WeighingCorrectionNote";
 import type { Commitment } from "@ifarm/shared";
@@ -90,7 +85,7 @@ function WeighingRegisterPanel({
     setSaving(true);
     setErrors({});
     try {
-      await createWeighing(animalId, {
+      await animalClient.createWeighing(animalId, {
         weightKg: weight,
         date: date === todayInput() ? undefined : date,
         notes,
@@ -206,7 +201,8 @@ export function AnimalWeighingHistoryDialog({
     if (!open) return;
     let cancelled = false;
 
-    getWeighings(animalId)
+    animalClient
+      .getWeighings(animalId)
       .then((data) => {
         if (cancelled) return;
         setWeighings([...data].reverse());
@@ -239,7 +235,7 @@ export function AnimalWeighingHistoryDialog({
   async function handleCancel() {
     if (!cancelling) return;
     try {
-      await cancelWeighing(animalId, cancelling.id);
+      await animalClient.cancelWeighing(animalId, cancelling.id);
       toast.success("Pesagem excluída.");
       afterChange();
     } catch (e) {

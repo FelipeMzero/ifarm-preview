@@ -51,7 +51,8 @@ import {
   SEX_LABELS,
 } from "@ifarm/shared";
 import { cn } from "@/lib/utils";
-import { AnimalFullDetails, deleteAnimal, getAnimalDetails } from "./services";
+import { animalClient } from "@/lib/clients";
+import { type AnimalFullDetails } from "@ifarm/shared";
 import { ORIGIN_VARIANT, SEX_ICON, STATUS_VARIANT } from "./display";
 import { AnimalWeightChart } from "./AnimalWeightChart";
 import {
@@ -167,7 +168,7 @@ export default function AnimalDetails({
 
     async function load() {
       try {
-        const data = await getAnimalDetails(id);
+        const data = await animalClient.getAnimalDetails(id);
         if (!cancelled) setAnimal(data);
       } catch (e) {
         if (!cancelled) setError((e as Error).message);
@@ -182,7 +183,7 @@ export default function AnimalDetails({
 
   async function handleDelete() {
     try {
-      await deleteAnimal(id);
+      await animalClient.deleteAnimal(id);
       toast.success("Registro excluído com sucesso!");
       if (onClose) onClose();
       else router.push("/animais");

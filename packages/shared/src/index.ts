@@ -32,3 +32,5 @@ export * from "./batch-transfer/schema";
 export * from "./batch-transfer/client";
 export * from "./batch/schema";
 export * from "./batch/client";
+export * from "./animal/schema";
+export * from "./animal/client";

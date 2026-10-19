@@ -1,4 +1,4 @@
-import { AnimalWeighing } from "./services";
+import { type AnimalWeighing } from "@ifarm/shared";
 import { formatDate, formatKg } from "./format";
 
 // Indica, abaixo do peso, que a pesagem foi corrigida e qual era o valor original.

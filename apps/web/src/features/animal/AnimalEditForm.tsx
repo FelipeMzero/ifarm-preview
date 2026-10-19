@@ -12,14 +12,12 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
+import { animalClient } from "@/lib/clients";
 import {
   ApiError,
-  AnimalDetail,
-  IdentifierKind,
-  getAnimal,
-  getAnimalCommitments,
-  updateAnimal,
-} from "./services";
+  type AnimalDetail,
+  type IdentifierKind,
+} from "@ifarm/shared";
 import { breedClient } from "@/lib/clients";
 import { type Breed } from "@ifarm/shared";
 import { Badge } from "@/components/ui/badge";
@@ -102,9 +100,9 @@ export function AnimalEditForm({
     async function loadData() {
       try {
         const [detail, open] = await Promise.all([
-          getAnimal(id),
+          animalClient.getAnimal(id),
           // Sem a lista, só os avisos antecipados somem: o servidor ainda barra.
-          getAnimalCommitments(id).catch(() => []),
+          animalClient.getAnimalCommitments(id).catch(() => []),
         ]);
         setAnimal(detail);
         setCommitments(open);
@@ -137,13 +135,13 @@ export function AnimalEditForm({
 
   async function onSubmit(data: AnimalEditFormData) {
     try {
-      await updateAnimal(id, {
+      await animalClient.updateAnimal(id, {
         ...data,
         newBatchId: pendingBatchId ?? undefined,
         batchChangeNotes: pendingBatchNotes,
       });
 
-      const fresh = await getAnimal(id);
+      const fresh = await animalClient.getAnimal(id);
       setAnimal(fresh);
       reset({
         name: fresh.name ?? "",
@@ -483,7 +481,7 @@ export function AnimalEditForm({
         onChanged={async () => {
           // Só o identificador atual muda; as alterações pendentes do formulário são preservadas.
           try {
-            setAnimal(await getAnimal(id));
+            setAnimal(await animalClient.getAnimal(id));
           } catch {
             toast.error("Não foi possível atualizar a identificação atual.");
           }
@@ -499,7 +497,7 @@ export function AnimalEditForm({
         onChanged={async () => {
           // Só o peso atual muda; as alterações pendentes do formulário são preservadas.
           try {
-            setAnimal(await getAnimal(id));
+            setAnimal(await animalClient.getAnimal(id));
           } catch {
             toast.error("Não foi possível atualizar o peso atual.");
           }
@@ -516,7 +514,7 @@ export function AnimalEditForm({
         onChanged={async () => {
           // Só a castração exibida muda; as alterações pendentes do formulário são preservadas.
           try {
-            setAnimal(await getAnimal(id));
+            setAnimal(await animalClient.getAnimal(id));
           } catch {
             toast.error("Não foi possível atualizar a castração.");
           }

@@ -40,13 +40,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  ApiError,
-  AnimalNeuteringRecord,
-  cancelNeutering,
-  createNeutering,
-  getNeuterings,
-} from "./services";
+import { animalClient } from "@/lib/clients";
+import { ApiError, type AnimalNeuteringRecord } from "@ifarm/shared";
 import { AnimalNeuteringCorrectionForm } from "./AnimalNeuteringCorrectionForm";
 import { neuteringTechniqueClient } from "@/lib/clients";
 import { type NeuteringTechnique } from "@ifarm/shared";
@@ -141,7 +136,11 @@ function NeuteringRegisterPanel({
     setSaving(true);
     setErrors({});
     try {
-      await createNeutering(animalId, { date, techniqueId, notes });
+      await animalClient.createNeutering(animalId, {
+        date,
+        techniqueId,
+        notes,
+      });
       toast.success(
         neutered ? "Recastração registrada." : "Castração registrada.",
       );
@@ -286,7 +285,8 @@ export function AnimalNeuteringHistoryDialog({
     if (!open) return;
     let cancelled = false;
 
-    getNeuterings(animalId)
+    animalClient
+      .getNeuterings(animalId)
       .then((data) => {
         if (cancelled) return;
         setNeuterings(data);
@@ -319,7 +319,7 @@ export function AnimalNeuteringHistoryDialog({
   async function handleCancel(keepNeutered?: boolean) {
     if (!cancelling) return;
     try {
-      await cancelNeutering(animalId, cancelling.id, keepNeutered);
+      await animalClient.cancelNeutering(animalId, cancelling.id, keepNeutered);
       toast.success("Castração excluída.");
       afterChange();
     } catch (e) {

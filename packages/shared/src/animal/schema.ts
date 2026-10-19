@@ -1,8 +1,18 @@
 import { z } from "zod";
-import { Sex, AnimalOrigin, AnimalStatus } from "@/generated/prisma/enums";
-import { FIELD_LIMITS } from "@/lib/field-limits";
+import { dateField } from "../date";
+import { AnimalOrigin, Sex } from "../enums";
+import { FIELD_LIMITS } from "../field-limits";
 
-export const animalCreateApiSchema = z
+// Contratos da API de animais (os formulários têm estado próprio, em features/animal/schema.ts).
+// Datas como "AAAA-MM-DD"; o servidor converte conforme a coluna (nascimento é @db.Date; as
+// demais são timestamps que guardam o dia).
+
+/** Data opcional; vazia vira null. */
+const optionalDate = dateField.transform((v) => v || null);
+/** Data opcional; vazia vira undefined ("não alterar"). */
+const keepDate = dateField.transform((v) => v || undefined);
+
+export const animalCreateSchema = z
   .object({
     currentTag: z
       .string()
@@ -36,14 +46,8 @@ export const animalCreateApiSchema = z
     sex: z.enum(Sex, "Este campo não pode ser vazio"),
     origin: z.enum(AnimalOrigin, "Este campo não pode ser vazio"),
 
-    birthDate: z
-      .string()
-      .optional()
-      .transform((v) => (v ? new Date(`${v}T00:00:00`) : null)),
-    propertyEntryDate: z
-      .string()
-      .optional()
-      .transform((v) => (v ? new Date(`${v}T00:00:00`) : null)),
+    birthDate: optionalDate,
+    propertyEntryDate: optionalDate,
 
     batchId: z.string().min(1, "Este campo não pode ser vazio"),
     currentWeightKg: z
@@ -52,10 +56,7 @@ export const animalCreateApiSchema = z
       .transform((v) => (v ? parseFloat(v) : null)),
 
     neutered: z.boolean().optional().default(false),
-    neuteringDate: z
-      .string()
-      .optional()
-      .transform((v) => (v ? new Date(`${v}T00:00:00`) : null)),
+    neuteringDate: optionalDate,
     neuteringTechniqueId: z
       .string()
       .optional()
@@ -79,10 +80,7 @@ export const animalCreateApiSchema = z
       .optional()
       .transform((v) => v || null),
 
-    acquisitionDate: z
-      .string()
-      .optional()
-      .transform((v) => (v ? new Date(`${v}T00:00:00`) : null)),
+    acquisitionDate: optionalDate,
 
     propertyId: z
       .string()
@@ -108,9 +106,9 @@ export const animalCreateApiSchema = z
     }
   });
 
-export type AnimalCreateApiData = z.infer<typeof animalCreateApiSchema>;
+export type AnimalCreateData = z.infer<typeof animalCreateSchema>;
 
-export const animalUpdateApiSchema = z.object({
+export const animalUpdateSchema = z.object({
   name: z
     .string()
     .max(
@@ -123,10 +121,7 @@ export const animalUpdateApiSchema = z.object({
     .string()
     .optional()
     .transform((v) => v || null),
-  birthDate: z
-    .string()
-    .optional()
-    .transform((v) => (v ? new Date(`${v}T00:00:00`) : null)),
+  birthDate: optionalDate,
   sex: z.enum(Sex, "Este campo não pode ser vazio"),
 
   newTag: z
@@ -173,10 +168,7 @@ export const animalUpdateApiSchema = z.object({
     .optional()
     .transform((v) => v || null),
 
-  neuteredAt: z
-    .string()
-    .optional()
-    .transform((v) => (v ? new Date(`${v}T00:00:00`) : undefined)),
+  neuteredAt: keepDate,
   neuteringTechniqueId: z
     .string()
     .optional()
@@ -187,75 +179,22 @@ export const animalUpdateApiSchema = z.object({
     .transform((v) => v || null),
 });
 
-export type AnimalUpdateApiData = z.infer<typeof animalUpdateApiSchema>;
+export type AnimalUpdateData = z.infer<typeof animalUpdateSchema>;
 
-export const animalQuerySchema = z.object({
-  propertyId: z.uuid().optional(),
-  page: z.coerce.number().int().min(0).optional().default(0),
-  pageSize: z.coerce.number().int().min(1).optional().default(10),
-  search: z.string().trim().optional().default(""),
-  status: z.preprocess(
-    (v) => (v === "" ? undefined : v),
-    z.enum(AnimalStatus).optional(),
-  ),
-  sex: z.preprocess((v) => (v === "" ? undefined : v), z.enum(Sex).optional()),
-  // "none" = animais sem lote.
-  batchId: z.preprocess(
-    (v) => (v === "" ? undefined : v),
-    z.union([z.uuid(), z.literal("none")]).optional(),
-  ),
-  neutered: z.preprocess(
-    (v) => (v === "" ? undefined : v),
-    z.enum(["true", "false"]).optional(),
-  ),
-  // Faixa etária pela data de nascimento; "unknown" = sem data de nascimento.
-  ageRange: z.preprocess(
-    (v) => (v === "" ? undefined : v),
-    z.enum(["upTo12", "12to24", "over24", "unknown"]).optional(),
-  ),
-  breedId: z.preprocess((v) => (v === "" ? undefined : v), z.uuid().optional()),
-  origin: z.preprocess(
-    (v) => (v === "" ? undefined : v),
-    z.enum(AnimalOrigin).optional(),
-  ),
-  excludeBatchId: z.preprocess(
-    (v) => (v === "" ? undefined : v),
-    z.uuid().optional(),
-  ),
-  minWeight: z.preprocess(
-    (v) => (v === "" ? undefined : v),
-    z.coerce.number().min(0).optional(),
-  ),
-  maxWeight: z.preprocess(
-    (v) => (v === "" ? undefined : v),
-    z.coerce.number().min(0).optional(),
-  ),
-});
-
-export type AnimalQueryData = z.infer<typeof animalQuerySchema>;
-
-export const weighingCorrectionApiSchema = z.object({
+export const weighingCorrectionSchema = z.object({
   weightKg: z.coerce
     .number("Informe um peso válido")
     .positive("O peso deve ser maior que zero"),
-  date: z
-    .string()
-    .optional()
-    .transform((v) => (v ? new Date(`${v}T00:00:00`) : undefined)),
+  date: keepDate,
   notes: z
     .string()
     .optional()
     .transform((v) => v || null),
 });
-export type WeighingCorrectionApiData = z.infer<
-  typeof weighingCorrectionApiSchema
->;
+export type WeighingCorrectionData = z.infer<typeof weighingCorrectionSchema>;
 
-export const neuteringCorrectionApiSchema = z.object({
-  date: z
-    .string()
-    .optional()
-    .transform((v) => (v ? new Date(`${v}T00:00:00`) : undefined)),
+export const neuteringCorrectionSchema = z.object({
+  date: keepDate,
   techniqueId: z
     .string()
     .optional()
@@ -265,25 +204,20 @@ export const neuteringCorrectionApiSchema = z.object({
     .optional()
     .transform((v) => v || null),
 });
-export type NeuteringCorrectionApiData = z.infer<
-  typeof neuteringCorrectionApiSchema
->;
+export type NeuteringCorrectionData = z.infer<typeof neuteringCorrectionSchema>;
 
-export const neuteringCancelApiSchema = z.object({
+export const neuteringCancelSchema = z.object({
   // Usado só quando a castração excluída era a última registrada: o animal pode ter
   // sido castrado antes de chegar (sem registro), então quem decide é o usuário.
   keepNeutered: z.boolean().optional(),
 });
 
 // Registro avulso de pesagem feito pelo histórico de pesagens (gravado na hora).
-export const weighingCreateApiSchema = z.object({
+export const weighingCreateSchema = z.object({
   weightKg: z.coerce
     .number("Informe um peso válido")
     .positive("O peso deve ser maior que zero"),
-  date: z
-    .string()
-    .optional()
-    .transform((v) => (v ? new Date(`${v}T00:00:00`) : undefined)),
+  date: keepDate,
   notes: z
     .string()
     .optional()
@@ -291,11 +225,8 @@ export const weighingCreateApiSchema = z.object({
 });
 
 // Registro avulso de castração feito pelo histórico de castrações (gravado na hora).
-export const neuteringCreateApiSchema = z.object({
-  date: z
-    .string()
-    .min(1, "Informe a data")
-    .transform((v) => new Date(`${v}T00:00:00`)),
+export const neuteringCreateSchema = z.object({
+  date: z.string().min(1, "Informe a data").pipe(z.iso.date("Data inválida")),
   // Castração feita na fazenda: a técnica é sempre conhecida.
   techniqueId: z.string("Informe a técnica.").min(1, "Informe a técnica."),
   notes: z
@@ -304,3 +235,58 @@ export const neuteringCreateApiSchema = z.object({
     .optional()
     .transform((v) => v || null),
 });
+
+// Troca (ou remoção) de brinco/RFID feita na hora.
+export const identifierChangeSchema = z.object({
+  // Vazio/null = remover o identificador do animal.
+  value: z
+    .string()
+    .trim()
+    .nullish()
+    .transform((v) => v || null),
+  notes: z
+    .string()
+    .nullish()
+    .transform((v) => v || null),
+});
+
+export type IdentifierChangeData = z.output<typeof identifierChangeSchema>;
+
+// Correção de um registro de brinco/RFID.
+export const identifierCorrectionSchema = z.object({
+  // Vazio = o registro passa a ser de remoção do identificador.
+  value: z
+    .string()
+    .trim()
+    .optional()
+    .transform((v) => v || null),
+  date: keepDate,
+  notes: z
+    .string()
+    .optional()
+    .transform((v) => v || null),
+});
+
+export type IdentifierCorrectionData = z.output<
+  typeof identifierCorrectionSchema
+>;
+
+export type WeighingCreateData = z.output<typeof weighingCreateSchema>;
+export type NeuteringCreateData = z.output<typeof neuteringCreateSchema>;
+export type NeuteringCancelData = z.output<typeof neuteringCancelSchema>;
+
+// O que o cliente envia (antes da validação).
+export type AnimalCreatePayload = z.input<typeof animalCreateSchema>;
+export type AnimalUpdatePayload = z.input<typeof animalUpdateSchema>;
+export type WeighingCreatePayload = z.input<typeof weighingCreateSchema>;
+export type WeighingCorrectionPayload = z.input<
+  typeof weighingCorrectionSchema
+>;
+export type NeuteringCreatePayload = z.input<typeof neuteringCreateSchema>;
+export type NeuteringCorrectionPayload = z.input<
+  typeof neuteringCorrectionSchema
+>;
+export type IdentifierChangePayload = z.input<typeof identifierChangeSchema>;
+export type IdentifierCorrectionPayload = z.input<
+  typeof identifierCorrectionSchema
+>;

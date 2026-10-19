@@ -1,99 +1,41 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { weighingCreateSchema } from "@ifarm/shared";
 import { requireSession } from "@/lib/api-auth";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
-import { weighingCreateApiSchema } from "../../../schemas";
-import { resolveEventDate } from "@/server/animal/eventDate";
-import {
-  recomputeCurrentWeight,
-  sortWeighings,
-  toWeighingDto,
-} from "@/server/animal/weighings";
-import { effectiveWeighing } from "@/server/management-session/effective";
-import {
-  assertNoConflicts,
-  CommitmentError,
-} from "@/server/animal/commitments";
-import { errorResponse } from "@/app/api/http";
+import { listWeighings } from "@/server/animal/queries";
+import { addWeighing } from "@/server/animal/mutations";
+import { errorResponse, validationErrorResponse } from "../../../http";
 
-export async function GET(
-  _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
+type Params = { params: Promise<{ id: string }> };
+
+export async function GET(_request: NextRequest, { params }: Params) {
   const { response } = await requireSession(RESOURCE_ACCESS.animais);
   if (response) return response;
 
-  const { id } = await params;
-
   try {
-    const items = await prisma.animalWeighing.findMany({
-      where: { animalId: id, cancelledAt: null, ...effectiveWeighing },
-    });
-
-    return NextResponse.json(sortWeighings(items.map(toWeighingDto)));
+    const { id } = await params;
+    return NextResponse.json(await listWeighings(id));
   } catch (error) {
-    console.error(error);
-    return NextResponse.json(
-      { message: "Ocorreu um erro interno no servidor." },
-      { status: 500 },
-    );
+    return errorResponse(error);
   }
 }
 
 // Registra uma pesagem avulsa na hora (o peso atual passa a ser o da mais recente).
-export async function POST(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
+export async function POST(request: NextRequest, { params }: Params) {
   const { response } = await requireSession(RESOURCE_ACCESS.animais);
   if (response) return response;
 
-  const { id } = await params;
-
   try {
-    const validation = weighingCreateApiSchema.safeParse(
+    const { id } = await params;
+    const validation = weighingCreateSchema.safeParse(
       await request.json().catch(() => ({})),
     );
-    if (!validation.success) {
-      const errors: Record<string, string> = {};
-      validation.error.issues.forEach((issue) => {
-        const field = issue.path[0] as string;
-        if (field && !errors[field]) errors[field] = issue.message;
-      });
-      return NextResponse.json({ success: false, errors }, { status: 400 });
-    }
+    if (!validation.success) return validationErrorResponse(validation.error);
 
-    const data = validation.data;
-    const date = await resolveEventDate(id, data.date);
-    if (!date.ok) {
-      return NextResponse.json(
-        { success: false, errors: { date: date.error } },
-        { status: 400 },
-      );
-    }
-
-    await prisma.$transaction(async (tx) => {
-      await assertNoConflicts(tx, [id], { kind: "record", type: "weighing" });
-      await tx.animalWeighing.create({
-        data: {
-          animalId: id,
-          weight: data.weightKg,
-          notes: data.notes,
-          weighedAt: date.at,
-        },
-      });
-      await recomputeCurrentWeight(tx, id);
-    });
-
+    await addWeighing(id, validation.data);
     return NextResponse.json({ success: true }, { status: 201 });
   } catch (error) {
-    if (error instanceof CommitmentError) {
-      return errorResponse(error, { field: null });
-    }
-    console.error(error);
-    return NextResponse.json(
-      { success: false, message: "Ocorreu um erro interno no servidor." },
-      { status: 500 },
-    );
+    // Conflito de compromisso aparece só como mensagem, sem campo do formulário.
+    return errorResponse(error, { field: null });
   }
 }

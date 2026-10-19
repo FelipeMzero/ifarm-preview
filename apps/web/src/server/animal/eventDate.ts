@@ -1,34 +1,51 @@
 import "server-only";
+import { formatDate, fromDbDate, toLocalDay, today } from "@ifarm/shared";
 import { prisma } from "@/lib/prisma";
+import { ValidationError } from "../errors";
 
-// Valida a data de um manejo avulso (pesagem, castração) e devolve o instante a gravar:
-// hoje usa a hora atual (fica depois dos registros anteriores do dia); dias passados
-// ficam à meia-noite local. Devolve { ok: false, error } quando a data é inválida.
-export async function resolveEventDate(
-  animalId: string,
-  date: Date | undefined,
-): Promise<{ ok: true; at: Date } | { ok: false; error: string }> {
-  const now = new Date();
-  const today = new Date(now);
-  today.setHours(0, 0, 0, 0);
+// Datas de manejos avulsos (pesagem, castração, identificação), recebidas como "AAAA-MM-DD".
 
-  if (!date || date.getTime() === today.getTime()) return { ok: true, at: now };
-  if (date > today) return { ok: false, error: "A data não pode ser futura." };
+const dateError = (message: string) =>
+  new ValidationError(message, { date: message });
 
+export function assertNotFuture(day: string) {
+  if (day > today()) throw dateError("A data não pode ser futura.");
+}
+
+export async function assertNotBeforeBirth(animalId: string, day: string) {
   const animal = await prisma.animal.findUnique({
     where: { id: animalId },
     select: { birthDate: true },
   });
-  // birthDate é só data (UTC 00:00); comparamos no fuso local, como as demais datas.
-  const birth = animal?.birthDate
-    ? new Date(`${animal.birthDate.toISOString().slice(0, 10)}T00:00:00`)
-    : null;
-  if (birth && date < birth) {
-    return {
-      ok: false,
-      error: `A data não pode ser anterior ao nascimento do animal (${birth.toLocaleDateString("pt-BR")}).`,
-    };
+  const birthDay = animal?.birthDate ? fromDbDate(animal.birthDate) : null;
+  if (birthDay && day < birthDay) {
+    throw dateError(
+      `A data não pode ser anterior ao nascimento do animal (${formatDate(birthDay)}).`,
+    );
   }
+}
 
-  return { ok: true, at: date };
+// Instante a gravar num manejo avulso: hoje usa a hora atual (fica depois dos registros
+// anteriores do dia); dias passados ficam à meia-noite local.
+export async function resolveEventDate(
+  animalId: string,
+  day: string | undefined,
+): Promise<Date> {
+  if (!day || day === today()) return new Date();
+  assertNotFuture(day);
+  await assertNotBeforeBirth(animalId, day);
+  return toLocalDay(day);
+}
+
+// Correção de data: troca só o dia e mantém o horário original, para não alterar a ordem
+// entre registros do mesmo dia.
+export function withDay(day: string, original: Date): Date {
+  const at = toLocalDay(day);
+  at.setHours(
+    original.getHours(),
+    original.getMinutes(),
+    original.getSeconds(),
+    original.getMilliseconds(),
+  );
+  return at;
 }

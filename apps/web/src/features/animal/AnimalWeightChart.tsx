@@ -8,7 +8,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
-import { AnimalWeighing } from "./services";
+import { toLocalDay, type AnimalWeighing } from "@ifarm/shared";
 
 const chartConfig = {
   weightKg: { label: "Peso", color: "var(--primary)" },
@@ -87,7 +87,7 @@ export function AnimalWeightChart({
     weightKg: w.weightKg,
   }));
 
-  const birth = birthDate ? new Date(`${birthDate}T00:00:00`) : null;
+  const birth = birthDate ? toLocalDay(birthDate) : null;
   const ageLabel = (ts: number) => {
     const months = birth ? ageInMonths(birth, ts) : null;
     return months == null ? null : formatAge(months, birthDateEstimated);

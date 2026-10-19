@@ -10,7 +10,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { DialogFooter } from "@/components/ui/dialog";
 import { FormField } from "@/components/our/FormField";
 import FieldRow from "@/components/our/FieldRow";
-import { ApiError, AnimalWeighing, correctWeighing } from "./services";
+import { animalClient } from "@/lib/clients";
+import { ApiError, type AnimalWeighing } from "@ifarm/shared";
 import { weighingCorrectionSchema, WeighingCorrectionFormData } from "./schema";
 
 interface AnimalWeighingCorrectionFormProps {
@@ -48,7 +49,7 @@ export function AnimalWeighingCorrectionForm({
       data.date !== toInputDate(weighing.date);
 
     try {
-      await correctWeighing(animalId, weighing.id, {
+      await animalClient.correctWeighing(animalId, weighing.id, {
         weightKg: data.weightKg,
         notes: data.notes,
         date: dateChanged ? data.date : undefined,

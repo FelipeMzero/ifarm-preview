@@ -54,7 +54,7 @@ import {
   SelectedAnimalsTable,
   useSelectedPage,
 } from "./SelectedAnimals";
-import { getAnimals } from "@/features/animal/services";
+import { animalClient } from "@/lib/clients";
 import { TransferStatusBadge } from "./display";
 import { BatchTransferFormData, batchTransferFormSchema } from "./schema";
 import { batchTransferClient } from "@/lib/clients";
@@ -233,12 +233,13 @@ export function BatchTransferForm({
   useEffect(() => {
     if (!initialOriginBatchId) return;
     let cancelled = false;
-    getAnimals({
-      propertyId,
-      batchId: initialOriginBatchId,
-      status: "ACTIVE",
-      pageSize: 2000,
-    })
+    animalClient
+      .getAnimals({
+        propertyId,
+        batchId: initialOriginBatchId,
+        status: "ACTIVE",
+        pageSize: 2000,
+      })
       .then((result) => {
         if (cancelled || !result.data.length) return;
         setSelected(result.data.map(toTransferAnimal));

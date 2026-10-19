@@ -4,7 +4,8 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
-import { createAnimal, ApiError } from "./services";
+import { animalClient } from "@/lib/clients";
+import { ApiError } from "@ifarm/shared";
 import { breedClient } from "@/lib/clients";
 import { type Breed } from "@ifarm/shared";
 import { neuteringTechniqueClient } from "@/lib/clients";
@@ -197,7 +198,7 @@ export default function AnimalForm({
 
   async function onSubmit(data: AnimalFormData) {
     try {
-      const response = await createAnimal({ ...data, propertyId });
+      const response = await animalClient.createAnimal({ ...data, propertyId });
       toast.success("Salvo com sucesso!");
       onSuccess?.(response.data.id);
     } catch (error) {

@@ -12,12 +12,12 @@ import { DialogFooter } from "@/components/ui/dialog";
 import { FormField } from "@/components/our/FormField";
 import FieldRow from "@/components/our/FieldRow";
 import { FIELD_LIMITS } from "@/lib/field-limits";
+import { animalClient } from "@/lib/clients";
 import {
   ApiError,
-  AnimalIdentifierRecord,
-  IdentifierKind,
-  correctIdentifier,
-} from "./services";
+  type AnimalIdentifierRecord,
+  type IdentifierKind,
+} from "@ifarm/shared";
 
 export const IDENTIFIER_LABELS: Record<IdentifierKind, string> = {
   tag: "Brinco",
@@ -77,7 +77,7 @@ export function AnimalIdentifierCorrectionForm({
       data.date !== toInputDate(record.date);
 
     try {
-      await correctIdentifier(animalId, kind, record.id, {
+      await animalClient.correctIdentifier(animalId, kind, record.id, {
         value: data.value,
         notes: data.notes,
         date: dateChanged ? data.date : undefined,

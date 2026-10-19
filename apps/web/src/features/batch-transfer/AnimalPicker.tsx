@@ -17,11 +17,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  AnimalRow,
-  getAnimals,
-  getCommitmentsFor,
-} from "@/features/animal/services";
+import { animalClient } from "@/lib/clients";
+import { type AnimalRow } from "@ifarm/shared";
 import { batchClient } from "@/lib/clients";
 import { AnimalIdentification, SEX_ICON } from "@/features/animal/display";
 import {
@@ -77,7 +74,7 @@ async function unavailableAnimals(
 ) {
   const reasons = new Map<string, string>();
   if (!intent) return reasons;
-  const commitments = await getCommitmentsFor(animalIds, exclude);
+  const commitments = await animalClient.getCommitmentsFor(animalIds, exclude);
   for (const [id, list] of Object.entries(commitments)) {
     const reason = blockingReason(list, intent);
     if (reason) reasons.set(id, reason);
@@ -175,7 +172,7 @@ export function useAnimalPicker({
     async function load() {
       setLoading(true);
       try {
-        const result = await getAnimals({
+        const result = await animalClient.getAnimals({
           ...query,
           page,
           pageSize: PAGE_SIZE,
@@ -212,7 +209,7 @@ export function useAnimalPicker({
   async function addAll() {
     setAddingAll(true);
     try {
-      const result = await getAnimals({
+      const result = await animalClient.getAnimals({
         ...query,
         page: 0,
         pageSize: ADD_ALL_LIMIT,

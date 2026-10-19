@@ -13,7 +13,8 @@ import FieldRow from "@/components/our/FieldRow";
 import { SelectField } from "@/components/our/SelectField";
 import { type NeuteringTechnique } from "@ifarm/shared";
 import { techniqueItems } from "@/features/neutering-technique/items";
-import { ApiError, AnimalNeuteringRecord, correctNeutering } from "./services";
+import { animalClient } from "@/lib/clients";
+import { ApiError, type AnimalNeuteringRecord } from "@ifarm/shared";
 import {
   neuteringCorrectionSchema,
   NeuteringCorrectionFormData,
@@ -56,7 +57,7 @@ export function AnimalNeuteringCorrectionForm({
       data.date !== toInputDate(neutering.date);
 
     try {
-      await correctNeutering(animalId, neutering.id, {
+      await animalClient.correctNeutering(animalId, neutering.id, {
         techniqueId: data.techniqueId,
         notes: data.notes,
         date: dateChanged ? data.date : undefined,

@@ -1,4 +1,5 @@
 import {
+  createAnimalClient,
   createAreaClient,
   createBatchClient,
   createBatchTransferClient,
@@ -31,3 +32,4 @@ export const purchaseClient = createPurchaseClient(request);
 export const receptionClient = createReceptionClient(request);
 export const batchTransferClient = createBatchTransferClient(request);
 export const batchClient = createBatchClient(request);
+export const animalClient = createAnimalClient(request);

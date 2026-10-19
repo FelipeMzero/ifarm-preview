@@ -1,16 +1,19 @@
-import { NextResponse } from "next/server";
-import { z } from "zod";
+import "server-only";
+import {
+  FIELD_LIMITS,
+  today,
+  type AnimalIdentifierRecord,
+  type IdentifierChangeData,
+  type IdentifierCorrectionData,
+  type IdentifierKind,
+} from "@ifarm/shared";
 import { prisma, Prisma } from "@/lib/prisma";
-import { FIELD_LIMITS } from "@/lib/field-limits";
 import {
   effectiveRfidTagging,
   effectiveTagging,
 } from "@/server/management-session/effective";
-import {
-  assertNoConflicts,
-  CommitmentError,
-} from "@/server/animal/commitments";
-import { errorResponse } from "@/app/api/http";
+import { assertNoConflicts } from "@/server/animal/commitments";
+import { withDay } from "@/server/animal/eventDate";
 import { BusinessError } from "@/server/errors";
 
 type Tx = Prisma.TransactionClient;
@@ -18,8 +21,6 @@ type Tx = Prisma.TransactionClient;
 // Brinco e RFID têm a mesma regra de histórico: cada troca é um registro, o valor
 // atual do animal (currentTag/currentRfid) é o do registro válido mais recente, e as
 // correções preservam o rastro (valor original na primeira correção, exclusão lógica).
-export type IdentifierKind = "tag" | "rfid";
-
 export const isIdentifierKind = (kind: string): kind is IdentifierKind =>
   kind === "tag" || kind === "rfid";
 
@@ -131,7 +132,7 @@ const ADAPTERS: Record<IdentifierKind, IdentifierAdapter> = {
   },
 };
 
-export function toIdentifierDto(r: IdentifierRecord) {
+export function toIdentifierDto(r: IdentifierRecord): AnimalIdentifierRecord {
   return {
     id: r.id,
     date: r.identifiedAt.toISOString(),
@@ -184,39 +185,11 @@ async function recomputeCurrent(
   });
 }
 
-// Conflito de compromisso aparece só como mensagem, sem campo do formulário.
-function identifierErrorResponse(error: unknown) {
-  return errorResponse(
-    error,
-    error instanceof CommitmentError ? { field: null } : {},
-  );
-}
-
+// Histórico válido (não excluído), do mais recente para o mais antigo.
 export async function listIdentifiers(kind: IdentifierKind, animalId: string) {
-  try {
-    const records = await ADAPTERS[kind].list(prisma, animalId);
-    return NextResponse.json(records.map(toIdentifierDto));
-  } catch (error) {
-    return identifierErrorResponse(error);
-  }
+  const records = await ADAPTERS[kind].list(prisma, animalId);
+  return records.map(toIdentifierDto);
 }
-
-const correctionSchema = z.object({
-  // Vazio = o registro passa a ser de remoção do identificador.
-  value: z
-    .string()
-    .trim()
-    .optional()
-    .transform((v) => v || null),
-  date: z
-    .string()
-    .optional()
-    .transform((v) => (v ? new Date(`${v}T00:00:00`) : undefined)),
-  notes: z
-    .string()
-    .optional()
-    .transform((v) => v || null),
-});
 
 const recordNotFound = (kind: IdentifierKind) =>
   new IdentifierError(
@@ -224,176 +197,118 @@ const recordNotFound = (kind: IdentifierKind) =>
     404,
   );
 
+// Corrige valor, data (só registros avulsos) e observação de um brinco/RFID.
 export async function correctIdentifier(
   kind: IdentifierKind,
   animalId: string,
   recordIdParam: string,
-  body: unknown,
+  data: IdentifierCorrectionData,
 ) {
   const adapter = ADAPTERS[kind];
-  const validation = correctionSchema.safeParse(body);
-  if (!validation.success) {
-    return NextResponse.json(
-      { success: false, message: "Parâmetros inválidos." },
-      { status: 400 },
+  if (data.value && data.value.length > adapter.maxLength) {
+    throw new IdentifierError(
+      `Máximo de ${adapter.maxLength} caracteres`,
+      400,
+      "value",
     );
   }
-  const data = validation.data;
 
-  try {
-    if (data.value && data.value.length > adapter.maxLength) {
+  await prisma.$transaction(async (tx) => {
+    const record = await adapter.find(tx, animalId, Number(recordIdParam));
+    if (!record) throw recordNotFound(kind);
+
+    if (data.date && record.managementId) {
       throw new IdentifierError(
-        `Máximo de ${adapter.maxLength} caracteres`,
+        "A data de uma identificação feita em sessão de manejo segue a data da sessão.",
         400,
-        "value",
+        "date",
       );
     }
 
-    await prisma.$transaction(async (tx) => {
-      const record = await adapter.find(tx, animalId, Number(recordIdParam));
-      if (!record) throw recordNotFound(kind);
-
-      if (data.date && record.managementId) {
-        throw new IdentifierError(
-          "A data de uma identificação feita em sessão de manejo segue a data da sessão.",
-          400,
-          "date",
-        );
+    let identifiedAt: Date | undefined;
+    if (data.date) {
+      if (data.date > today()) {
+        throw new IdentifierError("A data não pode ser futura.", 400, "date");
       }
+      identifiedAt = withDay(data.date, record.identifiedAt);
+    }
 
-      let identifiedAt: Date | undefined;
-      if (data.date) {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        if (data.date > today) {
-          throw new IdentifierError("A data não pode ser futura.", 400, "date");
-        }
-        // Troca só o dia e mantém o horário original, para não alterar a ordem
-        // entre registros do mesmo dia.
-        const original = record.identifiedAt;
-        identifiedAt = new Date(data.date);
-        identifiedAt.setHours(
-          original.getHours(),
-          original.getMinutes(),
-          original.getSeconds(),
-          original.getMilliseconds(),
-        );
-      }
-
-      const valueChanged = data.value !== record.value;
-      await adapter.update(tx, record.id, {
-        value: data.value,
-        notes: data.notes,
-        ...(identifiedAt ? { identifiedAt } : {}),
-        // Guarda o valor lançado originalmente só na primeira correção do valor.
-        ...(valueChanged && record.original == null
-          ? { original: record.value }
-          : {}),
-        correctedAt: new Date(),
-      });
-
-      await recomputeCurrent(tx, kind, animalId);
+    const valueChanged = data.value !== record.value;
+    await adapter.update(tx, record.id, {
+      value: data.value,
+      notes: data.notes,
+      ...(identifiedAt ? { identifiedAt } : {}),
+      // Guarda o valor lançado originalmente só na primeira correção do valor.
+      ...(valueChanged && record.original == null
+        ? { original: record.value }
+        : {}),
+      correctedAt: new Date(),
     });
 
-    return NextResponse.json({ success: true });
-  } catch (error) {
-    return identifierErrorResponse(error);
-  }
+    await recomputeCurrent(tx, kind, animalId);
+  });
 }
-
-const changeSchema = z.object({
-  // Vazio/null = remover o identificador do animal.
-  value: z
-    .string()
-    .trim()
-    .nullish()
-    .transform((v) => v || null),
-  notes: z
-    .string()
-    .nullish()
-    .transform((v) => v || null),
-});
 
 // Troca (ou remove) o identificador na hora: cria um registro avulso com a data de
 // hoje, que passa a ser o mais recente.
 export async function addIdentifier(
   kind: IdentifierKind,
   animalId: string,
-  body: unknown,
+  { value, notes }: IdentifierChangeData,
 ) {
   const adapter = ADAPTERS[kind];
-  const validation = changeSchema.safeParse(body);
-  if (!validation.success) {
-    return NextResponse.json(
-      { success: false, message: "Parâmetros inválidos." },
-      { status: 400 },
+  if (value && value.length > adapter.maxLength) {
+    throw new IdentifierError(
+      `Máximo de ${adapter.maxLength} caracteres`,
+      400,
+      "value",
     );
   }
-  const { value, notes } = validation.data;
 
-  try {
-    if (value && value.length > adapter.maxLength) {
+  await prisma.$transaction(async (tx) => {
+    await assertNoConflicts(tx, [animalId], { kind: "record", type: kind });
+    const animal = await tx.animal.findUnique({
+      where: { id: animalId },
+      select: { currentTag: true, currentRfid: true },
+    });
+    if (!animal) throw new IdentifierError("Animal não encontrado.", 404);
+
+    const current = animal[adapter.animalField];
+    if (value === current) {
       throw new IdentifierError(
-        `Máximo de ${adapter.maxLength} caracteres`,
+        value
+          ? `Este já é o ${adapter.label.toLowerCase()} atual do animal.`
+          : `O animal já está sem ${adapter.label.toLowerCase()}.`,
         400,
         "value",
       );
     }
 
-    await prisma.$transaction(async (tx) => {
-      await assertNoConflicts(tx, [animalId], { kind: "record", type: kind });
-      const animal = await tx.animal.findUnique({
-        where: { id: animalId },
-        select: { currentTag: true, currentRfid: true },
-      });
-      if (!animal) throw new IdentifierError("Animal não encontrado.", 404);
-
-      const current = animal[adapter.animalField];
-      if (value === current) {
-        throw new IdentifierError(
-          value
-            ? `Este já é o ${adapter.label.toLowerCase()} atual do animal.`
-            : `O animal já está sem ${adapter.label.toLowerCase()}.`,
-          400,
-          "value",
-        );
-      }
-
-      await adapter.create(tx, {
-        animalId,
-        value,
-        notes,
-        identifiedAt: new Date(),
-      });
-      await recomputeCurrent(tx, kind, animalId);
+    await adapter.create(tx, {
+      animalId,
+      value,
+      notes,
+      identifiedAt: new Date(),
     });
-
-    return NextResponse.json({ success: true }, { status: 201 });
-  } catch (error) {
-    return identifierErrorResponse(error);
-  }
+    await recomputeCurrent(tx, kind, animalId);
+  });
 }
 
+// Exclusão lógica: o registro sai do histórico e o identificador atual é recalculado.
 export async function cancelIdentifier(
   kind: IdentifierKind,
   animalId: string,
   recordIdParam: string,
 ) {
-  try {
-    await prisma.$transaction(async (tx) => {
-      const record = await ADAPTERS[kind].find(
-        tx,
-        animalId,
-        Number(recordIdParam),
-      );
-      if (!record) throw recordNotFound(kind);
+  await prisma.$transaction(async (tx) => {
+    const record = await ADAPTERS[kind].find(
+      tx,
+      animalId,
+      Number(recordIdParam),
+    );
+    if (!record) throw recordNotFound(kind);
 
-      await ADAPTERS[kind].update(tx, record.id, { cancelledAt: new Date() });
-      await recomputeCurrent(tx, kind, animalId);
-    });
-
-    return NextResponse.json({ success: true });
-  } catch (error) {
-    return identifierErrorResponse(error);
-  }
+    await ADAPTERS[kind].update(tx, record.id, { cancelledAt: new Date() });
+    await recomputeCurrent(tx, kind, animalId);
+  });
 }

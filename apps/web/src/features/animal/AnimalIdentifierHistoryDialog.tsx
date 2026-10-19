@@ -31,14 +31,12 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { ConfirmDialog } from "@/components/our/ConfirmDialog";
+import { animalClient } from "@/lib/clients";
 import {
   ApiError,
-  AnimalIdentifierRecord,
-  IdentifierKind,
-  cancelIdentifier,
-  changeIdentifier,
-  getIdentifiers,
-} from "./services";
+  type AnimalIdentifierRecord,
+  type IdentifierKind,
+} from "@ifarm/shared";
 import {
   AnimalIdentifierCorrectionForm,
   IDENTIFIER_LABELS,
@@ -91,7 +89,10 @@ function IdentifierChangePanel({
     setSaving(true);
     setError(null);
     try {
-      await changeIdentifier(animalId, kind, { value: newValue, notes });
+      await animalClient.changeIdentifier(animalId, kind, {
+        value: newValue,
+        notes,
+      });
       toast.success(
         newValue
           ? `${label} trocado para ${newValue}.`
@@ -219,7 +220,8 @@ export function AnimalIdentifierHistoryDialog({
     if (!open) return;
     let cancelled = false;
 
-    getIdentifiers(animalId, kind)
+    animalClient
+      .getIdentifiers(animalId, kind)
       .then((data) => {
         if (cancelled) return;
         setRecords(data);
@@ -252,7 +254,7 @@ export function AnimalIdentifierHistoryDialog({
   async function handleCancel() {
     if (!cancelling) return;
     try {
-      await cancelIdentifier(animalId, kind, cancelling.id);
+      await animalClient.cancelIdentifier(animalId, kind, cancelling.id);
       toast.success(`Registro de ${label} excluído.`);
       afterChange();
     } catch (e) {
