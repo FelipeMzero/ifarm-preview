@@ -14,11 +14,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useCurrentProperty } from "@/features/shell/CurrentPropertyProvider";
 import { ReceivedCount, formatDay } from "@/features/purchase/display";
-import {
-  getReceptionPurchases,
-  type ReceptionFilter,
-  type ReceptionPurchase,
-} from "./services";
+import { receptionClient } from "@/lib/clients";
+import { type ReceptionFilter, type ReceptionPurchase } from "@ifarm/shared";
 
 const DEFAULT_PAGE_SIZE = 10;
 
@@ -150,7 +147,7 @@ export default function ReceptionPurchaseList() {
     async function load() {
       setLoading(true);
       try {
-        const result = await getReceptionPurchases({
+        const result = await receptionClient.getReceptionPurchases({
           propertyId: currentProperty?.id,
           page: pageIndex,
           pageSize,

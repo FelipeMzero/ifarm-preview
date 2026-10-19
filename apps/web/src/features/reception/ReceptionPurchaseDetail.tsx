@@ -12,7 +12,8 @@ import FormSkeleton from "@/components/our/FormSkeleton";
 import { ReceivedCount, formatDay } from "@/features/purchase/display";
 import { SessionStatusBadge } from "@/features/management-session/display";
 import { NewReceptionDialog } from "./NewReceptionDialog";
-import { getReceptionPurchase, type ReceptionPurchase } from "./services";
+import { receptionClient } from "@/lib/clients";
+import { type ReceptionPurchase } from "@ifarm/shared";
 
 // A compra vista por quem recebe: o que foi negociado (em quantidade), o que já
 // chegou e as recepções. Daqui se abre uma nova recepção.
@@ -24,7 +25,8 @@ export function ReceptionPurchaseDetail({ id }: { id: string }) {
 
   useEffect(() => {
     let cancelled = false;
-    getReceptionPurchase(id)
+    receptionClient
+      .getReceptionPurchase(id)
       .then((data) => {
         if (!cancelled) setPurchase(data);
       })

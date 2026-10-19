@@ -32,7 +32,7 @@ import {
   type ManagementOptions,
 } from "@/features/management-session/services";
 import { useCurrentProperty } from "@/features/shell/CurrentPropertyProvider";
-import { createReception } from "./services";
+import { receptionClient } from "@/lib/clients";
 
 const receptionFormSchema = z.object({
   entryBatchId: z.string().min(1, "Selecione o lote de entrada"),
@@ -146,7 +146,7 @@ function ReceptionForm({
 
   async function onSubmit(data: ReceptionFormData) {
     try {
-      const result = await createReception(purchaseId, {
+      const result = await receptionClient.createReception(purchaseId, {
         entryBatchId: data.entryBatchId,
         gtaNumber: data.gtaNumber || null,
         invoiceNumber: data.invoiceNumber || null,

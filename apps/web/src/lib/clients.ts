@@ -7,6 +7,7 @@ import {
   createPersonClient,
   createPropertyClient,
   createPurchaseClient,
+  createReceptionClient,
   createStockingClient,
   type ApiRequest,
 } from "@ifarm/shared";
@@ -25,3 +26,4 @@ export const currentPropertyClient = createCurrentPropertyClient(request);
 export const propertyClient = createPropertyClient(request);
 export const areaClient = createAreaClient(request);
 export const purchaseClient = createPurchaseClient(request);
+export const receptionClient = createReceptionClient(request);

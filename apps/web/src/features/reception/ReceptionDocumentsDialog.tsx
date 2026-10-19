@@ -16,7 +16,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { updateReceptionDocuments } from "./services";
+import { receptionClient } from "@/lib/clients";
 
 type Documents = { gtaNumber: string | null; invoiceNumber: string | null };
 
@@ -80,7 +80,7 @@ function DocumentsForm({
     e.preventDefault();
     setSaving(true);
     try {
-      await updateReceptionDocuments(sessionId, {
+      await receptionClient.updateReceptionDocuments(sessionId, {
         gtaNumber: gta || null,
         invoiceNumber: invoice || null,
       });
