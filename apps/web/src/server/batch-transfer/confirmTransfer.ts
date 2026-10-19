@@ -1,8 +1,5 @@
 import "server-only";
-import {
-  unavailableAnimalsMessage,
-  unavailableReason,
-} from "@/lib/animal-availability";
+import { unavailableAnimalsMessage, unavailableReason } from "@ifarm/shared";
 import { Prisma } from "@/lib/prisma";
 import { BusinessError } from "@/server/errors";
 import {

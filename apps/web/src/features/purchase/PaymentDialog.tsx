@@ -19,7 +19,7 @@ import {
 import { FormField } from "@/components/our/FormField";
 import { formatBRL } from "./display";
 import { paymentFormSchema, type PaymentFormData } from "./schema";
-import { payPurchase } from "./services";
+import { purchaseClient } from "@/lib/clients";
 
 const todayIso = () => new Date().toLocaleDateString("en-CA");
 
@@ -93,7 +93,7 @@ function PaymentForm({
 
   async function onSubmit(data: PaymentFormData) {
     try {
-      await payPurchase(purchaseId, {
+      await purchaseClient.payPurchase(purchaseId, {
         paidAt: data.paidAt,
         paymentReference: data.paymentReference || undefined,
       });

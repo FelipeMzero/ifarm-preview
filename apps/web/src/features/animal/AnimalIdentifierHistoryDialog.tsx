@@ -44,7 +44,7 @@ import {
   IDENTIFIER_LABELS,
   IDENTIFIER_MAX_LENGTH,
 } from "./AnimalIdentifierCorrectionForm";
-import type { Commitment } from "@/lib/animal-commitments";
+import type { Commitment } from "@ifarm/shared";
 import { CommitmentNotice } from "./CommitmentNotice";
 import { formatDate } from "./format";
 

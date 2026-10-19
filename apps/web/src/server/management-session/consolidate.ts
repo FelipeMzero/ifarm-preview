@@ -1,8 +1,5 @@
 import "server-only";
-import {
-  unavailableAnimalsMessage,
-  unavailableReason,
-} from "@/lib/animal-availability";
+import { unavailableAnimalsMessage, unavailableReason } from "@ifarm/shared";
 import { assertNoConflicts } from "@/server/animal/commitments";
 import { animalLabel, summarize } from "@/server/batch-transfer/shared";
 import { findReception } from "@/server/purchase/reception";

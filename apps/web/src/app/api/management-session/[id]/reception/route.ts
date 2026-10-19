@@ -6,7 +6,7 @@ import {
   requireSessionIn,
   StepError,
 } from "@/server/management-session/shared";
-import { receptionDocumentsSchema } from "@/server/purchase/schemas";
+import { receptionDocumentsSchema } from "@ifarm/shared";
 import { errorResponse, validationErrorResponse } from "@/app/api/http";
 
 // Documentos da carga (GTA e nota fiscal) de uma recepção em aberto.

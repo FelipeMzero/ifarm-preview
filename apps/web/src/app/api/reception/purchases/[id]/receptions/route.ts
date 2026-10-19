@@ -10,7 +10,7 @@ import {
 } from "@/server/management-session/shared";
 import { planStepSchema } from "@/server/management-session/steps";
 import { validateReceptionInput } from "@/server/purchase/reception";
-import { receptionDocumentsSchema } from "@/server/purchase/schemas";
+import { receptionDocumentsSchema } from "@ifarm/shared";
 import { errorResponse, validationErrorResponse } from "@/app/api/http";
 
 const createSchema = receptionDocumentsSchema.extend({

@@ -10,7 +10,7 @@ import {
   describeCommitment,
   type Commitment,
   type CommitmentIntent,
-} from "../src/lib/animal-commitments";
+} from "@ifarm/shared";
 import { findCommitments } from "../src/server/animal/commitments";
 import { animalLabel } from "../src/server/batch-transfer/shared";
 

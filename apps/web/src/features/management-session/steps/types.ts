@@ -1,7 +1,7 @@
 import type { ComponentType } from "react";
 import type { Control } from "react-hook-form";
 import type { LucideIcon } from "lucide-react";
-import type { StepType } from "@/lib/management-steps";
+import type { StepType } from "@ifarm/shared";
 import type {
   ManagementOptions,
   SessionStepView,

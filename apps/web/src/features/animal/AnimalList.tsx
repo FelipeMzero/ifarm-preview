@@ -47,7 +47,7 @@ import {
 } from "./display";
 import AnimalDetails from "./AnimalDetails";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { ANIMAL_ORIGIN_LABELS, ANIMAL_STATUS_LABELS } from "@/lib/enum-labels";
+import { ANIMAL_ORIGIN_LABELS, ANIMAL_STATUS_LABELS } from "@ifarm/shared";
 import { ErrorPage } from "@/components/our/ErrorPage";
 import { useCurrentProperty } from "@/features/shell/CurrentPropertyProvider";
 

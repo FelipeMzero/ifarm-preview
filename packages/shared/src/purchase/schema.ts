@@ -1,10 +1,6 @@
 import { z } from "zod";
-import {
-  PurchaseCostSplit,
-  PurchasePricingType,
-  Sex,
-} from "@/generated/prisma/enums";
-import { FIELD_LIMITS } from "@/lib/field-limits";
+import { PurchaseCostSplit, PurchasePricingType, Sex } from "../enums";
+import { FIELD_LIMITS } from "../field-limits";
 
 const optionalText = (max: number) =>
   z
@@ -22,24 +18,10 @@ const optionalNumber = (schema: z.ZodNumber) =>
     .transform((v) => (v === "" || v == null ? null : v))
     .pipe(schema.nullable());
 
-export const purchaseQuerySchema = z.object({
-  propertyId: z.uuid().optional(),
-  page: z.coerce.number().int().min(0).optional().default(0),
-  pageSize: z.coerce.number().int().min(1).optional().default(10),
-  search: z.string().trim().optional().default(""),
-  status: z.preprocess(
-    (v) => (v === "" ? undefined : v),
-    // "all" = todas menos as canceladas.
-    z.enum(["open", "confirmed", "cancelled", "all"]).optional(),
-  ),
-});
-
-export type PurchaseQueryData = z.infer<typeof purchaseQuerySchema>;
-
 // Categoria da negociação. O preço da forma escolhida é obrigatório já na criação; só o
 // peso faturado (por arroba) pode vir depois — até o pagamento. Campos que não são da
 // forma escolhida são descartados.
-export const purchaseCategoryApiSchema = z
+export const purchaseCategorySchema = z
   .object({
     id: z.coerce.number().int().optional(),
     sex: z.enum(Sex),
@@ -102,9 +84,11 @@ export const purchaseCategoryApiSchema = z
     },
   );
 
-export type PurchaseCategoryApiData = z.infer<typeof purchaseCategoryApiSchema>;
+export type PurchaseCategoryData = z.infer<typeof purchaseCategorySchema>;
 
-export const purchaseApiSchema = z.object({
+// Contrato da API de compras (o formulário tem estado próprio, em features/purchase/schema.ts).
+// Datas como "AAAA-MM-DD"; o servidor converte (toLocalDay).
+export const purchaseSchema = z.object({
   title: z
     .string()
     .trim()
@@ -114,23 +98,17 @@ export const purchaseApiSchema = z.object({
       `Máximo de ${FIELD_LIMITS.purchase.title} caracteres`,
     ),
   sellerId: z.uuid("Selecione o vendedor."),
-  purchaseDate: z
-    .string()
-    .regex(/^\d{4}-\d{2}-\d{2}$/, "Informe uma data válida.")
-    .transform((v) => new Date(`${v}T00:00:00`)),
+  purchaseDate: z.iso.date("Informe uma data válida."),
   notes: optionalText(FIELD_LIMITS.purchase.notes),
   categories: z
-    .array(purchaseCategoryApiSchema)
+    .array(purchaseCategorySchema)
     .min(1, "Adicione ao menos uma categoria."),
   propertyId: z.uuid().optional(),
 });
 
-export const purchasePayApiSchema = z.object({
-  paidAt: z
-    .string()
-    .regex(/^\d{4}-\d{2}-\d{2}$/, "Informe uma data válida.")
-    .optional()
-    .transform((v) => (v ? new Date(`${v}T00:00:00`) : undefined)),
+// Pagamento: data informada (padrão: hoje) e referência opcional.
+export const purchasePaymentSchema = z.object({
+  paidAt: z.iso.date("Informe uma data válida.").optional(),
   paymentReference: optionalText(FIELD_LIMITS.purchase.paymentReference),
 });
 
@@ -139,3 +117,7 @@ export const receptionDocumentsSchema = z.object({
   gtaNumber: optionalText(FIELD_LIMITS.purchase.gtaNumber),
   invoiceNumber: optionalText(FIELD_LIMITS.purchase.invoiceNumber),
 });
+
+export type PurchaseData = z.output<typeof purchaseSchema>;
+export type PurchasePaymentData = z.output<typeof purchasePaymentSchema>;
+export type ReceptionDocumentsData = z.output<typeof receptionDocumentsSchema>;

@@ -4,7 +4,7 @@ import type {
   AnimalStatus,
   PersonType,
   MaritalStatus,
-} from "@/generated/prisma/enums";
+} from "./enums";
 
 export const SEX_LABELS: Record<Sex, string> = {
   MALE: "Macho",

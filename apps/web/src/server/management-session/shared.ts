@@ -12,8 +12,8 @@ import {
   type ManagementSessionStatus,
   type SessionStep,
   type StepType,
-} from "@/lib/management-steps";
-import type { CommitmentIntent } from "@/lib/animal-commitments";
+} from "@ifarm/shared";
+import type { CommitmentIntent } from "@ifarm/shared";
 import { animalLabel, summarize } from "@/server/batch-transfer/shared";
 import { stepModule } from "@/server/management-session/steps";
 import {

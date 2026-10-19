@@ -16,7 +16,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { FormField } from "@/components/our/FormField";
 import FieldRow from "@/components/our/FieldRow";
 import { SelectField } from "@/components/our/SelectField";
-import { SEX_ITEMS } from "@/lib/enum-labels";
+import { SEX_ITEMS } from "@ifarm/shared";
 import {
   COST_SPLIT_LABELS,
   PRICING_LABELS,
@@ -24,11 +24,11 @@ import {
   formatBRL,
 } from "./display";
 import type { PurchaseFormData } from "./schema";
-import type {
-  PurchaseCategory,
-  PurchaseCostSplit,
-  PurchasePricingType,
-} from "./services";
+import {
+  type PurchaseCategory,
+  type PurchaseCostSplit,
+  type PurchasePricingType,
+} from "@ifarm/shared";
 
 const PRICING_ITEMS = (
   Object.keys(PRICING_LABELS) as PurchasePricingType[]

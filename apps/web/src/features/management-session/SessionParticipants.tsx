@@ -4,7 +4,7 @@ import { useState } from "react";
 import { ChevronRight, CircleAlert, Loader2, Trash2 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
-import type { ParticipantStatus } from "@/lib/management-steps";
+import type { ParticipantStatus } from "@ifarm/shared";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";

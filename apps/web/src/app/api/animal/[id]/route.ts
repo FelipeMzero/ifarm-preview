@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma, Prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/api-auth";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
-import type { CommitmentIntent } from "@/lib/animal-commitments";
+import type { CommitmentIntent } from "@ifarm/shared";
 import {
   assertNoConflicts,
   CommitmentError,

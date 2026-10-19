@@ -37,14 +37,14 @@ import {
   ANIMAL_ORIGIN_LABELS,
   ANIMAL_STATUS_LABELS,
   SEX_ITEMS,
-} from "@/lib/enum-labels";
+} from "@ifarm/shared";
 import { AnimalEditFormData, animalEditFormSchema } from "./schema";
 import { Separator } from "@/components/ui/separator";
 import { AnimalBatchChangeDialog } from "./AnimalBatchChangeDialog";
 import { AnimalWeighingHistoryDialog } from "./AnimalWeighingHistoryDialog";
 import { AnimalIdentifierHistoryDialog } from "./AnimalIdentifierHistoryDialog";
 import { AnimalNeuteringHistoryDialog } from "./AnimalNeuteringHistoryDialog";
-import type { Commitment } from "@/lib/animal-commitments";
+import type { Commitment } from "@ifarm/shared";
 
 type AnimalEditFormProps = {
   id: string;

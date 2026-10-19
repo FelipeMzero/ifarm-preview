@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { dateField, formatDate, fromDbDate, toDbDate } from "./date";
+import {
+  dateField,
+  formatDate,
+  fromDbDate,
+  fromLocalDay,
+  toDbDate,
+  toLocalDay,
+} from "./date";
 
 describe("dateField", () => {
   it("aceita AAAA-MM-DD, vazio e ausente", () => {
@@ -29,5 +36,13 @@ describe("toDbDate / fromDbDate", () => {
 describe("formatDate", () => {
   it("formata no padrão brasileiro", () => {
     expect(formatDate("1990-05-10")).toBe("10/05/1990");
+  });
+});
+
+describe("toLocalDay / fromLocalDay", () => {
+  it("grava à meia-noite local e a ida e volta preservam o dia", () => {
+    const d = toLocalDay("2026-05-10");
+    expect([d.getHours(), d.getMinutes()]).toEqual([0, 0]);
+    expect(fromLocalDay(d)).toBe("2026-05-10");
   });
 });

@@ -8,7 +8,7 @@ import {
   STEP_TYPE_LABELS,
   STEP_TYPES,
   type StepType,
-} from "@/lib/management-steps";
+} from "@ifarm/shared";
 import type { PlanFormData } from "./schema";
 import type { ManagementOptions } from "./services";
 import { clientStepModule } from "./steps/registry";

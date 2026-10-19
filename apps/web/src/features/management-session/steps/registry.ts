@@ -1,5 +1,5 @@
 import type { ComponentType } from "react";
-import type { StepType } from "@/lib/management-steps";
+import type { StepType } from "@ifarm/shared";
 import { STEP_ICONS } from "../display";
 import BatchPlanFields from "./batch/BatchPlanFields";
 import BatchStep from "./batch/BatchStep";

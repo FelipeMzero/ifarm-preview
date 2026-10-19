@@ -1,5 +1,5 @@
 import "server-only";
-import { sessionStatus } from "@/lib/management-steps";
+import { sessionStatus } from "@ifarm/shared";
 import type { Prisma } from "@/lib/prisma";
 import { categoryLabel } from "@/server/purchase/reception";
 

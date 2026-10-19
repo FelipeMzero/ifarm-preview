@@ -7,7 +7,7 @@ import {
   sessionStepsSelect,
   STEP_TYPE_LABELS,
   toSessionSteps,
-} from "@/lib/management-steps";
+} from "@ifarm/shared";
 import { assertNoConflicts } from "@/server/animal/commitments";
 import { getOrAssignCurrentProperty } from "@/server/current-property/queries";
 import {

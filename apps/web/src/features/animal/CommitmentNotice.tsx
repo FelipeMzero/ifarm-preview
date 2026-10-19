@@ -4,7 +4,7 @@ import {
   describeCommitment,
   type Commitment,
   type CommitmentIntent,
-} from "@/lib/animal-commitments";
+} from "@ifarm/shared";
 
 // Avisa, antes de salvar, que o animal tem operação em aberto que conflita com o que
 // se vai fazer. O servidor aplica a mesma regra: o bloqueio aqui é só antecipado. Os

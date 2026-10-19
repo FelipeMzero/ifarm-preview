@@ -45,7 +45,8 @@ export async function GET(
       name: batch.name,
       notes: batch.notes ?? "",
       hasMeta: Boolean(batch.saleGoal),
-      targetDate: batch.saleGoal?.targetDate?.toISOString().slice(0, 10) ?? null,
+      targetDate:
+        batch.saleGoal?.targetDate?.toISOString().slice(0, 10) ?? null,
       targetWeight: batch.saleGoal?.targetWeight?.toNumber() ?? null,
       currentArea: activeHistory?.area ?? null,
       areaHistory: batch.batchAreaHistories.map((h) => ({
@@ -89,8 +90,15 @@ export async function PUT(
       return NextResponse.json({ success: false, errors }, { status: 400 });
     }
 
-    const { name, notes, hasMeta, targetDate, targetWeight, newAreaId, areaChangeDescription } =
-      validation.data;
+    const {
+      name,
+      notes,
+      hasMeta,
+      targetDate,
+      targetWeight,
+      newAreaId,
+      areaChangeDescription,
+    } = validation.data;
 
     const current = await prisma.batch.findUnique({
       where: { id },
@@ -122,7 +130,10 @@ export async function PUT(
         return NextResponse.json(
           {
             success: false,
-            errors: { newAreaId: "Área inválida ou inativa para a propriedade selecionada." },
+            errors: {
+              newAreaId:
+                "Área inválida ou inativa para a propriedade selecionada.",
+            },
           },
           { status: 400 },
         );
@@ -144,7 +155,9 @@ export async function PUT(
         return NextResponse.json(
           {
             success: false,
-            errors: { newAreaId: `A área de destino já está ocupada pelo lote "${occupied.batch.name}".` },
+            errors: {
+              newAreaId: `A área de destino já está ocupada pelo lote "${occupied.batch.name}".`,
+            },
           },
           { status: 400 },
         );

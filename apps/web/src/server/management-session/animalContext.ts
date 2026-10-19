@@ -1,5 +1,5 @@
 import "server-only";
-import { participantStatus } from "@/lib/management-steps";
+import { participantStatus } from "@ifarm/shared";
 import {
   effectiveNeutering,
   effectiveWeighing,

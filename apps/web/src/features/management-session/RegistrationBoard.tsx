@@ -30,7 +30,7 @@ import ListSkeleton from "@/components/our/ListSkeleton";
 import { AnimalPicker } from "@/features/batch-transfer/AnimalPicker";
 import type { TransferAnimal } from "@/features/batch-transfer/services";
 import { useCurrentProperty } from "@/features/shell/CurrentPropertyProvider";
-import type { ParticipantStatus } from "@/lib/management-steps";
+import type { ParticipantStatus } from "@ifarm/shared";
 import { SessionStatusBadge, formatSessionDate, todayIso } from "./display";
 import {
   addParticipants,

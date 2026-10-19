@@ -1,10 +1,6 @@
 import "server-only";
 import { z } from "zod";
-import {
-  stepKey,
-  type SessionStep,
-  type StepType,
-} from "@/lib/management-steps";
+import { stepKey, type SessionStep, type StepType } from "@ifarm/shared";
 import { batchStep } from "@/server/management-session/steps/batch";
 import { healthStep } from "@/server/management-session/steps/health";
 import {

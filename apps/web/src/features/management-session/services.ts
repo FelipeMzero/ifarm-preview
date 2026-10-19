@@ -2,7 +2,7 @@ import type {
   ManagementSessionStatus,
   ParticipantStatus,
   StepType,
-} from "@/lib/management-steps";
+} from "@ifarm/shared";
 
 export class ApiError extends Error {
   errors?: Record<string, string>;

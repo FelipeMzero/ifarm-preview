@@ -28,8 +28,8 @@ import {
   blockingReason,
   type CommitmentExclusion,
   type CommitmentIntent,
-} from "@/lib/animal-commitments";
-import { SEX_ITEMS } from "@/lib/enum-labels";
+} from "@ifarm/shared";
+import { SEX_ITEMS } from "@ifarm/shared";
 import { cn } from "@/lib/utils";
 import { TransferAnimal } from "./services";
 

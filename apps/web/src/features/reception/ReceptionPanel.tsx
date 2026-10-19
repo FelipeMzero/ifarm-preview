@@ -5,7 +5,7 @@ import { ArrowRight, Loader2, Plus, TriangleAlert, Truck } from "lucide-react";
 import { toast } from "sonner";
 
 import { cn } from "@/lib/utils";
-import { SEX_ITEMS } from "@/lib/enum-labels";
+import { SEX_ITEMS } from "@ifarm/shared";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SelectField } from "@/components/our/SelectField";

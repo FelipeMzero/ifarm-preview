@@ -52,7 +52,7 @@ import { neuteringTechniqueClient } from "@/lib/clients";
 import { type NeuteringTechnique } from "@ifarm/shared";
 import { techniqueItems } from "@/features/neutering-technique/items";
 import { SelectField } from "@/components/our/SelectField";
-import type { Commitment } from "@/lib/animal-commitments";
+import type { Commitment } from "@ifarm/shared";
 import { CommitmentNotice } from "./CommitmentNotice";
 import { formatDate } from "./format";
 

@@ -39,7 +39,7 @@ import {
   formatTaxId,
   type PersonInput,
 } from "@ifarm/shared";
-import { MARITAL_STATUS_LABELS as MARITAL_STATUS_LABEL } from "@/lib/enum-labels";
+import { MARITAL_STATUS_LABELS as MARITAL_STATUS_LABEL } from "@ifarm/shared";
 
 function formatPhone(value: string): string {
   const digits = value.replace(/\D/g, "");

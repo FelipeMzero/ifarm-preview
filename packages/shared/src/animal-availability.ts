@@ -1,5 +1,5 @@
-import type { AnimalStatus } from "@/generated/prisma/enums";
-import { ANIMAL_STATUS_LABELS } from "@/lib/enum-labels";
+import type { AnimalStatus } from "./enums";
+import { ANIMAL_STATUS_LABELS } from "./enum-labels";
 
 // Por que o animal não pode mais participar de uma operação em aberto da propriedade
 // (ex.: morreu ou foi transferido depois de ser incluído nela); null = pode participar.

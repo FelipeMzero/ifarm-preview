@@ -14,7 +14,7 @@ import {
   stepKey,
   toStepRows,
   type SessionStep,
-} from "../src/lib/management-steps";
+} from "@ifarm/shared";
 import { consolidateSession } from "../src/server/management-session/consolidate";
 import { findCommitments } from "../src/server/animal/commitments";
 import { saveAnimalStep } from "../src/server/management-session/records";

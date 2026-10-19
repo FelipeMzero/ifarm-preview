@@ -6,6 +6,7 @@ import {
   createNeuteringTechniqueClient,
   createPersonClient,
   createPropertyClient,
+  createPurchaseClient,
   createStockingClient,
   type ApiRequest,
 } from "@ifarm/shared";
@@ -23,3 +24,4 @@ export const stockingClient = createStockingClient(request);
 export const currentPropertyClient = createCurrentPropertyClient(request);
 export const propertyClient = createPropertyClient(request);
 export const areaClient = createAreaClient(request);
+export const purchaseClient = createPurchaseClient(request);

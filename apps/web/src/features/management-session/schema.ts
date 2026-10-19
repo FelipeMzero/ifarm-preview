@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { FIELD_LIMITS } from "@/lib/field-limits";
-import { STEP_TYPES } from "@/lib/management-steps";
+import { STEP_TYPES } from "@ifarm/shared";
 
 // Uma etapa no formulário de planejamento. Os campos extras só valem para o tipo
 // correspondente (castração, sanitário e apartação); os demais tipos não têm configuração.

@@ -18,7 +18,7 @@ import {
   ANIMAL_ORIGIN_ITEMS,
   ANIMAL_STATUS_ITEMS,
   SEX_ITEMS,
-} from "@/lib/enum-labels";
+} from "@ifarm/shared";
 
 // Filtros da lista de animais. "" = sem filtro. Os valores são os da API.
 export type AnimalListFilters = {

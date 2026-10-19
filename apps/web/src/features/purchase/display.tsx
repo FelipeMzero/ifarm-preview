@@ -1,9 +1,9 @@
 import { Badge } from "@/components/ui/badge";
-import type {
-  PurchaseCostSplit,
-  PurchasePricingType,
-  PurchaseStatus,
-} from "./services";
+import {
+  type PurchaseCostSplit,
+  type PurchasePricingType,
+  type PurchaseStatus,
+} from "@ifarm/shared";
 
 export const PURCHASE_STATUS_LABELS: Record<PurchaseStatus, string> = {
   open: "Em andamento",

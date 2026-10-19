@@ -35,7 +35,7 @@ import { Input } from "@/components/ui/input";
 import { SelectField } from "@/components/our/SelectField";
 import { personClient } from "@/lib/clients";
 import { PersonType, formatTaxId, type PersonRow } from "@ifarm/shared";
-import { PERSON_TYPE_ITEMS, PERSON_TYPE_LABELS } from "@/lib/enum-labels";
+import { PERSON_TYPE_ITEMS, PERSON_TYPE_LABELS } from "@ifarm/shared";
 import { ErrorPage } from "@/components/our/ErrorPage";
 
 const DEFAULT_PAGE_SIZE = 10;
@@ -75,12 +75,8 @@ const COLUMN_LABELS: Record<string, string> = {
 const TYPE_LABEL: Record<string, string> = PERSON_TYPE_LABELS;
 
 const TYPE_ICON: Record<string, React.ReactNode> = {
-  [PersonType.INDIVIDUAL]: (
-    <User className="size-4 text-muted-foreground" />
-  ),
-  [PersonType.COMPANY]: (
-    <Building2 className="size-4 text-muted-foreground" />
-  ),
+  [PersonType.INDIVIDUAL]: <User className="size-4 text-muted-foreground" />,
+  [PersonType.COMPANY]: <Building2 className="size-4 text-muted-foreground" />,
 };
 
 function buildColumns(

@@ -49,7 +49,7 @@ import {
   ANIMAL_ORIGIN_LABELS,
   ANIMAL_STATUS_LABELS,
   SEX_LABELS,
-} from "@/lib/enum-labels";
+} from "@ifarm/shared";
 import { cn } from "@/lib/utils";
 import { AnimalFullDetails, deleteAnimal, getAnimalDetails } from "./services";
 import { ORIGIN_VARIANT, SEX_ICON, STATUS_VARIANT } from "./display";

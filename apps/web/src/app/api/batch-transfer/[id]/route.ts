@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/api-auth";
-import { unavailableReason } from "@/lib/animal-availability";
+import { unavailableReason } from "@ifarm/shared";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
 import { batchTransferApiSchema } from "../../schemas";
 import {

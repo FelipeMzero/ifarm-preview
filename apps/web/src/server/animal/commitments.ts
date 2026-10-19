@@ -7,12 +7,8 @@ import {
   type Commitment,
   type CommitmentExclusion,
   type CommitmentIntent,
-} from "@/lib/animal-commitments";
-import {
-  sessionStepsSelect,
-  stepKey,
-  toSessionSteps,
-} from "@/lib/management-steps";
+} from "@ifarm/shared";
+import { sessionStepsSelect, stepKey, toSessionSteps } from "@ifarm/shared";
 import { animalLabel, summarize } from "@/server/batch-transfer/shared";
 
 // Compromissos pendentes dos animais (regras em lib/animal-commitments.ts e em

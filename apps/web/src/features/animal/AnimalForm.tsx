@@ -47,7 +47,7 @@ import {
 } from "./schema";
 import { Separator } from "@/components/ui/separator";
 import { FormActionBar } from "@/components/our/FormActionBar";
-import { ANIMAL_ORIGIN_ITEMS, SEX_ITEMS } from "@/lib/enum-labels";
+import { ANIMAL_ORIGIN_ITEMS, SEX_ITEMS } from "@ifarm/shared";
 
 type AnimalFormProps = {
   title?: string;

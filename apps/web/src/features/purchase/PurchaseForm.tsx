@@ -50,16 +50,8 @@ import {
   type PurchaseCategoryForm,
   type PurchaseFormData,
 } from "./schema";
-import {
-  ApiError,
-  cancelPurchase,
-  consolidatePurchase,
-  createPurchase,
-  getPurchase,
-  undoPurchasePayment,
-  updatePurchase,
-  type PurchaseDetail,
-} from "./services";
+import { purchaseClient } from "@/lib/clients";
+import { ApiError, type PurchaseDetail } from "@ifarm/shared";
 
 const todayIso = () => new Date().toLocaleDateString("en-CA");
 const str = (v: number | null | undefined) => (v == null ? "" : String(v));
@@ -195,7 +187,8 @@ export function PurchaseForm({ id }: { id?: string }) {
   useEffect(() => {
     if (!id) return;
     let cancelled = false;
-    getPurchase(id)
+    purchaseClient
+      .getPurchase(id)
       .then((data) => {
         if (cancelled) return;
         setDetail(data);
@@ -233,11 +226,11 @@ export function PurchaseForm({ id }: { id?: string }) {
     };
     try {
       if (id) {
-        await updatePurchase(id, payload);
+        await purchaseClient.updatePurchase(id, payload);
         toast.success("Compra atualizada!");
         setRefreshKey((k) => k + 1);
       } else {
-        const result = await createPurchase(payload);
+        const result = await purchaseClient.createPurchase(payload);
         toast.success("Compra registrada!");
         router.replace(`/compras/${result.data.id}`);
       }
@@ -264,15 +257,15 @@ export function PurchaseForm({ id }: { id?: string }) {
     setAction(null);
     try {
       if (current === "consolidate") {
-        await consolidatePurchase(id);
+        await purchaseClient.consolidatePurchase(id);
         toast.success(
           "Compra consolidada. Os custos dos animais foram rateados.",
         );
       } else if (current === "undoPay") {
-        await undoPurchasePayment(id);
+        await purchaseClient.undoPurchasePayment(id);
         toast.success("Pagamento desfeito. Os valores podem ser corrigidos.");
       } else {
-        await cancelPurchase(id);
+        await purchaseClient.cancelPurchase(id);
         toast.success("Compra cancelada.");
       }
       setRefreshKey((k) => k + 1);

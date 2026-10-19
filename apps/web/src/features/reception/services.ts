@@ -1,4 +1,4 @@
-import type { ManagementSessionStatus } from "@/lib/management-steps";
+import type { ManagementSessionStatus } from "@ifarm/shared";
 import { ApiError } from "@/features/management-session/services";
 
 // Área de recepções: a compra vista por quem recebe os animais (sem valores).

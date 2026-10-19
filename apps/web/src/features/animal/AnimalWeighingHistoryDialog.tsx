@@ -39,7 +39,7 @@ import {
 } from "./services";
 import { AnimalWeighingCorrectionForm } from "./AnimalWeighingCorrectionForm";
 import { WeighingCorrectionNote } from "./WeighingCorrectionNote";
-import type { Commitment } from "@/lib/animal-commitments";
+import type { Commitment } from "@ifarm/shared";
 import { CommitmentNotice } from "./CommitmentNotice";
 import { formatDate, formatKg } from "./format";
 

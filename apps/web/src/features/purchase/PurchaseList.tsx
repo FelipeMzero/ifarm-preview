@@ -19,7 +19,8 @@ import {
   formatBRL,
   formatDay,
 } from "./display";
-import { getPurchases, type PurchaseRow } from "./services";
+import { purchaseClient } from "@/lib/clients";
+import { type PurchaseRow } from "@ifarm/shared";
 
 const DEFAULT_PAGE_SIZE = 10;
 
@@ -156,7 +157,7 @@ export default function PurchaseList() {
     async function load() {
       setLoading(true);
       try {
-        const result = await getPurchases({
+        const result = await purchaseClient.getPurchases({
           propertyId: currentProperty?.id,
           page: pageIndex,
           pageSize,

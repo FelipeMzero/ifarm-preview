@@ -1,8 +1,6 @@
-import "server-only";
+import type { PurchaseCategoryData, PurchaseStatus } from "@ifarm/shared";
 import type { Prisma } from "@/lib/prisma";
 import { BusinessError } from "@/server/errors";
-
-export type PurchaseStatus = "open" | "confirmed" | "cancelled";
 
 // Em andamento → consolidada (fim: custos rateados) ou cancelada (desconsiderada). O
 // pagamento é um fato do andamento, não uma situação.
@@ -58,4 +56,28 @@ export function missingValue(c: CategoryPricing) {
     return "o peso faturado";
   }
   return null;
+}
+
+// Campos que definem quanto se paga: bloqueados depois do pagamento.
+const VALUE_FIELDS = [
+  "pricingType",
+  "unitPrice",
+  "totalPrice",
+  "invoicedWeight",
+  "shrinkPercent",
+] as const;
+
+// A categoria gravada e a nova versão têm o mesmo valor (forma de preço, preços e pesos)?
+export function sameValue(
+  saved: Record<(typeof VALUE_FIELDS)[number], unknown>,
+  next: PurchaseCategoryData,
+) {
+  return VALUE_FIELDS.every((field) => {
+    const a = saved[field];
+    const b = next[field];
+    if (field === "pricingType") return a === b;
+    const n = (v: unknown) =>
+      v == null ? null : Number((v as { toString(): string }).toString());
+    return n(a) === n(b);
+  });
 }

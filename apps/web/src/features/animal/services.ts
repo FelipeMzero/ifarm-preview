@@ -1,4 +1,4 @@
-import type { Commitment, CommitmentExclusion } from "@/lib/animal-commitments";
+import type { Commitment, CommitmentExclusion } from "@ifarm/shared";
 import { AnimalFormData } from "./schema";
 
 export class ApiError extends Error {

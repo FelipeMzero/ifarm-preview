@@ -12,7 +12,7 @@ import type {
   ManagementSessionStatus,
   ParticipantStatus,
   StepType,
-} from "@/lib/management-steps";
+} from "@ifarm/shared";
 
 export const SESSION_STATUS_LABELS: Record<ManagementSessionStatus, string> = {
   planned: "Planejada",
