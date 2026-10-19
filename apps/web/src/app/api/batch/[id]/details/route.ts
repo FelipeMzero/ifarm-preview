@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/api-auth";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
 import { sortWeighings, toWeighingDto } from "../../../animal/weighings";
-import { stockingPreview } from "../../../stocking";
+import { stockingPreview } from "@/server/stocking/queries";
 import { effectiveWeighing } from "../../../management-session/effective";
 
 const DAY_MS = 24 * 60 * 60 * 1000;

@@ -10,7 +10,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorPage } from "@/components/our/ErrorPage";
 import { useCurrentProperty } from "@/features/shell/CurrentPropertyProvider";
-import { getCurrentPropertyDetails, CurrentPropertyDetails } from "./services";
+import { currentPropertyClient } from "@/lib/clients";
+import { type CurrentPropertyDetails } from "@ifarm/shared";
 
 function DashboardSkeleton() {
   return (
@@ -40,7 +41,7 @@ export default function Dashboard() {
     async function load() {
       setLoading(true);
       try {
-        const data = await getCurrentPropertyDetails();
+        const data = await currentPropertyClient.getCurrentPropertyDetails();
         if (!cancelled) setProperty(data);
       } catch (e) {
         if (!cancelled) setError((e as Error).message);

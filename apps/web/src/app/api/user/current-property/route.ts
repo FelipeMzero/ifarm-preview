@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/api-auth";
-import { getOrAssignCurrentProperty } from "./currentProperty";
+import { getOrAssignCurrentProperty } from "@/server/current-property/queries";
+import { setCurrentProperty } from "@/server/current-property/mutations";
+import { errorResponse } from "../../http";
 
 const bodySchema = z.object({
   propertyId: z.string().min(1, "Este campo não pode ser vazio"),
@@ -15,44 +16,33 @@ export async function GET() {
   const { session, response } = await requireSession();
   if (response) return response;
 
-  const currentProperty = await getOrAssignCurrentProperty(session.user.id);
-
-  return NextResponse.json({ data: currentProperty });
+  try {
+    const data = await getOrAssignCurrentProperty(session.user.id);
+    return NextResponse.json({ data });
+  } catch (error) {
+    return errorResponse(error);
+  }
 }
 
 export async function PUT(request: NextRequest) {
   const { session, response } = await requireSession();
   if (response) return response;
 
-  const body = await request.json();
-  const validation = bodySchema.safeParse(body);
+  try {
+    const validation = bodySchema.safeParse(await request.json());
+    if (!validation.success) {
+      return NextResponse.json(
+        { message: "Parâmetros inválidos." },
+        { status: 400 },
+      );
+    }
 
-  if (!validation.success) {
-    return NextResponse.json(
-      { message: "Parâmetros inválidos." },
-      { status: 400 },
+    const data = await setCurrentProperty(
+      session.user.id,
+      validation.data.propertyId,
     );
+    return NextResponse.json({ data });
+  } catch (error) {
+    return errorResponse(error);
   }
-
-  const { propertyId } = validation.data;
-
-  const property = await prisma.property.findUnique({
-    where: { id: propertyId },
-    select: { id: true, name: true },
-  });
-
-  if (!property) {
-    return NextResponse.json(
-      { message: "Propriedade não encontrada." },
-      { status: 404 },
-    );
-  }
-
-  await prisma.userSettings.upsert({
-    where: { userId: session.user.id },
-    create: { userId: session.user.id, currentPropertyId: propertyId },
-    update: { currentPropertyId: propertyId },
-  });
-
-  return NextResponse.json({ data: { id: property.id, name: property.name } });
 }

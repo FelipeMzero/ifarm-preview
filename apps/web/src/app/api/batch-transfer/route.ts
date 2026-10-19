@@ -7,7 +7,7 @@ import {
   batchTransferQuerySchema,
   type BatchTransferQueryData,
 } from "@/app/api/schemas";
-import { getOrAssignCurrentProperty } from "../user/current-property/currentProperty";
+import { getOrAssignCurrentProperty } from "@/server/current-property/queries";
 import {
   assertNoConflicts,
   CommitmentError,

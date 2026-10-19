@@ -11,3 +11,6 @@ export * from "./health-management-type/schema";
 export * from "./health-management-type/client";
 export * from "./neutering-technique/schema";
 export * from "./neutering-technique/client";
+export * from "./stocking/schema";
+export * from "./stocking/client";
+export * from "./current-property/client";

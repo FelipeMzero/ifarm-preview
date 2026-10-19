@@ -1,8 +1,10 @@
 import {
   createBreedClient,
+  createCurrentPropertyClient,
   createHealthManagementTypeClient,
   createNeuteringTechniqueClient,
   createPersonClient,
+  createStockingClient,
   type ApiRequest,
 } from "@ifarm/shared";
 
@@ -15,3 +17,5 @@ export const breedClient = createBreedClient(request);
 export const healthManagementTypeClient =
   createHealthManagementTypeClient(request);
 export const neuteringTechniqueClient = createNeuteringTechniqueClient(request);
+export const stockingClient = createStockingClient(request);
+export const currentPropertyClient = createCurrentPropertyClient(request);

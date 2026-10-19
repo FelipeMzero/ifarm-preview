@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/api-auth";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
-import { getOrAssignCurrentProperty } from "../../user/current-property/currentProperty";
+import { getOrAssignCurrentProperty } from "@/server/current-property/queries";
 
 // Opções usadas no planejamento e no registro: tipos de procedimento sanitário,
 // técnicas de castração, pessoas (veterinário responsável) e lotes ativos da

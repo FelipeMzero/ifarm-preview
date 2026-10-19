@@ -3,7 +3,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/api-auth";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
-import { getOrAssignCurrentProperty } from "../../user/current-property/currentProperty";
+import { getOrAssignCurrentProperty } from "@/server/current-property/queries";
 import {
   isPending,
   receptionPurchaseInclude,

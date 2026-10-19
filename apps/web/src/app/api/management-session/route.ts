@@ -9,7 +9,7 @@ import {
   toSessionSteps,
 } from "@/lib/management-steps";
 import { assertNoConflicts } from "../animal/commitments";
-import { getOrAssignCurrentProperty } from "../user/current-property/currentProperty";
+import { getOrAssignCurrentProperty } from "@/server/current-property/queries";
 import {
   managementSessionApiSchema,
   managementSessionQuerySchema,

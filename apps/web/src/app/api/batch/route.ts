@@ -8,7 +8,7 @@ import {
   type BatchQueryData,
 } from "@/app/api/schemas";
 import { uniqueConstraintErrors } from "@/server/db-errors";
-import { getOrAssignCurrentProperty } from "../user/current-property/currentProperty";
+import { getOrAssignCurrentProperty } from "@/server/current-property/queries";
 
 function buildWhere(query: BatchQueryData) {
   const where: Record<string, unknown> = {

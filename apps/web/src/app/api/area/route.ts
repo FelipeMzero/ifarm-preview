@@ -4,8 +4,8 @@ import { requireSession } from "@/lib/api-auth";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
 import { uniqueConstraintErrors } from "@/server/db-errors";
 import { areaApiSchema, areaQuerySchema } from "../schemas";
-import { getOrAssignCurrentProperty } from "../user/current-property/currentProperty";
-import { areasLastExit, areasOccupancy } from "../stocking";
+import { getOrAssignCurrentProperty } from "@/server/current-property/queries";
+import { areasLastExit, areasOccupancy } from "@/server/stocking/queries";
 
 export async function GET(request: NextRequest) {
   const { session, response } = await requireSession(RESOURCE_ACCESS.areas);

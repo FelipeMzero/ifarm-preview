@@ -1,72 +1,8 @@
+import "server-only";
+import type { AreaOccupancy, Sex, StockingPreview } from "@ifarm/shared";
 import { prisma } from "@/lib/prisma";
-import type { Sex } from "@/generated/prisma/enums";
-
-// Unidade Animal: 450 kg de peso vivo.
-export const UA_KG = 450;
-
-// Equivalência usada quando o animal não tem peso, mas tem data de nascimento.
-const UA_BY_AGE = {
-  upTo12Months: 0.4,
-  upTo24Months: 0.75,
-  adult: 1,
-  adultBull: 1.25,
-} as const;
-
-// Sem peso e sem idade: conta como 1 UA para não subestimar a ocupação.
-const UA_FALLBACK = 1;
-
-export type UaAnimal = {
-  currentWeight: number | null;
-  birthDate: Date | null;
-  sex: Sex;
-  neutered: boolean;
-};
-
-function ageInMonths(birthDate: Date, now: Date) {
-  return (
-    (now.getFullYear() - birthDate.getFullYear()) * 12 +
-    (now.getMonth() - birthDate.getMonth())
-  );
-}
-
-// UA de um animal: pelo peso quando houver; senão estimada pela idade; senão 1 UA.
-export function animalUnits(
-  animal: UaAnimal,
-  now = new Date(),
-): { ua: number; estimated: boolean } {
-  if (animal.currentWeight != null && animal.currentWeight > 0) {
-    return { ua: animal.currentWeight / UA_KG, estimated: false };
-  }
-
-  if (animal.birthDate) {
-    const months = ageInMonths(animal.birthDate, now);
-    if (months <= 12) return { ua: UA_BY_AGE.upTo12Months, estimated: true };
-    if (months <= 24) return { ua: UA_BY_AGE.upTo24Months, estimated: true };
-    const isBull = animal.sex === "MALE" && !animal.neutered;
-    return {
-      ua: isBull ? UA_BY_AGE.adultBull : UA_BY_AGE.adult,
-      estimated: true,
-    };
-  }
-
-  return { ua: UA_FALLBACK, estimated: true };
-}
-
-type UaTotal = { ua: number; count: number; estimatedCount: number };
-
-function sumUnits(animals: UaAnimal[], now: Date): UaTotal {
-  return animals.reduce<UaTotal>(
-    (acc, a) => {
-      const { ua, estimated } = animalUnits(a, now);
-      return {
-        ua: acc.ua + ua,
-        count: acc.count + 1,
-        estimatedCount: acc.estimatedCount + (estimated ? 1 : 0),
-      };
-    },
-    { ua: 0, count: 0, estimatedCount: 0 },
-  );
-}
+import { NotFoundError } from "../errors";
+import { sumUnits, type UaAnimal } from "./rules";
 
 const UA_SELECT = {
   id: true,
@@ -89,15 +25,6 @@ function toUaAnimal(a: {
     neutered: a.neutered,
   };
 }
-
-export type StockingPreview = {
-  area: { id: string; name: string };
-  capacityUa: number;
-  current: UaTotal;
-  incoming: UaTotal;
-  projectedUa: number;
-  exceeds: boolean;
-};
 
 // Ocupação de uma área (em UA) antes e depois de receber animais. A área alvo vem
 // de `areaId` ou da área atual de `batchId`. Entram na conta os animais listados,
@@ -177,16 +104,23 @@ export async function stockingPreview(params: {
   };
 }
 
-export type AreaOccupancy = {
-  batch: { id: string; name: string };
-  /** Entrada do lote atual na área (início do período de ocupação). */
-  occupiedSince: string;
-  animalCount: number;
-  currentUa: number;
-  estimatedCount: number;
-  capacityUa: number;
-  exceeds: boolean;
-};
+// Mesma prévia, para a confirmação de uma transferência já salva: área do lote de destino e
+// animais da transferência.
+export async function transferStockingPreview(transferId: string) {
+  const transfer = await prisma.animalBatchTransfer.findUnique({
+    where: { id: transferId },
+    select: {
+      destinationBatchId: true,
+      items: { select: { animalId: true } },
+    },
+  });
+  if (!transfer) throw new NotFoundError("Transferência não encontrada.");
+
+  return stockingPreview({
+    batchId: transfer.destinationBatchId,
+    animalIds: transfer.items.map((i) => i.animalId),
+  });
+}
 
 // Ocupação atual de várias áreas de uma vez (para o mapa): lote aberto em cada área,
 // quantidade de animais e UA. Áreas livres ficam fora do mapa retornado.

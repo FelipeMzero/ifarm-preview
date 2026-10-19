@@ -1,9 +1,5 @@
 import { z } from "zod";
-import {
-  Sex,
-  AnimalOrigin,
-  AnimalStatus,
-} from "@/generated/prisma/enums";
+import { Sex, AnimalOrigin, AnimalStatus } from "@/generated/prisma/enums";
 import { FIELD_LIMITS } from "@/lib/field-limits";
 
 export const animalCreateApiSchema = z
@@ -602,30 +598,6 @@ export const batchTransferApiSchema = z.object({
 });
 
 export type BatchTransferApiData = z.infer<typeof batchTransferApiSchema>;
-
-export const stockingPreviewApiSchema = z.object({
-  areaId: z.uuid().optional(),
-  batchId: z.uuid().optional(),
-  transferId: z.uuid().optional(),
-  animalIds: z.array(z.uuid()).optional().default([]),
-  batchIds: z.array(z.uuid()).optional().default([]),
-  newAnimals: z
-    .array(
-      z.object({
-        weightKg: z.number().positive().nullable().optional(),
-        birthDate: z
-          .string()
-          .optional()
-          .transform((v) => (v ? new Date(`${v}T00:00:00`) : null)),
-        sex: z.enum(Sex),
-        neutered: z.boolean().optional().default(false),
-      }),
-    )
-    .optional()
-    .default([]),
-});
-
-export type StockingPreviewApiData = z.infer<typeof stockingPreviewApiSchema>;
 
 export const batchReopenApiSchema = z.object({
   areaId: z.uuid("Selecione a área do lote."),

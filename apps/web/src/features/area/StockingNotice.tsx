@@ -3,11 +3,8 @@
 import { useEffect, useState } from "react";
 import { Info, TriangleAlert } from "lucide-react";
 import { cn } from "@/lib/utils";
-import {
-  StockingPreview,
-  StockingPreviewRequest,
-  getStockingPreview,
-} from "./stocking";
+import { stockingClient } from "@/lib/clients";
+import type { StockingPreview, StockingPreviewRequest } from "@ifarm/shared";
 
 function formatUa(value: number) {
   return value.toLocaleString("pt-BR", {
@@ -60,7 +57,7 @@ export function StockingNotice({
     let cancelled = false;
     const timer = setTimeout(async () => {
       try {
-        const result = await getStockingPreview(JSON.parse(key));
+        const result = await stockingClient.getStockingPreview(JSON.parse(key));
         if (!cancelled) setPreview(result);
       } catch {
         // A prévia é só informativa; sem ela a operação segue normalmente.

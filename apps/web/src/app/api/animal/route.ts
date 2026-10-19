@@ -4,7 +4,7 @@ import { requireSession } from "@/lib/api-auth";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
 import { uniqueConstraintErrors } from "@/server/db-errors";
 import { animalCreateApiSchema, animalQuerySchema } from "../schemas";
-import { getOrAssignCurrentProperty } from "../user/current-property/currentProperty";
+import { getOrAssignCurrentProperty } from "@/server/current-property/queries";
 import {
   INVALID_TECHNIQUE_MESSAGE,
   isValidNeuteringTechnique,

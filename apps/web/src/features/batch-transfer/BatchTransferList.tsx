@@ -30,7 +30,7 @@ import {
   getBatchTransfers,
 } from "./services";
 import { TransferStatusBadge, formatTransferDate } from "./display";
-import { getStockingPreview } from "@/features/area/stocking";
+import { stockingClient } from "@/lib/clients";
 import { describeStocking } from "@/features/area/StockingNotice";
 
 const DEFAULT_PAGE_SIZE = 10;
@@ -227,7 +227,8 @@ export default function BatchTransferList() {
     onEdit: (id) => router.push(`/lotes/transferencias/${id}`),
     onConfirm: (row) => {
       setPendingAction({ type: "confirm", row });
-      getStockingPreview({ transferId: row.id })
+      stockingClient
+        .getStockingPreview({ transferId: row.id })
         .then((preview) =>
           setStockingWarning(
             preview?.exceeds

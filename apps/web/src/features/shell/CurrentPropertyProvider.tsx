@@ -11,7 +11,7 @@ import {
   getPropertyOptions,
   PropertyOption,
 } from "@/features/property/services";
-import { getCurrentProperty, setCurrentProperty } from "./services";
+import { currentPropertyClient } from "@/lib/clients";
 
 type CurrentPropertyContextValue = {
   property: PropertyOption | null;
@@ -37,7 +37,7 @@ export function CurrentPropertyProvider({ children }: { children: ReactNode }) {
     try {
       const [freshOptions, freshProperty] = await Promise.all([
         getPropertyOptions(),
-        getCurrentProperty(),
+        currentPropertyClient.getCurrentProperty(),
       ]);
       setOptions(freshOptions);
       setProperty(freshProperty);
@@ -61,7 +61,7 @@ export function CurrentPropertyProvider({ children }: { children: ReactNode }) {
   }, []);
 
   async function select(propertyId: string) {
-    const updated = await setCurrentProperty(propertyId);
+    const updated = await currentPropertyClient.setCurrentProperty(propertyId);
     setProperty(updated);
   }
 
