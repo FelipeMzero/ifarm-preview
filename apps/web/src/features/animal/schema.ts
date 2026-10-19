@@ -1,10 +1,10 @@
 import { z } from "zod";
 import {
+  FIELD_LIMITS,
   Sex as EnumSex,
   AnimalOrigin as EnumAnimalOrigin,
   AnimalStatus as EnumAnimalStatus,
-} from "@/generated/prisma/enums";
-import { FIELD_LIMITS } from "@ifarm/shared";
+} from "@ifarm/shared";
 
 export { EnumSex, EnumAnimalOrigin, EnumAnimalStatus };
 
