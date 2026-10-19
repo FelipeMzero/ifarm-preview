@@ -13,7 +13,10 @@ export type ApiResponse = {
 };
 
 /** Faz a requisição para `path` (ex.: "/api/person"), relativo à origem da API. */
-export type ApiRequest = (path: string, init?: ApiRequestInit) => Promise<ApiResponse>;
+export type ApiRequest = (
+  path: string,
+  init?: ApiRequestInit,
+) => Promise<ApiResponse>;
 
 export class ApiError extends Error {
   errors?: Record<string, string>;
@@ -27,15 +30,21 @@ export class ApiError extends Error {
 
 type ErrorBody = { message?: string; errors?: Record<string, string> };
 
-/** Lê o corpo JSON; em resposta de erro, lança ApiError com a mensagem e os erros por campo. */
+/**
+ * Lê o corpo JSON; em resposta de erro, lança ApiError com a mensagem e os erros por campo.
+ * Com `messageField`, o erro desse campo, se houver, vira a mensagem principal (telas que só
+ * mostram um aviso, sem destacar campos).
+ */
 export async function readJson<T>(
   response: ApiResponse,
   fallbackMessage: string,
+  messageField?: string,
 ): Promise<T> {
   const body = await response.json();
   if (!response.ok) {
     const { message, errors } = (body ?? {}) as ErrorBody;
-    throw new ApiError(message ?? fallbackMessage, errors);
+    const fieldMessage = messageField ? errors?.[messageField] : undefined;
+    throw new ApiError(fieldMessage ?? message ?? fallbackMessage, errors);
   }
   return body as T;
 }

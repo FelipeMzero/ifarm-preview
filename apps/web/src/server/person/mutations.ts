@@ -2,9 +2,10 @@ import "server-only";
 import { toDbDate, type PersonInput } from "@ifarm/shared";
 import { prisma } from "@/lib/prisma";
 import { buildAddressWrite, toAddressData } from "../address";
-import { dbConflict } from "../db-errors";
+import { write } from "../db-errors";
 import { NotFoundError } from "../errors";
-import { toggledDeactivatedAt, withoutImmutableFields } from "./rules";
+import { toggledDeactivatedAt } from "../status";
+import { withoutImmutableFields } from "./rules";
 
 // Converte o que veio do formulário (textos, "" para vazio) para o formato do banco.
 function toPersonData(input: PersonInput) {
@@ -20,15 +21,6 @@ function toPersonData(input: PersonInput) {
     birthDate: input.birthDate ? toDbDate(input.birthDate) : null,
     maritalStatus: input.maritalStatus || null,
   };
-}
-
-// Executa a escrita trocando os erros de unicidade e de vínculo do Prisma por ConflictError.
-async function write<T>(operation: () => Promise<T>): Promise<T> {
-  try {
-    return await operation();
-  } catch (error) {
-    throw dbConflict(error) ?? error;
-  }
 }
 
 async function findOrThrow(id: string) {

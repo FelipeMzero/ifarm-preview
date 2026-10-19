@@ -32,7 +32,7 @@ import {
   SearchCombobox,
   type SearchComboboxItem,
 } from "@/components/our/SearchCombobox";
-import { getBreeds } from "@/features/breed/services";
+import { breedClient } from "@/lib/clients";
 import { personClient } from "@/lib/clients";
 import { SessionStatusBadge } from "@/features/management-session/display";
 import { useCurrentProperty } from "@/features/shell/CurrentPropertyProvider";
@@ -172,7 +172,8 @@ export function PurchaseForm({ id }: { id?: string }) {
 
   useEffect(() => {
     let cancelled = false;
-    personClient.getPeople({ pageSize: 5, status: "active" })
+    personClient
+      .getPeople({ pageSize: 5, status: "active" })
       .then((result) => {
         if (!cancelled)
           setSellerItems(
@@ -180,7 +181,8 @@ export function PurchaseForm({ id }: { id?: string }) {
           );
       })
       .catch(() => {});
-    getBreeds()
+    breedClient
+      .getBreeds()
       .then((list) => {
         if (!cancelled) setBreeds(list.filter((b) => !b.deactivatedAt));
       })

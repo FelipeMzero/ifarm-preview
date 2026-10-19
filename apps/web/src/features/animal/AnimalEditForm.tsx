@@ -20,7 +20,8 @@ import {
   getAnimalCommitments,
   updateAnimal,
 } from "./services";
-import { Breed, getBreeds } from "@/features/breed/services";
+import { breedClient } from "@/lib/clients";
+import { type Breed } from "@ifarm/shared";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { FieldLegend, FieldSet } from "@/components/ui/field";
@@ -125,7 +126,7 @@ export function AnimalEditForm({
   useEffect(() => {
     async function loadBreeds() {
       try {
-        const breedList = await getBreeds();
+        const breedList = await breedClient.getBreeds();
         setBreeds(breedList.filter((b) => !b.deactivatedAt));
       } catch {
         setBreeds([]);

@@ -5,12 +5,11 @@ import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import { createAnimal, ApiError } from "./services";
-import { Breed, getBreeds } from "@/features/breed/services";
-import {
-  NeuteringTechnique,
-  getNeuteringTechniques,
-  techniqueItems,
-} from "@/features/neutering-technique/services";
+import { breedClient } from "@/lib/clients";
+import { type Breed } from "@ifarm/shared";
+import { neuteringTechniqueClient } from "@/lib/clients";
+import { type NeuteringTechnique } from "@ifarm/shared";
+import { techniqueItems } from "@/features/neutering-technique/items";
 import { BatchRow, getBatches } from "@/features/batch/services";
 import { BatchForm } from "@/features/batch/BatchForm";
 import { StockingNotice } from "@/features/area/StockingNotice";
@@ -172,13 +171,14 @@ export default function AnimalForm({
   useEffect(() => {
     async function loadStaticOptions() {
       try {
-        const breedList = await getBreeds();
+        const breedList = await breedClient.getBreeds();
         setBreeds(breedList.filter((b) => !b.deactivatedAt));
       } catch {
         setBreeds([]);
       }
       try {
-        const techniqueList = await getNeuteringTechniques();
+        const techniqueList =
+          await neuteringTechniqueClient.getNeuteringTechniques();
         setTechniques(techniqueList.filter((t) => !t.deactivatedAt));
       } catch {
         setTechniques([]);

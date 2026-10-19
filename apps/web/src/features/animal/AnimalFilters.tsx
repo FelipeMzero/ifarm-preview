@@ -13,7 +13,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { getBatches } from "@/features/batch/services";
-import { getBreeds } from "@/features/breed/services";
+import { breedClient } from "@/lib/clients";
 import {
   ANIMAL_ORIGIN_ITEMS,
   ANIMAL_STATUS_ITEMS,
@@ -146,7 +146,7 @@ export function useFilterOptions(propertyId?: string): FilterOptions {
     let cancelled = false;
     Promise.all([
       getBatches({ propertyId, status: "active", pageSize: 100 }),
-      getBreeds(),
+      breedClient.getBreeds(),
     ])
       .then(([batches, breeds]) => {
         if (cancelled) return;

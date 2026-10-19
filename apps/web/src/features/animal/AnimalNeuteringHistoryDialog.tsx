@@ -48,11 +48,9 @@ import {
   getNeuterings,
 } from "./services";
 import { AnimalNeuteringCorrectionForm } from "./AnimalNeuteringCorrectionForm";
-import {
-  NeuteringTechnique,
-  getNeuteringTechniques,
-  techniqueItems,
-} from "@/features/neutering-technique/services";
+import { neuteringTechniqueClient } from "@/lib/clients";
+import { type NeuteringTechnique } from "@ifarm/shared";
+import { techniqueItems } from "@/features/neutering-technique/items";
 import { SelectField } from "@/components/our/SelectField";
 import type { Commitment } from "@/lib/animal-commitments";
 import { CommitmentNotice } from "./CommitmentNotice";
@@ -271,7 +269,8 @@ export function AnimalNeuteringHistoryDialog({
   useEffect(() => {
     if (!open) return;
     let cancelled = false;
-    getNeuteringTechniques()
+    neuteringTechniqueClient
+      .getNeuteringTechniques()
       .then((data) => {
         if (!cancelled) setTechniques(data);
       })

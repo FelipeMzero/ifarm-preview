@@ -8,14 +8,8 @@ import {
 } from "@/components/our/InlineEditableList";
 import { ErrorPage } from "@/components/our/ErrorPage";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Breed,
-  getBreeds,
-  createBreed,
-  updateBreed,
-  deleteBreed,
-  toggleBreedStatus,
-} from "./services";
+import { breedClient } from "@/lib/clients";
+import { type Breed } from "@ifarm/shared";
 import { FIELD_LIMITS } from "@/lib/field-limits";
 
 const COLUMNS: InlineEditableColumn<Breed>[] = [
@@ -48,7 +42,7 @@ export default function BreedList() {
     async function load() {
       setLoading(true);
       try {
-        const data = await getBreeds();
+        const data = await breedClient.getBreeds();
         if (!cancelled) setBreeds(data);
       } catch (e) {
         if (!cancelled) setError((e as Error).message);
@@ -64,24 +58,24 @@ export default function BreedList() {
   }, []);
 
   async function handleCreate(values: Record<string, string>) {
-    const created = await createBreed(values.name);
+    const created = await breedClient.createBreed(values.name);
     setBreeds((prev) => [...prev, created]);
   }
 
   async function handleUpdate(id: string, values: Record<string, string>) {
-    const updated = await updateBreed(id, values.name);
+    const updated = await breedClient.updateBreed(id, values.name);
     setBreeds((prev) =>
       prev.map((breed) => (breed.id === id ? updated : breed)),
     );
   }
 
   async function handleDelete(id: string) {
-    await deleteBreed(id);
+    await breedClient.deleteBreed(id);
     setBreeds((prev) => prev.filter((breed) => breed.id !== id));
   }
 
   async function handleToggleActive(id: string) {
-    const updated = await toggleBreedStatus(id);
+    const updated = await breedClient.toggleBreedStatus(id);
     setBreeds((prev) =>
       prev.map((breed) => (breed.id === id ? updated : breed)),
     );

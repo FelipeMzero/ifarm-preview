@@ -81,3 +81,12 @@ export function dbConflict(error: unknown): ConflictError | null {
 
   return null;
 }
+
+// Executa uma escrita no banco trocando os erros de unicidade e de vínculo por ConflictError.
+export async function write<T>(operation: () => Promise<T>): Promise<T> {
+  try {
+    return await operation();
+  } catch (error) {
+    throw dbConflict(error) ?? error;
+  }
+}

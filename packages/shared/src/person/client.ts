@@ -69,7 +69,10 @@ export function createPersonClient(request: ApiRequest) {
     },
 
     async updatePerson(id: string, data: PersonInput) {
-      const response = await request(PERSON_BY_ID(id), jsonRequest("PUT", data));
+      const response = await request(
+        PERSON_BY_ID(id),
+        jsonRequest("PUT", data),
+      );
       return readJson<{ success: true; data: { id: string } }>(
         response,
         "Não foi possível atualizar a pessoa.",

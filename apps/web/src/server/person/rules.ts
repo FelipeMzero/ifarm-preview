@@ -11,18 +11,10 @@
 //   em mutations.ts.
 
 // RN-PESSOA-02: tipo e documento identificam a pessoa e não mudam depois do cadastro.
-export function withoutImmutableFields<T extends { type: unknown; taxId: unknown }>(
-  data: T,
-): Omit<T, "type" | "taxId"> {
+export function withoutImmutableFields<
+  T extends { type: unknown; taxId: unknown },
+>(data: T): Omit<T, "type" | "taxId"> {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { type, taxId, ...editable } = data;
   return editable;
-}
-
-// Ativar/Desativar (RF-PESSOA-06) alterna entre os dois estados.
-export function toggledDeactivatedAt(
-  current: Date | null,
-  now: Date = new Date(),
-): Date | null {
-  return current ? null : now;
 }

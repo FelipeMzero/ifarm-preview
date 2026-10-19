@@ -3,7 +3,7 @@
 import { useWatch } from "react-hook-form";
 import { FormField } from "@/components/our/FormField";
 import { SelectField } from "@/components/our/SelectField";
-import { techniqueItems } from "@/features/neutering-technique/services";
+import { techniqueItems } from "@/features/neutering-technique/items";
 import type { PlanFieldsProps } from "../types";
 
 // Técnica prevista: vem pré-selecionada no registro de cada animal, que pode trocá-la.

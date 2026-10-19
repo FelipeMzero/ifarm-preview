@@ -11,10 +11,8 @@ import { DialogFooter } from "@/components/ui/dialog";
 import { FormField } from "@/components/our/FormField";
 import FieldRow from "@/components/our/FieldRow";
 import { SelectField } from "@/components/our/SelectField";
-import {
-  NeuteringTechnique,
-  techniqueItems,
-} from "@/features/neutering-technique/services";
+import { type NeuteringTechnique } from "@ifarm/shared";
+import { techniqueItems } from "@/features/neutering-technique/items";
 import { ApiError, AnimalNeuteringRecord, correctNeutering } from "./services";
 import {
   neuteringCorrectionSchema,

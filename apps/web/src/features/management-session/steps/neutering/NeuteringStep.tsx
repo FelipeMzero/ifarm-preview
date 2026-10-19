@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { FieldSet } from "@/components/ui/field";
 import { FormField } from "@/components/our/FormField";
 import { SelectField } from "@/components/our/SelectField";
-import { techniqueItems } from "@/features/neutering-technique/services";
+import { techniqueItems } from "@/features/neutering-technique/items";
 import { FIELD_LIMITS } from "@/lib/field-limits";
 import type { StepScreenProps } from "../types";
 import { formatDay, handleStepError } from "../formHelpers";

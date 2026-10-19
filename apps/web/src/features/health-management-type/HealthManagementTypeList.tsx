@@ -8,14 +8,8 @@ import {
 } from "@/components/our/InlineEditableList";
 import { ErrorPage } from "@/components/our/ErrorPage";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  HealthManagementType,
-  getHealthManagementTypes,
-  createHealthManagementType,
-  updateHealthManagementType,
-  deleteHealthManagementType,
-  toggleHealthManagementTypeStatus,
-} from "./services";
+import { healthManagementTypeClient } from "@/lib/clients";
+import { type HealthManagementType } from "@ifarm/shared";
 import { FIELD_LIMITS } from "@/lib/field-limits";
 
 const COLUMNS: InlineEditableColumn<HealthManagementType>[] = [
@@ -48,7 +42,8 @@ export default function HealthManagementTypeList() {
     async function load() {
       setLoading(true);
       try {
-        const data = await getHealthManagementTypes();
+        const data =
+          await healthManagementTypeClient.getHealthManagementTypes();
         if (!cancelled) setTypes(data);
       } catch (e) {
         if (!cancelled) setError((e as Error).message);
@@ -64,27 +59,29 @@ export default function HealthManagementTypeList() {
   }, []);
 
   async function handleCreate(values: Record<string, string>) {
-    const created = await createHealthManagementType(values.name);
+    const created = await healthManagementTypeClient.createHealthManagementType(
+      values.name,
+    );
     setTypes((prev) => [...prev, created]);
   }
 
   async function handleUpdate(id: string, values: Record<string, string>) {
-    const updated = await updateHealthManagementType(id, values.name);
-    setTypes((prev) =>
-      prev.map((type) => (type.id === id ? updated : type)),
+    const updated = await healthManagementTypeClient.updateHealthManagementType(
+      id,
+      values.name,
     );
+    setTypes((prev) => prev.map((type) => (type.id === id ? updated : type)));
   }
 
   async function handleDelete(id: string) {
-    await deleteHealthManagementType(id);
+    await healthManagementTypeClient.deleteHealthManagementType(id);
     setTypes((prev) => prev.filter((type) => type.id !== id));
   }
 
   async function handleToggleActive(id: string) {
-    const updated = await toggleHealthManagementTypeStatus(id);
-    setTypes((prev) =>
-      prev.map((type) => (type.id === id ? updated : type)),
-    );
+    const updated =
+      await healthManagementTypeClient.toggleHealthManagementTypeStatus(id);
+    setTypes((prev) => prev.map((type) => (type.id === id ? updated : type)));
   }
 
   if (error) {

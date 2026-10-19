@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { neuteringTechniqueSchema } from "@ifarm/shared";
 import { requireSession } from "@/lib/api-auth";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
-import { uniqueConstraintErrors } from "@/server/db-errors";
-import { neuteringTechniqueApiSchema } from "../schemas";
+import { listNeuteringTechniques } from "@/server/neutering-technique/queries";
+import { createNeuteringTechnique } from "@/server/neutering-technique/mutations";
+import { errorResponse, validationErrorResponse } from "../http";
 
 export async function GET() {
   const { response } = await requireSession(
@@ -12,16 +13,9 @@ export async function GET() {
   if (response) return response;
 
   try {
-    const techniques = await prisma.neuteringTechnique.findMany({
-      orderBy: { name: "asc" },
-    });
-    return NextResponse.json({ data: techniques });
+    return NextResponse.json({ data: await listNeuteringTechniques() });
   } catch (error) {
-    console.error(error);
-    return NextResponse.json(
-      { message: "Ocorreu um erro interno no servidor." },
-      { status: 500 },
-    );
+    return errorResponse(error);
   }
 }
 
@@ -32,36 +26,12 @@ export async function POST(request: NextRequest) {
   if (response) return response;
 
   try {
-    const body = await request.json();
-    const validation = neuteringTechniqueApiSchema.safeParse(body);
+    const validation = neuteringTechniqueSchema.safeParse(await request.json());
+    if (!validation.success) return validationErrorResponse(validation.error);
 
-    if (!validation.success) {
-      const errors: Record<string, string> = {};
-      validation.error.issues.forEach((issue) => {
-        const field = issue.path[0] as string;
-        if (field && !errors[field]) errors[field] = issue.message;
-      });
-      return NextResponse.json({ success: false, errors }, { status: 400 });
-    }
-
-    const technique = await prisma.neuteringTechnique.create({
-      data: validation.data,
-    });
-
-    return NextResponse.json(
-      { success: true, data: technique },
-      { status: 201 },
-    );
+    const data = await createNeuteringTechnique(validation.data);
+    return NextResponse.json({ success: true, data }, { status: 201 });
   } catch (error) {
-    const errors = uniqueConstraintErrors(error);
-    if (errors) {
-      return NextResponse.json({ success: false, errors }, { status: 409 });
-    }
-
-    console.error(error);
-    return NextResponse.json(
-      { success: false, message: "Ocorreu um erro interno no servidor." },
-      { status: 500 },
-    );
+    return errorResponse(error);
   }
 }

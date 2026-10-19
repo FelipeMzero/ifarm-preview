@@ -8,14 +8,8 @@ import {
 } from "@/components/our/InlineEditableList";
 import { ErrorPage } from "@/components/our/ErrorPage";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  NeuteringTechnique,
-  getNeuteringTechniques,
-  createNeuteringTechnique,
-  updateNeuteringTechnique,
-  deleteNeuteringTechnique,
-  toggleNeuteringTechniqueStatus,
-} from "./services";
+import { neuteringTechniqueClient } from "@/lib/clients";
+import { type NeuteringTechnique } from "@ifarm/shared";
 import { FIELD_LIMITS } from "@/lib/field-limits";
 
 const COLUMNS: InlineEditableColumn<NeuteringTechnique>[] = [
@@ -48,7 +42,7 @@ export default function NeuteringTechniqueList() {
     async function load() {
       setLoading(true);
       try {
-        const data = await getNeuteringTechniques();
+        const data = await neuteringTechniqueClient.getNeuteringTechniques();
         if (!cancelled) setTechniques(data);
       } catch (e) {
         if (!cancelled) setError((e as Error).message);
@@ -64,24 +58,30 @@ export default function NeuteringTechniqueList() {
   }, []);
 
   async function handleCreate(values: Record<string, string>) {
-    const created = await createNeuteringTechnique(values.name);
+    const created = await neuteringTechniqueClient.createNeuteringTechnique(
+      values.name,
+    );
     setTechniques((prev) => [...prev, created]);
   }
 
   async function handleUpdate(id: string, values: Record<string, string>) {
-    const updated = await updateNeuteringTechnique(id, values.name);
+    const updated = await neuteringTechniqueClient.updateNeuteringTechnique(
+      id,
+      values.name,
+    );
     setTechniques((prev) =>
       prev.map((technique) => (technique.id === id ? updated : technique)),
     );
   }
 
   async function handleDelete(id: string) {
-    await deleteNeuteringTechnique(id);
+    await neuteringTechniqueClient.deleteNeuteringTechnique(id);
     setTechniques((prev) => prev.filter((technique) => technique.id !== id));
   }
 
   async function handleToggleActive(id: string) {
-    const updated = await toggleNeuteringTechniqueStatus(id);
+    const updated =
+      await neuteringTechniqueClient.toggleNeuteringTechniqueStatus(id);
     setTechniques((prev) =>
       prev.map((technique) => (technique.id === id ? updated : technique)),
     );
