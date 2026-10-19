@@ -62,7 +62,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useCurrentProperty } from "@/features/shell/CurrentPropertyProvider";
-import { getProperty } from "@/features/property/services";
+import { propertyClient } from "@/lib/clients";
 import { areaFormSchema, AreaFormData } from "./schema";
 import {
   getAreas,
@@ -643,7 +643,7 @@ export default function AreaMap() {
 
     async function loadPropertyCoords() {
       try {
-        const details = await getProperty(currentProperty!.id);
+        const details = await propertyClient.getProperty(currentProperty!.id);
         if (details.latitude && details.longitude) {
           if (active)
             setPropertyCoords([

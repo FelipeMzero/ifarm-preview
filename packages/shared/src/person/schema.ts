@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { addressFields, checkAddress } from "../address";
 import { dateField } from "../date";
 import { MaritalStatus, PersonType } from "../enums";
 import { FIELD_LIMITS } from "../field-limits";
@@ -53,47 +54,10 @@ export const personSchema = z
     birthDate: dateField,
     maritalStatus: z.union([z.enum(MaritalStatus), z.literal("")]).optional(),
 
-    // Endereço
-    zipCode: z.string().optional(),
-    street: z
-      .string()
-      .max(
-        FIELD_LIMITS.address.street,
-        `Máximo de ${FIELD_LIMITS.address.street} caracteres`,
-      )
-      .optional(),
-    number: z
-      .string()
-      .max(
-        FIELD_LIMITS.address.number,
-        `Máximo de ${FIELD_LIMITS.address.number} caracteres`,
-      )
-      .optional(),
-    complement: z
-      .string()
-      .max(
-        FIELD_LIMITS.address.complement,
-        `Máximo de ${FIELD_LIMITS.address.complement} caracteres`,
-      )
-      .optional(),
-    neighborhood: z
-      .string()
-      .max(
-        FIELD_LIMITS.address.neighborhood,
-        `Máximo de ${FIELD_LIMITS.address.neighborhood} caracteres`,
-      )
-      .optional(),
-    city: z
-      .string()
-      .max(
-        FIELD_LIMITS.address.city,
-        `Máximo de ${FIELD_LIMITS.address.city} caracteres`,
-      )
-      .optional(),
-    state: z.string().optional(),
+    ...addressFields,
   })
   .check((ctx) => {
-    const { type, taxId, email, zipCode, street, city, state } = ctx.value;
+    const { type, taxId, email } = ctx.value;
 
     // RN-PESSOA-01
     if (taxId && !isValidTaxId(type, taxId)) {
@@ -115,39 +79,7 @@ export const personSchema = z
       });
     }
 
-    // Endereço é tudo ou nada: começou a preencher, CEP, logradouro, cidade e UF passam a ser
-    // obrigatórios.
-    const addressStarted = zipCode || street || city || state;
-    if (addressStarted) {
-      if (!zipCode)
-        ctx.issues.push({
-          code: "custom",
-          input: zipCode,
-          path: ["zipCode"],
-          message: "Este campo não pode ser vazio",
-        });
-      if (!street)
-        ctx.issues.push({
-          code: "custom",
-          input: street,
-          path: ["street"],
-          message: "Este campo não pode ser vazio",
-        });
-      if (!city)
-        ctx.issues.push({
-          code: "custom",
-          input: city,
-          path: ["city"],
-          message: "Este campo não pode ser vazio",
-        });
-      if (!state)
-        ctx.issues.push({
-          code: "custom",
-          input: state,
-          path: ["state"],
-          message: "Este campo não pode ser vazio",
-        });
-    }
+    checkAddress(ctx.value, ctx.issues);
   });
 
 export type PersonInput = z.infer<typeof personSchema>;

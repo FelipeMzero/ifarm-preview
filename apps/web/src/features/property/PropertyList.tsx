@@ -33,7 +33,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { SelectField } from "@/components/our/SelectField";
-import { PropertyRow, getProperties, togglePropertyStatus } from "./services";
+import { propertyClient } from "@/lib/clients";
+import { type PropertyRow } from "@ifarm/shared";
 import { ErrorPage } from "@/components/our/ErrorPage";
 import { useCurrentProperty } from "@/features/shell/CurrentPropertyProvider";
 
@@ -202,7 +203,7 @@ export default function PropertyList() {
     async function load() {
       setLoading(true);
       try {
-        const result = await getProperties({
+        const result = await propertyClient.getProperties({
           page: pageIndex,
           pageSize,
           search: debouncedSearch,
@@ -234,7 +235,7 @@ export default function PropertyList() {
 
     setIsToggling(true);
     try {
-      await togglePropertyStatus(togglingId);
+      await propertyClient.togglePropertyStatus(togglingId);
       setRefreshKey((k) => k + 1);
       setTogglingId(null);
       refreshCurrentProperty();

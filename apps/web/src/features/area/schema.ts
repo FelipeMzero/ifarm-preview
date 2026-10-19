@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { FIELD_LIMITS } from "@/lib/field-limits";
-import { numericField, optionalNumericField } from "@/lib/zod-utils";
+import { numericField, optionalNumericField } from "@ifarm/shared";
 
 export const hectaresSchema = z.coerce
   .number()

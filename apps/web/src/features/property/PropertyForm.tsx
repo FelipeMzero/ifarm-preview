@@ -7,12 +7,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { IMaskInput } from "react-imask";
 import dynamic from "next/dynamic";
 
-import {
-  getProperty,
-  updateProperty,
-  createProperty,
-  ApiError,
-} from "./services";
+import { propertyClient } from "@/lib/clients";
+import { ApiError } from "@ifarm/shared";
 import { personClient } from "@/lib/clients";
 import { ErrorPage } from "@/components/our/ErrorPage";
 import { toast } from "sonner";
@@ -29,7 +25,7 @@ import {
 } from "@/components/our/SearchCombobox";
 import { ArrowLeft, Loader2, MapPin, MapPinOff } from "lucide-react";
 import FormSkeleton from "@/components/our/FormSkeleton";
-import { PropertyFormData, propertyFormSchema } from "./schema";
+import { propertySchema, type PropertyInput } from "@ifarm/shared";
 import { Separator } from "@/components/ui/separator";
 import { BR_STATE_ITEMS } from "@/lib/br-states";
 import { cn } from "@/lib/utils";
@@ -164,8 +160,8 @@ export default function PropertyForm({
     setValue,
     setError,
     formState: { isSubmitting },
-  } = useForm<PropertyFormData>({
-    resolver: zodResolver(propertyFormSchema),
+  } = useForm<PropertyInput>({
+    resolver: zodResolver(propertySchema),
     defaultValues: {
       name: "",
       ownerId: "",
@@ -203,7 +199,7 @@ export default function PropertyForm({
         }));
 
         if (id) {
-          const data = await getProperty(id);
+          const data = await propertyClient.getProperty(id);
           if (
             data.ownerId &&
             data.ownerName &&
@@ -292,17 +288,17 @@ export default function PropertyForm({
     }
   }
 
-  async function onSubmit(data: PropertyFormData) {
+  async function onSubmit(data: PropertyInput) {
     try {
       if (id) {
-        await updateProperty(id, data);
-        const fresh = await getProperty(id);
+        await propertyClient.updateProperty(id, data);
+        const fresh = await propertyClient.getProperty(id);
         reset(fresh);
         toast.success("Registro atualizado com sucesso!");
         refreshCurrentProperty();
         onSuccess?.();
       } else {
-        const response = await createProperty(data);
+        const response = await propertyClient.createProperty(data);
         toast.success("Registro salvo com sucesso!");
         refreshCurrentProperty();
         onSuccess?.(response.data.id);
@@ -310,7 +306,7 @@ export default function PropertyForm({
     } catch (error) {
       if (error instanceof ApiError && error.errors) {
         Object.entries(error.errors).forEach(([field, message]) => {
-          setError(field as keyof PropertyFormData, {
+          setError(field as keyof PropertyInput, {
             type: "server",
             message,
           });

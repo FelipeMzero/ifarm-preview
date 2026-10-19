@@ -18,3 +18,14 @@ export class ConflictError extends Error {
     this.name = "ConflictError";
   }
 }
+
+/** Regra de negócio violada por um valor informado; vira 400 com o erro no campo. */
+export class ValidationError extends Error {
+  constructor(
+    message: string,
+    readonly fieldErrors?: Record<string, string>,
+  ) {
+    super(message);
+    this.name = "ValidationError";
+  }
+}

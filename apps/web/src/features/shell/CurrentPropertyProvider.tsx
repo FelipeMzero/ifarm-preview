@@ -7,10 +7,8 @@ import {
   useState,
   ReactNode,
 } from "react";
-import {
-  getPropertyOptions,
-  PropertyOption,
-} from "@/features/property/services";
+import { propertyClient } from "@/lib/clients";
+import { type PropertyOption } from "@ifarm/shared";
 import { currentPropertyClient } from "@/lib/clients";
 
 type CurrentPropertyContextValue = {
@@ -36,7 +34,7 @@ export function CurrentPropertyProvider({ children }: { children: ReactNode }) {
   async function refresh() {
     try {
       const [freshOptions, freshProperty] = await Promise.all([
-        getPropertyOptions(),
+        propertyClient.getPropertyOptions(),
         currentPropertyClient.getCurrentProperty(),
       ]);
       setOptions(freshOptions);

@@ -22,8 +22,8 @@ import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ConfirmDialog } from "@/components/our/ConfirmDialog";
 import { ErrorPage } from "@/components/our/ErrorPage";
-import { deleteProperty, getProperty } from "./services";
-import { PropertyFormData } from "./schema";
+import { propertyClient } from "@/lib/clients";
+import type { PropertyInput } from "@ifarm/shared";
 import { useCurrentProperty } from "@/features/shell/CurrentPropertyProvider";
 
 function DetailsSkeleton() {
@@ -46,7 +46,7 @@ export default function PropertyDetails({
 }) {
   const router = useRouter();
   const { refresh: refreshCurrentProperty } = useCurrentProperty();
-  const [property, setProperty] = useState<PropertyFormData | null>(null);
+  const [property, setProperty] = useState<PropertyInput | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
@@ -57,7 +57,7 @@ export default function PropertyDetails({
     async function load() {
       setLoading(true);
       try {
-        const data = await getProperty(id);
+        const data = await propertyClient.getProperty(id);
         if (!cancelled) setProperty(data);
       } catch (e) {
         if (!cancelled) setError((e as Error).message);
@@ -74,7 +74,7 @@ export default function PropertyDetails({
 
   async function handleDelete() {
     try {
-      await deleteProperty(id);
+      await propertyClient.deleteProperty(id);
       toast.success("Registro excluído com sucesso!");
       refreshCurrentProperty();
       if (onClose) onClose();

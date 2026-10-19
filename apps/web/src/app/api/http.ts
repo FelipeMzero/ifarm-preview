@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import type { z } from "zod";
-import { ConflictError, NotFoundError } from "@/server/errors";
+import { ConflictError, NotFoundError, ValidationError } from "@/server/errors";
 
 // Erros de validação no formato que os formulários esperam: a primeira mensagem de cada campo.
 export function validationErrorResponse(error: z.ZodError) {
@@ -18,6 +18,15 @@ export function errorResponse(error: unknown) {
     return NextResponse.json(
       { success: false, message: error.message },
       { status: 404 },
+    );
+  }
+
+  if (error instanceof ValidationError) {
+    return NextResponse.json(
+      error.fieldErrors
+        ? { success: false, errors: error.fieldErrors }
+        : { success: false, message: error.message },
+      { status: 400 },
     );
   }
 
