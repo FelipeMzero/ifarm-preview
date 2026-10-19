@@ -1,13 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { receptionDocumentsSchema } from "@ifarm/shared";
 import { requireSession } from "@/lib/api-auth";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
-import {
-  requireSessionIn,
-  StepError,
-} from "@/server/management-session/shared";
-import { receptionDocumentsSchema } from "@ifarm/shared";
-import { errorResponse, validationErrorResponse } from "@/app/api/http";
+import { updateReceptionDocuments } from "@/server/management-session/mutations";
+import { errorResponse, validationErrorResponse } from "../../../http";
 
 // Documentos da carga (GTA e nota fiscal) de uma recepção em aberto.
 export async function PATCH(
@@ -17,30 +13,14 @@ export async function PATCH(
   const { response } = await requireSession(RESOURCE_ACCESS.recepcoes);
   if (response) return response;
 
-  const { id } = await params;
-
   try {
+    const { id } = await params;
     const validation = receptionDocumentsSchema.safeParse(
       await request.json().catch(() => ({})),
     );
     if (!validation.success) return validationErrorResponse(validation.error);
 
-    await prisma.$transaction(async (tx) => {
-      await requireSessionIn(
-        tx,
-        id,
-        ["planned", "in_progress"],
-        "A recepção já foi concluída ou cancelada.",
-      );
-      const updated = await tx.purchaseReception.updateMany({
-        where: { managementSessionId: id },
-        data: validation.data,
-      });
-      if (updated.count !== 1) {
-        throw new StepError("Esta sessão não é uma recepção de compra.", 400);
-      }
-    });
-
+    await updateReceptionDocuments(id, validation.data);
     return NextResponse.json({ success: true });
   } catch (error) {
     return errorResponse(error);

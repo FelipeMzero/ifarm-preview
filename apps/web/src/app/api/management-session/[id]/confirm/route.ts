@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/api-auth";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
-import { consolidateSession } from "@/server/management-session/consolidate";
-import { errorResponse } from "@/app/api/http";
+import { confirmManagementSession } from "@/server/management-session/mutations";
+import { errorResponse } from "../../../http";
 
-// Consolida a sessão (ver consolidateSession).
+// Consolida a sessão: os registros passam a valer.
 export async function POST(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
@@ -13,14 +12,10 @@ export async function POST(
   const { response } = await requireSession(RESOURCE_ACCESS.manejos);
   if (response) return response;
 
-  const { id } = await params;
-
   try {
-    const result = await prisma.$transaction(
-      (tx) => consolidateSession(tx, id),
-      { timeout: 60_000 },
-    );
-    return NextResponse.json({ success: true, data: result });
+    const { id } = await params;
+    const data = await confirmManagementSession(id);
+    return NextResponse.json({ success: true, data });
   } catch (error) {
     return errorResponse(error);
   }

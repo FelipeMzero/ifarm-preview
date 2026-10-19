@@ -27,10 +27,8 @@ import {
   toStepPayload,
   type PlanFormData,
 } from "@/features/management-session/schema";
-import {
-  getManagementOptions,
-  type ManagementOptions,
-} from "@/features/management-session/services";
+import { managementSessionClient } from "@/lib/clients";
+import { type ManagementOptions } from "@ifarm/shared";
 import { useCurrentProperty } from "@/features/shell/CurrentPropertyProvider";
 import { receptionClient } from "@/lib/clients";
 
@@ -132,7 +130,8 @@ function ReceptionForm({
 
   useEffect(() => {
     let cancelled = false;
-    getManagementOptions(currentProperty?.id)
+    managementSessionClient
+      .getManagementOptions(currentProperty?.id)
       .then((result) => {
         if (!cancelled) setOptions(result);
       })

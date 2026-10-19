@@ -31,14 +31,11 @@ import {
   STEP_ICONS,
   formatSessionDate,
 } from "./display";
+import { managementSessionClient } from "@/lib/clients";
 import {
-  clearStepRecord,
-  getManagementOptions,
-  getSessionAnimal,
-  saveStepRecord,
   type ManagementOptions,
   type SessionAnimalContext,
-} from "./services";
+} from "@ifarm/shared";
 import { sessionView } from "./SessionParticipants";
 import { clientStepModule } from "./steps/registry";
 import { formatKg } from "./steps/formHelpers";
@@ -104,7 +101,8 @@ export function AnimalStepPage({
 
   useEffect(() => {
     let cancelled = false;
-    getSessionAnimal(sessionId, animalId)
+    managementSessionClient
+      .getSessionAnimal(sessionId, animalId)
       .then((data) => {
         if (cancelled) return;
         setContext(data);
@@ -128,7 +126,8 @@ export function AnimalStepPage({
 
   useEffect(() => {
     let cancelled = false;
-    getManagementOptions(currentProperty?.id)
+    managementSessionClient
+      .getManagementOptions(currentProperty?.id)
       .then((result) => {
         if (!cancelled) setOptions(result);
       })
@@ -206,7 +205,7 @@ export function AnimalStepPage({
   async function handleSubmit(payload: unknown) {
     setSaving(true);
     try {
-      const updated = await saveStepRecord(
+      const updated = await managementSessionClient.saveStepRecord(
         sessionId,
         animalId,
         current.key,
@@ -223,7 +222,13 @@ export function AnimalStepPage({
   async function handleUndo() {
     setUndoing(false);
     try {
-      setContext(await clearStepRecord(sessionId, animalId, current.key));
+      setContext(
+        await managementSessionClient.clearStepRecord(
+          sessionId,
+          animalId,
+          current.key,
+        ),
+      );
       toast.success("Registro desfeito.");
       // Remonta o formulário da etapa, que agora está sem registro.
       setVersion((v) => v + 1);

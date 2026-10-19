@@ -23,11 +23,11 @@ import {
   SEX_ICON,
 } from "@/features/animal/display";
 import { ParticipantStatusBadge, STEP_ICONS, todayIso } from "./display";
-import type {
-  SessionParticipant,
-  SessionStepView,
-  SessionValues,
-} from "./services";
+import {
+  type SessionParticipant,
+  type SessionStepView,
+  type SessionValues,
+} from "@ifarm/shared";
 
 // Partes do registro de uma sessão compartilhadas entre o registro de manejo e a
 // recepção de compra (que também é uma sessão de manejo por baixo).

@@ -1,6 +1,6 @@
 import type { FieldValues, Path, UseFormReturn } from "react-hook-form";
 import { toast } from "sonner";
-import { ApiError } from "../services";
+import { ApiError } from "@ifarm/shared";
 
 // Leva os erros da API para os campos do formulário da etapa e avisa o usuário.
 export function handleStepError<T extends FieldValues>(

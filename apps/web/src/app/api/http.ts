@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import type { z } from "zod";
+import { ZodError, type z } from "zod";
 import {
   BusinessError,
   ConflictError,
@@ -26,6 +26,9 @@ export function errorResponse(
   error: unknown,
   options: { field?: string | null } = {},
 ) {
+  // Validação feita dentro de server/ (ex.: dados de uma etapa de manejo).
+  if (error instanceof ZodError) return validationErrorResponse(error);
+
   if (error instanceof BusinessError) {
     const field = options.field === undefined ? error.field : options.field;
     return NextResponse.json(

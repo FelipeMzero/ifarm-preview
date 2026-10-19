@@ -32,15 +32,11 @@ import { type TransferAnimal } from "@ifarm/shared";
 import { useCurrentProperty } from "@/features/shell/CurrentPropertyProvider";
 import type { ParticipantStatus } from "@ifarm/shared";
 import { SessionStatusBadge, formatSessionDate, todayIso } from "./display";
+import { managementSessionClient } from "@/lib/clients";
 import {
-  addParticipants,
-  confirmManagementSession,
-  getManagementSession,
-  removeParticipant,
-  startManagementSession,
   type ManagementSessionDetail,
   type SessionParticipant,
-} from "./services";
+} from "@ifarm/shared";
 import {
   ParticipantTabs,
   SessionDateDialog,
@@ -80,7 +76,8 @@ export function RegistrationBoard({ id }: { id: string }) {
 
   useEffect(() => {
     let cancelled = false;
-    getManagementSession(id)
+    managementSessionClient
+      .getManagementSession(id)
       .then((data) => {
         if (!cancelled) setDetail(data);
       })
@@ -133,7 +130,7 @@ export function RegistrationBoard({ id }: { id: string }) {
   // O registro começa com a data de hoje; se precisar, ela é corrigida no cabeçalho.
   async function startToday(animalId?: string) {
     try {
-      await startManagementSession(id, todayIso());
+      await managementSessionClient.startManagementSession(id, todayIso());
       toast.success("Registro iniciado com a data de hoje.");
       if (animalId) router.push(`/manejos/${id}/registro/${animalId}`);
       else reload();
@@ -172,7 +169,7 @@ export function RegistrationBoard({ id }: { id: string }) {
 
   async function handleStart(date: string) {
     try {
-      await startManagementSession(id, date);
+      await managementSessionClient.startManagementSession(id, date);
       toast.success("Data do manejo alterada.");
       reload();
     } catch (e) {
@@ -185,7 +182,7 @@ export function RegistrationBoard({ id }: { id: string }) {
     const ids = animals.map((a) => a.id).filter((a) => !participantIds.has(a));
     if (!ids.length) return;
     try {
-      const result = await addParticipants(id, ids);
+      const result = await managementSessionClient.addParticipants(id, ids);
       toast.success(`${result.data.added} animal(is) incluído(s) na sessão.`);
       reload();
     } catch (e) {
@@ -198,7 +195,7 @@ export function RegistrationBoard({ id }: { id: string }) {
     const target = removing;
     setRemoving(null);
     try {
-      await removeParticipant(id, target.animal.id);
+      await managementSessionClient.removeParticipant(id, target.animal.id);
       toast.success("Animal removido da sessão.");
       reload();
     } catch (e) {
@@ -210,7 +207,7 @@ export function RegistrationBoard({ id }: { id: string }) {
     setConfirming(false);
     setConsolidating(true);
     try {
-      const result = await confirmManagementSession(id);
+      const result = await managementSessionClient.confirmManagementSession(id);
       toast.success(
         `Manejo consolidado: ${result.data.handled} animal(is) manejado(s)${
           result.data.removed

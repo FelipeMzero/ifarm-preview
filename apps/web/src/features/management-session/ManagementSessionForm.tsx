@@ -42,15 +42,12 @@ import { type TransferAnimal } from "@ifarm/shared";
 import { useCurrentProperty } from "@/features/shell/CurrentPropertyProvider";
 import { SessionStatusBadge, formatSessionDate, todayIso } from "./display";
 import { planFormSchema, toStepPayload, type PlanFormData } from "./schema";
+import { managementSessionClient } from "@/lib/clients";
 import {
   ApiError,
-  createManagementSession,
-  getManagementOptions,
-  getManagementSession,
-  updateManagementSession,
   type ManagementOptions,
   type ManagementSessionDetail,
-} from "./services";
+} from "@ifarm/shared";
 import { StepsEditor } from "./StepsEditor";
 import { clientStepModule } from "./steps/registry";
 
@@ -154,7 +151,8 @@ export function ManagementSessionForm({
 
   useEffect(() => {
     let cancelled = false;
-    getManagementOptions(propertyId)
+    managementSessionClient
+      .getManagementOptions(propertyId)
       .then((result) => {
         if (!cancelled) setOptions(result);
       })
@@ -169,7 +167,8 @@ export function ManagementSessionForm({
   useEffect(() => {
     if (!id) return;
     let cancelled = false;
-    getManagementSession(id)
+    managementSessionClient
+      .getManagementSession(id)
       .then((data) => {
         if (cancelled) return;
         setDetail(data);
@@ -213,11 +212,12 @@ export function ManagementSessionForm({
 
     try {
       if (id) {
-        await updateManagementSession(id, payload);
+        await managementSessionClient.updateManagementSession(id, payload);
         toast.success("Planejamento atualizado!");
         onSuccess?.(id, false);
       } else {
-        const response = await createManagementSession(payload);
+        const response =
+          await managementSessionClient.createManagementSession(payload);
         toast.success("Sessão de manejo planejada!");
         onSuccess?.(response.data.id, true);
       }

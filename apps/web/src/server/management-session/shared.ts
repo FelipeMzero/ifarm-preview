@@ -1,5 +1,6 @@
 import "server-only";
 import { z } from "zod";
+import { fromLocalDay, toLocalDay, today } from "@ifarm/shared";
 import {
   normalizeStepOrder,
   REPEATABLE_STEP_TYPES,
@@ -74,16 +75,13 @@ export function requireManagementDate(session: LoadedSession) {
 export const dateOnlySchema = z
   .string()
   .regex(/^\d{4}-\d{2}-\d{2}$/, "Informe uma data válida.")
-  .transform((v) => new Date(`${v}T00:00:00`));
+  .transform((v) => toLocalDay(v));
 
 export function startOfToday() {
-  const d = new Date();
-  d.setHours(0, 0, 0, 0);
-  return d;
+  return toLocalDay(today());
 }
 
-export const toDateOnly = (d: Date | null) =>
-  d ? d.toLocaleDateString("en-CA") : null;
+export const toDateOnly = (d: Date | null) => (d ? fromLocalDay(d) : null);
 
 // Animais que não podem participar: fora da propriedade ou inativos.
 export async function invalidAnimals(

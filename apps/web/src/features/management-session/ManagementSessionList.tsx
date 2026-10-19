@@ -24,12 +24,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useCurrentProperty } from "@/features/shell/CurrentPropertyProvider";
 import { SessionStatusBadge, formatSessionDate, todayIso } from "./display";
-import {
-  cancelManagementSession,
-  getManagementSessions,
-  startManagementSession,
-  type ManagementSessionRow,
-} from "./services";
+import { managementSessionClient } from "@/lib/clients";
+import { type ManagementSessionRow } from "@ifarm/shared";
 
 const DEFAULT_PAGE_SIZE = 10;
 
@@ -212,7 +208,7 @@ export default function ManagementSessionList() {
     async function load() {
       setLoading(true);
       try {
-        const result = await getManagementSessions({
+        const result = await managementSessionClient.getManagementSessions({
           propertyId: currentProperty?.id,
           page: pageIndex,
           pageSize,
@@ -252,7 +248,7 @@ export default function ManagementSessionList() {
     const row = cancelling;
     setCancelling(null);
     try {
-      await cancelManagementSession(row.id);
+      await managementSessionClient.cancelManagementSession(row.id);
       toast.success("Sessão de manejo cancelada.");
       setRefreshKey((k) => k + 1);
     } catch (e) {
@@ -265,7 +261,7 @@ export default function ManagementSessionList() {
     // Inicia com a data de hoje; a data pode ser corrigida no cabeçalho do registro.
     onStart: async (id) => {
       try {
-        await startManagementSession(id, todayIso());
+        await managementSessionClient.startManagementSession(id, todayIso());
         toast.success("Registro iniciado com a data de hoje.");
         router.push(`/manejos/${id}/registro`);
       } catch (e) {

@@ -9,12 +9,12 @@ import { SEX_ITEMS } from "@ifarm/shared";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SelectField } from "@/components/our/SelectField";
+import { managementSessionClient } from "@/lib/clients";
 import {
   ApiError,
-  receiveAnimal,
   type ReceptionCategory,
   type ReceptionInfo,
-} from "@/features/management-session/services";
+} from "@ifarm/shared";
 
 // Categoria em recebimento: lembrada por sessão neste navegador (conveniência de quem
 // está no tronco; a informação que vale fica no animal recebido).
@@ -96,7 +96,7 @@ export function ReceptionPanel({
     setSaving(true);
     setError(null);
     try {
-      const result = await receiveAnimal(sessionId, {
+      const result = await managementSessionClient.receiveAnimal(sessionId, {
         categoryId: category.id,
         sex: sex as "MALE" | "FEMALE",
         ageMonths: age ? Number(age) : null,

@@ -16,15 +16,11 @@ import {
   formatSessionDate,
   todayIso,
 } from "@/features/management-session/display";
+import { managementSessionClient } from "@/lib/clients";
 import {
-  cancelManagementSession,
-  confirmManagementSession,
-  getManagementSession,
-  removeParticipant,
-  startManagementSession,
   type ManagementSessionDetail,
   type SessionParticipant,
-} from "@/features/management-session/services";
+} from "@ifarm/shared";
 import {
   ParticipantTabs,
   SessionDateDialog,
@@ -70,7 +66,8 @@ export function ReceptionBoard({ id }: { id: string }) {
 
   useEffect(() => {
     let cancelled = false;
-    getManagementSession(id)
+    managementSessionClient
+      .getManagementSession(id)
       .then((data) => {
         if (!cancelled) setDetail(data);
       })
@@ -154,7 +151,7 @@ export function ReceptionBoard({ id }: { id: string }) {
 
   async function handleDate(date: string) {
     try {
-      await startManagementSession(id, date);
+      await managementSessionClient.startManagementSession(id, date);
       toast.success("Data da recepção alterada.");
       reload();
     } catch (e) {
@@ -168,7 +165,7 @@ export function ReceptionBoard({ id }: { id: string }) {
     const target = removing;
     setRemoving(null);
     try {
-      await removeParticipant(id, target.animal.id);
+      await managementSessionClient.removeParticipant(id, target.animal.id);
       toast.success("Recebimento desfeito.");
       reload();
     } catch (e) {
@@ -180,7 +177,7 @@ export function ReceptionBoard({ id }: { id: string }) {
     setConfirming(false);
     setConsolidating(true);
     try {
-      const result = await confirmManagementSession(id);
+      const result = await managementSessionClient.confirmManagementSession(id);
       toast.success(
         `Recepção concluída: ${result.data.handled} animal(is) recebido(s).`,
       );
@@ -195,7 +192,7 @@ export function ReceptionBoard({ id }: { id: string }) {
   async function handleCancel() {
     setCancelling(false);
     try {
-      await cancelManagementSession(id);
+      await managementSessionClient.cancelManagementSession(id);
       toast.success("Recepção cancelada.");
       router.push(purchaseUrl);
     } catch (e) {

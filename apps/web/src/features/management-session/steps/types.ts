@@ -6,7 +6,7 @@ import type {
   ManagementOptions,
   SessionStepView,
   StepAnimalDetail,
-} from "../services";
+} from "@ifarm/shared";
 import type { PlanFormData, PlanStepForm } from "../schema";
 
 /**

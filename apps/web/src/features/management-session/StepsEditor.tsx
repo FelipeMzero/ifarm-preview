@@ -10,7 +10,7 @@ import {
   type StepType,
 } from "@ifarm/shared";
 import type { PlanFormData } from "./schema";
-import type { ManagementOptions } from "./services";
+import { type ManagementOptions } from "@ifarm/shared";
 import { clientStepModule } from "./steps/registry";
 
 type StepsEditorProps = {

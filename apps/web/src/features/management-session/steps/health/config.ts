@@ -1,4 +1,4 @@
-import type { SessionStepView } from "../../services";
+import type { SessionStepView } from "@ifarm/shared";
 import type { PlanStepForm } from "../../schema";
 
 export type HealthDoseType = "NONE" | "FIXED" | "PER_WEIGHT";

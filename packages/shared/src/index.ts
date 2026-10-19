@@ -34,3 +34,4 @@ export * from "./batch/schema";
 export * from "./batch/client";
 export * from "./animal/schema";
 export * from "./animal/client";
+export * from "./management-session/client";
