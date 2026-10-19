@@ -1,12 +1,12 @@
 // Compromissos pendentes dos animais: operações abertas que já contam com o animal e
 // com as quais outra operação não pode conflitar. As regras estão documentadas em
 // docs/data-dictionary.md, seção 2.9; ao mudar esta tabela, atualize a documentação
-// e os casos de animal-commitments.test.ts.
+// e os casos de commitments.test.ts.
 //
 // Módulo puro (sem banco): a API busca os compromissos (server/animal/commitments.ts)
 // e as telas usam as mesmas regras para avisar antes de salvar.
 
-import { STEP_TYPE_LABELS, type StepType } from "./management-steps";
+import { STEP_TYPE_LABELS, type StepType } from "../management-session/steps";
 
 export type Commitment =
   // Recepção de compra ainda não concluída: o animal ainda pode deixar de existir.

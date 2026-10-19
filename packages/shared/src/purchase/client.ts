@@ -5,7 +5,7 @@ import {
   type ApiRequest,
 } from "../client";
 import type { PurchaseCostSplit, PurchasePricingType, Sex } from "../enums";
-import type { ManagementSessionStatus } from "../management-steps";
+import type { ManagementSessionStatus } from "../management-session/steps";
 
 export type PurchaseStatus = "open" | "confirmed" | "cancelled";
 

@@ -5,7 +5,7 @@ import {
   toQueryString,
   type ApiRequest,
 } from "../client";
-import type { Commitment, CommitmentExclusion } from "../animal-commitments";
+import type { Commitment, CommitmentExclusion } from "./commitments";
 import type {
   AnimalCreatePayload,
   AnimalUpdatePayload,

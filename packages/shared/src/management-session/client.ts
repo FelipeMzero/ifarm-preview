@@ -8,7 +8,7 @@ import type {
   ManagementSessionStatus,
   ParticipantStatus,
   StepType,
-} from "../management-steps";
+} from "./steps";
 
 type Ref = { id: string; name: string };
 

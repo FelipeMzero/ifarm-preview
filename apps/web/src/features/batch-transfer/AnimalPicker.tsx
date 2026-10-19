@@ -59,7 +59,7 @@ type AnimalPickerOptions = {
   onRemove: (ids: string[]) => void;
   /**
    * O que se vai fazer com os animais: os que têm operação em aberto conflitante
-   * aparecem desabilitados, com o motivo (ver packages/shared/src/animal-commitments.ts).
+   * aparecem desabilitados, com o motivo (ver packages/shared/src/animal/commitments.ts).
    */
   intent?: CommitmentIntent;
   /** A operação sendo editada, que não conta como conflito. */

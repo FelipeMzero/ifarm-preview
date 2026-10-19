@@ -4,7 +4,7 @@ import {
   toQueryString,
   type ApiRequest,
 } from "../client";
-import type { ManagementSessionStatus } from "../management-steps";
+import type { ManagementSessionStatus } from "../management-session/steps";
 
 // Área de recepções: a compra vista por quem recebe os animais (sem valores).
 

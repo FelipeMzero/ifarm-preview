@@ -5,7 +5,7 @@ import {
   describeCommitment,
   type Commitment,
   type CommitmentIntent,
-} from "./animal-commitments";
+} from "./commitments";
 
 const reception: Commitment = { kind: "reception", id: "r", title: "Carga 1" };
 const transfer: Commitment = {
