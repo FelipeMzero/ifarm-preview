@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { FIELD_LIMITS } from "./field-limits";
+import { FIELD_LIMITS } from "../field-limits";
 
 // Campos de endereço comuns a pessoa e propriedade, como o usuário os informa ("" para vazio).
 export const addressFields = {

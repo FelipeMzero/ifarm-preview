@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { addressFields, checkAddress } from "../address";
+import { addressFields, checkAddress } from "../address/schema";
 import { dateField } from "../date";
 import { MaritalStatus, PersonType } from "../enums";
 import { FIELD_LIMITS } from "../field-limits";
