@@ -10,7 +10,8 @@ import { type Breed } from "@ifarm/shared";
 import { neuteringTechniqueClient } from "@/lib/clients";
 import { type NeuteringTechnique } from "@ifarm/shared";
 import { techniqueItems } from "@/features/neutering-technique/items";
-import { BatchRow, getBatches } from "@/features/batch/services";
+import { batchClient } from "@/lib/clients";
+import { type BatchRow } from "@ifarm/shared";
 import { BatchForm } from "@/features/batch/BatchForm";
 import { StockingNotice } from "@/features/area/StockingNotice";
 import { personClient } from "@/lib/clients";
@@ -115,7 +116,7 @@ export default function AnimalForm({
   const loadBatches = useCallback(
     async (q: string) => {
       try {
-        const result = await getBatches({
+        const result = await batchClient.getBatches({
           propertyId,
           status: "active",
           search: q,

@@ -22,7 +22,7 @@ import {
   getAnimals,
   getCommitmentsFor,
 } from "@/features/animal/services";
-import { getBatches } from "@/features/batch/services";
+import { batchClient } from "@/lib/clients";
 import { AnimalIdentification, SEX_ICON } from "@/features/animal/display";
 import {
   blockingReason,
@@ -137,7 +137,8 @@ export function useAnimalPicker({
   useEffect(() => {
     let cancelled = false;
 
-    getBatches({ propertyId, status: "active", pageSize: 100 })
+    batchClient
+      .getBatches({ propertyId, status: "active", pageSize: 100 })
       .then((result) => {
         if (!cancelled)
           setBatchItems(

@@ -29,7 +29,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { SelectField } from "@/components/our/SelectField";
-import { BatchCloseError, BatchRow, closeBatch, getBatches } from "./services";
+import { batchClient } from "@/lib/clients";
+import { BatchCloseError, type BatchRow } from "@ifarm/shared";
 import { ConfirmDialog } from "@/components/our/ConfirmDialog";
 import { ErrorPage } from "@/components/our/ErrorPage";
 import { useCurrentProperty } from "@/features/shell/CurrentPropertyProvider";
@@ -199,7 +200,7 @@ export default function BatchList() {
     async function load() {
       setLoading(true);
       try {
-        const result = await getBatches({
+        const result = await batchClient.getBatches({
           propertyId: currentProperty?.id,
           page: pageIndex,
           pageSize,
@@ -248,7 +249,7 @@ export default function BatchList() {
     if (!row) return;
     setClosingBatch(null);
     try {
-      await closeBatch(row.id);
+      await batchClient.closeBatch(row.id);
       toast.success(`Lote "${row.name}" encerrado.`);
       setRefreshKey((k) => k + 1);
     } catch (e) {

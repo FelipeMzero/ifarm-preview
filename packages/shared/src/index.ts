@@ -30,3 +30,5 @@ export * from "./reception/client";
 export * from "./animal-label";
 export * from "./batch-transfer/schema";
 export * from "./batch-transfer/client";
+export * from "./batch/schema";
+export * from "./batch/client";

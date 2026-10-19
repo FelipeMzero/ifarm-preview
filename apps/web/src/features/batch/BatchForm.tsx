@@ -29,14 +29,8 @@ import {
 } from "@/components/our/SearchCombobox";
 import { useCurrentProperty } from "@/features/shell/CurrentPropertyProvider";
 import { BatchFormData, batchFormSchema, BatchAreaChangeData } from "./schema";
-import {
-  ApiError,
-  BatchDetail,
-  createBatch,
-  getAreasForBatch,
-  getBatch,
-  updateBatch,
-} from "./services";
+import { batchClient } from "@/lib/clients";
+import { ApiError, type BatchDetail } from "@ifarm/shared";
 import { BatchAreaChangeDialog } from "./BatchAreaChangeDialog";
 
 type BatchFormProps = {
@@ -98,7 +92,7 @@ export function BatchForm({ id, title, onCancel, onSuccess }: BatchFormProps) {
   const loadAreas = useCallback(
     async (q: string) => {
       try {
-        const result = await getAreasForBatch(q, propertyId);
+        const result = await batchClient.getAreasForBatch(q, propertyId);
         setAreaItems(result.data.map((a) => ({ value: a.id, label: a.name })));
       } catch (err) {
         console.error("Erro ao carregar áreas para o lote:", err);
@@ -142,7 +136,7 @@ export function BatchForm({ id, title, onCancel, onSuccess }: BatchFormProps) {
 
     async function loadData() {
       try {
-        const detail = await getBatch(id!);
+        const detail = await batchClient.getBatch(id!);
         if (cancelled) return;
         setEditingBatch(detail);
         reset(toFormValues(detail));
@@ -162,7 +156,7 @@ export function BatchForm({ id, title, onCancel, onSuccess }: BatchFormProps) {
   async function onSubmit(data: BatchFormData) {
     try {
       if (id) {
-        const updateData: Parameters<typeof updateBatch>[1] = {
+        const updateData: Parameters<typeof batchClient.updateBatch>[1] = {
           name: data.name,
           notes: data.notes,
           hasMeta: data.hasMeta,
@@ -174,8 +168,8 @@ export function BatchForm({ id, title, onCancel, onSuccess }: BatchFormProps) {
           updateData.newAreaId = pendingAreaId;
         }
 
-        await updateBatch(id, updateData);
-        const fresh = await getBatch(id);
+        await batchClient.updateBatch(id, updateData);
+        const fresh = await batchClient.getBatch(id);
         setEditingBatch(fresh);
         reset(toFormValues(fresh));
         setPendingAreaId(null);
@@ -183,7 +177,7 @@ export function BatchForm({ id, title, onCancel, onSuccess }: BatchFormProps) {
         toast.success("Registro atualizado com sucesso!");
         onSuccess?.();
       } else {
-        const response = await createBatch({
+        const response = await batchClient.createBatch({
           ...data,
           propertyId,
         });

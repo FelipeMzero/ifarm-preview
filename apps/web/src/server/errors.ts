@@ -41,6 +41,8 @@ export class BusinessError extends Error {
     message: string,
     readonly status = 400,
     readonly field?: string,
+    /** Dados extras no corpo da resposta (ex.: `code`, ou `errors` com mensagens por campo). */
+    readonly details?: Record<string, unknown>,
   ) {
     super(message);
     this.name = new.target.name;

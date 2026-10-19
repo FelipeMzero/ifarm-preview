@@ -20,7 +20,7 @@ import {
   SearchComboboxItem,
 } from "@/components/our/SearchCombobox";
 import { AnimalBatchChangeData, animalBatchChangeSchema } from "./schema";
-import { getBatches } from "@/features/batch/services";
+import { batchClient } from "@/lib/clients";
 import { StockingNotice } from "@/features/area/StockingNotice";
 
 interface AnimalBatchChangeDialogProps {
@@ -57,7 +57,7 @@ export function AnimalBatchChangeDialog({
   const loadBatches = useCallback(
     async (q: string) => {
       try {
-        const result = await getBatches({
+        const result = await batchClient.getBatches({
           propertyId,
           status: "active",
           search: q,

@@ -38,7 +38,7 @@ import {
 } from "@/components/our/SearchCombobox";
 import { cn } from "@/lib/utils";
 import { BatchForm } from "@/features/batch/BatchForm";
-import { getBatch, getBatches } from "@/features/batch/services";
+import { batchClient } from "@/lib/clients";
 import { StockingNotice } from "@/features/area/StockingNotice";
 import { useCurrentProperty } from "@/features/shell/CurrentPropertyProvider";
 import {
@@ -166,7 +166,7 @@ export function BatchTransferForm({
   const loadBatches = useCallback(
     async (q: string) => {
       try {
-        const result = await getBatches({
+        const result = await batchClient.getBatches({
           propertyId,
           status: "active",
           search: q,
@@ -257,7 +257,8 @@ export function BatchTransferForm({
   useEffect(() => {
     if (!initialDestinationBatchId) return;
     let cancelled = false;
-    getBatch(initialDestinationBatchId)
+    batchClient
+      .getBatch(initialDestinationBatchId)
       .then((b) => {
         if (!cancelled) setPresetBatch({ value: b.id, label: b.name });
       })

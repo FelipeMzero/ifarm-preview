@@ -12,7 +12,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { getBatches } from "@/features/batch/services";
+import { batchClient } from "@/lib/clients";
 import { breedClient } from "@/lib/clients";
 import {
   ANIMAL_ORIGIN_ITEMS,
@@ -145,7 +145,7 @@ export function useFilterOptions(propertyId?: string): FilterOptions {
   useEffect(() => {
     let cancelled = false;
     Promise.all([
-      getBatches({ propertyId, status: "active", pageSize: 100 }),
+      batchClient.getBatches({ propertyId, status: "active", pageSize: 100 }),
       breedClient.getBreeds(),
     ])
       .then(([batches, breeds]) => {

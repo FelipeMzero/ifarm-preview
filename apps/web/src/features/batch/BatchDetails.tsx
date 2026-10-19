@@ -66,7 +66,8 @@ import {
 import { cn } from "@/lib/utils";
 import { BatchGoalChart } from "./BatchGoalChart";
 import { projectBatch } from "./projection";
-import { BatchFullDetails, getBatchDetails } from "./services";
+import { batchClient } from "@/lib/clients";
+import { type BatchFullDetails } from "@ifarm/shared";
 
 function formatAdg(value: number | null | undefined) {
   if (value == null) return "—";
@@ -138,7 +139,7 @@ export default function BatchDetails({
 
     async function load() {
       try {
-        const data = await getBatchDetails(id);
+        const data = await batchClient.getBatchDetails(id);
         if (!cancelled) setBatch(data);
       } catch (e) {
         if (!cancelled) setError((e as Error).message);

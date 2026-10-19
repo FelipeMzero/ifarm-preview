@@ -234,73 +234,6 @@ export const animalQuerySchema = z.object({
 
 export type AnimalQueryData = z.infer<typeof animalQuerySchema>;
 
-export const batchQuerySchema = z.object({
-  propertyId: z.uuid().optional(),
-  page: z.coerce.number().int().min(0).optional().default(0),
-  pageSize: z.coerce.number().int().min(1).optional().default(10),
-  search: z.string().trim().optional().default(""),
-  status: z.preprocess(
-    (v) => (v === "" ? undefined : v),
-    z.enum(["active", "inactive"]).optional(),
-  ),
-});
-
-export type BatchQueryData = z.infer<typeof batchQuerySchema>;
-
-export const batchCreateApiSchema = z.object({
-  name: z
-    .string()
-    .min(1, "Este campo é obrigatório")
-    .max(100, "Máximo de 100 caracteres"),
-  notes: z
-    .string()
-    .max(500, "Máximo de 500 caracteres")
-    .optional()
-    .transform((v) => v || null),
-  areaId: z.uuid("Área inválida"),
-  propertyId: z.uuid().optional(),
-  hasMeta: z.boolean().optional().default(false),
-  targetDate: z
-    .string()
-    .optional()
-    .transform((v) => (v ? new Date(`${v}T00:00:00`) : null)),
-  targetWeight: z
-    .string()
-    .optional()
-    .transform((v) => (v ? parseFloat(v) : null)),
-});
-
-export type BatchCreateApiData = z.infer<typeof batchCreateApiSchema>;
-
-export const batchUpdateApiSchema = z.object({
-  name: z
-    .string()
-    .min(1, "Este campo é obrigatório")
-    .max(100, "Máximo de 100 caracteres"),
-  notes: z
-    .string()
-    .max(500, "Máximo de 500 caracteres")
-    .optional()
-    .transform((v) => v || null),
-  hasMeta: z.boolean().optional().default(false),
-  targetDate: z
-    .string()
-    .optional()
-    .transform((v) => (v ? new Date(`${v}T00:00:00`) : null)),
-  targetWeight: z
-    .string()
-    .optional()
-    .transform((v) => (v ? parseFloat(v) : null)),
-  newAreaId: z.uuid("Área inválida").optional(),
-  areaChangeDescription: z
-    .string()
-    .max(500, "Máximo de 500 caracteres")
-    .optional()
-    .transform((v) => v || null),
-});
-
-export type BatchUpdateApiData = z.infer<typeof batchUpdateApiSchema>;
-
 export const weighingCorrectionApiSchema = z.object({
   weightKg: z.coerce
     .number("Informe um peso válido")
@@ -317,20 +250,6 @@ export const weighingCorrectionApiSchema = z.object({
 export type WeighingCorrectionApiData = z.infer<
   typeof weighingCorrectionApiSchema
 >;
-
-export const batchReopenApiSchema = z.object({
-  areaId: z.uuid("Selecione a área do lote."),
-  notes: z
-    .string()
-    .max(
-      FIELD_LIMITS.batch.notes,
-      `Máximo de ${FIELD_LIMITS.batch.notes} caracteres`,
-    )
-    .optional()
-    .transform((v) => v || null),
-});
-
-export type BatchReopenApiData = z.infer<typeof batchReopenApiSchema>;
 
 export const neuteringCorrectionApiSchema = z.object({
   date: z

@@ -1,5 +1,5 @@
 import { DAY_MS } from "@/features/animal/format";
-import type { BatchDetailAnimal } from "./services";
+import { type BatchDetailAnimal } from "@ifarm/shared";
 
 // Projeção linear da meta de peso do lote. Cada animal cresce a partir da sua última
 // pesagem no próprio GMD (ou, sem histórico, no GMD médio do lote); o peso médio do lote

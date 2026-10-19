@@ -24,7 +24,8 @@ import {
 } from "@/components/our/SearchCombobox";
 import { FIELD_LIMITS } from "@/lib/field-limits";
 import { StockingNotice } from "@/features/area/StockingNotice";
-import { ApiError, getAreasForBatch, getBatch, reopenBatch } from "./services";
+import { batchClient } from "@/lib/clients";
+import { ApiError } from "@ifarm/shared";
 
 const reopenSchema = z.object({
   areaId: z.string().min(1, "Selecione a área do lote."),
@@ -70,7 +71,7 @@ export function BatchReopenDialog({
   const loadAreas = useCallback(
     async (q: string) => {
       try {
-        const result = await getAreasForBatch(q, propertyId);
+        const result = await batchClient.getAreasForBatch(q, propertyId);
         setAreaItems(result.data.map((a) => ({ value: a.id, label: a.name })));
         return result.data;
       } catch (err) {
@@ -102,7 +103,7 @@ export function BatchReopenDialog({
       setPreviousArea(null);
       try {
         const [detail, available] = await Promise.all([
-          getBatch(batchId!),
+          batchClient.getBatch(batchId!),
           loadAreas(""),
         ]);
         if (cancelled) return;
@@ -136,7 +137,7 @@ export function BatchReopenDialog({
   async function handleSubmit(data: ReopenData) {
     if (!batch) return;
     try {
-      await reopenBatch(batch.id, data);
+      await batchClient.reopenBatch(batch.id, data);
       toast.success(`Lote "${batch.name}" reativado.`);
       onOpenChange(false);
       onReopened();

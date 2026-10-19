@@ -33,6 +33,7 @@ export function errorResponse(
         success: false,
         message: error.message,
         ...(field ? { errors: { [field]: error.message } } : {}),
+        ...error.details,
       },
       { status: error.status },
     );

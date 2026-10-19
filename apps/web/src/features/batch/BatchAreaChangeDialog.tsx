@@ -20,7 +20,7 @@ import {
   SearchComboboxItem,
 } from "@/components/our/SearchCombobox";
 import { BatchAreaChangeData, batchAreaChangeSchema } from "./schema";
-import { getAreasForBatch } from "./services";
+import { batchClient } from "@/lib/clients";
 import { StockingNotice } from "@/features/area/StockingNotice";
 
 interface BatchAreaChangeDialogProps {
@@ -53,7 +53,7 @@ export function BatchAreaChangeDialog({
   const loadAreas = useCallback(
     async (q: string) => {
       try {
-        const result = await getAreasForBatch(q, propertyId);
+        const result = await batchClient.getAreasForBatch(q, propertyId);
         setAreaItems(
           result.data
             .filter((a) => a.id !== currentAreaId)
