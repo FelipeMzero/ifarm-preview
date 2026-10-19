@@ -3,7 +3,7 @@ import { addressFields, checkAddress } from "../address";
 import { dateField } from "../date";
 import { MaritalStatus, PersonType } from "../enums";
 import { FIELD_LIMITS } from "../field-limits";
-import { isValidTaxId } from "../tax-id";
+import { isValidTaxId } from "./tax-id";
 
 // Dados de uma pessoa como o usuário os informa: textos, com "" para campo vazio. Validado no
 // formulário e de novo na API; a conversão para o formato do banco fica no servidor.
