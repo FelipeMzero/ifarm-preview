@@ -11,11 +11,8 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import {
-  AreaOccupancyHistoryEntry,
-  AreaRow,
-  getAreaOccupancyHistory,
-} from "./services";
+import { areaClient } from "@/lib/clients";
+import { type AreaOccupancyHistoryEntry, type AreaRow } from "@ifarm/shared";
 import { OccupancySummary } from "./occupancy";
 
 function formatDate(iso: string) {
@@ -46,7 +43,8 @@ export function AreaDetails({
   useEffect(() => {
     if (!areaId) return;
     let cancelled = false;
-    getAreaOccupancyHistory(areaId)
+    areaClient
+      .getAreaOccupancyHistory(areaId)
       .then((entries) => {
         if (!cancelled) setHistory({ areaId, entries });
       })

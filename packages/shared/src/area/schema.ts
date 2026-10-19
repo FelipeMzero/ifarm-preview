@@ -1,6 +1,6 @@
 import { z } from "zod";
-import { FIELD_LIMITS } from "@/lib/field-limits";
-import { numericField, optionalNumericField } from "@ifarm/shared";
+import { FIELD_LIMITS } from "../field-limits";
+import { numericField, optionalNumericField } from "../zod-utils";
 
 export const hectaresSchema = z.coerce
   .number()
@@ -19,7 +19,8 @@ export const daysSchema = z.coerce
   .positive("Valor inválido.")
   .max(FIELD_LIMITS.area.days, `Máximo de ${FIELD_LIMITS.area.days} dias.`);
 
-export const areaFormSchema = z.object({
+// Dados de uma área como o usuário os informa: números como texto, "" para vazio.
+export const areaSchema = z.object({
   name: z
     .string()
     .min(1, "Este campo é obrigatório")
@@ -27,6 +28,7 @@ export const areaFormSchema = z.object({
       FIELD_LIMITS.area.name,
       `Máximo de ${FIELD_LIMITS.area.name} caracteres`,
     ),
+  /** Contorno desenhado no mapa (GeoJSON). */
   polygon: z
     .any()
     .refine((val) => val != null, "Você deve desenhar o contorno no mapa."),
@@ -44,4 +46,4 @@ export const areaFormSchema = z.object({
   propertyId: z.uuid("Propriedade inválida."),
 });
 
-export type AreaFormData = z.infer<typeof areaFormSchema>;
+export type AreaInput = z.infer<typeof areaSchema>;

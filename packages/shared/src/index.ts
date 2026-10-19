@@ -18,3 +18,5 @@ export * from "./address";
 export * from "./zod-utils";
 export * from "./property/schema";
 export * from "./property/client";
+export * from "./area/schema";
+export * from "./area/client";

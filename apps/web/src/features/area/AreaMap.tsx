@@ -63,17 +63,9 @@ import {
 } from "@/components/ui/select";
 import { useCurrentProperty } from "@/features/shell/CurrentPropertyProvider";
 import { propertyClient } from "@/lib/clients";
-import { areaFormSchema, AreaFormData } from "./schema";
-import {
-  getAreas,
-  createArea,
-  updateArea,
-  deleteArea,
-  toggleAreaStatus,
-  AreaOccupiedError,
-  AreaRow,
-  ApiError,
-} from "./services";
+import { areaSchema, type AreaInput } from "@ifarm/shared";
+import { areaClient } from "@/lib/clients";
+import { AreaOccupiedError, type AreaRow, ApiError } from "@ifarm/shared";
 import { AreaForm } from "./AreaForm";
 import { AreaDetails } from "./AreaDetails";
 import {
@@ -706,8 +698,8 @@ export default function AreaMap() {
     batch: { id: string; name: string };
   } | null>(null);
 
-  const form = useForm<AreaFormData>({
-    resolver: zodResolver(areaFormSchema),
+  const form = useForm<AreaInput>({
+    resolver: zodResolver(areaSchema),
     defaultValues: {
       name: "",
       polygon: null,
@@ -730,7 +722,7 @@ export default function AreaMap() {
     async function fetchList() {
       setLoading(true);
       try {
-        const result = await getAreas({
+        const result = await areaClient.getAreas({
           propertyId: currentProperty?.id,
           status: statusFilter,
         });
@@ -867,13 +859,13 @@ export default function AreaMap() {
     setIsDrawing(true);
   }, [drawnLayer, form]);
 
-  const onSubmit = async (data: AreaFormData) => {
+  const onSubmit = async (data: AreaInput) => {
     try {
       if (editingArea) {
-        await updateArea(editingArea.id, data);
+        await areaClient.updateArea(editingArea.id, data);
         toast.success("Registro atualizado com sucesso!");
       } else {
-        await createArea(data);
+        await areaClient.createArea(data);
         toast.success("Registro salvo com sucesso!");
       }
       setSheetOpen(false);
@@ -898,7 +890,7 @@ export default function AreaMap() {
   const confirmDelete = async () => {
     if (!deletingAreaId) return;
     try {
-      await deleteArea(deletingAreaId);
+      await areaClient.deleteArea(deletingAreaId);
       toast.success("Registro excluído com sucesso!");
       setRefreshKey((k) => k + 1);
     } catch (err: any) {
@@ -920,7 +912,7 @@ export default function AreaMap() {
       return;
     }
     try {
-      await toggleAreaStatus(area.id);
+      await areaClient.toggleAreaStatus(area.id);
       toast.success(
         statusFilter === "active"
           ? "Área desativada com sucesso!"

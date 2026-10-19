@@ -14,8 +14,8 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { AreaFormData } from "./schema";
-import { AreaRow } from "./services";
+import type { AreaInput } from "@ifarm/shared";
+import { type AreaRow } from "@ifarm/shared";
 import FieldRow from "@/components/our/FieldRow";
 import { FormActionBar } from "@/components/our/FormActionBar";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -24,8 +24,8 @@ interface AreaFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   editingArea: AreaRow | null;
-  form: UseFormReturn<AreaFormData>;
-  onSubmit: (data: AreaFormData) => Promise<void>;
+  form: UseFormReturn<AreaInput>;
+  onSubmit: (data: AreaInput) => Promise<void>;
   onCancel: () => void;
   hectaresWarning: string | null;
   onRedraw?: () => void;

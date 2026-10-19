@@ -13,6 +13,8 @@ export class ConflictError extends Error {
     message: string,
     /** Erro por campo, quando o conflito é de um valor informado (ex.: documento já usado). */
     readonly fieldErrors?: Record<string, string>,
+    /** Dados extras para a tela tratar o conflito (ex.: `code` e o registro que o causou). */
+    readonly details?: Record<string, unknown>,
   ) {
     super(message);
     this.name = "ConflictError";

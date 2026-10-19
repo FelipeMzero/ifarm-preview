@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import type { AreaRow } from "./services";
+import { type AreaRow } from "@ifarm/shared";
 
 export type AreaStatus =
   "free" | "ready" | "occupied" | "near" | "exceeded" | "inactive";

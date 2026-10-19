@@ -1,4 +1,5 @@
 import {
+  createAreaClient,
   createBreedClient,
   createCurrentPropertyClient,
   createHealthManagementTypeClient,
@@ -21,3 +22,4 @@ export const neuteringTechniqueClient = createNeuteringTechniqueClient(request);
 export const stockingClient = createStockingClient(request);
 export const currentPropertyClient = createCurrentPropertyClient(request);
 export const propertyClient = createPropertyClient(request);
+export const areaClient = createAreaClient(request);

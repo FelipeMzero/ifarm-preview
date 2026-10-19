@@ -20,11 +20,18 @@ export type ApiRequest = (
 
 export class ApiError extends Error {
   errors?: Record<string, string>;
+  /** Corpo completo da resposta de erro, para casos com dados extras (ex.: `code`). */
+  body?: Record<string, unknown>;
 
-  constructor(message: string, errors?: Record<string, string>) {
+  constructor(
+    message: string,
+    errors?: Record<string, string>,
+    body?: Record<string, unknown>,
+  ) {
     super(message);
     this.name = "ApiError";
     this.errors = errors;
+    this.body = body;
   }
 }
 
@@ -44,7 +51,11 @@ export async function readJson<T>(
   if (!response.ok) {
     const { message, errors } = (body ?? {}) as ErrorBody;
     const fieldMessage = messageField ? errors?.[messageField] : undefined;
-    throw new ApiError(fieldMessage ?? message ?? fallbackMessage, errors);
+    throw new ApiError(
+      fieldMessage ?? message ?? fallbackMessage,
+      errors,
+      (body ?? {}) as Record<string, unknown>,
+    );
   }
   return body as T;
 }

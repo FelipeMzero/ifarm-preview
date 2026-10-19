@@ -34,7 +34,7 @@ export function errorResponse(error: unknown) {
     return NextResponse.json(
       error.fieldErrors
         ? { success: false, errors: error.fieldErrors }
-        : { success: false, message: error.message },
+        : { success: false, message: error.message, ...error.details },
       { status: 409 },
     );
   }
