@@ -7,7 +7,7 @@ import {
   type PersonListResult,
   type PersonRow,
 } from "@ifarm/shared";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/server/db";
 import { NotFoundError } from "../errors";
 
 export const personQuerySchema = z.object({

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { personSchema } from "@ifarm/shared";
-import { requireSession } from "@/lib/api-auth";
+import { requireSession } from "@/app/api/session";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
 import { listPeople, personQuerySchema } from "@/server/person/queries";
 import { createPerson } from "@/server/person/mutations";

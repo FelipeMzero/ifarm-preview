@@ -1,5 +1,5 @@
 import type { PurchaseCategoryData, PurchaseStatus } from "@ifarm/shared";
-import type { Prisma } from "@/lib/prisma";
+import type { Prisma } from "@/server/db";
 import { BusinessError } from "@/server/errors";
 
 // Em andamento → consolidada (fim: custos rateados) ou cancelada (desconsiderada). O

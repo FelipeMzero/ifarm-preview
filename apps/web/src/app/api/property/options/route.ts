@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireSession } from "@/lib/api-auth";
+import { requireSession } from "@/app/api/session";
 import { listPropertyOptions } from "@/server/property/queries";
 import { errorResponse } from "../../http";
 

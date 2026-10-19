@@ -1,6 +1,6 @@
 import "server-only";
 import type { CurrentProperty, CurrentPropertyDetails } from "@ifarm/shared";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/server/db";
 
 // Se o usuário nunca teve uma propriedade selecionada, assume automaticamente a
 // propriedade ativa mais antiga cadastrada, sem exigir escolha manual no primeiro

@@ -1,5 +1,5 @@
 import "server-only";
-import { Prisma } from "@/lib/prisma";
+import { Prisma } from "@/server/db";
 import type { AnimalWeighing } from "@/generated/prisma/client";
 import { effectiveWeighing } from "@/server/management-session/effective";
 

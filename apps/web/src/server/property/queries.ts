@@ -5,7 +5,7 @@ import type {
   PropertyListResult,
   PropertyOption,
 } from "@ifarm/shared";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/server/db";
 import { NotFoundError } from "../errors";
 
 export const propertyQuerySchema = z.object({

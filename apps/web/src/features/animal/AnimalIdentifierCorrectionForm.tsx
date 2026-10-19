@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { DialogFooter } from "@/components/ui/dialog";
 import { FormField } from "@/components/our/FormField";
 import FieldRow from "@/components/our/FieldRow";
-import { FIELD_LIMITS } from "@/lib/field-limits";
+import { FIELD_LIMITS } from "@ifarm/shared";
 import { animalClient } from "@/lib/clients";
 import {
   ApiError,

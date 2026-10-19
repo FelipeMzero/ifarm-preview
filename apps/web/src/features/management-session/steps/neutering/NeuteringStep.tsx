@@ -9,7 +9,7 @@ import { FieldSet } from "@/components/ui/field";
 import { FormField } from "@/components/our/FormField";
 import { SelectField } from "@/components/our/SelectField";
 import { techniqueItems } from "@/features/neutering-technique/items";
-import { FIELD_LIMITS } from "@/lib/field-limits";
+import { FIELD_LIMITS } from "@ifarm/shared";
 import type { StepScreenProps } from "../types";
 import { formatDay, handleStepError } from "../formHelpers";
 

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { purchasePaymentSchema } from "@ifarm/shared";
-import { requireSession } from "@/lib/api-auth";
+import { requireSession } from "@/app/api/session";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
 import { payPurchase, undoPurchasePayment } from "@/server/purchase/mutations";
 import { errorResponse, validationErrorResponse } from "../../../http";

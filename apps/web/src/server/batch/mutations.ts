@@ -5,7 +5,7 @@ import {
   type BatchReopenData,
   type BatchUpdateData,
 } from "@ifarm/shared";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/server/db";
 import { getOrAssignCurrentProperty } from "../current-property/queries";
 import { write } from "../db-errors";
 import { BusinessError, NotFoundError, ValidationError } from "../errors";

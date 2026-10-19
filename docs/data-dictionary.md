@@ -235,7 +235,7 @@ As checagens travam as linhas dos animais envolvidos (`SELECT … FOR UPDATE`) a
 
 **Interface.** O seletor de animais mostra os comprometidos desabilitados, com o motivo, e os ignora em "adicionar todos". Os registros avulsos mostram o aviso antes de salvar.
 
-**Na aplicação:** as regras (função pura, com testes) ficam em `src/lib/animal-commitments.ts`; a busca no banco, a trava e o erro, em `src/app/api/animal/commitments.ts`. O script `pnpm check:commitments` lista os conflitos já existentes entre operações abertas.
+**Na aplicação:** as regras (função pura, com testes) ficam em `packages/shared/src/animal-commitments.ts`; a busca no banco, a trava e o erro, em `apps/web/src/server/animal/commitments.ts`. O script `pnpm check:commitments` lista os conflitos já existentes entre operações abertas.
 
 ---
 

@@ -15,7 +15,7 @@ import type {
 } from "@/server/management-session/steps/types";
 import { weighingStep } from "@/server/management-session/steps/weighing";
 
-// Registro dos tipos de etapa. Um tipo novo entra aqui (e em lib/management-steps.ts).
+// Registro dos tipos de etapa. Um tipo novo entra aqui (e em packages/shared/src/management-steps.ts).
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const STEP_MODULES: Record<StepType, StepModule<any, any, any, any>> = {
   weighing: weighingStep,

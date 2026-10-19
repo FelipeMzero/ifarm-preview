@@ -1,7 +1,7 @@
 import "server-only";
 import { z } from "zod";
-import { Prisma } from "@/lib/prisma";
-import { FIELD_LIMITS } from "@/lib/field-limits";
+import { Prisma } from "@/server/db";
+import { FIELD_LIMITS, fromLocalDay, toDbDate } from "@ifarm/shared";
 import { BusinessError } from "@/server/errors";
 
 type Tx = Prisma.TransactionClient;
@@ -215,7 +215,7 @@ export async function receiveAnimal(
     const d = new Date(session.managementDate);
     d.setMonth(d.getMonth() - input.ageMonths);
     // @db.Date: grava o dia (UTC 00:00) correspondente à data local.
-    birthDate = new Date(`${d.toLocaleDateString("en-CA")}T00:00:00Z`);
+    birthDate = toDbDate(fromLocalDay(d));
   }
 
   const animal = await tx.animal.create({

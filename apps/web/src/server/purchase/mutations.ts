@@ -5,7 +5,7 @@ import {
   type PurchaseData,
   type PurchasePaymentData,
 } from "@ifarm/shared";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/server/db";
 import { getOrAssignCurrentProperty } from "../current-property/queries";
 import { allocatePurchaseCosts } from "./costs";
 import { categoryLabel } from "./reception";

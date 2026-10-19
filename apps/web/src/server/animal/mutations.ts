@@ -11,7 +11,7 @@ import {
   type WeighingCorrectionData,
   type WeighingCreateData,
 } from "@ifarm/shared";
-import { prisma, Prisma } from "@/lib/prisma";
+import { prisma, Prisma } from "@/server/db";
 import { getOrAssignCurrentProperty } from "../current-property/queries";
 import { write } from "../db-errors";
 import { deleteRecord } from "../deletion";

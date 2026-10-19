@@ -13,7 +13,7 @@ import {
   type Commitment,
   type CommitmentExclusion,
 } from "@ifarm/shared";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/server/db";
 import { getOrAssignCurrentProperty } from "../current-property/queries";
 import { NotFoundError } from "../errors";
 import {

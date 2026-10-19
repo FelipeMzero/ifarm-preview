@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { requireSession } from "@/lib/api-auth";
+import { requireSession } from "@/app/api/session";
 import { getOrAssignCurrentProperty } from "@/server/current-property/queries";
 import { setCurrentProperty } from "@/server/current-property/mutations";
 import { errorResponse } from "../../http";

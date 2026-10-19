@@ -1,6 +1,6 @@
 import "server-only";
 import type { BreedInput } from "@ifarm/shared";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/server/db";
 import { write } from "../db-errors";
 import { NotFoundError } from "../errors";
 import { toggledDeactivatedAt } from "../status";

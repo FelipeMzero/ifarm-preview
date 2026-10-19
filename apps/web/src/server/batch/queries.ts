@@ -7,7 +7,7 @@ import {
   type BatchFullDetails,
   type BatchListResult,
 } from "@ifarm/shared";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/server/db";
 import { sortWeighings, toWeighingDto } from "../animal/weighings";
 import { getOrAssignCurrentProperty } from "../current-property/queries";
 import { NotFoundError } from "../errors";

@@ -1,7 +1,7 @@
 import "server-only";
 import { z } from "zod";
 import { receptionDocumentsSchema } from "@ifarm/shared";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/server/db";
 import { applyPlanSteps, startOfToday } from "../management-session/shared";
 import { planStepSchema } from "../management-session/steps";
 import { StepError } from "../management-session/steps/types";

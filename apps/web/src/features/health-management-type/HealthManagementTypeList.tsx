@@ -10,7 +10,7 @@ import { ErrorPage } from "@/components/our/ErrorPage";
 import { Skeleton } from "@/components/ui/skeleton";
 import { healthManagementTypeClient } from "@/lib/clients";
 import { type HealthManagementType } from "@ifarm/shared";
-import { FIELD_LIMITS } from "@/lib/field-limits";
+import { FIELD_LIMITS } from "@ifarm/shared";
 
 const COLUMNS: InlineEditableColumn<HealthManagementType>[] = [
   {

@@ -3,6 +3,7 @@ import {
   type PurchaseCostSplit,
   type PurchasePricingType,
   type PurchaseStatus,
+  formatDate,
 } from "@ifarm/shared";
 
 export const PURCHASE_STATUS_LABELS: Record<PurchaseStatus, string> = {
@@ -39,9 +40,8 @@ export const COST_SPLIT_LABELS: Record<PurchaseCostSplit, string> = {
 export const formatBRL = (value: number) =>
   value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
-// Datas da compra são dias (sem horário); o sufixo evita o deslocamento de fuso.
-export const formatDay = (value: string) =>
-  new Date(`${value.slice(0, 10)}T00:00:00`).toLocaleDateString("pt-BR");
+// Datas da compra são dias (sem horário).
+export const formatDay = (value: string) => formatDate(value.slice(0, 10));
 
 // Recebidos x esperados, com destaque quando passa do negociado.
 export function ReceivedCount({

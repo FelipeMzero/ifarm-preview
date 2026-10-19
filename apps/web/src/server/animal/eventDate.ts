@@ -1,6 +1,6 @@
 import "server-only";
 import { formatDate, fromDbDate, toLocalDay, today } from "@ifarm/shared";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/server/db";
 import { ValidationError } from "../errors";
 
 // Datas de manejos avulsos (pesagem, castração, identificação), recebidas como "AAAA-MM-DD".

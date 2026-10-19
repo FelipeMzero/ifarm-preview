@@ -1,5 +1,5 @@
 import "server-only";
-import { Prisma } from "@/lib/prisma";
+import { Prisma } from "@/server/db";
 
 type AddressData = Omit<Prisma.AddressCreateInput, "person" | "property">;
 

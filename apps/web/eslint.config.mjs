@@ -10,9 +10,8 @@ const eslintConfig = defineConfig([
     rules: {
       semi: ["error", "always"], // Obriga o uso de ponto e vírgula e marca como erro
       // Datas sem hora passam pelas funções de packages/shared/src/date.ts.
-      // "warn" até os demais módulos migrarem; depois, "error".
       "no-restricted-syntax": [
-        "warn",
+        "error",
         {
           selector: "TemplateElement[value.raw=/T00:00:00$/]",
           message:

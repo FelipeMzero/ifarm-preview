@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { healthManagementTypeSchema } from "@ifarm/shared";
-import { requireSession } from "@/lib/api-auth";
+import { requireSession } from "@/app/api/session";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
 import { listHealthManagementTypes } from "@/server/health-management-type/queries";
 import { createHealthManagementType } from "@/server/health-management-type/mutations";

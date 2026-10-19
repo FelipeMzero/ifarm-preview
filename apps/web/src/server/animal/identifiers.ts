@@ -7,7 +7,7 @@ import {
   type IdentifierCorrectionData,
   type IdentifierKind,
 } from "@ifarm/shared";
-import { prisma, Prisma } from "@/lib/prisma";
+import { prisma, Prisma } from "@/server/db";
 import {
   effectiveRfidTagging,
   effectiveTagging,

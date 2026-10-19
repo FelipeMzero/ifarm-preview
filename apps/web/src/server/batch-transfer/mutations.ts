@@ -5,7 +5,7 @@ import {
   toLocalDay,
   type BatchTransferData,
 } from "@ifarm/shared";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/server/db";
 import { assertNoConflicts } from "../animal/commitments";
 import { getOrAssignCurrentProperty } from "../current-property/queries";
 import { BusinessError, NotFoundError, ValidationError } from "../errors";

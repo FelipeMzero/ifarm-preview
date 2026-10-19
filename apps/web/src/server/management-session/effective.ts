@@ -1,5 +1,5 @@
 import "server-only";
-import type { Prisma } from "@/lib/prisma";
+import type { Prisma } from "@/server/db";
 
 // Registros feitos numa sessão de manejo ficam gravados nas tabelas definitivas desde o
 // registro, mas só passam a valer quando a sessão é consolidada. Estes filtros separam os

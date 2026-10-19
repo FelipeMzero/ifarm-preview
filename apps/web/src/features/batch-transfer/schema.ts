@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { FIELD_LIMITS } from "@/lib/field-limits";
+import { FIELD_LIMITS } from "@ifarm/shared";
 
 export const batchTransferFormSchema = z.object({
   destinationBatchId: z.string().min(1, "Este campo é obrigatório"),

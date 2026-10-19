@@ -6,7 +6,7 @@ import {
   type PurchaseDetail,
   type PurchaseListResult,
 } from "@ifarm/shared";
-import { prisma, type Prisma } from "@/lib/prisma";
+import { prisma, type Prisma } from "@/server/db";
 import { getOrAssignCurrentProperty } from "../current-property/queries";
 import { NotFoundError } from "../errors";
 import { arrivalWeightsByCategory } from "./costs";

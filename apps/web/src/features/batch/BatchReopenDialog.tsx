@@ -22,7 +22,7 @@ import {
   SearchCombobox,
   SearchComboboxItem,
 } from "@/components/our/SearchCombobox";
-import { FIELD_LIMITS } from "@/lib/field-limits";
+import { FIELD_LIMITS } from "@ifarm/shared";
 import { StockingNotice } from "@/features/area/StockingNotice";
 import { batchClient } from "@/lib/clients";
 import { ApiError } from "@ifarm/shared";

@@ -5,7 +5,7 @@ import {
   unavailableAnimalsMessage,
   unavailableReason,
 } from "@ifarm/shared";
-import { Prisma } from "@/lib/prisma";
+import { Prisma } from "@/server/db";
 import { BusinessError } from "@/server/errors";
 import { transferStatus } from "./rules";
 

@@ -5,7 +5,7 @@ import type {
   AreaOccupancyHistoryEntry,
   AreaRow,
 } from "@ifarm/shared";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/server/db";
 import { getOrAssignCurrentProperty } from "../current-property/queries";
 import { NotFoundError } from "../errors";
 import { areasLastExit, areasOccupancy } from "../stocking/queries";

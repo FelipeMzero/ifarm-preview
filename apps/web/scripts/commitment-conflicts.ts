@@ -4,7 +4,7 @@
 // consolidação/confirmação delas passa a falhar.
 //
 //   pnpm check:commitments
-import { prisma } from "../src/lib/prisma";
+import { prisma } from "../src/server/db";
 import {
   conflictsFor,
   describeCommitment,

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { animalUpdateSchema } from "@ifarm/shared";
-import { requireSession } from "@/lib/api-auth";
+import { requireSession } from "@/app/api/session";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
 import { getAnimal } from "@/server/animal/queries";
 import { deleteAnimal, updateAnimal } from "@/server/animal/mutations";

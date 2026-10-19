@@ -1,7 +1,13 @@
 "use client";
 
 import { useEffect } from "react";
-import { MapContainer, Marker, TileLayer, useMap, useMapEvents } from "react-leaflet";
+import {
+  MapContainer,
+  Marker,
+  TileLayer,
+  useMap,
+  useMapEvents,
+} from "react-leaflet";
 import L from "leaflet";
 import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
 import markerIcon from "leaflet/dist/images/marker-icon.png";
@@ -37,7 +43,13 @@ function ClickHandler({
 // MapContainer só aplica `center`/`zoom` na montagem inicial; em modo somente-leitura
 // o componente permanece montado enquanto os campos de lat/long mudam, então recentraliza
 // manualmente sempre que a posição de destino muda.
-function Recenter({ center, zoom }: { center: [number, number]; zoom: number }) {
+function Recenter({
+  center,
+  zoom,
+}: {
+  center: [number, number];
+  zoom: number;
+}) {
   const map = useMap();
   useEffect(() => {
     map.setView(center, zoom);

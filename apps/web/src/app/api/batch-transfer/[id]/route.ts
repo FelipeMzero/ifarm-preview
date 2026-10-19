@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { batchTransferSchema } from "@ifarm/shared";
-import { requireSession } from "@/lib/api-auth";
+import { requireSession } from "@/app/api/session";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
 import { getBatchTransfer } from "@/server/batch-transfer/queries";
 import { updateBatchTransfer } from "@/server/batch-transfer/mutations";

@@ -6,8 +6,8 @@ import {
   type ReceptionPurchase,
   type ReceptionPurchaseListResult,
 } from "@ifarm/shared";
-import type { Prisma } from "@/lib/prisma";
-import { prisma } from "@/lib/prisma";
+import type { Prisma } from "@/server/db";
+import { prisma } from "@/server/db";
 import { getOrAssignCurrentProperty } from "../current-property/queries";
 import { NotFoundError } from "../errors";
 import { categoryLabel } from "../purchase/reception";

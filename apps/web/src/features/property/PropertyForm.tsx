@@ -1,6 +1,6 @@
 "use client";
 
-import { FIELD_LIMITS } from "@/lib/field-limits";
+import { FIELD_LIMITS } from "@ifarm/shared";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -27,7 +27,7 @@ import { ArrowLeft, Loader2, MapPin, MapPinOff } from "lucide-react";
 import FormSkeleton from "@/components/our/FormSkeleton";
 import { propertySchema, type PropertyInput } from "@ifarm/shared";
 import { Separator } from "@/components/ui/separator";
-import { BR_STATE_ITEMS } from "@/lib/br-states";
+import { BR_STATE_ITEMS } from "@ifarm/shared";
 import { cn } from "@/lib/utils";
 import { LocationPickerDialog } from "./LocationPickerDialog";
 import { useCurrentProperty } from "@/features/shell/CurrentPropertyProvider";

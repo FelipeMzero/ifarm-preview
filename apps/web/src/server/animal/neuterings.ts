@@ -1,6 +1,6 @@
 import "server-only";
 import type { Prisma } from "@/generated/prisma/client";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/server/db";
 
 // Relações necessárias para exibir a técnica (atual e a lançada originalmente).
 export const neuteringInclude = {

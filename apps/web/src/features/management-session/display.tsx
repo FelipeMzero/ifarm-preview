@@ -1,3 +1,4 @@
+import { formatDate } from "@ifarm/shared";
 import {
   Boxes,
   Nfc,
@@ -74,9 +75,9 @@ export const STEP_ICONS: Record<StepType, LucideIcon> = {
   batch: Boxes,
 };
 
-// Datas da sessão são dias (sem horário); o sufixo evita o deslocamento de fuso.
+// Datas da sessão são dias (sem horário).
 export function formatSessionDate(value: string) {
-  return new Date(`${value.slice(0, 10)}T00:00:00`).toLocaleDateString("pt-BR");
+  return formatDate(value.slice(0, 10));
 }
 
 export function todayIso() {

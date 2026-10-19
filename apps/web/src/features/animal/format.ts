@@ -26,7 +26,10 @@ export function formatCurrency(value: number): string {
 
 export const DAY_MS = 24 * 60 * 60 * 1000;
 
-export function daysBetween(from: string, to: string | Date = new Date()): number {
+export function daysBetween(
+  from: string,
+  to: string | Date = new Date(),
+): number {
   const end = typeof to === "string" ? new Date(to) : to;
   return Math.max(
     0,

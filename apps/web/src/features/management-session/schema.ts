@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { FIELD_LIMITS } from "@/lib/field-limits";
+import { FIELD_LIMITS } from "@ifarm/shared";
 import { STEP_TYPES } from "@ifarm/shared";
 
 // Uma etapa no formulário de planejamento. Os campos extras só valem para o tipo

@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { FormField } from "@/components/our/FormField";
 import FieldRow from "@/components/our/FieldRow";
 import { SelectField } from "@/components/our/SelectField";
-import { FIELD_LIMITS } from "@/lib/field-limits";
+import { FIELD_LIMITS } from "@ifarm/shared";
 import type { PlanFieldsProps } from "../types";
 import { DOSE_LABELS, type HealthDoseType } from "./config";
 

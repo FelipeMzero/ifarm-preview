@@ -4,7 +4,7 @@ import {
   AnimalOrigin as EnumAnimalOrigin,
   AnimalStatus as EnumAnimalStatus,
 } from "@/generated/prisma/enums";
-import { FIELD_LIMITS } from "@/lib/field-limits";
+import { FIELD_LIMITS } from "@ifarm/shared";
 
 export { EnumSex, EnumAnimalOrigin, EnumAnimalStatus };
 

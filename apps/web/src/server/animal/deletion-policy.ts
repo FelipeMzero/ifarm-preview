@@ -1,5 +1,5 @@
 import "server-only";
-import type { Prisma } from "@/lib/prisma";
+import type { Prisma } from "@/server/db";
 import type { DeletionPolicy } from "@/server/deletion";
 
 type Tx = Prisma.TransactionClient;

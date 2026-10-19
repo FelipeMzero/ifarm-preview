@@ -1,6 +1,6 @@
 import "server-only";
 import type { PropertyInput } from "@ifarm/shared";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/server/db";
 import { buildAddressWrite, toAddressData } from "../address";
 import { write } from "../db-errors";
 import { NotFoundError, ValidationError } from "../errors";

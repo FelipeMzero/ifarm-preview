@@ -1,6 +1,6 @@
 import "server-only";
 import { BusinessError } from "@/server/errors";
-import { Prisma } from "@/lib/prisma";
+import { Prisma } from "@/server/db";
 import {
   conflictsFor,
   describeCommitment,
@@ -11,7 +11,7 @@ import {
 import { sessionStepsSelect, stepKey, toSessionSteps } from "@ifarm/shared";
 import { animalLabel, summarize } from "@ifarm/shared";
 
-// Compromissos pendentes dos animais (regras em lib/animal-commitments.ts e em
+// Compromissos pendentes dos animais (regras em packages/shared/src/animal-commitments.ts e em
 // docs/data-dictionary.md, seção 2.9).
 
 type Tx = Prisma.TransactionClient;

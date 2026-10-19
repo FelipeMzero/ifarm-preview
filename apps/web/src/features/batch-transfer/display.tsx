@@ -1,5 +1,5 @@
 import { Badge } from "@/components/ui/badge";
-import { type BatchTransferStatus } from "@ifarm/shared";
+import { type BatchTransferStatus, formatDate } from "@ifarm/shared";
 
 export const TRANSFER_STATUS_LABELS: Record<BatchTransferStatus, string> = {
   pending: "Pendente",
@@ -25,7 +25,7 @@ export function TransferStatusBadge({
   );
 }
 
-// Datas de transferência são dias (sem horário); o sufixo evita o deslocamento de fuso.
+// Datas de transferência são dias (sem horário).
 export function formatTransferDate(value: string) {
-  return new Date(`${value.slice(0, 10)}T00:00:00`).toLocaleDateString("pt-BR");
+  return formatDate(value.slice(0, 10));
 }

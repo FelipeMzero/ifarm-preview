@@ -1,6 +1,6 @@
 import "server-only";
 import { z } from "zod";
-import { FIELD_LIMITS } from "@/lib/field-limits";
+import { FIELD_LIMITS } from "@ifarm/shared";
 import { animalLabel, summarize } from "@ifarm/shared";
 import {
   defineStep,

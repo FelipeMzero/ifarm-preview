@@ -1,6 +1,6 @@
 import "server-only";
 import type { Breed } from "@ifarm/shared";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/server/db";
 
 export function toBreed(b: {
   id: string;

@@ -1,7 +1,7 @@
 import "server-only";
 import { z } from "zod";
-import { FIELD_LIMITS } from "@/lib/field-limits";
-import type { Prisma } from "@/lib/prisma";
+import { FIELD_LIMITS } from "@ifarm/shared";
+import type { Prisma } from "@/server/db";
 import type { SessionStep, StepType } from "@ifarm/shared";
 import { BusinessError } from "@/server/errors";
 

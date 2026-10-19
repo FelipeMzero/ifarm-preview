@@ -1,5 +1,6 @@
 "use client";
 
+import { toLocalDay } from "@ifarm/shared";
 import {
   CartesianGrid,
   ComposedChart,
@@ -53,13 +54,13 @@ export function BatchGoalChart({
   today.setHours(0, 0, 0, 0);
 
   const history: Point[] = series.map((p) => ({
-    ts: new Date(`${p.date}T00:00:00`).getTime(),
+    ts: toLocalDay(p.date).getTime(),
     avgWeightKg: p.avgWeightKg,
     animalCount: p.animalCount,
   }));
 
   const targetTs = projection.targetDate
-    ? new Date(`${projection.targetDate}T00:00:00`).getTime()
+    ? toLocalDay(projection.targetDate).getTime()
     : null;
 
   // Linha de projeção: de hoje até a data da meta ou a data estimada (a mais distante).

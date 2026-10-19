@@ -20,7 +20,7 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { authClient, useSession } from "@/lib/auth-client";
 import { ResetPasswordDialog } from "./ResetPasswordDialog";
-import { FIELD_LIMITS } from "@/lib/field-limits";
+import { FIELD_LIMITS } from "@ifarm/shared";
 
 const DEFAULT_PAGE_SIZE = 10;
 

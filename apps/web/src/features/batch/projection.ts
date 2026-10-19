@@ -1,5 +1,5 @@
 import { DAY_MS } from "@/features/animal/format";
-import { type BatchDetailAnimal } from "@ifarm/shared";
+import { type BatchDetailAnimal, toLocalDay } from "@ifarm/shared";
 
 // Projeção linear da meta de peso do lote. Cada animal cresce a partir da sua última
 // pesagem no próprio GMD (ou, sem histórico, no GMD médio do lote); o peso médio do lote
@@ -79,7 +79,7 @@ export function projectBatch(
 
   const targetWeightKg = goal?.targetWeightKg ?? null;
   const targetDate = goal?.targetDate ?? null;
-  const target = targetDate ? new Date(`${targetDate}T00:00:00`) : null;
+  const target = targetDate ? toLocalDay(targetDate) : null;
 
   // Sem GMD, o "hoje" é só a média dos pesos atuais.
   const projectedTodayKg =

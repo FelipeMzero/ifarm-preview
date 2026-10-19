@@ -2,19 +2,15 @@
 // logo depois de rodar os indicadores (GMD, metas, lotação, rodízio de áreas, carências)
 // estão "atuais". Só popula um banco vazio: para recriar, rode
 //   pnpm exec prisma db push --force-reset && pnpm exec prisma db seed
-import { prisma } from "../src/lib/prisma";
-import { auth } from "../src/lib/auth";
+import { prisma } from "../src/server/db";
+import { auth } from "../src/server/auth";
 import type { Prisma } from "../src/generated/prisma/client";
 import type {
   AnimalOrigin,
   AnimalStatus,
   Sex,
 } from "../src/generated/prisma/enums";
-import {
-  stepKey,
-  toStepRows,
-  type SessionStep,
-} from "@ifarm/shared";
+import { stepKey, toStepRows, type SessionStep } from "@ifarm/shared";
 import { consolidateSession } from "../src/server/management-session/consolidate";
 import { findCommitments } from "../src/server/animal/commitments";
 import { saveAnimalStep } from "../src/server/management-session/records";

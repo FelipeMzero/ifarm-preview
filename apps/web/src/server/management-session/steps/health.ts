@@ -1,6 +1,6 @@
 import "server-only";
 import { z } from "zod";
-import { FIELD_LIMITS } from "@/lib/field-limits";
+import { FIELD_LIMITS, fromDbDate, toDbDate } from "@ifarm/shared";
 import { HealthManagementDoseType } from "@/generated/prisma/enums";
 import {
   defineStep,
@@ -13,9 +13,9 @@ const optionalDate = z
   .regex(/^\d{4}-\d{2}-\d{2}$/, "Informe uma data válida.")
   .nullish()
   .or(z.literal(""))
-  .transform((v) => (v ? new Date(`${v}T00:00:00Z`) : null));
+  .transform((v) => (v ? toDbDate(v) : null));
 
-const toDateOnly = (d: Date | null) => d?.toISOString().slice(0, 10) ?? null;
+const toDateOnly = (d: Date | null) => (d ? fromDbDate(d) : null);
 
 const positiveNumber = z.coerce
   .number("Informe um valor válido")

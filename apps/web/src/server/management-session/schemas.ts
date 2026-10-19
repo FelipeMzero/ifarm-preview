@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { FIELD_LIMITS } from "@/lib/field-limits";
+import { FIELD_LIMITS } from "@ifarm/shared";
 import { dateOnlySchema } from "@/server/management-session/shared";
 import { planStepSchema } from "@/server/management-session/steps";
 
