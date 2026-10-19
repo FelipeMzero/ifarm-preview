@@ -1,5 +1,6 @@
 import {
   createAreaClient,
+  createBatchTransferClient,
   createBreedClient,
   createCurrentPropertyClient,
   createHealthManagementTypeClient,
@@ -27,3 +28,4 @@ export const propertyClient = createPropertyClient(request);
 export const areaClient = createAreaClient(request);
 export const purchaseClient = createPurchaseClient(request);
 export const receptionClient = createReceptionClient(request);
+export const batchTransferClient = createBatchTransferClient(request);

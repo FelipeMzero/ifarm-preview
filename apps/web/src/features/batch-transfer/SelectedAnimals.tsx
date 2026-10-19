@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/table";
 import { AnimalIdentification, SEX_ICON } from "@/features/animal/display";
 import { cn } from "@/lib/utils";
-import { TransferAnimal } from "./services";
+import { type TransferAnimal } from "@ifarm/shared";
 
 const PAGE_SIZE = 10;
 // Lotes listados por nome no resumo; os demais viram "+N".

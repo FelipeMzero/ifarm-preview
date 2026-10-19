@@ -9,7 +9,7 @@ import {
   type CommitmentIntent,
 } from "@ifarm/shared";
 import { sessionStepsSelect, stepKey, toSessionSteps } from "@ifarm/shared";
-import { animalLabel, summarize } from "@/server/batch-transfer/shared";
+import { animalLabel, summarize } from "@ifarm/shared";
 
 // Compromissos pendentes dos animais (regras em lib/animal-commitments.ts e em
 // docs/data-dictionary.md, seção 2.9).

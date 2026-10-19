@@ -57,14 +57,12 @@ import {
 import { getAnimals } from "@/features/animal/services";
 import { TransferStatusBadge } from "./display";
 import { BatchTransferFormData, batchTransferFormSchema } from "./schema";
+import { batchTransferClient } from "@/lib/clients";
 import {
   ApiError,
-  BatchTransferDetail,
-  TransferAnimal,
-  createBatchTransfer,
-  getBatchTransfer,
-  updateBatchTransfer,
-} from "./services";
+  type BatchTransferDetail,
+  type TransferAnimal,
+} from "@ifarm/shared";
 
 type FormStep = "data" | "animals";
 
@@ -211,7 +209,7 @@ export function BatchTransferForm({
 
     async function loadData() {
       try {
-        const data = await getBatchTransfer(id!);
+        const data = await batchTransferClient.getBatchTransfer(id!);
         if (cancelled) return;
         setDetail(data);
         setSelected(data.animals);
@@ -325,11 +323,11 @@ export function BatchTransferForm({
 
     try {
       if (id) {
-        await updateBatchTransfer(id, payload);
+        await batchTransferClient.updateBatchTransfer(id, payload);
         toast.success("Transferência atualizada com sucesso!");
         onSuccess?.(id);
       } else {
-        const response = await createBatchTransfer(payload);
+        const response = await batchTransferClient.createBatchTransfer(payload);
         toast.success("Transferência salva como pendente!");
         onSuccess?.(response.data.id);
       }

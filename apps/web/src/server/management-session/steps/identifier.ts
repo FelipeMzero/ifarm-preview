@@ -1,7 +1,7 @@
 import "server-only";
 import { z } from "zod";
 import { FIELD_LIMITS } from "@/lib/field-limits";
-import { animalLabel, summarize } from "@/server/batch-transfer/shared";
+import { animalLabel, summarize } from "@ifarm/shared";
 import {
   defineStep,
   StepError,

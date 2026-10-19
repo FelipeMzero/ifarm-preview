@@ -12,7 +12,7 @@ import {
   type CommitmentIntent,
 } from "@ifarm/shared";
 import { findCommitments } from "../src/server/animal/commitments";
-import { animalLabel } from "../src/server/batch-transfer/shared";
+import { animalLabel } from "@ifarm/shared";
 
 // A intenção que cada compromisso representou quando foi criado.
 function intentOf(commitment: Commitment): CommitmentIntent {

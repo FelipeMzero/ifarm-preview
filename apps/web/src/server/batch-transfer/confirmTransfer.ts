@@ -1,12 +1,13 @@
 import "server-only";
-import { unavailableAnimalsMessage, unavailableReason } from "@ifarm/shared";
-import { Prisma } from "@/lib/prisma";
-import { BusinessError } from "@/server/errors";
 import {
   animalLabel,
   summarize,
-  transferStatus,
-} from "@/server/batch-transfer/shared";
+  unavailableAnimalsMessage,
+  unavailableReason,
+} from "@ifarm/shared";
+import { Prisma } from "@/lib/prisma";
+import { BusinessError } from "@/server/errors";
+import { transferStatus } from "./rules";
 
 type Tx = Prisma.TransactionClient;
 

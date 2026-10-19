@@ -23,12 +23,8 @@ import { SelectField } from "@/components/our/SelectField";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useCurrentProperty } from "@/features/shell/CurrentPropertyProvider";
-import {
-  BatchTransferRow,
-  cancelBatchTransfer,
-  confirmBatchTransfer,
-  getBatchTransfers,
-} from "./services";
+import { batchTransferClient } from "@/lib/clients";
+import { type BatchTransferRow } from "@ifarm/shared";
 import { TransferStatusBadge, formatTransferDate } from "./display";
 import { stockingClient } from "@/lib/clients";
 import { describeStocking } from "@/features/area/StockingNotice";
@@ -170,7 +166,7 @@ export default function BatchTransferList() {
     async function load() {
       setLoading(true);
       try {
-        const result = await getBatchTransfers({
+        const result = await batchTransferClient.getBatchTransfers({
           propertyId: currentProperty?.id,
           page: pageIndex,
           pageSize,
@@ -211,10 +207,10 @@ export default function BatchTransferList() {
     setPendingAction(null);
     try {
       if (type === "confirm") {
-        await confirmBatchTransfer(row.id);
+        await batchTransferClient.confirmBatchTransfer(row.id);
         toast.success("Transferência confirmada! Os animais mudaram de lote.");
       } else {
-        await cancelBatchTransfer(row.id);
+        await batchTransferClient.cancelBatchTransfer(row.id);
         toast.success("Transferência cancelada.");
       }
       setRefreshKey((k) => k + 1);

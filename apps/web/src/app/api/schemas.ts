@@ -318,39 +318,6 @@ export type WeighingCorrectionApiData = z.infer<
   typeof weighingCorrectionApiSchema
 >;
 
-export const batchTransferQuerySchema = z.object({
-  propertyId: z.uuid().optional(),
-  page: z.coerce.number().int().min(0).optional().default(0),
-  pageSize: z.coerce.number().int().min(1).optional().default(10),
-  search: z.string().trim().optional().default(""),
-  status: z.preprocess(
-    (v) => (v === "" ? undefined : v),
-    z.enum(["pending", "confirmed", "cancelled"]).optional(),
-  ),
-});
-
-export type BatchTransferQueryData = z.infer<typeof batchTransferQuerySchema>;
-
-export const batchTransferApiSchema = z.object({
-  destinationBatchId: z.uuid("Selecione o lote de destino."),
-  transferDate: z
-    .string()
-    .regex(/^\d{4}-\d{2}-\d{2}$/, "Informe uma data válida.")
-    .transform((v) => new Date(`${v}T00:00:00`)),
-  notes: z
-    .string()
-    .max(
-      FIELD_LIMITS.batchTransfer.notes,
-      `Máximo de ${FIELD_LIMITS.batchTransfer.notes} caracteres`,
-    )
-    .optional()
-    .transform((v) => v || null),
-  animalIds: z.array(z.uuid()).default([]),
-  propertyId: z.uuid().optional(),
-});
-
-export type BatchTransferApiData = z.infer<typeof batchTransferApiSchema>;
-
 export const batchReopenApiSchema = z.object({
   areaId: z.uuid("Selecione a área do lote."),
   notes: z

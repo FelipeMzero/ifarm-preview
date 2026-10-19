@@ -1,5 +1,5 @@
 import { Badge } from "@/components/ui/badge";
-import { BatchTransferStatus } from "./services";
+import { type BatchTransferStatus } from "@ifarm/shared";
 
 export const TRANSFER_STATUS_LABELS: Record<BatchTransferStatus, string> = {
   pending: "Pendente",

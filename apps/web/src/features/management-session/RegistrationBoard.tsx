@@ -28,7 +28,7 @@ import { ConfirmDialog } from "@/components/our/ConfirmDialog";
 import { ErrorPage } from "@/components/our/ErrorPage";
 import ListSkeleton from "@/components/our/ListSkeleton";
 import { AnimalPicker } from "@/features/batch-transfer/AnimalPicker";
-import type { TransferAnimal } from "@/features/batch-transfer/services";
+import { type TransferAnimal } from "@ifarm/shared";
 import { useCurrentProperty } from "@/features/shell/CurrentPropertyProvider";
 import type { ParticipantStatus } from "@ifarm/shared";
 import { SessionStatusBadge, formatSessionDate, todayIso } from "./display";

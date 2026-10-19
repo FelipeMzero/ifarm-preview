@@ -31,7 +31,7 @@ import {
 } from "@ifarm/shared";
 import { SEX_ITEMS } from "@ifarm/shared";
 import { cn } from "@/lib/utils";
-import { TransferAnimal } from "./services";
+import { type TransferAnimal } from "@ifarm/shared";
 
 const PAGE_SIZE = 10;
 // Limite de segurança para "adicionar todos os filtrados".

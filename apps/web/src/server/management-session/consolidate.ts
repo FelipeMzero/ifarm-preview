@@ -1,7 +1,7 @@
 import "server-only";
 import { unavailableAnimalsMessage, unavailableReason } from "@ifarm/shared";
 import { assertNoConflicts } from "@/server/animal/commitments";
-import { animalLabel, summarize } from "@/server/batch-transfer/shared";
+import { animalLabel, summarize } from "@ifarm/shared";
 import { findReception } from "@/server/purchase/reception";
 import {
   requireManagementDate,

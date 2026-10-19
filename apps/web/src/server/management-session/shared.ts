@@ -14,7 +14,7 @@ import {
   type StepType,
 } from "@ifarm/shared";
 import type { CommitmentIntent } from "@ifarm/shared";
-import { animalLabel, summarize } from "@/server/batch-transfer/shared";
+import { animalLabel, summarize } from "@ifarm/shared";
 import { stepModule } from "@/server/management-session/steps";
 import {
   StepError,

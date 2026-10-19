@@ -38,7 +38,7 @@ import {
   SelectedAnimalsTable,
   useSelectedPage,
 } from "@/features/batch-transfer/SelectedAnimals";
-import type { TransferAnimal } from "@/features/batch-transfer/services";
+import { type TransferAnimal } from "@ifarm/shared";
 import { useCurrentProperty } from "@/features/shell/CurrentPropertyProvider";
 import { SessionStatusBadge, formatSessionDate, todayIso } from "./display";
 import { planFormSchema, toStepPayload, type PlanFormData } from "./schema";

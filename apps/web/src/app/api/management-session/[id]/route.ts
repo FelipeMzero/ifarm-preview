@@ -5,7 +5,7 @@ import { RESOURCE_ACCESS } from "@/lib/permissions";
 import { unavailableReason } from "@ifarm/shared";
 import { participantStatus, stepKey } from "@ifarm/shared";
 import { assertNoConflicts } from "@/server/animal/commitments";
-import { animalLabel, summarize } from "@/server/batch-transfer/shared";
+import { animalLabel, summarize } from "@ifarm/shared";
 import { managementSessionApiSchema } from "@/server/management-session/schemas";
 import {
   applyPlanSteps,
