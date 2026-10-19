@@ -25,3 +25,34 @@ export function buildAddressWrite(
 
   return {};
 }
+
+type AddressInput = {
+  zipCode?: string;
+  street?: string;
+  number?: string;
+  complement?: string;
+  neighborhood?: string;
+  city?: string;
+  state?: string;
+};
+
+/**
+ * Endereço é tudo ou nada: só existe quando CEP, logradouro, cidade e UF foram informados.
+ * Campos opcionais em branco viram null.
+ */
+export function toAddressData(input: AddressInput): AddressData | null {
+  const { zipCode, street, number, complement, neighborhood, city, state } =
+    input;
+  if (!zipCode || !street || !city || !state) return null;
+
+  return {
+    zipCode,
+    street,
+    number: number || null,
+    complement: complement || null,
+    neighborhood: neighborhood || null,
+    city,
+    state,
+    country: "Brasil",
+  };
+}

@@ -33,7 +33,7 @@ import {
   type SearchComboboxItem,
 } from "@/components/our/SearchCombobox";
 import { getBreeds } from "@/features/breed/services";
-import { getPeople } from "@/features/person/services";
+import { personClient } from "@/lib/clients";
 import { SessionStatusBadge } from "@/features/management-session/display";
 import { useCurrentProperty } from "@/features/shell/CurrentPropertyProvider";
 import { Badge } from "@/components/ui/badge";
@@ -159,7 +159,7 @@ export function PurchaseForm({ id }: { id?: string }) {
 
   const loadSellers = useCallback(async (q: string) => {
     try {
-      const result = await getPeople({
+      const result = await personClient.getPeople({
         search: q,
         pageSize: q ? 20 : 5,
         status: "active",
@@ -172,7 +172,7 @@ export function PurchaseForm({ id }: { id?: string }) {
 
   useEffect(() => {
     let cancelled = false;
-    getPeople({ pageSize: 5, status: "active" })
+    personClient.getPeople({ pageSize: 5, status: "active" })
       .then((result) => {
         if (!cancelled)
           setSellerItems(

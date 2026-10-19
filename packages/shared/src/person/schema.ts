@@ -1,19 +1,14 @@
 import { z } from "zod";
-import {
-  PersonType as EnumPersonType,
-  MaritalStatus as EnumMaritalStatus,
-} from "@/generated/prisma/enums";
-import { isValidTaxId } from "@/lib/tax-id";
-import { FIELD_LIMITS } from "@/lib/field-limits";
+import { dateField } from "../date";
+import { MaritalStatus, PersonType } from "../enums";
+import { FIELD_LIMITS } from "../field-limits";
+import { isValidTaxId } from "../tax-id";
 
-export { EnumPersonType, EnumMaritalStatus };
-
-const enumValues = <T extends Record<string, string>>(e: T) =>
-  Object.values(e) as [T[keyof T], ...T[keyof T][]];
-
-export const personFormSchema = z
+// Dados de uma pessoa como o usuário os informa: textos, com "" para campo vazio. Validado no
+// formulário e de novo na API; a conversão para o formato do banco fica no servidor.
+export const personSchema = z
   .object({
-    type: z.enum(enumValues(EnumPersonType), "Este campo não pode ser vazio"),
+    type: z.enum(PersonType, "Este campo não pode ser vazio"),
     taxId: z.string().min(1, "Este campo não pode ser vazio"),
     name: z
       .string()
@@ -55,8 +50,8 @@ export const personFormSchema = z
         `Máximo de ${FIELD_LIMITS.person.rg} caracteres`,
       )
       .optional(),
-    birthDate: z.string().optional(),
-    maritalStatus: z.string().optional(),
+    birthDate: dateField,
+    maritalStatus: z.union([z.enum(MaritalStatus), z.literal("")]).optional(),
 
     // Endereço
     zipCode: z.string().optional(),
@@ -100,13 +95,14 @@ export const personFormSchema = z
   .check((ctx) => {
     const { type, taxId, email, zipCode, street, city, state } = ctx.value;
 
+    // RN-PESSOA-01
     if (taxId && !isValidTaxId(type, taxId)) {
       ctx.issues.push({
         code: "custom",
         input: taxId,
         path: ["taxId"],
         message:
-          type === EnumPersonType.INDIVIDUAL ? "CPF inválido" : "CNPJ inválido",
+          type === PersonType.INDIVIDUAL ? "CPF inválido" : "CNPJ inválido",
       });
     }
 
@@ -119,6 +115,8 @@ export const personFormSchema = z
       });
     }
 
+    // Endereço é tudo ou nada: começou a preencher, CEP, logradouro, cidade e UF passam a ser
+    // obrigatórios.
     const addressStarted = zipCode || street || city || state;
     if (addressStarted) {
       if (!zipCode)
@@ -152,4 +150,4 @@ export const personFormSchema = z
     }
   });
 
-export type PersonFormData = z.infer<typeof personFormSchema>;
+export type PersonInput = z.infer<typeof personSchema>;

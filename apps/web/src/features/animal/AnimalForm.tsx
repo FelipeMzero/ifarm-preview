@@ -14,7 +14,7 @@ import {
 import { BatchRow, getBatches } from "@/features/batch/services";
 import { BatchForm } from "@/features/batch/BatchForm";
 import { StockingNotice } from "@/features/area/StockingNotice";
-import { getPeople } from "@/features/person/services";
+import { personClient } from "@/lib/clients";
 import PersonForm from "@/features/person/PersonForm";
 import { useCurrentProperty } from "@/features/shell/CurrentPropertyProvider";
 import { toast } from "sonner";
@@ -142,7 +142,7 @@ export default function AnimalForm({
 
   const loadSellers = useCallback(async (q: string) => {
     try {
-      const result = await getPeople({
+      const result = await personClient.getPeople({
         search: q,
         pageSize: q ? 20 : 5,
         status: "active",

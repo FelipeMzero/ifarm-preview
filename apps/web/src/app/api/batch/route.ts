@@ -7,7 +7,7 @@ import {
   batchQuerySchema,
   type BatchQueryData,
 } from "@/app/api/schemas";
-import { uniqueConstraintErrors } from "@/app/api/dbErrors";
+import { uniqueConstraintErrors } from "@/server/db-errors";
 import { getOrAssignCurrentProperty } from "../user/current-property/currentProperty";
 
 function buildWhere(query: BatchQueryData) {

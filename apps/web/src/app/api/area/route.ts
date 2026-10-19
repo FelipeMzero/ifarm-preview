@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/api-auth";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
-import { uniqueConstraintErrors } from "../dbErrors";
+import { uniqueConstraintErrors } from "@/server/db-errors";
 import { areaApiSchema, areaQuerySchema } from "../schemas";
 import { getOrAssignCurrentProperty } from "../user/current-property/currentProperty";
 import { areasLastExit, areasOccupancy } from "../stocking";

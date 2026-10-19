@@ -5,7 +5,7 @@ import { RESOURCE_ACCESS } from "@/lib/permissions";
 import {
   uniqueConstraintErrors,
   referencedElsewhereMessage,
-} from "../../dbErrors";
+} from "@/server/db-errors";
 import { neuteringTechniqueApiSchema } from "../../schemas";
 
 export async function PUT(

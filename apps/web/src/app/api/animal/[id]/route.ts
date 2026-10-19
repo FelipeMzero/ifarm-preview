@@ -8,7 +8,7 @@ import {
   CommitmentError,
   commitmentErrorResponse,
 } from "../commitments";
-import { uniqueConstraintErrors } from "../../dbErrors";
+import { uniqueConstraintErrors } from "@/server/db-errors";
 import { deleteRecord, DeletionBlockedError } from "../../deletion";
 import { animalDeletionPolicy } from "../deletion-policy";
 import { animalUpdateApiSchema } from "../../schemas";

@@ -5,9 +5,9 @@ import { RESOURCE_ACCESS } from "@/lib/permissions";
 import {
   uniqueConstraintErrors,
   referencedElsewhereMessage,
-} from "../../dbErrors";
+} from "@/server/db-errors";
 import { propertyApiSchema } from "../../schemas";
-import { buildAddressWrite } from "../../addressHelpers";
+import { buildAddressWrite } from "@/server/address";
 
 export async function GET(
   _request: NextRequest,

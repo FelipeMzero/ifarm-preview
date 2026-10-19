@@ -33,11 +33,10 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { SelectField } from "@/components/our/SelectField";
-import { PersonRow, getPeople, togglePersonStatus } from "./services";
-import { EnumPersonType } from "./schema";
+import { personClient } from "@/lib/clients";
+import { PersonType, formatTaxId, type PersonRow } from "@ifarm/shared";
 import { PERSON_TYPE_ITEMS, PERSON_TYPE_LABELS } from "@/lib/enum-labels";
 import { ErrorPage } from "@/components/our/ErrorPage";
-import { formatTaxId } from "@/lib/tax-id";
 
 const DEFAULT_PAGE_SIZE = 10;
 
@@ -50,7 +49,7 @@ const STATUS_FILTER = {
 function filterToParams(filter: string): { type?: string; status?: string } {
   if (filter === STATUS_FILTER.ACTIVE) return { status: "active" };
   if (filter === STATUS_FILTER.INACTIVE) return { status: "inactive" };
-  if (filter === EnumPersonType.INDIVIDUAL || filter === EnumPersonType.COMPANY)
+  if (filter === PersonType.INDIVIDUAL || filter === PersonType.COMPANY)
     return { type: filter };
   return {};
 }
@@ -76,10 +75,10 @@ const COLUMN_LABELS: Record<string, string> = {
 const TYPE_LABEL: Record<string, string> = PERSON_TYPE_LABELS;
 
 const TYPE_ICON: Record<string, React.ReactNode> = {
-  [EnumPersonType.INDIVIDUAL]: (
+  [PersonType.INDIVIDUAL]: (
     <User className="size-4 text-muted-foreground" />
   ),
-  [EnumPersonType.COMPANY]: (
+  [PersonType.COMPANY]: (
     <Building2 className="size-4 text-muted-foreground" />
   ),
 };
@@ -223,7 +222,7 @@ export default function PersonList() {
     async function load() {
       setLoading(true);
       try {
-        const result = await getPeople({
+        const result = await personClient.getPeople({
           page: pageIndex,
           pageSize,
           search: debouncedSearch,
@@ -255,7 +254,7 @@ export default function PersonList() {
 
     setIsToggling(true);
     try {
-      await togglePersonStatus(togglingId);
+      await personClient.togglePersonStatus(togglingId);
       setRefreshKey((k) => k + 1);
       setTogglingId(null);
     } catch {

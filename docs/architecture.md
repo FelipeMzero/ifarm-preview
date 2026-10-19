@@ -82,3 +82,59 @@ sequenceDiagram
     Backend-->>Frontend: Dados protegidos
     Frontend-->>User: Exibir perfil
 ```
+
+```mermaid
+flowchart TB
+  subgraph Apresentacao["Apresentação"]
+    direction LR
+    Pages["app/(protected)/pessoas<br/>páginas"]
+    Features["features/person<br/>PersonForm, PersonList, PersonDetails"]
+    WebClients["lib/clients.ts<br/>web: fetch do navegador"]
+    Mobile["apps/mobile<br/>(futuro)"]
+    MobileClients["lib/clients.ts<br/>mobile: URL da API + cookie"]
+  end
+
+  subgraph Shared["packages/shared · contrato entre os lados"]
+    direction LR
+    Schema["person/schema.ts<br/>personSchema"]
+    Client["person/client.ts<br/>createPersonClient, PersonRow"]
+    ClientBase["client.ts<br/>ApiError, readJson, toQueryString"]
+    Utils["date · enums · tax-id · field-limits"]
+  end
+
+  subgraph Http["Interface HTTP"]
+    Routes["app/api/person/*<br/>sessão → valida → chama server → responde"]
+    HttpErr["app/api/http.ts<br/>erro → status HTTP"]
+  end
+
+  subgraph Server["Negócio e dados · server-only"]
+    Queries["server/person/queries.ts"]
+    Mutations["server/person/mutations.ts"]
+    Rules["server/person/rules.ts<br/>regras puras"]
+    Infra["server/errors · db-errors · address"]
+  end
+
+  Prisma["Prisma ORM"]
+  DB[("PostgreSQL")]
+
+  Pages --> Features
+  Features --> WebClients
+  Features --> Schema
+  Mobile -.-> MobileClients
+  WebClients --> Client
+  MobileClients -.-> Client
+  Client --> ClientBase
+  Client -- "HTTP /api/person" --> Routes
+  Routes --> Schema
+  Routes --> Queries
+  Routes --> Mutations
+  Routes --> HttpErr
+  Mutations --> Rules
+  Mutations --> Infra
+  Queries --> Utils
+  Mutations --> Utils
+  Queries --> Prisma
+  Mutations --> Prisma
+  Schema --> Utils
+  Prisma --> DB
+```

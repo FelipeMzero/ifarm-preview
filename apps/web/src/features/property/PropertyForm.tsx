@@ -13,7 +13,7 @@ import {
   createProperty,
   ApiError,
 } from "./services";
-import { getPeople } from "@/features/person/services";
+import { personClient } from "@/lib/clients";
 import { ErrorPage } from "@/components/our/ErrorPage";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -147,7 +147,7 @@ export default function PropertyForm({
   const searchOwners = useCallback((query: string) => {
     if (ownerDebounce.current) clearTimeout(ownerDebounce.current);
     ownerDebounce.current = setTimeout(async () => {
-      const result = await getPeople({
+      const result = await personClient.getPeople({
         search: query,
         pageSize: query ? 20 : 5,
         status: "active",
@@ -193,7 +193,7 @@ export default function PropertyForm({
   useEffect(() => {
     async function loadData() {
       try {
-        const initialOwners = await getPeople({
+        const initialOwners = await personClient.getPeople({
           pageSize: 5,
           status: "active",
         });
@@ -689,7 +689,7 @@ export default function PropertyForm({
               setIsPersonModalOpen(false);
               if (newId) {
                 // Atualiza a listagem de titulares no client e auto-seleciona a nova pessoa
-                const result = await getPeople({
+                const result = await personClient.getPeople({
                   search: "",
                   pageSize: 20,
                   status: "active",

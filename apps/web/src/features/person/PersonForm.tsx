@@ -1,12 +1,18 @@
 "use client";
 
-import { FIELD_LIMITS } from "@/lib/field-limits";
+import {
+  FIELD_LIMITS,
+  PersonType,
+  personSchema,
+  type PersonInput,
+  ApiError,
+} from "@ifarm/shared";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { IMaskInput } from "react-imask";
 
-import { getPerson, updatePerson, createPerson, ApiError } from "./services";
+import { personClient } from "@/lib/clients";
 import { ErrorPage } from "@/components/our/ErrorPage";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -18,7 +24,6 @@ import FieldRow from "@/components/our/FieldRow";
 import { SearchCombobox } from "@/components/our/SearchCombobox";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import FormSkeleton from "@/components/our/FormSkeleton";
-import { PersonFormData, personFormSchema, EnumPersonType } from "./schema";
 import { Separator } from "@/components/ui/separator";
 import { BR_STATE_ITEMS } from "@/lib/br-states";
 import { PERSON_TYPE_ITEMS, MARITAL_STATUS_ITEMS } from "@/lib/enum-labels";
@@ -55,10 +60,10 @@ export default function PersonForm({
     setValue,
     setError,
     formState: { isSubmitting },
-  } = useForm<PersonFormData>({
-    resolver: zodResolver(personFormSchema),
+  } = useForm<PersonInput>({
+    resolver: zodResolver(personSchema),
     defaultValues: {
-      type: EnumPersonType.INDIVIDUAL,
+      type: PersonType.INDIVIDUAL,
       taxId: "",
       name: "",
       stateRegistration: "",
@@ -79,14 +84,14 @@ export default function PersonForm({
   });
 
   const type = watch("type");
-  const isCompany = type === EnumPersonType.COMPANY;
+  const isCompany = type === PersonType.COMPANY;
 
   useEffect(() => {
     if (!id) return;
 
     async function loadData() {
       try {
-        const data = await getPerson(id!);
+        const data = await personClient.getPerson(id!);
         reset(data);
       } catch {
         setLoadFailed(true);
@@ -123,23 +128,23 @@ export default function PersonForm({
     }
   }
 
-  async function onSubmit(data: PersonFormData) {
+  async function onSubmit(data: PersonInput) {
     try {
       if (id) {
-        await updatePerson(id, data);
-        const fresh = await getPerson(id);
+        await personClient.updatePerson(id, data);
+        const fresh = await personClient.getPerson(id);
         reset(fresh);
         toast.success("Atualizado com sucesso!");
         onSuccess?.();
       } else {
-        const response = await createPerson(data);
+        const response = await personClient.createPerson(data);
         toast.success("Salvo com sucesso!");
         onSuccess?.(response.data.id);
       }
     } catch (error) {
       if (error instanceof ApiError && error.errors) {
         Object.entries(error.errors).forEach(([field, message]) => {
-          setError(field as keyof PersonFormData, { type: "server", message });
+          setError(field as keyof PersonInput, { type: "server", message });
         });
         toast.error("Verifique os campos destacados.");
       } else {

@@ -1,4 +1,5 @@
 import { Prisma } from "@/lib/prisma";
+import { ConflictError } from "./errors";
 
 // const UNIQUE_FIELD_MESSAGES: Record<string, string> = {
 //   brinco: "Este brinco já está em uso.",
@@ -68,4 +69,15 @@ export function referencedElsewhereMessage(error: unknown): string | null {
   return label
     ? `Não é possível excluir: existem ${label} a este registro.`
     : "Não é possível excluir: este registro está em uso em outro lugar";
+}
+
+// Traduz as violações de unicidade e de vínculo em ConflictError; devolve null para os demais erros.
+export function dbConflict(error: unknown): ConflictError | null {
+  const fieldErrors = uniqueConstraintErrors(error);
+  if (fieldErrors) return new ConflictError("Valor já em uso.", fieldErrors);
+
+  const referencedMessage = referencedElsewhereMessage(error);
+  if (referencedMessage) return new ConflictError(referencedMessage);
+
+  return null;
 }

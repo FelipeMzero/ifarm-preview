@@ -1,224 +1,68 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { personSchema } from "@ifarm/shared";
 import { requireSession } from "@/lib/api-auth";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
+import { getPerson } from "@/server/person/queries";
 import {
-  uniqueConstraintErrors,
-  referencedElsewhereMessage,
-} from "../../dbErrors";
-import { personApiSchema } from "../../schemas";
-import { buildAddressWrite } from "../../addressHelpers";
+  deletePerson,
+  togglePersonStatus,
+  updatePerson,
+} from "@/server/person/mutations";
+import { errorResponse, validationErrorResponse } from "../../http";
 
-export async function GET(
-  _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
+type Params = { params: Promise<{ id: string }> };
+
+export async function GET(_request: NextRequest, { params }: Params) {
   const { response } = await requireSession(RESOURCE_ACCESS.pessoas);
   if (response) return response;
 
-  const { id } = await params;
-
   try {
-    const person = await prisma.person.findUnique({
-      where: { id },
-      include: { address: true },
-    });
-
-    if (!person) {
-      return NextResponse.json(
-        { message: "Pessoa não encontrada." },
-        { status: 404 },
-      );
-    }
-
-    return NextResponse.json({
-      type: person.type,
-      taxId: person.taxId,
-      name: person.name,
-      stateRegistration: person.stateRegistration ?? "",
-      phone: person.phone ?? "",
-      email: person.email ?? "",
-      tradeName: person.tradeName ?? "",
-      rg: person.rg ?? "",
-      birthDate: person.birthDate?.toISOString().slice(0, 10) ?? "",
-      maritalStatus: person.maritalStatus ?? "",
-      zipCode: person.address?.zipCode ?? "",
-      street: person.address?.street ?? "",
-      number: person.address?.number ?? "",
-      complement: person.address?.complement ?? "",
-      neighborhood: person.address?.neighborhood ?? "",
-      city: person.address?.city ?? "",
-      state: person.address?.state ?? "",
-    });
+    const { id } = await params;
+    return NextResponse.json(await getPerson(id));
   } catch (error) {
-    console.error(error);
-    return NextResponse.json(
-      { message: "Ocorreu um erro interno no servidor." },
-      { status: 500 },
-    );
+    return errorResponse(error);
   }
 }
 
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
+export async function PUT(request: NextRequest, { params }: Params) {
   const { response } = await requireSession(RESOURCE_ACCESS.pessoas);
   if (response) return response;
 
-  const { id } = await params;
-
   try {
-    const body = await request.json();
-    const validation = personApiSchema.safeParse(body);
+    const { id } = await params;
+    const validation = personSchema.safeParse(await request.json());
+    if (!validation.success) return validationErrorResponse(validation.error);
 
-    if (!validation.success) {
-      const errors: Record<string, string> = {};
-      validation.error.issues.forEach((issue) => {
-        const field = issue.path[0] as string;
-        if (field && !errors[field]) errors[field] = issue.message;
-      });
-      return NextResponse.json({ success: false, errors }, { status: 400 });
-    }
-
-    // `type` e `taxId` são imutáveis após o cadastro (RF-PESSOA-02): omitidos do update.
-    const {
-      name,
-      stateRegistration,
-      phone,
-      email,
-      tradeName,
-      rg,
-      birthDate,
-      maritalStatus,
-      zipCode,
-      street,
-      number,
-      complement,
-      neighborhood,
-      city,
-      state,
-    } = validation.data;
-
-    const addressData =
-      zipCode && street && city && state
-        ? {
-            zipCode,
-            street,
-            number,
-            complement,
-            neighborhood,
-            city,
-            state,
-            country: "Brasil",
-          }
-        : null;
-
-    const current = await prisma.person.findUnique({
-      where: { id },
-      select: { addressId: true },
-    });
-
-    if (!current) {
-      return NextResponse.json(
-        { success: false, message: "Pessoa não encontrada." },
-        { status: 404 },
-      );
-    }
-
-    const person = await prisma.person.update({
-      where: { id },
-      data: {
-        name,
-        stateRegistration,
-        phone,
-        email,
-        tradeName,
-        rg,
-        birthDate,
-        maritalStatus,
-        ...buildAddressWrite(addressData, current.addressId),
-      },
-    });
-
-    return NextResponse.json({ success: true, data: person });
+    const data = await updatePerson(id, validation.data);
+    return NextResponse.json({ success: true, data });
   } catch (error) {
-    const errors = uniqueConstraintErrors(error);
-    if (errors) {
-      return NextResponse.json({ success: false, errors }, { status: 409 });
-    }
-
-    console.error(error);
-    return NextResponse.json(
-      { success: false, message: "Ocorreu um erro interno no servidor." },
-      { status: 500 },
-    );
+    return errorResponse(error);
   }
 }
 
-export async function DELETE(
-  _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
+export async function DELETE(_request: NextRequest, { params }: Params) {
   const { response } = await requireSession(RESOURCE_ACCESS.pessoas);
   if (response) return response;
 
-  const { id } = await params;
-
   try {
-    // Exclusão condicionada (RN-PESSOA-03): bloqueada se houver propriedade vinculada.
-    await prisma.person.delete({ where: { id } });
+    const { id } = await params;
+    await deletePerson(id);
     return NextResponse.json({ success: true });
   } catch (error) {
-    const referencedMessage = referencedElsewhereMessage(error);
-    if (referencedMessage) {
-      return NextResponse.json(
-        { success: false, message: referencedMessage },
-        { status: 409 },
-      );
-    }
-
-    console.error(error);
-    return NextResponse.json(
-      { success: false, message: "Ocorreu um erro interno no servidor." },
-      { status: 500 },
-    );
+    return errorResponse(error);
   }
 }
 
-export async function PATCH(
-  _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
+// Ativa ou desativa a pessoa.
+export async function PATCH(_request: NextRequest, { params }: Params) {
   const { response } = await requireSession(RESOURCE_ACCESS.pessoas);
   if (response) return response;
 
-  const { id } = await params;
-
   try {
-    const person = await prisma.person.findUnique({
-      where: { id },
-      select: { deactivatedAt: true },
-    });
-
-    if (!person) {
-      return NextResponse.json(
-        { message: "Pessoa não encontrada." },
-        { status: 404 },
-      );
-    }
-
-    const updated = await prisma.person.update({
-      where: { id },
-      data: { deactivatedAt: person.deactivatedAt ? null : new Date() },
-    });
-
-    return NextResponse.json({ success: true, data: updated });
+    const { id } = await params;
+    const data = await togglePersonStatus(id);
+    return NextResponse.json({ success: true, data });
   } catch (error) {
-    console.error(error);
-    return NextResponse.json(
-      { success: false, message: "Ocorreu um erro interno no servidor." },
-      { status: 500 },
-    );
+    return errorResponse(error);
   }
 }

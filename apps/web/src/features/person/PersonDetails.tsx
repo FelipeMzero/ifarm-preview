@@ -32,10 +32,14 @@ import {
 } from "@/components/ui/table";
 import { ConfirmDialog } from "@/components/our/ConfirmDialog";
 import { ErrorPage } from "@/components/our/ErrorPage";
-import { deletePerson, getPerson } from "./services";
-import { PersonFormData, EnumPersonType } from "./schema";
+import { personClient } from "@/lib/clients";
+import {
+  PersonType,
+  formatDate,
+  formatTaxId,
+  type PersonInput,
+} from "@ifarm/shared";
 import { MARITAL_STATUS_LABELS as MARITAL_STATUS_LABEL } from "@/lib/enum-labels";
-import { formatTaxId } from "@/lib/tax-id";
 
 function formatPhone(value: string): string {
   const digits = value.replace(/\D/g, "");
@@ -44,11 +48,6 @@ function formatPhone(value: string): string {
   if (digits.length === 10)
     return digits.replace(/(\d{2})(\d{4})(\d{4})/, "($1) $2-$3");
   return value;
-}
-
-function formatDate(iso: string): string {
-  if (!iso) return "—";
-  return new Date(`${iso}T00:00:00`).toLocaleDateString("pt-BR");
 }
 
 // Dados ilustrativos: essas informações ainda não existem no sistema (RF-PESSOA-04 em construção).
@@ -116,7 +115,7 @@ export default function PersonDetails({
   onClose?: () => void;
 }) {
   const router = useRouter();
-  const [person, setPerson] = useState<PersonFormData | null>(null);
+  const [person, setPerson] = useState<PersonInput | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
@@ -127,7 +126,7 @@ export default function PersonDetails({
     async function load() {
       setLoading(true);
       try {
-        const data = await getPerson(id);
+        const data = await personClient.getPerson(id);
         if (!cancelled) setPerson(data);
       } catch (e) {
         if (!cancelled) setError((e as Error).message);
@@ -144,7 +143,7 @@ export default function PersonDetails({
 
   async function handleDelete() {
     try {
-      await deletePerson(id);
+      await personClient.deletePerson(id);
       toast.success("Registro excluído com sucesso!");
       if (onClose) onClose();
       else router.push("/pessoas");
@@ -170,7 +169,7 @@ export default function PersonDetails({
     return <DetailsSkeleton />;
   }
 
-  const isIndividual = person.type === EnumPersonType.INDIVIDUAL;
+  const isIndividual = person.type === PersonType.INDIVIDUAL;
   const address = [
     person.street && person.number
       ? `${person.street}, ${person.number}`

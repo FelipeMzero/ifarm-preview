@@ -9,6 +9,16 @@ const eslintConfig = defineConfig([
   {
     rules: {
       semi: ["error", "always"], // Obriga o uso de ponto e vírgula e marca como erro
+      // Datas sem hora passam por toDbDate/fromDbDate/formatDate de @ifarm/shared.
+      // "warn" até os demais módulos migrarem; depois, "error".
+      "no-restricted-syntax": [
+        "warn",
+        {
+          selector: "TemplateElement[value.raw=/T00:00:00$/]",
+          message:
+            "Use toDbDate/fromDbDate/formatDate de @ifarm/shared em vez de montar a data com T00:00:00.",
+        },
+      ],
     },
   },
 
