@@ -35,12 +35,13 @@ export function toLocalDay(value: string): Date {
   return new Date(`${value}T00:00:00`);
 }
 
+const pad = (n: number) => String(n).padStart(2, "0");
+
 /** Date → o dia dele ("AAAA-MM-DD") no fuso local. */
 export function fromLocalDay(value: Date): string {
-  return value.toLocaleDateString("en-CA");
+  // Montado à mão, sem Intl (toLocaleDateString), que varia entre motores (ex.: Hermes no mobile).
+  return `${value.getFullYear()}-${pad(value.getMonth() + 1)}-${pad(value.getDate())}`;
 }
-
-const pad = (n: number) => String(n).padStart(2, "0");
 
 /** "AAAA-MM-DDTHH:mm" → Date nesse horário, no fuso local. */
 export function toLocalDateTime(value: string): Date {
