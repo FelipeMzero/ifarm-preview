@@ -65,7 +65,7 @@ import {
 } from "@/features/animal/format";
 import { cn } from "@/lib/utils";
 import { BatchGoalChart } from "./BatchGoalChart";
-import { projectBatch } from "./projection";
+import { projectBatch } from "@ifarm/shared";
 import { batchClient } from "@/lib/clients";
 import { type BatchFullDetails, formatEventDateTime } from "@ifarm/shared";
 

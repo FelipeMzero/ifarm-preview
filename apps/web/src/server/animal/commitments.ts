@@ -2,14 +2,18 @@ import "server-only";
 import { BusinessError } from "@/server/errors";
 import { Prisma } from "@/server/db";
 import {
-  conflictsFor,
   describeCommitment,
   type Commitment,
   type CommitmentExclusion,
   type CommitmentIntent,
 } from "@ifarm/shared";
-import { sessionStepsSelect, stepKey, toSessionSteps } from "@ifarm/shared";
 import { animalLabel, summarize } from "@ifarm/shared";
+import { blockingConflicts } from "./rules";
+import {
+  sessionStepsSelect,
+  stepKey,
+  toSessionSteps,
+} from "@/server/management-session/session-steps";
 
 // Compromissos pendentes dos animais (regras em packages/shared/src/animal/commitments.ts e em
 // docs/data-dictionary.md, seção 2.9).
@@ -144,31 +148,16 @@ export async function assertNoConflicts(
   await lockAnimals(tx, ids);
   const commitments = await findCommitments(tx, ids, exclude);
 
-  // Animais em conflito, agrupados pelo compromisso que os prende.
-  const byCommitment = new Map<
-    string,
-    { commitment: Commitment; animalIds: string[] }
-  >();
-  for (const [animalId, list] of commitments) {
-    for (const { commitment, severity } of conflictsFor(list, intent)) {
-      if (severity !== "block") continue;
-      const key = `${commitment.kind}:${commitment.id}`;
-      const group = byCommitment.get(key) ?? { commitment, animalIds: [] };
-      group.animalIds.push(animalId);
-      byCommitment.set(key, group);
-    }
-  }
-  if (!byCommitment.size) return;
+  const groups = blockingConflicts(commitments, intent);
+  if (!groups.length) return;
 
   const animals = await tx.animal.findMany({
-    where: {
-      id: { in: [...byCommitment.values()].flatMap((g) => g.animalIds) },
-    },
+    where: { id: { in: groups.flatMap((g) => g.animalIds) } },
     select: { id: true, code: true, currentTag: true, currentRfid: true },
   });
   const labelOf = new Map(animals.map((a) => [a.id, animalLabel(a)]));
 
-  const parts = [...byCommitment.values()].map(
+  const parts = groups.map(
     ({ commitment, animalIds }) =>
       `${summarize(animalIds.map((id) => labelOf.get(id) ?? "desconhecido"))} em ${describeCommitment(commitment, intent)}`,
   );

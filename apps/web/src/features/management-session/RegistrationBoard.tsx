@@ -28,7 +28,7 @@ import { ConfirmDialog } from "@/components/our/ConfirmDialog";
 import { ErrorPage } from "@/components/our/ErrorPage";
 import ListSkeleton from "@/components/our/ListSkeleton";
 import { AnimalPicker } from "@/features/batch-transfer/AnimalPicker";
-import { type TransferAnimal, nowDateTime } from "@ifarm/shared";
+import { isSessionOpen, type TransferAnimal, nowDateTime } from "@ifarm/shared";
 import { useCurrentProperty } from "@/features/shell/CurrentPropertyProvider";
 import type { ParticipantStatus } from "@ifarm/shared";
 import { SessionStatusBadge, formatSessionDateTime } from "./display";
@@ -107,7 +107,7 @@ export function RegistrationBoard({ id }: { id: string }) {
 
   const { status, steps } = detail;
   const inProgress = status === "in_progress";
-  const editable = status === "planned" || inProgress;
+  const editable = isSessionOpen(status);
 
   const filtered = detail.participants.filter((p) =>
     matchesParticipant(p, search),

@@ -1,4 +1,7 @@
-// Tipos de etapa de uma sessão de manejo, compartilhados entre a API e as telas.
+// Vocabulário das sessões de manejo usado pelas telas: tipos de etapa e situações.
+// O modelo das etapas no servidor (chaves, ordem, gravação) está em
+// server/management-session/session-steps.ts.
+//
 // Cada tipo é implementado como um módulo próprio (servidor em
 // server/management-session/steps, tela em features/management-session/steps);
 // para incluir um tipo novo, acrescente-o aqui e registre os dois módulos.
@@ -14,15 +17,6 @@ export const STEP_TYPES = [
 
 export type StepType = (typeof STEP_TYPES)[number];
 
-// Uma etapa da sessão (linha de ManagementStep, sem a posição).
-export type SessionStep =
-  | { type: "weighing" }
-  | { type: "neutering" }
-  | { type: "tag" }
-  | { type: "rfid" }
-  | { type: "health"; healthManagementId: string }
-  | { type: "batch" };
-
 export const STEP_TYPE_LABELS: Record<StepType, string> = {
   weighing: "Pesagem",
   neutering: "Castração",
@@ -35,70 +29,18 @@ export const STEP_TYPE_LABELS: Record<StepType, string> = {
 // Só o sanitário pode aparecer mais de uma vez na mesma sessão.
 export const REPEATABLE_STEP_TYPES: readonly StepType[] = ["health"];
 
-// Chave estável da etapa dentro da sessão (o sanitário se distingue pelo procedimento).
-export function stepKey(step: SessionStep) {
-  return step.type === "health"
-    ? `health:${step.healthManagementId}`
-    : step.type;
-}
-
-// A apartação decide o destino do animal depois dos demais manejos: fica sempre por último.
-export function normalizeStepOrder<T extends { type: StepType }>(steps: T[]) {
-  return [
-    ...steps.filter((s) => s.type !== "batch"),
-    ...steps.filter((s) => s.type === "batch"),
-  ];
-}
-
-// Etapas gravadas em ManagementStep, na ordem da sessão. O banco guarda o tipo em
-// maiúsculas (enum ManagementStepType).
-export const sessionStepsSelect = {
-  orderBy: { position: "asc" },
-  select: { type: true, healthManagementId: true },
-} as const;
-
-export function toSessionSteps(
-  rows: { type: string; healthManagementId: string | null }[],
-): SessionStep[] {
-  return rows.map((row) => {
-    const type = row.type.toLowerCase() as StepType;
-    return type === "health"
-      ? { type, healthManagementId: row.healthManagementId! }
-      : { type };
-  });
-}
-
-export function toStepRows(steps: SessionStep[]) {
-  return steps.map((step, position) => ({
-    type: step.type.toUpperCase() as Uppercase<StepType>,
-    position,
-    healthManagementId: step.type === "health" ? step.healthManagementId : null,
-  }));
-}
-
 export type ManagementSessionStatus =
   "planned" | "in_progress" | "confirmed" | "cancelled";
 
-export function sessionStatus(s: {
-  performedAt: Date | string | null;
-  confirmedAt: Date | string | null;
-  cancelledAt: Date | string | null;
-}): ManagementSessionStatus {
-  if (s.cancelledAt) return "cancelled";
-  if (s.confirmedAt) return "confirmed";
-  if (s.performedAt) return "in_progress";
-  return "planned";
-}
+// Em aberto: ainda não consolidada nem cancelada (planejada ou em andamento). É quando
+// a sessão aceita alterações.
+export const OPEN_SESSION_STATUSES: readonly ManagementSessionStatus[] = [
+  "planned",
+  "in_progress",
+];
+
+export const isSessionOpen = (status: ManagementSessionStatus) =>
+  OPEN_SESSION_STATUSES.includes(status);
 
 // Situação de cada animal no registro: nenhuma, algumas ou todas as etapas registradas.
 export type ParticipantStatus = "pending" | "partial" | "done";
-
-export function participantStatus(
-  done: number,
-  total: number,
-): ParticipantStatus {
-  // Sem etapas (ex.: recepção de compra só para receber os animais): nada a registrar.
-  if (total === 0) return "done";
-  if (done === 0) return "pending";
-  return done >= total ? "done" : "partial";
-}

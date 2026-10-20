@@ -19,7 +19,7 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart";
 import { DAY_MS } from "@/features/animal/format";
-import type { BatchProjection } from "./projection";
+import type { BatchProjection } from "@ifarm/shared";
 
 const chartConfig = {
   avgWeightKg: { label: "Peso médio", color: "var(--primary)" },

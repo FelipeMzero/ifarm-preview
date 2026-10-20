@@ -2,26 +2,25 @@ import "server-only";
 import type { z } from "zod";
 import {
   animalLabel,
-  stepKey,
+  OPEN_SESSION_STATUSES,
   summarize,
+  type ManagementSessionStartData,
+  type ReceiveAnimalData,
   type ReceptionDocumentsData,
 } from "@ifarm/shared";
 import { prisma } from "@/server/db";
 import { assertNoConflicts } from "../animal/commitments";
 import { getOrAssignCurrentProperty } from "../current-property/queries";
+import { diffIds } from "../diff";
 import {
   findReception,
   receiveAnimal,
   removeReceivedAnimal,
-  type receiveAnimalSchema,
 } from "../purchase/reception";
 import { loadAnimalContext } from "./animalContext";
 import { consolidateSession } from "./consolidate";
 import { clearAnimalStep, saveAnimalStep } from "./records";
-import type {
-  managementSessionApiSchema,
-  managementSessionStartApiSchema,
-} from "./schemas";
+import type { managementSessionApiSchema } from "./schemas";
 import {
   applyPlanSteps,
   invalidAnimals,
@@ -34,11 +33,9 @@ import {
 } from "./shared";
 import { countDone, loadStepRecords, stepModule } from "./steps";
 import type { Tx } from "./steps/types";
+import { stepKey } from "@/server/management-session/session-steps";
 
 type ManagementSessionData = z.output<typeof managementSessionApiSchema>;
-type ManagementSessionStartData = z.output<
-  typeof managementSessionStartApiSchema
->;
 
 // Planeja uma sessão: data prevista, etapas e animais participantes.
 export async function createManagementSession(
@@ -101,7 +98,7 @@ export async function updateManagementSession(
     const session = await requireSessionIn(
       tx,
       id,
-      ["planned", "in_progress"],
+      OPEN_SESSION_STATUSES,
       "Somente sessões não consolidadas podem ser alteradas.",
     );
     const reception = await findReception(tx, id);
@@ -161,11 +158,11 @@ async function updateParticipants(
       },
     },
   });
-  const nextIds = new Set(animalIds);
-  const currentIds = new Set(current.map((p) => p.animalId));
-  const removed = current.filter((p) => !nextIds.has(p.animalId));
-  const added = animalIds.filter((a) => !currentIds.has(a));
-  const kept = animalIds.filter((a) => currentIds.has(a));
+  const { removed, added, kept } = diffIds(
+    current,
+    animalIds,
+    (p) => p.animalId,
+  );
 
   const invalid = await invalidAnimals(tx, session.propertyId, added);
   if (invalid.length) {
@@ -227,7 +224,7 @@ export async function startManagementSession(
     await requireSessionIn(
       tx,
       id,
-      ["planned", "in_progress"],
+      OPEN_SESSION_STATUSES,
       "Somente sessões não consolidadas podem ser iniciadas.",
     );
     await tx.managementSession.update({
@@ -294,7 +291,7 @@ export async function addParticipants(id: string, animalIdsParam: string[]) {
     const session = await requireSessionIn(
       tx,
       id,
-      ["planned", "in_progress"],
+      OPEN_SESSION_STATUSES,
       "Somente sessões não consolidadas aceitam novos animais.",
     );
 
@@ -335,7 +332,7 @@ export async function removeParticipant(id: string, animalId: string) {
     const session = await requireSessionIn(
       tx,
       id,
-      ["planned", "in_progress"],
+      OPEN_SESSION_STATUSES,
       "Somente sessões não consolidadas podem ser alteradas.",
     );
 
@@ -365,7 +362,7 @@ export async function updateReceptionDocuments(
     await requireSessionIn(
       tx,
       id,
-      ["planned", "in_progress"],
+      OPEN_SESSION_STATUSES,
       "A recepção já foi concluída ou cancelada.",
     );
     const updated = await tx.purchaseReception.updateMany({
@@ -382,7 +379,7 @@ export async function updateReceptionDocuments(
 // liga-o à categoria da compra e o inclui na sessão para os manejos da recepção.
 export async function receiveSessionAnimal(
   id: string,
-  data: z.output<typeof receiveAnimalSchema>,
+  data: ReceiveAnimalData,
 ) {
   const animalId = await prisma.$transaction(async (tx) => {
     const session = requireManagementDate(

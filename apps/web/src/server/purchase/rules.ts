@@ -1,4 +1,8 @@
-import type { PurchaseCategoryData, PurchaseStatus } from "@ifarm/shared";
+import {
+  fromLocalDay,
+  type PurchaseCategoryData,
+  type PurchaseStatus,
+} from "@ifarm/shared";
 import type { Prisma } from "@/server/db";
 import { BusinessError } from "@/server/errors";
 
@@ -12,6 +16,15 @@ export function purchaseStatus(e: {
   if (e.confirmedAt) return "confirmed";
   return "open";
 }
+
+// Filtro de cada situação na consulta, coerente com purchaseStatus (ver o teste).
+// "all" = todas menos as canceladas.
+export const PURCHASE_STATUS_WHERE = {
+  open: { confirmedAt: null, cancelledAt: null },
+  confirmed: { confirmedAt: { not: null }, cancelledAt: null },
+  cancelled: { cancelledAt: { not: null } },
+  all: { cancelledAt: null },
+} satisfies Record<PurchaseStatus | "all", Prisma.PurchaseEventWhereInput>;
 
 export class PurchaseError extends BusinessError {}
 
@@ -41,6 +54,51 @@ export function categoryValue(c: CategoryPricing, heads: number) {
   return ((invoiced * (1 - shrink / 100)) / ARROBA_LIVE_KG) * unit;
 }
 
+// Valor da categoria visto na compra. Por cabeça: estimado sobre os esperados enquanto
+// em andamento; consolidada, sobre os recebidos.
+export function estimatedCategoryValue(
+  c: CategoryPricing & { expectedQuantity: number },
+  confirmed: boolean,
+  received: number,
+) {
+  return categoryValue(c, confirmed ? received : c.expectedQuantity);
+}
+
+// Soma só quando todos os valores são conhecidos (null = falta algum).
+export function sumIfAllKnown(values: (number | null)[]): number | null {
+  if (values.some((v) => v == null)) return null;
+  return values.reduce<number>((s, v) => s + v!, 0);
+}
+
+const round2 = (n: number) => Math.round(n * 100) / 100;
+
+// Proporção de cada animal no rateio de uma categoria que não é por cabeça. Valor
+// fechado com divisão igual: partes iguais. Senão, pelo peso de entrada; quem não foi
+// pesado entra com a média dos pesados (sem nenhuma pesagem, partes iguais).
+export function costShares(
+  c: { pricingType: string; costSplit: string },
+  entryWeights: (number | null)[],
+): number[] {
+  if (c.pricingType === "LUMP_SUM" && c.costSplit === "EQUAL") {
+    return entryWeights.map(() => 1);
+  }
+  const known = entryWeights.filter((w): w is number => w != null);
+  const average = known.length
+    ? known.reduce((s, w) => s + w, 0) / known.length
+    : 1;
+  return entryWeights.map((w) => w ?? average);
+}
+
+// Distribui `value` na proporção de `shares`, em centavos, com a sobra do
+// arredondamento no último: a soma dos custos bate exatamente com o valor.
+export function splitValue(value: number, shares: number[]) {
+  const total = shares.reduce((s, w) => s + w, 0);
+  const parts = shares.map((w) => round2((value * w) / total));
+  const diff = round2(value - parts.reduce((s, p) => s + p, 0));
+  parts[parts.length - 1] = round2(parts[parts.length - 1] + diff);
+  return parts;
+}
+
 // O que falta para o valor da categoria ser conhecido (null = completo). Os preços são
 // exigidos já na criação; o peso por arroba pode vir depois, até o pagamento.
 export function missingValue(c: CategoryPricing) {
@@ -67,9 +125,11 @@ const VALUE_FIELDS = [
   "shrinkPercent",
 ] as const;
 
+type CategoryValueFields = Record<(typeof VALUE_FIELDS)[number], unknown>;
+
 // A categoria gravada e a nova versão têm o mesmo valor (forma de preço, preços e pesos)?
 export function sameValue(
-  saved: Record<(typeof VALUE_FIELDS)[number], unknown>,
+  saved: CategoryValueFields,
   next: PurchaseCategoryData,
 ) {
   return VALUE_FIELDS.every((field) => {
@@ -80,4 +140,116 @@ export function sameValue(
       v == null ? null : Number((v as { toString(): string }).toString());
     return n(a) === n(b);
   });
+}
+
+type SavedCategory = CategoryValueFields & {
+  id: number;
+  receivedAnimals: number;
+};
+
+/**
+ * O que muda nas categorias de uma compra em andamento: as removidas e os ids que já
+ * existiam (os demais são criados). Depois do pagamento, vendedor, conjunto de categorias
+ * e valores ficam bloqueados; categorias com animais recebidos nunca são removidas.
+ */
+export function planCategoryChanges(
+  saved: SavedCategory[],
+  next: PurchaseCategoryData[],
+  payment: { paid: boolean; sellerChanged: boolean },
+) {
+  const keptIds = new Set(next.map((c) => c.id).filter((v) => v != null));
+  const removed = saved.filter((c) => !keptIds.has(c.id));
+  const existingIds = new Set(saved.map((c) => c.id));
+  const added = next.filter((c) => c.id == null || !existingIds.has(c.id));
+
+  if (payment.paid) {
+    const changedValue = next.some((c) => {
+      const s = saved.find((s) => s.id === c.id);
+      return s && !sameValue(s, c);
+    });
+    if (
+      payment.sellerChanged ||
+      removed.length ||
+      added.length ||
+      changedValue
+    ) {
+      throw new PurchaseError(
+        "A compra já foi paga: vendedor, categorias e valores não podem mudar. Desfaça o pagamento para corrigir.",
+        409,
+      );
+    }
+  }
+
+  const withAnimals = removed.filter((c) => c.receivedAnimals > 0);
+  if (withAnimals.length) {
+    throw new PurchaseError(
+      `Não é possível remover categorias com animais recebidos (${withAnimals
+        .map((c) => `${c.receivedAnimals} animal(is)`)
+        .join(", ")}).`,
+      409,
+      "categories",
+    );
+  }
+
+  return { removedIds: removed.map((c) => c.id), existingIds };
+}
+
+type PurchaseState = {
+  confirmedAt: Date | null;
+  cancelledAt: Date | null;
+  paymentDate: Date | null;
+};
+
+// Por que a compra não pode ser paga (null = pode). O pagamento é registrado uma vez,
+// com a compra em andamento.
+export function paymentBlocker(e: PurchaseState): string | null {
+  if (purchaseStatus(e) !== "open" || e.paymentDate) {
+    return "Só é possível registrar o pagamento de uma compra em andamento e ainda não paga.";
+  }
+  return null;
+}
+
+// Por que a compra não pode ser consolidada (null = pode): exige pagamento, ao menos um
+// animal recebido e nenhuma recepção em aberto.
+export function consolidationBlocker(
+  e: PurchaseState & { receivedAnimals: number; openReceptions: number },
+): string | null {
+  if (purchaseStatus(e) !== "open") {
+    return "Somente compras em andamento podem ser consolidadas.";
+  }
+  if (!e.paymentDate) {
+    return "Registre o pagamento antes de consolidar a compra.";
+  }
+  if (!e.receivedAnimals) {
+    return "A compra não tem animais recebidos. Sem animais, cancele a compra.";
+  }
+  if (e.openReceptions) {
+    return `Há ${e.openReceptions} recepção(ões) em aberto. Conclua ou cancele antes de consolidar.`;
+  }
+  return null;
+}
+
+// Por que a compra não pode ser cancelada (null = pode): só em andamento, sem pagamento e
+// sem animais recebidos.
+export function cancellationBlocker(
+  e: PurchaseState & { receivedAnimals: number },
+): string | null {
+  if (e.cancelledAt) return "A compra já está cancelada.";
+  if (e.confirmedAt) return "Uma compra consolidada não pode ser cancelada.";
+  if (e.paymentDate) return "Uma compra paga não pode ser cancelada.";
+  if (e.receivedAnimals) {
+    return `A compra tem ${e.receivedAnimals} animal(is) recebido(s) e não pode ser cancelada. Remova-os das recepções antes.`;
+  }
+  return null;
+}
+
+// Data de nascimento estimada ("AAAA-MM-DD", dia local) de um animal com `ageMonths`
+// meses no instante `at` (ex.: idade pela arcada dentária na recepção). Sem o dia no mês
+// de destino (31/03 menos 1 mês), vale o último dia dele (28 ou 29/02), sem transbordar
+// para o mês seguinte como o setMonth faria.
+export function estimatedBirthDay(at: Date, ageMonths: number): string {
+  const year = at.getFullYear();
+  const month = at.getMonth() - ageMonths; // negativo volta anos (normalizado pelo Date)
+  const lastDay = new Date(year, month + 1, 0).getDate();
+  return fromLocalDay(new Date(year, month, Math.min(at.getDate(), lastDay)));
 }

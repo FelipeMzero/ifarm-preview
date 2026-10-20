@@ -4,7 +4,6 @@ import {
   toLocalDateTime,
   type AnimalCreateData,
   type AnimalUpdateData,
-  type CommitmentIntent,
   type NeuteringCancelData,
   type NeuteringCorrectionData,
   type NeuteringCreateData,
@@ -38,6 +37,11 @@ import {
   REQUIRED_TECHNIQUE_MESSAGE,
   isValidNeuteringTechnique,
 } from "./neuterings";
+import {
+  keepsOriginal,
+  sessionDateLock,
+  updateCommitmentIntents,
+} from "./rules";
 import { recomputeCurrentWeight } from "./weighings";
 
 const fieldError = (field: string, message: string) =>
@@ -256,22 +260,7 @@ export async function updateAnimal(id: string, data: AnimalUpdateData) {
 
   const now = new Date();
 
-  // Troca de lote e registros pelo cadastro respeitam os compromissos do animal.
-  const intents: CommitmentIntent[] = [
-    ...(data.newBatchId ? [{ kind: "batchChange" as const }] : []),
-    ...(data.newTag !== undefined
-      ? [{ kind: "record" as const, type: "tag" as const }]
-      : []),
-    ...(data.newRfid !== undefined
-      ? [{ kind: "record" as const, type: "rfid" as const }]
-      : []),
-    ...(data.neuteredAt
-      ? [{ kind: "record" as const, type: "neutering" as const }]
-      : []),
-    ...(data.newWeightKg != null
-      ? [{ kind: "record" as const, type: "weighing" as const }]
-      : []),
-  ];
+  const intents = updateCommitmentIntents(data);
 
   await write(() =>
     prisma.$transaction(async (tx) => {
@@ -424,12 +413,8 @@ export async function correctWeighing(
 ) {
   const weighing = await findActiveWeighing(animalId, weighingId);
 
-  if (data.date && weighing.managementId) {
-    throw fieldError(
-      "date",
-      "A data de uma pesagem feita em sessão de manejo segue a data da sessão.",
-    );
-  }
+  const dateLock = sessionDateLock(weighing, data.date, "pesagem");
+  if (dateLock) throw fieldError("date", dateLock);
 
   let weighedAt: Date | undefined;
   if (data.date) {
@@ -448,7 +433,7 @@ export async function correctWeighing(
         notes: data.notes,
         ...(weighedAt ? { weighedAt } : {}),
         // Guarda o valor lançado originalmente só na primeira correção de peso.
-        ...(weightChanged && !weighing.originalWeight
+        ...(keepsOriginal(weightChanged, weighing.originalWeight)
           ? { originalWeight: weighing.weight }
           : {}),
         correctedAt: new Date(),
@@ -549,12 +534,8 @@ export async function correctNeutering(
     throw fieldError("techniqueId", INVALID_TECHNIQUE_MESSAGE);
   }
 
-  if (data.date && neutering.managementId) {
-    throw fieldError(
-      "date",
-      "A data de uma castração feita em sessão de manejo segue a data da sessão.",
-    );
-  }
+  const dateLock = sessionDateLock(neutering, data.date, "castração");
+  if (dateLock) throw fieldError("date", dateLock);
 
   let neuteredAt: Date | undefined;
   if (data.date) {
@@ -563,6 +544,8 @@ export async function correctNeutering(
     await assertNotBeforeBirth(animalId, neuteredAt);
   }
 
+  // Dois valores originais (data e técnica, que pode ser nula): a marca da primeira
+  // correção é correctedAt, não o original vazio (ver keepsOriginal).
   const firstCorrection = neutering.correctedAt === null;
 
   await prisma.animalNeutering.update({

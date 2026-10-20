@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireSession } from "@/app/api/session";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
 import { receiveSessionAnimal } from "@/server/management-session/mutations";
-import { receiveAnimalSchema } from "@/server/purchase/reception";
+import { receiveAnimalSchema } from "@ifarm/shared";
 import { errorResponse, validationErrorResponse } from "../../../../http";
 
 // Recebe um animal que desceu do caminhão (cria o animal e o inclui na sessão).

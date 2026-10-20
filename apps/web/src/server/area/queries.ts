@@ -5,10 +5,60 @@ import type {
   AreaOccupancyHistoryEntry,
   AreaRow,
 } from "@ifarm/shared";
-import { prisma } from "@/server/db";
+import { prisma, type Prisma } from "@/server/db";
 import { getOrAssignCurrentProperty } from "../current-property/queries";
-import { NotFoundError } from "../errors";
+import { NotFoundError, ValidationError } from "../errors";
 import { areasLastExit, areasOccupancy } from "../stocking/queries";
+import { areaRotation, areaStatus } from "./rules";
+
+// A área recebe o lote se está ativa na propriedade e não é ocupada por outro lote ativo
+// (`exceptBatchId`: o próprio lote, ao trocar de área ou reativar). Erro no campo `field`.
+export async function assertAreaAvailable(
+  tx: Prisma.TransactionClient,
+  params: {
+    areaId: string;
+    propertyId: string;
+    exceptBatchId?: string;
+    field: string;
+  },
+) {
+  const { areaId, propertyId, exceptBatchId, field } = params;
+
+  const area = await tx.area.findFirst({
+    where: { id: areaId, propertyId, closedAt: null },
+    select: { id: true },
+  });
+  if (!area) {
+    throw new ValidationError("Área inválida.", {
+      [field]: "Área inválida ou inativa para a propriedade selecionada.",
+    });
+  }
+
+  const occupant = await findOccupyingBatch(tx, areaId, exceptBatchId);
+  if (occupant) {
+    throw new ValidationError("Área ocupada.", {
+      [field]: `A área selecionada já está ocupada pelo lote "${occupant.name}".`,
+    });
+  }
+}
+
+// Lote ativo que ocupa a área agora (null = livre), fora `exceptBatchId`.
+export async function findOccupyingBatch(
+  tx: Prisma.TransactionClient,
+  areaId: string,
+  exceptBatchId?: string,
+) {
+  const occupied = await tx.batchAreaHistory.findFirst({
+    where: {
+      areaId,
+      exitedAt: null,
+      batch: { closedAt: null },
+      ...(exceptBatchId ? { batchId: { not: exceptBatchId } } : {}),
+    },
+    select: { batch: { select: { id: true, name: true } } },
+  });
+  return occupied?.batch ?? null;
+}
 
 export const areaQuerySchema = z.object({
   propertyId: z.preprocess(
@@ -70,21 +120,30 @@ export async function listAreas(
     })),
   );
 
-  return areas.map((a) => ({
-    id: a.id,
-    name: a.name,
-    polygon: a.polygon,
-    hectares: a.hectares.toNumber(),
-    stockingRate: a.stockingRate.toNumber(),
-    defaultOccupationDays: a.defaultOccupationDays,
-    defaultRestDays: a.defaultRestDays,
-    notes: a.notes,
-    propertyId: a.propertyId,
-    closedAt: a.closedAt?.toISOString() ?? null,
-    updatedAt: a.updatedAt.toISOString(),
-    occupancy: occupancy.get(a.id) ?? null,
-    lastExitAt: lastExit.get(a.id) ?? null,
-  }));
+  const now = new Date();
+  return areas.map((a) => {
+    const state = {
+      closedAt: a.closedAt?.toISOString() ?? null,
+      defaultOccupationDays: a.defaultOccupationDays,
+      defaultRestDays: a.defaultRestDays,
+      occupancy: occupancy.get(a.id) ?? null,
+      lastExitAt: lastExit.get(a.id) ?? null,
+    };
+    const rotation = areaRotation(state, now);
+    return {
+      id: a.id,
+      name: a.name,
+      polygon: a.polygon,
+      hectares: a.hectares.toNumber(),
+      stockingRate: a.stockingRate.toNumber(),
+      notes: a.notes,
+      propertyId: a.propertyId,
+      updatedAt: a.updatedAt.toISOString(),
+      ...state,
+      status: areaStatus(state, rotation),
+      rotation,
+    };
+  });
 }
 
 // Devolve a área no mesmo formato do formulário, para edição.

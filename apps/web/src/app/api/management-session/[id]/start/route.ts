@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireSession } from "@/app/api/session";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
 import { startManagementSession } from "@/server/management-session/mutations";
-import { managementSessionStartApiSchema } from "@/server/management-session/schemas";
+import { managementSessionStartSchema } from "@ifarm/shared";
 import { errorResponse, validationErrorResponse } from "../../../http";
 
 // Inicia o registro (ou corrige a data do manejo enquanto não consolidada).
@@ -15,7 +15,7 @@ export async function POST(
 
   try {
     const { id } = await params;
-    const validation = managementSessionStartApiSchema.safeParse(
+    const validation = managementSessionStartSchema.safeParse(
       await request.json(),
     );
     if (!validation.success) return validationErrorResponse(validation.error);

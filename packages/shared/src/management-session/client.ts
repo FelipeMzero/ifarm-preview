@@ -4,6 +4,7 @@ import {
   toQueryString,
   type ApiRequest,
 } from "../client";
+import type { ReceiveAnimalPayload } from "./schema";
 import type {
   ManagementSessionStatus,
   ParticipantStatus,
@@ -141,13 +142,6 @@ export type ManagementSessionPayload = {
   steps: Record<string, unknown>[];
   animalIds: string[];
   propertyId?: string;
-};
-
-export type ReceiveAnimalPayload = {
-  categoryId: number;
-  sex?: "MALE" | "FEMALE";
-  ageMonths?: number | null;
-  name?: string;
 };
 
 export type ManagementSessionListResult = {

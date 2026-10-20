@@ -1,10 +1,15 @@
-import { DAY_MS } from "@/features/animal/format";
-import { type BatchDetailAnimal, toLocalDay } from "@ifarm/shared";
+import { toLocalDay } from "../date";
+import type { BatchDetailAnimal } from "./client";
+
+const DAY_MS = 24 * 60 * 60 * 1000;
 
 // Projeção linear da meta de peso do lote. Cada animal cresce a partir da sua última
 // pesagem no próprio GMD (ou, sem histórico, no GMD médio do lote); o peso médio do lote
 // numa data é a média dessas projeções — e, por ser linear, dá para resolver a data em
 // que o lote atinge a meta.
+//
+// Fica no shared porque roda no cliente: a tela simula outros GMDs sem chamar o
+// servidor. O GMD de cada animal (adgKgPerDay) vem calculado pela API.
 
 export type BatchProjection = {
   weighedCount: number;

@@ -6,9 +6,10 @@ import {
   type BatchUpdateData,
 } from "@ifarm/shared";
 import { prisma } from "@/server/db";
+import { assertAreaAvailable } from "../area/queries";
 import { getOrAssignCurrentProperty } from "../current-property/queries";
 import { write } from "../db-errors";
-import { BusinessError, NotFoundError, ValidationError } from "../errors";
+import { BusinessError, NotFoundError } from "../errors";
 
 const toTargetDate = (v?: string) => (v ? toDbDate(v) : null);
 
@@ -18,25 +19,7 @@ export async function createBatch(data: BatchCreateData, userId: string) {
   const propertyId =
     data.propertyId ?? (await getOrAssignCurrentProperty(userId))?.id ?? "";
 
-  const area = await prisma.area.findFirst({
-    where: { id: areaId, propertyId, closedAt: null },
-    select: { id: true },
-  });
-  if (!area) {
-    throw new ValidationError("Área inválida.", {
-      areaId: "Área inválida ou inativa para a propriedade selecionada.",
-    });
-  }
-
-  const occupied = await prisma.batchAreaHistory.findFirst({
-    where: { areaId, exitedAt: null, batch: { closedAt: null } },
-    select: { id: true, batch: { select: { name: true } } },
-  });
-  if (occupied) {
-    throw new ValidationError("Área ocupada.", {
-      areaId: `A área selecionada já está ocupada pelo lote "${occupied.batch.name}".`,
-    });
-  }
+  await assertAreaAvailable(prisma, { areaId, propertyId, field: "areaId" });
 
   const batch = await write(() =>
     prisma.$transaction(async (tx) => {
@@ -90,30 +73,12 @@ export async function updateBatch(id: string, data: BatchUpdateData) {
   if (!current) throw new NotFoundError("Lote não encontrado.");
 
   if (newAreaId) {
-    const area = await prisma.area.findFirst({
-      where: { id: newAreaId, propertyId: current.propertyId, closedAt: null },
-      select: { id: true },
+    await assertAreaAvailable(prisma, {
+      areaId: newAreaId,
+      propertyId: current.propertyId,
+      exceptBatchId: id,
+      field: "newAreaId",
     });
-    if (!area) {
-      throw new ValidationError("Área inválida.", {
-        newAreaId: "Área inválida ou inativa para a propriedade selecionada.",
-      });
-    }
-
-    const occupied = await prisma.batchAreaHistory.findFirst({
-      where: {
-        areaId: newAreaId,
-        exitedAt: null,
-        batchId: { not: id },
-        batch: { closedAt: null },
-      },
-      select: { id: true, batch: { select: { name: true } } },
-    });
-    if (occupied) {
-      throw new ValidationError("Área ocupada.", {
-        newAreaId: `A área de destino já está ocupada pelo lote "${occupied.batch.name}".`,
-      });
-    }
   }
 
   await write(() =>
@@ -230,34 +195,12 @@ export async function reopenBatch(id: string, data: BatchReopenData) {
       throw new BusinessError("O lote não está encerrado.", 409);
     }
 
-    const area = await tx.area.findFirst({
-      where: { id: areaId, propertyId: batch.propertyId, closedAt: null },
-      select: { id: true },
+    await assertAreaAvailable(tx, {
+      areaId,
+      propertyId: batch.propertyId,
+      exceptBatchId: id,
+      field: "areaId",
     });
-    if (!area) {
-      throw new BusinessError("Área inválida.", 400, undefined, {
-        errors: {
-          areaId: "Área inválida ou inativa para a propriedade do lote.",
-        },
-      });
-    }
-
-    const occupied = await tx.batchAreaHistory.findFirst({
-      where: {
-        areaId,
-        exitedAt: null,
-        batchId: { not: id },
-        batch: { closedAt: null },
-      },
-      select: { batch: { select: { name: true } } },
-    });
-    if (occupied) {
-      throw new BusinessError("Área ocupada.", 400, undefined, {
-        errors: {
-          areaId: `A área selecionada já está ocupada pelo lote "${occupied.batch.name}".`,
-        },
-      });
-    }
 
     // Condicional ao status para não reativar duas vezes em requisições simultâneas.
     const reopened = await tx.batch.updateMany({

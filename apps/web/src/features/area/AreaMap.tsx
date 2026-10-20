@@ -65,7 +65,12 @@ import { useCurrentProperty } from "@/features/shell/CurrentPropertyProvider";
 import { propertyClient } from "@/lib/clients";
 import { areaSchema, type AreaInput } from "@ifarm/shared";
 import { areaClient } from "@/lib/clients";
-import { AreaOccupiedError, type AreaRow, ApiError } from "@ifarm/shared";
+import {
+  AreaOccupiedError,
+  type AreaRow,
+  type AreaStatus,
+  ApiError,
+} from "@ifarm/shared";
 import { AreaForm } from "./AreaForm";
 import { AreaDetails } from "./AreaDetails";
 import {
@@ -73,10 +78,7 @@ import {
   AREA_STATUS_LABELS,
   AREA_STATUS_PATH_CLASS,
   AREA_STATUS_SWATCH,
-  AreaStatus,
   OccupancySummary,
-  areaRotation,
-  areaStatus,
   restStateLabel,
   rotationDaysLabel,
 } from "./occupancy";
@@ -529,7 +531,7 @@ function EditablePolygon({
   // A cor indica a situação da área (ocupada, livre, lotação excedida). O Leaflet só
   // aplica className na criação, por isso o componente é remontado (key) quando a
   // situação ou o modo de edição mudam.
-  const status = areaStatus(area);
+  const status = area.status;
   // Áreas sem lote (livres, descansadas, inativas) têm contorno tracejado.
   const isOpen = !area.occupancy;
 
@@ -1146,7 +1148,7 @@ export default function AreaMap() {
                 return (
                   <div key={area.id}>
                     <EditablePolygon
-                      key={`${areaStatus(area)}-${isSelectedForEdit}`}
+                      key={`${area.status}-${isSelectedForEdit}`}
                       area={area}
                       isEditing={isSelectedForEdit}
                       editingPoints={
@@ -1261,7 +1263,7 @@ export default function AreaMap() {
                             <div>{area.name}</div>
                             {!area.closedAt &&
                               (() => {
-                                const rotation = areaRotation(area);
+                                const rotation = area.rotation;
                                 const days = rotationDaysLabel(rotation);
                                 const overdue =
                                   rotation?.kind === "occupation" &&

@@ -2,8 +2,9 @@ import "server-only";
 import { z } from "zod";
 import { FIELD_LIMITS } from "@ifarm/shared";
 import type { Prisma } from "@/server/db";
-import type { SessionStep, StepType } from "@ifarm/shared";
+import type { StepType } from "@ifarm/shared";
 import { BusinessError } from "@/server/errors";
+import { type SessionStep } from "@/server/management-session/session-steps";
 
 export type Tx = Prisma.TransactionClient;
 

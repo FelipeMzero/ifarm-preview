@@ -10,13 +10,17 @@ import type {
   AnimalStatus,
   Sex,
 } from "../src/generated/prisma/enums";
-import { stepKey, toStepRows, type SessionStep } from "@ifarm/shared";
 import { consolidateSession } from "../src/server/management-session/consolidate";
 import { findCommitments } from "../src/server/animal/commitments";
 import { saveAnimalStep } from "../src/server/management-session/records";
 import { applyPlanSteps } from "../src/server/management-session/shared";
 import { planStepSchema } from "../src/server/management-session/steps";
 import { findReception, receiveAnimal } from "../src/server/purchase/reception";
+import {
+  type SessionStep,
+  stepKey,
+  toStepRows,
+} from "../src/server/management-session/session-steps";
 
 // ---------------------------------------------------------------------------
 // Datas relativas ao dia do seed

@@ -2,7 +2,7 @@ import "server-only";
 import { z } from "zod";
 import {
   fromLocalDay,
-  sessionStatus,
+  isSessionOpen,
   type ReceptionPurchase,
   type ReceptionPurchaseListResult,
   fromDbDate,
@@ -12,7 +12,9 @@ import { prisma } from "@/server/db";
 import { getOrAssignCurrentProperty } from "../current-property/queries";
 import { NotFoundError } from "../errors";
 import { categoryLabel } from "../purchase/reception";
+import { purchaseStatus } from "../purchase/rules";
 import { isPending } from "./rules";
+import { sessionStatus } from "@/server/management-session/session-steps";
 
 // Área de recepções: dados físicos da compra (quem vende, o que foi negociado em
 // quantidade, o que já chegou). Nada de preços, custos ou situação financeira.
@@ -69,18 +71,12 @@ function toReceptionPurchase(e: ReceptionPurchaseRow): ReceptionPurchase {
     notes: e.notes,
     seller: e.seller,
     // Recepções só em compras em andamento; consolidadas e canceladas são consulta.
-    status: e.cancelledAt
-      ? ("cancelled" as const)
-      : e.confirmedAt
-        ? ("confirmed" as const)
-        : ("open" as const),
+    status: purchaseStatus(e),
     categories,
     receptions,
     expectedQuantity: expected,
     receivedQuantity: received,
-    hasOpenReception: receptions.some(
-      (r) => r.status === "planned" || r.status === "in_progress",
-    ),
+    hasOpenReception: receptions.some((r) => isSessionOpen(r.status)),
   };
 }
 

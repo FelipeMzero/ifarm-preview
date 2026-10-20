@@ -2,12 +2,8 @@ import "server-only";
 import { z } from "zod";
 import {
   fromLocalDateTime,
-  participantStatus,
-  sessionStatus,
-  sessionStepsSelect,
+  isSessionOpen,
   STEP_TYPE_LABELS,
-  toSessionSteps,
-  unavailableReason,
   type ManagementOptions,
   type ManagementSessionDetail,
   type ManagementSessionListResult,
@@ -18,6 +14,7 @@ import { getOrAssignCurrentProperty } from "../current-property/queries";
 import { NotFoundError } from "../errors";
 import { describeReception } from "../purchase/reception";
 import { loadAnimalContext } from "./animalContext";
+import { SESSION_STATUS_WHERE } from "./rules";
 import { managementSessionQuerySchema } from "./schemas";
 import { loadSession } from "./shared";
 import {
@@ -27,6 +24,13 @@ import {
   NO_SESSION_VALUES,
   sessionValues,
 } from "./steps";
+import {
+  participantStatus,
+  sessionStatus,
+  sessionStepsSelect,
+  toSessionSteps,
+} from "@/server/management-session/session-steps";
+import { unavailableReason } from "@/server/animal/rules";
 
 export { managementSessionQuerySchema };
 export type ManagementSessionQuery = z.infer<
@@ -40,23 +44,7 @@ function buildWhere(query: ManagementSessionQuery, propertyId: string) {
     purchaseReception: { is: null },
   };
 
-  if (query.status === "open") {
-    where.confirmedAt = null;
-    where.cancelledAt = null;
-  } else if (query.status === "planned") {
-    where.performedAt = null;
-    where.confirmedAt = null;
-    where.cancelledAt = null;
-  } else if (query.status === "in_progress") {
-    where.performedAt = { not: null };
-    where.confirmedAt = null;
-    where.cancelledAt = null;
-  } else if (query.status === "confirmed") {
-    where.confirmedAt = { not: null };
-    where.cancelledAt = null;
-  } else if (query.status === "cancelled") {
-    where.cancelledAt = { not: null };
-  }
+  if (query.status) Object.assign(where, SESSION_STATUS_WHERE[query.status]);
 
   if (query.search) {
     const contains = { contains: query.search, mode: "insensitive" as const };
@@ -165,7 +153,7 @@ export async function getManagementSession(
     describeReception(prisma, id),
   ]);
 
-  const open = session.status === "planned" || session.status === "in_progress";
+  const open = isSessionOpen(session.status);
 
   return {
     id: session.id,

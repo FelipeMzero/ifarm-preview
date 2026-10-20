@@ -2,7 +2,6 @@ import "server-only";
 import { z } from "zod";
 import {
   fromLocalDay,
-  sessionStatus,
   type PurchaseDetail,
   type PurchaseListResult,
   fromDbDate,
@@ -12,7 +11,13 @@ import { getOrAssignCurrentProperty } from "../current-property/queries";
 import { NotFoundError } from "../errors";
 import { arrivalWeightsByCategory } from "./costs";
 import { categoryLabel } from "./reception";
-import { categoryValue, purchaseStatus } from "./rules";
+import {
+  estimatedCategoryValue,
+  PURCHASE_STATUS_WHERE,
+  purchaseStatus,
+  sumIfAllKnown,
+} from "./rules";
+import { sessionStatus } from "@/server/management-session/session-steps";
 
 export const purchaseQuerySchema = z.object({
   propertyId: z.uuid().optional(),
@@ -34,18 +39,8 @@ const day = (d: Date | null) => (d ? fromLocalDay(d) : null);
 function buildWhere(query: PurchaseQuery, propertyId: string) {
   const where: Prisma.PurchaseEventWhereInput = {
     destinationPropertyId: propertyId,
+    ...PURCHASE_STATUS_WHERE[query.status ?? "open"],
   };
-
-  const status = query.status ?? "open";
-  if (status === "open") {
-    Object.assign(where, { confirmedAt: null, cancelledAt: null });
-  } else if (status === "confirmed") {
-    Object.assign(where, { confirmedAt: { not: null }, cancelledAt: null });
-  } else if (status === "cancelled") {
-    where.cancelledAt = { not: null };
-  } else {
-    where.cancelledAt = null;
-  }
 
   if (query.search) {
     const contains = { contains: query.search, mode: "insensitive" as const };
@@ -93,9 +88,8 @@ export async function listPurchases(
 
   return {
     data: events.map((e) => {
-      // Por cabeça: estimado sobre os esperados; consolidada, sobre os recebidos.
       const values = e.categories.map((c) =>
-        categoryValue(c, e.confirmedAt ? c._count.animals : c.expectedQuantity),
+        estimatedCategoryValue(c, e.confirmedAt != null, c._count.animals),
       );
       return {
         id: e.id,
@@ -111,10 +105,7 @@ export async function listPurchases(
         ),
         receivedQuantity: e._count.purchasedAnimals,
         receptionCount: e._count.receptions,
-        // Soma só quando todas as categorias têm valor.
-        value: values.every((v) => v != null)
-          ? values.reduce((s, v) => s + v!, 0)
-          : null,
+        value: sumIfAllKnown(values),
         status: purchaseStatus(e),
         paid: e.paymentDate != null,
       };
@@ -171,10 +162,10 @@ export async function getPurchase(id: string): Promise<PurchaseDetail> {
       costSplit: c.costSplit,
       notes: c.notes,
       receivedQuantity: c.animals.length,
-      // Por cabeça: sobre os esperados enquanto em andamento; depois, os recebidos.
-      estimatedValue: categoryValue(
+      estimatedValue: estimatedCategoryValue(
         c,
-        event.confirmedAt ? c.animals.length : c.expectedQuantity,
+        event.confirmedAt != null,
+        c.animals.length,
       ),
       // Soma do peso de chegada dos recebidos (sugestão do peso por arroba).
       arrivalWeight: arrival.get(c.id) ?? {
@@ -183,10 +174,7 @@ export async function getPurchase(id: string): Promise<PurchaseDetail> {
         received: 0,
       },
       // Soma dos custos rateados (só existe com a compra consolidada).
-      costTotal:
-        costs.length && costs.every((v) => v != null)
-          ? costs.reduce((s, v) => s + v!, 0)
-          : null,
+      costTotal: costs.length ? sumIfAllKnown(costs) : null,
     };
   });
 

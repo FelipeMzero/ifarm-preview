@@ -12,7 +12,8 @@ export type Commitment =
   // Recepção de compra ainda não concluída: o animal ainda pode deixar de existir.
   | { kind: "reception"; id: string; title: string }
   // Sessão de manejo aberta (planejada ou em andamento), com as chaves das etapas
-  // (ver stepKey: o sanitário se distingue pelo procedimento).
+  // (o sanitário se distingue pelo procedimento: "health:<id>"; ver stepKey no
+  // servidor, em server/management-session/session-steps.ts).
   | { kind: "session"; id: string; title: string; stepKeys: readonly string[] }
   // Transferência de lote pendente e isolada (a da apartação pertence à sessão).
   | { kind: "transfer"; id: string; destinationBatchName: string };

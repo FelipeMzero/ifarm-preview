@@ -13,6 +13,16 @@ const UA_BY_AGE = {
   adultBull: 1.25,
 } as const;
 
+// Capacidade da área em UA (hectares × taxa de lotação, em UA/ha) e se a ocupação a
+// ultrapassa.
+export function capacityCheck(
+  area: { hectares: number; stockingRate: number },
+  ua: number,
+) {
+  const capacityUa = area.hectares * area.stockingRate;
+  return { capacityUa, exceeds: ua > capacityUa };
+}
+
 // Sem peso e sem idade: conta como 1 UA para não subestimar a ocupação.
 const UA_FALLBACK = 1;
 

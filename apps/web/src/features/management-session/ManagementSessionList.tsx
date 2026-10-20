@@ -25,7 +25,11 @@ import { Input } from "@/components/ui/input";
 import { useCurrentProperty } from "@/features/shell/CurrentPropertyProvider";
 import { SessionStatusBadge, formatSessionDateTime } from "./display";
 import { managementSessionClient } from "@/lib/clients";
-import { type ManagementSessionRow, nowDateTime } from "@ifarm/shared";
+import {
+  isSessionOpen,
+  type ManagementSessionRow,
+  nowDateTime,
+} from "@ifarm/shared";
 
 const DEFAULT_PAGE_SIZE = 10;
 
@@ -113,7 +117,7 @@ function buildColumns(handlers: {
       enableSorting: false,
       cell: ({ row }) => {
         const { id, status } = row.original;
-        const open = status === "planned" || status === "in_progress";
+        const open = isSessionOpen(status);
         return (
           <div className="flex items-center justify-end gap-1">
             {open && (

@@ -1,5 +1,5 @@
 import "server-only";
-import { fromLocalDateTime, participantStatus } from "@ifarm/shared";
+import { fromLocalDateTime, isSessionOpen } from "@ifarm/shared";
 import {
   effectiveNeutering,
   effectiveWeighing,
@@ -13,6 +13,7 @@ import {
   sessionValues,
 } from "@/server/management-session/steps";
 import type { Tx } from "@/server/management-session/steps/types";
+import { participantStatus } from "@/server/management-session/session-steps";
 
 // Tudo o que as telas de etapa precisam de um animal da sessão: dados atuais do animal,
 // etapas da sessão e o que já foi registrado nele. Null = o animal não está na sessão.
@@ -75,10 +76,9 @@ export async function loadAnimalContext(db: Tx, id: string, animalId: string) {
       steps.map((s) => [s.key, records.get(s.key)?.get(animalId) ?? null]),
     ),
     // Para o cabeçalho; as telas de etapa seguem usando os valores atuais de `animal`.
-    sessionValues:
-      session.status === "planned" || session.status === "in_progress"
-        ? sessionValues(records, animalId)
-        : NO_SESSION_VALUES,
+    sessionValues: isSessionOpen(session.status)
+      ? sessionValues(records, animalId)
+      : NO_SESSION_VALUES,
     status: participantStatus(countDone(records, animalId), steps.length),
   };
 }

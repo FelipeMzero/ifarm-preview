@@ -1,6 +1,6 @@
 import "server-only";
 import { z } from "zod";
-import { stepKey, type SessionStep, type StepType } from "@ifarm/shared";
+import { type StepType } from "@ifarm/shared";
 import { batchStep } from "@/server/management-session/steps/batch";
 import { healthStep } from "@/server/management-session/steps/health";
 import {
@@ -14,6 +14,10 @@ import type {
   Tx,
 } from "@/server/management-session/steps/types";
 import { weighingStep } from "@/server/management-session/steps/weighing";
+import {
+  type SessionStep,
+  stepKey,
+} from "@/server/management-session/session-steps";
 
 // Registro dos tipos de etapa. Um tipo novo entra aqui (e em packages/shared/src/management-session/steps.ts).
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

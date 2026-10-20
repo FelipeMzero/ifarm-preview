@@ -1,13 +1,9 @@
 import "server-only";
-import {
-  animalLabel,
-  summarize,
-  unavailableAnimalsMessage,
-  unavailableReason,
-} from "@ifarm/shared";
+import { animalLabel, summarize } from "@ifarm/shared";
 import { Prisma } from "@/server/db";
 import { BusinessError } from "@/server/errors";
-import { transferStatus } from "./rules";
+import { blockedTransferAnimals, enteredAfter, transferStatus } from "./rules";
+import { unavailableAnimalsMessage } from "@/server/animal/rules";
 
 type Tx = Prisma.TransactionClient;
 
@@ -73,24 +69,20 @@ export async function confirmTransferInTx(tx: Tx, id: string) {
   // Os animais mudam de lote na data e hora programadas.
   const effectiveDate = transfer.transferredAt;
 
-  const inactive = transfer.items.filter(({ animal }) =>
-    unavailableReason(animal, transfer.propertyId),
+  const { unavailable, alreadyInDestination } = blockedTransferAnimals(
+    transfer.items.map((i) => i.animal),
+    transfer.propertyId,
+    transfer.destinationBatchId,
   );
-  if (inactive.length) {
+  if (unavailable.length) {
     throw new ConfirmError(
-      unavailableAnimalsMessage(
-        summarize(inactive.map(({ animal }) => animalLabel(animal))),
-      ),
+      unavailableAnimalsMessage(summarize(unavailable.map(animalLabel))),
     );
   }
-
-  const alreadyInDestination = transfer.items.filter(
-    ({ animal }) => animal.currentBatchId === transfer.destinationBatchId,
-  );
   if (alreadyInDestination.length) {
     throw new ConfirmError(
       `Animais que já estão no lote de destino: ${summarize(
-        alreadyInDestination.map(({ animal }) => animalLabel(animal)),
+        alreadyInDestination.map(animalLabel),
       )}. Remova-os da transferência antes de confirmar.`,
     );
   }
@@ -100,9 +92,7 @@ export async function confirmTransferInTx(tx: Tx, id: string) {
     where: { animalId: { in: animalIds }, exitedAt: null },
   });
 
-  const enteredLater = activeHistories.filter(
-    (h) => h.enteredAt > effectiveDate,
-  );
+  const enteredLater = enteredAfter(activeHistories, effectiveDate);
   if (enteredLater.length) {
     const byId = new Map(transfer.items.map((i) => [i.animalId, i.animal]));
     throw new ConfirmError(

@@ -2,6 +2,7 @@ import "server-only";
 import { z } from "zod";
 import { FIELD_LIMITS } from "@ifarm/shared";
 import { animalLabel, summarize } from "@ifarm/shared";
+import { takenInSession } from "@/server/management-session/rules";
 import {
   defineStep,
   StepError,
@@ -217,9 +218,7 @@ function identifierStep(adapter: IdentifierAdapter) {
       }
 
       const items = await adapter.findItems(tx, session.id);
-      if (
-        items.some((i) => i.animalId !== animal.id && i.value === payload.value)
-      ) {
+      if (takenInSession(items, animal.id, payload.value)) {
         throw new StepError(
           `${adapter.label} já registrado para outro animal nesta sessão.`,
           409,

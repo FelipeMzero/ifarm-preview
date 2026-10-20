@@ -17,6 +17,7 @@ import {
 } from "@/features/management-session/display";
 import { managementSessionClient } from "@/lib/clients";
 import {
+  isSessionOpen,
   type ManagementSessionDetail,
   type SessionParticipant,
   nowDateTime,
@@ -102,7 +103,7 @@ export function ReceptionBoard({ id }: { id: string }) {
 
   const { status, steps } = detail;
   const inProgress = status === "in_progress";
-  const editable = status === "planned" || inProgress;
+  const editable = isSessionOpen(status);
   const hasSteps = steps.length > 0;
   const purchaseUrl = `/recepcoes/compras/${reception.purchaseEventId}`;
 

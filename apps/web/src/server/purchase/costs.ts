@@ -1,10 +1,13 @@
 import "server-only";
 import type { Prisma } from "@/server/db";
-import { categoryValue, PurchaseError } from "@/server/purchase/rules";
+import {
+  categoryValue,
+  costShares,
+  PurchaseError,
+  splitValue,
+} from "@/server/purchase/rules";
 
 type Tx = Prisma.TransactionClient;
-
-const round2 = (n: number) => Math.round(n * 100) / 100;
 
 // Peso de entrada de cada animal comprado: a pesagem (não cancelada) feita na sessão
 // da sua recepção.
@@ -65,16 +68,6 @@ export async function arrivalWeightsByCategory(tx: Tx, eventId: string) {
   return result;
 }
 
-// Distribui `value` na proporção de `shares`, em centavos, com a sobra do
-// arredondamento no último: a soma dos custos bate exatamente com o valor.
-function split(value: number, shares: number[]) {
-  const total = shares.reduce((s, w) => s + w, 0);
-  const parts = shares.map((w) => round2((value * w) / total));
-  const diff = round2(value - parts.reduce((s, p) => s + p, 0));
-  parts[parts.length - 1] = round2(parts[parts.length - 1] + diff);
-  return parts;
-}
-
 /**
  * Rateia o custo de cada animal da compra. Feito uma única vez, na consolidação, com
  * todos os animais recebidos e todos os valores conhecidos.
@@ -107,18 +100,13 @@ export async function allocatePurchaseCosts(tx: Tx, eventId: string) {
       throw new PurchaseError("Há categorias sem valor definido.", 409);
     }
 
-    let shares: number[];
-    if (category.pricingType === "LUMP_SUM" && category.costSplit === "EQUAL") {
-      shares = group.map(() => 1);
-    } else {
-      const known = group.filter((a) => a.weightKg != null);
-      const average = known.length
-        ? known.reduce((s, a) => s + a.weightKg!, 0) / known.length
-        : 1;
-      shares = group.map((a) => a.weightKg ?? average);
-    }
-
-    const costs = split(value, shares);
+    const costs = splitValue(
+      value,
+      costShares(
+        category,
+        group.map((a) => a.weightKg),
+      ),
+    );
     for (const [i, animal] of group.entries()) {
       await tx.purchasedAnimal.update({
         where: { id: animal.id },

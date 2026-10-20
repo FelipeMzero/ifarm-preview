@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireSession } from "@/app/api/session";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
 import { addParticipants } from "@/server/management-session/mutations";
-import { participantsApiSchema } from "@/server/management-session/schemas";
+import { sessionParticipantsSchema } from "@ifarm/shared";
 import { errorResponse, validationErrorResponse } from "../../../http";
 
 // Inclui na sessão animais que não estavam no planejamento.
@@ -15,7 +15,9 @@ export async function POST(
 
   try {
     const { id } = await params;
-    const validation = participantsApiSchema.safeParse(await request.json());
+    const validation = sessionParticipantsSchema.safeParse(
+      await request.json(),
+    );
     if (!validation.success) return validationErrorResponse(validation.error);
 
     const data = await addParticipants(id, validation.data.animalIds);

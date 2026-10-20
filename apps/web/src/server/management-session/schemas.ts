@@ -45,12 +45,3 @@ export const managementSessionApiSchema = z.object({
   animalIds: z.array(z.uuid()).default([]),
   propertyId: z.uuid().optional(),
 });
-
-export const managementSessionStartApiSchema = z.object({
-  // Data e hora em que o manejo acontece ("AAAA-MM-DDTHH:mm", no fuso local).
-  performedAt: dateTimeField.transform(toLocalDateTime),
-});
-
-export const participantsApiSchema = z.object({
-  animalIds: z.array(z.uuid()).min(1, "Selecione ao menos um animal."),
-});

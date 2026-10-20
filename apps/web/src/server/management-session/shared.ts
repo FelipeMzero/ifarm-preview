@@ -1,25 +1,24 @@
 import "server-only";
-import {
-  normalizeStepOrder,
-  REPEATABLE_STEP_TYPES,
-  sessionStatus,
-  sessionStepsSelect,
-  STEP_TYPE_LABELS,
-  stepKey,
-  toSessionSteps,
-  toStepRows,
-  type ManagementSessionStatus,
-  type SessionStep,
-  type StepType,
-} from "@ifarm/shared";
+import { type ManagementSessionStatus, type StepType } from "@ifarm/shared";
 import type { CommitmentIntent } from "@ifarm/shared";
 import { animalLabel, summarize } from "@ifarm/shared";
+import { repeatedStepMessage } from "@/server/management-session/rules";
 import { stepModule } from "@/server/management-session/steps";
 import {
   StepError,
   type SessionCtx,
   type Tx,
 } from "@/server/management-session/steps/types";
+import {
+  normalizeStepOrder,
+  sessionStatus,
+  type SessionStep,
+  sessionStepsSelect,
+  stepKey,
+  toSessionSteps,
+  toStepRows,
+} from "@/server/management-session/session-steps";
+import { unavailableReason } from "@/server/animal/rules";
 
 export { StepError };
 
@@ -50,7 +49,7 @@ export async function loadSession(
 export async function requireSessionIn(
   tx: Tx,
   id: string,
-  statuses: ManagementSessionStatus[],
+  statuses: readonly ManagementSessionStatus[],
   message: string,
 ) {
   const session = await loadSession(tx, id);
@@ -90,9 +89,7 @@ export async function invalidAnimals(
   const found = new Map(animals.map((a) => [a.id, a]));
   return animalIds
     .map((id) => found.get(id))
-    .filter(
-      (a) => !a || a.status !== "ACTIVE" || a.currentPropertyId !== propertyId,
-    )
+    .filter((a) => !a || unavailableReason(a, propertyId))
     .map((a) => (a ? animalLabel(a) : "desconhecido"));
 }
 
@@ -108,17 +105,9 @@ export async function applyPlanSteps(
   current: SessionStep[],
   plan: ({ type: StepType } & Record<string, unknown>)[],
 ) {
-  const counts = new Map<StepType, number>();
-  for (const p of plan) counts.set(p.type, (counts.get(p.type) ?? 0) + 1);
-  for (const [type, count] of counts) {
-    if (count > 1 && !REPEATABLE_STEP_TYPES.includes(type)) {
-      throw new StepError(
-        `O manejo "${STEP_TYPE_LABELS[type]}" só pode aparecer uma vez.`,
-        400,
-        "steps",
-      );
-    }
-  }
+  const repeated = repeatedStepMessage(plan);
+  if (repeated) throw new StepError(repeated, 400, "steps");
+  const plannedTypes = new Set(plan.map((p) => p.type));
 
   // A lista é regravada inteira no fim. Sai antes, para que o sanitário removido possa
   // apagar o seu procedimento (FK) e a reordenação não esbarre na posição única.
@@ -135,7 +124,7 @@ export async function applyPlanSteps(
     const kept =
       step.type === "health"
         ? keptHealth.has(step.healthManagementId)
-        : counts.has(step.type);
+        : plannedTypes.has(step.type);
     if (!kept) await stepModule(step.type).dispose(tx, session, step);
   }
 

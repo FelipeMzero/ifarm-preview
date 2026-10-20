@@ -1,8 +1,9 @@
 import "server-only";
 import { z } from "zod";
 import { Prisma } from "@/server/db";
-import { FIELD_LIMITS, fromLocalDay, toDbDate } from "@ifarm/shared";
+import { toDbDate, type ReceiveAnimalData } from "@ifarm/shared";
 import { BusinessError } from "@/server/errors";
+import { estimatedBirthDay } from "./rules";
 
 type Tx = Prisma.TransactionClient;
 
@@ -147,36 +148,13 @@ export async function describeReception(tx: Tx, sessionId: string) {
   };
 }
 
-export const receiveAnimalSchema = z.object({
-  categoryId: z.coerce.number().int(),
-  // Sexo diferente do da categoria é permitido (com alerta na tela): quem decide é o
-  // operador olhando o animal.
-  sex: z.enum(["MALE", "FEMALE"]).optional(),
-  // Idade estimada (ex.: pela arcada dentária); vira data de nascimento estimada.
-  ageMonths: z.coerce
-    .number()
-    .int()
-    .min(0, "Idade inválida")
-    .max(360, "Idade inválida")
-    .nullish(),
-  name: z
-    .string()
-    .trim()
-    .max(
-      FIELD_LIMITS.animal.name,
-      `Máximo de ${FIELD_LIMITS.animal.name} caracteres`,
-    )
-    .nullish()
-    .transform((v) => v || null),
-});
-
 // Cria o animal que desceu do caminhão: já ativo, na propriedade e no lote de entrada,
 // ligado à categoria da compra e participante da sessão.
 export async function receiveAnimal(
   tx: Tx,
   session: { id: string; propertyId: string; performedAt: Date },
   reception: Reception,
-  input: z.infer<typeof receiveAnimalSchema>,
+  input: ReceiveAnimalData,
 ) {
   if (reception.purchaseEvent.cancelledAt) {
     throw new ReceptionError("A compra foi cancelada.", 409);
@@ -205,13 +183,11 @@ export async function receiveAnimal(
   // Entrada na fazenda: a data e hora da recepção.
   const enteredAt = session.performedAt;
 
-  let birthDate: Date | null = null;
-  if (input.ageMonths != null) {
-    const d = new Date(session.performedAt);
-    d.setMonth(d.getMonth() - input.ageMonths);
-    // @db.Date: grava o dia (UTC 00:00) correspondente à data local.
-    birthDate = toDbDate(fromLocalDay(d));
-  }
+  // @db.Date: grava o dia (UTC 00:00) correspondente à data local.
+  const birthDate =
+    input.ageMonths != null
+      ? toDbDate(estimatedBirthDay(session.performedAt, input.ageMonths))
+      : null;
 
   const animal = await tx.animal.create({
     data: {

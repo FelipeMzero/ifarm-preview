@@ -3,6 +3,11 @@ import { z } from "zod";
 import { FIELD_LIMITS, fromDbDate, toDbDate } from "@ifarm/shared";
 import { HealthManagementDoseType } from "@/generated/prisma/enums";
 import {
+  doseChangeBlocker,
+  plannedDose,
+  requiresDose,
+} from "@/server/management-session/rules";
+import {
   defineStep,
   StepError,
   stepNotesSchema,
@@ -80,30 +85,23 @@ export const healthStep = defineStep({
       title: plan.title,
       veterinarianId: plan.veterinarianId,
       doseType: plan.doseType,
-      doseMl: plan.doseType === "NONE" ? null : (plan.doseMl ?? null),
-      doseWeightKg:
-        plan.doseType === "PER_WEIGHT" ? (plan.doseWeightKg ?? null) : null,
+      ...plannedDose(plan),
       withdrawalEndDate: plan.withdrawalEndDate,
       nextDueDate: plan.nextDueDate,
     };
 
     if (plan.healthManagementId) {
-      // Registros já feitos seguem a regra de dose da época: com dose, todos têm a
-      // dose aplicada; sem dose, nenhum tem. Trocar entre os dois os deixaria incoerentes.
       const current = await tx.healthManagement.findFirst({
         where: { id: plan.healthManagementId, managementSessionId: session.id },
         select: { doseType: true, _count: { select: { items: true } } },
       });
-      if (
+      const blocker =
         current &&
-        current._count.items > 0 &&
-        (current.doseType === "NONE") !== (plan.doseType === "NONE")
-      ) {
-        throw new StepError(
-          `O procedimento sanitário já foi registrado em ${current._count.items} animal(is): não é possível ${plan.doseType === "NONE" ? "retirar" : "incluir"} a dose. Desfaça os registros antes.`,
-          409,
+        doseChangeBlocker(
+          { doseType: current.doseType, recordCount: current._count.items },
+          plan.doseType,
         );
-      }
+      if (blocker) throw new StepError(blocker, 409);
 
       const updated = await tx.healthManagement.updateMany({
         where: { id: plan.healthManagementId, managementSessionId: session.id },
@@ -202,10 +200,11 @@ export const healthStep = defineStep({
     });
     if (!hm) throw new StepError("Procedimento sanitário não encontrado.");
     // Quem aplicou sabe a dose: não é estimada depois pelo peso.
-    if (hm.doseType !== "NONE" && payload.doseMl == null) {
+    const withDose = requiresDose(hm.doseType);
+    if (withDose && payload.doseMl == null) {
       throw new StepError("Informe a dose aplicada.", 400, "doseMl");
     }
-    const doseMl = hm.doseType === "NONE" ? null : payload.doseMl;
+    const doseMl = withDose ? payload.doseMl : null;
 
     const existing = await tx.healthManagementItem.findFirst({
       where: { managementId: step.healthManagementId, animalId: animal.id },

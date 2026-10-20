@@ -14,6 +14,7 @@ import {
 } from "@/server/management-session/effective";
 import { assertNoConflicts } from "@/server/animal/commitments";
 import { BusinessError } from "@/server/errors";
+import { keepsOriginal, sessionDateLock } from "./rules";
 
 type Tx = Prisma.TransactionClient;
 
@@ -216,13 +217,8 @@ export async function correctIdentifier(
     const record = await adapter.find(tx, animalId, Number(recordIdParam));
     if (!record) throw recordNotFound(kind);
 
-    if (data.date && record.managementId) {
-      throw new IdentifierError(
-        "A data de uma identificação feita em sessão de manejo segue a data da sessão.",
-        400,
-        "date",
-      );
-    }
+    const dateLock = sessionDateLock(record, data.date, "identificação");
+    if (dateLock) throw new IdentifierError(dateLock, 400, "date");
 
     let identifiedAt: Date | undefined;
     if (data.date) {
@@ -238,7 +234,7 @@ export async function correctIdentifier(
       notes: data.notes,
       ...(identifiedAt ? { identifiedAt } : {}),
       // Guarda o valor lançado originalmente só na primeira correção do valor.
-      ...(valueChanged && record.original == null
+      ...(keepsOriginal(valueChanged, record.original)
         ? { original: record.value }
         : {}),
       correctedAt: new Date(),

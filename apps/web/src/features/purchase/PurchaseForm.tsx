@@ -51,7 +51,7 @@ import {
   type PurchaseFormData,
 } from "./schema";
 import { purchaseClient } from "@/lib/clients";
-import { ApiError, type PurchaseDetail } from "@ifarm/shared";
+import { ApiError, isSessionOpen, type PurchaseDetail } from "@ifarm/shared";
 
 const todayIso = () => new Date().toLocaleDateString("en-CA");
 const str = (v: number | null | undefined) => (v == null ? "" : String(v));
@@ -294,9 +294,7 @@ export function PurchaseForm({ id }: { id?: string }) {
       ? values.reduce((s, v) => s + v!, 0)
       : null;
   const openReceptions =
-    detail?.receptions.filter(
-      (r) => r.status === "planned" || r.status === "in_progress",
-    ).length ?? 0;
+    detail?.receptions.filter((r) => isSessionOpen(r.status)).length ?? 0;
   // Por que ainda não dá para consolidar (null = pode).
   const consolidateBlocker = !detail
     ? null

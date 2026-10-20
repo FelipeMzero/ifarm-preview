@@ -1,98 +1,15 @@
 import { cn } from "@/lib/utils";
-import { type AreaRow } from "@ifarm/shared";
+import {
+  type AreaRotation,
+  type AreaRow,
+  type AreaStatus,
+} from "@ifarm/shared";
 
-export type AreaStatus =
-  "free" | "ready" | "occupied" | "near" | "exceeded" | "inactive";
+// Apresentação da situação e do rodízio das áreas. As regras (semáforo de lotação,
+// prazos de ocupação e descanso) são do servidor: vêm prontas em `area.status` e
+// `area.rotation`.
 
-// A partir desta fração da capacidade a área é destacada como "perto do limite".
-const NEAR_LIMIT = 0.8;
-
-const DAY_MS = 24 * 60 * 60 * 1000;
-
-const daysSince = (iso: string, now: Date) =>
-  Math.max(0, Math.floor((now.getTime() - new Date(iso).getTime()) / DAY_MS));
-
-const formatDate = (date: Date) => date.toLocaleDateString("pt-BR");
-
-// Rodízio da área: há quanto tempo está ocupada ou em descanso, comparado com os dias
-// de referência cadastrados. Sem referência, só a contagem de dias é informada.
-export type AreaRotation =
-  | {
-      kind: "occupation";
-      days: number;
-      since: string;
-      limit: number | null;
-      overdue: boolean;
-    }
-  | {
-      kind: "rest";
-      /** null quando a área nunca foi ocupada. */
-      days: number | null;
-      since: string | null;
-      limit: number | null;
-      ready: boolean;
-      readyAt: Date | null;
-    };
-
-export function areaRotation(
-  area: AreaRow,
-  now = new Date(),
-): AreaRotation | null {
-  if (area.closedAt) return null;
-
-  if (area.occupancy) {
-    const days = daysSince(area.occupancy.occupiedSince, now);
-    const limit = area.defaultOccupationDays;
-    return {
-      kind: "occupation",
-      days,
-      since: area.occupancy.occupiedSince,
-      limit,
-      overdue: limit != null && days > limit,
-    };
-  }
-
-  const limit = area.defaultRestDays;
-  if (!area.lastExitAt) {
-    // Nunca ocupada: está pronta (se houver referência de descanso).
-    return {
-      kind: "rest",
-      days: null,
-      since: null,
-      limit,
-      ready: limit != null,
-      readyAt: null,
-    };
-  }
-
-  const days = daysSince(area.lastExitAt, now);
-  return {
-    kind: "rest",
-    days,
-    since: area.lastExitAt,
-    limit,
-    ready: limit != null && days >= limit,
-    readyAt:
-      limit != null
-        ? new Date(new Date(area.lastExitAt).getTime() + limit * DAY_MS)
-        : null,
-  };
-}
-
-// Ocupadas: semáforo pela lotação (verde até 80%, amarelo até 100%, vermelho acima).
-// Livres: "pronta" quando já cumpriu os dias de descanso; senão cinza.
-export function areaStatus(area: AreaRow): AreaStatus {
-  if (area.closedAt) return "inactive";
-  const occupancy = area.occupancy;
-  if (!occupancy) {
-    const rotation = areaRotation(area);
-    return rotation?.kind === "rest" && rotation.ready ? "ready" : "free";
-  }
-  if (occupancy.exceeds) return "exceeded";
-  return occupancy.currentUa >= occupancy.capacityUa * NEAR_LIMIT
-    ? "near"
-    : "occupied";
-}
+const formatDate = (iso: string) => new Date(iso).toLocaleDateString("pt-BR");
 
 // Classes aplicadas ao <path> do polígono no Leaflet. CSS tem precedência sobre os
 // atributos fill/stroke que o Leaflet grava, então as cores seguem o tema.
@@ -208,9 +125,7 @@ export function OccupancySummary({
   area: AreaRow;
   className?: string;
 }) {
-  const status = areaStatus(area);
-  const occupancy = area.occupancy;
-  const rotation = areaRotation(area);
+  const { status, occupancy, rotation } = area;
 
   if (!occupancy) {
     return (

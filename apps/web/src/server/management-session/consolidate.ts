@@ -1,8 +1,8 @@
 import "server-only";
-import { unavailableAnimalsMessage, unavailableReason } from "@ifarm/shared";
 import { assertNoConflicts } from "@/server/animal/commitments";
 import { animalLabel, summarize } from "@ifarm/shared";
 import { findReception } from "@/server/purchase/reception";
+import { splitHandled } from "@/server/management-session/rules";
 import {
   requireManagementDate,
   requireSessionIn,
@@ -15,6 +15,10 @@ import {
   stepModule,
 } from "@/server/management-session/steps";
 import type { Tx } from "@/server/management-session/steps/types";
+import {
+  unavailableAnimalsMessage,
+  unavailableReason,
+} from "@/server/animal/rules";
 
 /**
  * Consolida a sessão: os animais sem nenhum registro saem da sessão e os registros
@@ -56,11 +60,10 @@ export async function consolidateSession(tx: Tx, id: string, at?: Date) {
   // Na recepção de compra todo participante é um animal recebido (já existe):
   // conta como manejado mesmo sem etapas registradas e não sai da sessão.
   const reception = await findReception(tx, id);
-  const handled = participants.filter(
-    (p) => reception || countDone(records, p.animalId),
-  );
-  const notHandled = participants.filter(
-    (p) => !reception && !countDone(records, p.animalId),
+  const { handled, notHandled } = splitHandled(
+    participants,
+    (p) => countDone(records, p.animalId) > 0,
+    !!reception,
   );
 
   if (!handled.length) {

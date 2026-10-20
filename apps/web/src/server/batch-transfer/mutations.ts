@@ -8,9 +8,10 @@ import {
 import { prisma } from "@/server/db";
 import { assertNoConflicts } from "../animal/commitments";
 import { getOrAssignCurrentProperty } from "../current-property/queries";
+import { diffIds } from "../diff";
 import { BusinessError, NotFoundError, ValidationError } from "../errors";
 import { confirmTransferInTx, ConfirmError } from "./confirmTransfer";
-import { transferStatus } from "./rules";
+import { blockedTransferAnimals, transferStatus } from "./rules";
 
 // Valida o lote de destino e os animais do plano (ValidationError com o erro no campo). Os animais podem vir de lotes
 // diferentes (ou de nenhum), mas precisam estar ativos na propriedade e fora do
@@ -49,18 +50,17 @@ async function validateTransferPlan(params: {
       currentBatchId: true,
     },
   });
-  const found = new Map(animals.map((a) => [a.id, a]));
-
-  const inactive: string[] = [];
-  const alreadyInDestination: string[] = [];
-  for (const id of uniqueIds) {
-    const a = found.get(id);
-    if (!a || a.status !== "ACTIVE" || a.currentPropertyId !== propertyId) {
-      inactive.push(a ? animalLabel(a) : "desconhecido");
-    } else if (a.currentBatchId === destinationBatchId) {
-      alreadyInDestination.push(animalLabel(a));
-    }
-  }
+  const foundIds = new Set(animals.map((a) => a.id));
+  const unknown = uniqueIds.filter((id) => !foundIds.has(id));
+  const { unavailable, alreadyInDestination } = blockedTransferAnimals(
+    animals,
+    propertyId,
+    destinationBatchId,
+  );
+  const inactive = [
+    ...unavailable.map(animalLabel),
+    ...unknown.map(() => "desconhecido"),
+  ];
 
   const messages: string[] = [];
   if (inactive.length) {
@@ -70,7 +70,7 @@ async function validateTransferPlan(params: {
   }
   if (alreadyInDestination.length) {
     messages.push(
-      `Animais que já estão no lote de destino: ${summarize(alreadyInDestination)}.`,
+      `Animais que já estão no lote de destino: ${summarize(alreadyInDestination.map(animalLabel))}.`,
     );
   }
 
@@ -145,12 +145,12 @@ export async function updateBatchTransfer(id: string, data: BatchTransferData) {
 
   // Mantém os itens que continuam no plano (preserva createdAt/notes) e só
   // remove/adiciona a diferença.
-  const nextIds = new Set(animalIds);
-  const currentIds = new Set(current.items.map((i) => i.animalId));
-  const removedItemIds = current.items
-    .filter((i) => !nextIds.has(i.animalId))
-    .map((i) => i.id);
-  const addedAnimalIds = animalIds.filter((a) => !currentIds.has(a));
+  const { removed, added: addedAnimalIds } = diffIds(
+    current.items,
+    animalIds,
+    (i) => i.animalId,
+  );
+  const removedItemIds = removed.map((i) => i.id);
 
   await prisma.$transaction(async (tx) => {
     // Condicional ao status para não sobrescrever uma confirmação concorrente.

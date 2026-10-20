@@ -4,6 +4,7 @@ import { prisma } from "@/server/db";
 import { write } from "../db-errors";
 import { ConflictError, NotFoundError, ValidationError } from "../errors";
 import { toggledDeactivatedAt } from "../status";
+import { findOccupyingBatch } from "./queries";
 
 // Converte o que veio do formulário (números como texto, "" para vazio) para o formato do banco.
 function toAreaData(input: AreaInput) {
@@ -68,15 +69,12 @@ export async function toggleAreaStatus(id: string) {
   const area = await findOrThrow(id);
 
   if (!area.closedAt) {
-    const occupied = await prisma.batchAreaHistory.findFirst({
-      where: { areaId: id, exitedAt: null, batch: { closedAt: null } },
-      select: { batch: { select: { id: true, name: true } } },
-    });
-    if (occupied) {
+    const occupant = await findOccupyingBatch(prisma, id);
+    if (occupant) {
       throw new ConflictError(
-        `A área está ocupada pelo lote "${occupied.batch.name}". Mova o lote para outra área antes de desativar.`,
+        `A área está ocupada pelo lote "${occupant.name}". Mova o lote para outra área antes de desativar.`,
         undefined,
-        { code: "OCCUPIED", batch: occupied.batch },
+        { code: "OCCUPIED", batch: occupant },
       );
     }
   }

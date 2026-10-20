@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { toDbDate } from "@ifarm/shared";
-import { animalUnits, sumUnits, UA_KG } from "./rules";
+import { animalUnits, capacityCheck, sumUnits, UA_KG } from "./rules";
 
 const now = new Date("2026-10-19T12:00:00Z");
 const base = { currentWeight: null, birthDate: null, neutered: false } as const;
@@ -52,5 +52,20 @@ describe("sumUnits", () => {
         now,
       ),
     ).toEqual({ ua: 3, count: 2, estimatedCount: 1 });
+  });
+});
+
+describe("capacityCheck", () => {
+  it("capacidade é hectares × taxa de lotação", () => {
+    expect(capacityCheck({ hectares: 10, stockingRate: 1.5 }, 15)).toEqual({
+      capacityUa: 15,
+      exceeds: false,
+    });
+  });
+
+  it("excede só acima da capacidade", () => {
+    expect(
+      capacityCheck({ hectares: 10, stockingRate: 1.5 }, 15.1).exceeds,
+    ).toBe(true);
   });
 });

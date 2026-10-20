@@ -2,14 +2,14 @@ import "server-only";
 import { z } from "zod";
 import {
   fromLocalDateTime,
-  unavailableReason,
   type BatchTransferDetail,
   type BatchTransferListResult,
 } from "@ifarm/shared";
 import { prisma } from "@/server/db";
 import { getOrAssignCurrentProperty } from "../current-property/queries";
 import { NotFoundError } from "../errors";
-import { transferStatus } from "./rules";
+import { TRANSFER_STATUS_WHERE, transferStatus } from "./rules";
+import { unavailableReason } from "@/server/animal/rules";
 
 export const batchTransferQuerySchema = z.object({
   propertyId: z.uuid().optional(),
@@ -33,15 +33,7 @@ function buildWhere(query: BatchTransferQuery, propertyId: string) {
     ],
   };
 
-  if (query.status === "pending") {
-    where.confirmedAt = null;
-    where.cancelledAt = null;
-  } else if (query.status === "confirmed") {
-    where.confirmedAt = { not: null };
-    where.cancelledAt = null;
-  } else if (query.status === "cancelled") {
-    where.cancelledAt = { not: null };
-  }
+  if (query.status) Object.assign(where, TRANSFER_STATUS_WHERE[query.status]);
 
   if (query.search) {
     const contains = { contains: query.search, mode: "insensitive" };

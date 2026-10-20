@@ -1,6 +1,11 @@
 import "server-only";
 import type { Prisma } from "@/server/db";
 import type { DeletionPolicy } from "@/server/deletion";
+import {
+  animalDeletionBlocker,
+  isStandalonePurchase,
+  laterRecordsBlocker,
+} from "./rules";
 
 type Tx = Prisma.TransactionClient;
 
@@ -56,19 +61,16 @@ async function standalonePurchase(tx: Tx, animalId: string) {
 
   const event = purchased.purchaseEvent;
   const session = purchased.reception.managementSession;
-  const isStandalone =
-    event._count.categories === 1 &&
-    event._count.receptions === 1 &&
-    event._count.purchasedAnimals === 1 &&
-    session._count.participants === 1 &&
-    session._count.healthManagements === 0 &&
-    session._count.animalBatchTransfers === 0 &&
-    session._count.animalPropertyTransfers === 0 &&
-    !session.weighingManagement &&
-    !session.neuteringManagement &&
-    !session.tagManagement &&
-    !session.rfidManagement &&
-    !session.brandManagement;
+  const isStandalone = isStandalonePurchase(event._count, {
+    ...session._count,
+    hasStepManagements: !!(
+      session.weighingManagement ||
+      session.neuteringManagement ||
+      session.tagManagement ||
+      session.rfidManagement ||
+      session.brandManagement
+    ),
+  });
 
   if (!isStandalone) return null;
 
@@ -112,37 +114,17 @@ export const animalDeletionPolicy: DeletionPolicy = {
     // Inexistente: deixa o remove falhar com P2025 para a rota responder 404.
     if (!animal) return null;
 
-    const count = animal._count;
+    // A compra só é consultada quando decide algo (animal ativo e comprado).
+    const standalone =
+      animal.status === "ACTIVE" &&
+      animal._count.purchasedAnimals > 0 &&
+      (await standalonePurchase(tx, id)) != null;
+    const blocker = animalDeletionBlocker(
+      { status: animal.status, count: animal._count },
+      standalone,
+    );
+    if (blocker) return blocker;
 
-    if (animal.status !== "ACTIVE") {
-      return "Não é possível excluir um animal que já saiu do rebanho.";
-    }
-    // A compra avulsa traz a participação na sessão de recepção dela.
-    let ownParticipations = 0;
-    if (count.purchasedAnimals > 0) {
-      if (!(await standalonePurchase(tx, id))) {
-        return "Não é possível excluir: o animal está vinculado a uma compra.";
-      }
-      ownParticipations = 1;
-    }
-    if (
-      count.animalPropertyHistories > 1 ||
-      count.animalBatchHistories > 1 ||
-      count.propertyTransferItems > 0 ||
-      count.batchTransferItems > 0
-    ) {
-      return "Não é possível excluir: o animal já foi movimentado entre propriedades ou lotes.";
-    }
-    if (
-      count.managementParticipants > ownParticipations ||
-      count.healthManagementItems > 0 ||
-      count.animalBrandings > 0
-    ) {
-      return "Não é possível excluir: o animal já possui manejos registrados.";
-    }
-
-    // Os avulsos do cadastro são no máximo um de cada tipo, fora de sessão de manejo.
-    // Mais de um (inclusive corrigidos/cancelados) indica manejos posteriores.
     // Sequencial: o cliente da transação não aceita consultas em paralelo.
     const where = { animalId: id };
     const select = { managementId: true };
@@ -151,20 +133,7 @@ export const animalDeletionPolicy: DeletionPolicy = {
     const rfidTaggings = await tx.animalRfidTagging.findMany({ where, select });
     const neuterings = await tx.animalNeutering.findMany({ where, select });
 
-    const hasLaterRecords = [
-      weighings,
-      taggings,
-      rfidTaggings,
-      neuterings,
-    ].some(
-      (records) =>
-        records.length > 1 || records.some((r) => r.managementId !== null),
-    );
-    if (hasLaterRecords) {
-      return "Não é possível excluir: o animal já possui manejos registrados.";
-    }
-
-    return null;
+    return laterRecordsBlocker([weighings, taggings, rfidTaggings, neuterings]);
   },
 
   async remove(tx, id) {

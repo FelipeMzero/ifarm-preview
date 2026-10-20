@@ -2,7 +2,7 @@ import "server-only";
 import type { AreaOccupancy, Sex, StockingPreview } from "@ifarm/shared";
 import { prisma } from "@/server/db";
 import { NotFoundError } from "../errors";
-import { sumUnits, type UaAnimal } from "./rules";
+import { capacityCheck, sumUnits, type UaAnimal } from "./rules";
 
 const UA_SELECT = {
   id: true,
@@ -91,8 +91,14 @@ export async function stockingPreview(params: {
     now,
   );
 
-  const capacityUa = area.hectares.toNumber() * area.stockingRate.toNumber();
   const projectedUa = current.ua + incoming.ua;
+  const { capacityUa, exceeds } = capacityCheck(
+    {
+      hectares: area.hectares.toNumber(),
+      stockingRate: area.stockingRate.toNumber(),
+    },
+    projectedUa,
+  );
 
   return {
     area: { id: area.id, name: area.name },
@@ -100,7 +106,7 @@ export async function stockingPreview(params: {
     current,
     incoming,
     projectedUa,
-    exceeds: projectedUa > capacityUa,
+    exceeds,
   };
 }
 
@@ -164,15 +170,13 @@ export async function areasOccupancy(
   for (const h of histories) {
     const area = areaById.get(h.areaId)!;
     const total = sumUnits(byBatch.get(h.batch.id) ?? [], now);
-    const capacityUa = area.hectares * area.stockingRate;
     result.set(h.areaId, {
       batch: h.batch,
       occupiedSince: h.enteredAt.toISOString(),
       animalCount: total.count,
       currentUa: total.ua,
       estimatedCount: total.estimatedCount,
-      capacityUa,
-      exceeds: total.ua > capacityUa,
+      ...capacityCheck(area, total.ua),
     });
   }
 
