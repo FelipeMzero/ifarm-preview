@@ -1,7 +1,6 @@
 import "server-only";
 import { z } from "zod";
 import { FIELD_LIMITS } from "@ifarm/shared";
-import { animalLabel, summarize } from "@ifarm/shared";
 import { takenInSession } from "@/server/management-session/rules";
 import {
   defineStep,
@@ -10,6 +9,7 @@ import {
   type StepAnimal,
   type Tx,
 } from "@/server/management-session/steps/types";
+import { animalLabel, summarize } from "@/server/animal/rules";
 
 type IdentifierItem = {
   id: number;

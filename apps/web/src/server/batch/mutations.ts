@@ -1,6 +1,5 @@
 import "server-only";
 import {
-  toDbDate,
   type BatchCreateData,
   type BatchReopenData,
   type BatchUpdateData,
@@ -10,6 +9,7 @@ import { assertAreaAvailable } from "../area/queries";
 import { getOrAssignCurrentProperty } from "../current-property/queries";
 import { write } from "../db-errors";
 import { BusinessError, NotFoundError } from "../errors";
+import { toDbDate } from "@/server/db-dates";
 
 const toTargetDate = (v?: string) => (v ? toDbDate(v) : null);
 

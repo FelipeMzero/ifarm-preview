@@ -3,7 +3,6 @@ import { z } from "zod";
 import {
   AnimalOrigin,
   AnimalStatus,
-  fromDbDate,
   Sex,
   type AnimalDetail,
   type AnimalFullDetails,
@@ -26,6 +25,7 @@ import {
 import { findCommitments } from "./commitments";
 import { neuteringInclude, toNeuteringDto } from "./neuterings";
 import { sortWeighings, toWeighingDto } from "./weighings";
+import { fromDbDate } from "@/server/db-dates";
 
 export const animalQuerySchema = z.object({
   propertyId: z.uuid().optional(),

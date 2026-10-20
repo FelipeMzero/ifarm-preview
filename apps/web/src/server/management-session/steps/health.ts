@@ -1,6 +1,6 @@
 import "server-only";
 import { z } from "zod";
-import { FIELD_LIMITS, fromDbDate, toDbDate } from "@ifarm/shared";
+import { FIELD_LIMITS } from "@ifarm/shared";
 import { HealthManagementDoseType } from "@/generated/prisma/enums";
 import {
   doseChangeBlocker,
@@ -12,6 +12,7 @@ import {
   StepError,
   stepNotesSchema,
 } from "@/server/management-session/steps/types";
+import { fromDbDate, toDbDate } from "@/server/db-dates";
 
 const optionalDate = z
   .string()

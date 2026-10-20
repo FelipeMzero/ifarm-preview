@@ -1,7 +1,6 @@
 import "server-only";
 import {
   isSessionOpen,
-  toDbDate,
   today,
   type PurchaseData,
   type PurchasePaymentData,
@@ -20,6 +19,7 @@ import {
   purchaseStatus,
 } from "./rules";
 import { sessionStatus } from "@/server/management-session/session-steps";
+import { toDbDate } from "@/server/db-dates";
 
 // Registra a negociação: título, vendedor e as categorias negociadas (com preços). Nenhum animal
 // existe ainda; eles são criados nas recepções.

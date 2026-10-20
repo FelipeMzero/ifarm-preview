@@ -1,4 +1,4 @@
-import { fromDbDate } from "@ifarm/shared";
+import { fromDbDate } from "@/server/db-dates";
 
 // Indicadores do lote (GMD, peso médio ao longo do tempo, compras), sem banco.
 

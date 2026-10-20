@@ -1,6 +1,5 @@
 import "server-only";
 import { assertNoConflicts } from "@/server/animal/commitments";
-import { animalLabel, summarize } from "@ifarm/shared";
 import { findReception } from "@/server/purchase/reception";
 import { splitHandled } from "@/server/management-session/rules";
 import {
@@ -16,6 +15,8 @@ import {
 } from "@/server/management-session/steps";
 import type { Tx } from "@/server/management-session/steps/types";
 import {
+  animalLabel,
+  summarize,
   unavailableAnimalsMessage,
   unavailableReason,
 } from "@/server/animal/rules";

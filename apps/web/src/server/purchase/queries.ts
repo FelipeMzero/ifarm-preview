@@ -4,7 +4,6 @@ import {
   fromLocalDay,
   type PurchaseDetail,
   type PurchaseListResult,
-  fromDbDate,
 } from "@ifarm/shared";
 import { prisma, type Prisma } from "@/server/db";
 import { getOrAssignCurrentProperty } from "../current-property/queries";
@@ -18,6 +17,7 @@ import {
   sumIfAllKnown,
 } from "./rules";
 import { sessionStatus } from "@/server/management-session/session-steps";
+import { fromDbDate } from "@/server/db-dates";
 
 export const purchaseQuerySchema = z.object({
   propertyId: z.uuid().optional(),

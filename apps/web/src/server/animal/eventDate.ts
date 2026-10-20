@@ -1,12 +1,8 @@
 import "server-only";
-import {
-  formatDate,
-  fromDbDate,
-  fromLocalDay,
-  toLocalDateTime,
-} from "@ifarm/shared";
+import { formatDate, fromLocalDay, toLocalDateTime } from "@ifarm/shared";
 import { prisma } from "@/server/db";
 import { ValidationError } from "../errors";
+import { fromDbDate } from "@/server/db-dates";
 
 // Data e hora de manejos avulsos e de correções (pesagem, castração, identificação),
 // recebidas como "AAAA-MM-DDTHH:mm" e interpretadas no fuso local.

@@ -1,9 +1,7 @@
 import "server-only";
 import type { z } from "zod";
 import {
-  animalLabel,
   OPEN_SESSION_STATUSES,
-  summarize,
   type ManagementSessionStartData,
   type ReceiveAnimalData,
   type ReceptionDocumentsData,
@@ -34,6 +32,7 @@ import {
 import { countDone, loadStepRecords, stepModule } from "./steps";
 import type { Tx } from "./steps/types";
 import { stepKey } from "@/server/management-session/session-steps";
+import { animalLabel, summarize } from "@/server/animal/rules";
 
 type ManagementSessionData = z.output<typeof managementSessionApiSchema>;
 

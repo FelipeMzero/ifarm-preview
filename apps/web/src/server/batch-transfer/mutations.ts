@@ -1,10 +1,5 @@
 import "server-only";
-import {
-  animalLabel,
-  summarize,
-  toLocalDateTime,
-  type BatchTransferData,
-} from "@ifarm/shared";
+import { toLocalDateTime, type BatchTransferData } from "@ifarm/shared";
 import { prisma } from "@/server/db";
 import { assertNoConflicts } from "../animal/commitments";
 import { getOrAssignCurrentProperty } from "../current-property/queries";
@@ -12,6 +7,7 @@ import { diffIds } from "../diff";
 import { BusinessError, NotFoundError, ValidationError } from "../errors";
 import { confirmTransferInTx, ConfirmError } from "./confirmTransfer";
 import { blockedTransferAnimals, transferStatus } from "./rules";
+import { animalLabel, summarize } from "@/server/animal/rules";
 
 // Valida o lote de destino e os animais do plano (ValidationError com o erro no campo). Os animais podem vir de lotes
 // diferentes (ou de nenhum), mas precisam estar ativos na propriedade e fora do

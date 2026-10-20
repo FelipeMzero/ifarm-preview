@@ -1,7 +1,6 @@
 import "server-only";
 import { z } from "zod";
 import {
-  fromDbDate,
   fromLocalDateTime,
   type BatchDetail,
   type BatchFullDetails,
@@ -14,6 +13,7 @@ import { NotFoundError } from "../errors";
 import { effectiveWeighing } from "../management-session/effective";
 import { stockingPreview } from "../stocking/queries";
 import { averageDailyGain, groupPurchases, weightSeries } from "./rules";
+import { fromDbDate } from "@/server/db-dates";
 
 export const batchQuerySchema = z.object({
   propertyId: z.uuid().optional(),

@@ -3,7 +3,7 @@ import { z } from "zod";
 // Três tipos de data, que circulam como texto e só viram Date na fronteira com o banco:
 //
 // - Só o dia (colunas @db.Date: birthDate, purchaseDate, paymentDate...): "AAAA-MM-DD";
-//   toDbDate/fromDbDate, em UTC, que é como o Prisma lê e grava esse tipo.
+//   a conversão para o banco (toDbDate/fromDbDate) é do servidor, em server/db-dates.ts.
 // - Data e hora informadas pelo usuário (manejos, transferências, perdas, abates):
 //   "AAAA-MM-DDTHH:mm", sem fuso, como o <input type="datetime-local"> entrega; o servidor as
 //   interpreta no fuso local (toLocalDateTime/fromLocalDateTime).
@@ -16,19 +16,6 @@ import { z } from "zod";
 export const dateField = z
   .union([z.iso.date("Data inválida"), z.literal("")])
   .optional();
-
-/** Data obrigatória: "AAAA-MM-DD". */
-export const requiredDateField = z.iso.date("Data inválida");
-
-/** "AAAA-MM-DD" → Date à meia-noite UTC, para gravar numa coluna @db.Date. */
-export function toDbDate(value: string): Date {
-  return new Date(`${value}T00:00:00Z`);
-}
-
-/** Date lido de uma coluna @db.Date → "AAAA-MM-DD". */
-export function fromDbDate(value: Date): string {
-  return value.toISOString().slice(0, 10);
-}
 
 /** "AAAA-MM-DD" → Date à meia-noite local (ex.: cálculo de idade, eixo de gráfico). */
 export function toLocalDay(value: string): Date {

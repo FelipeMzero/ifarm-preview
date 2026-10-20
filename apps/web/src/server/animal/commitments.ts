@@ -7,8 +7,7 @@ import {
   type CommitmentExclusion,
   type CommitmentIntent,
 } from "@ifarm/shared";
-import { animalLabel, summarize } from "@ifarm/shared";
-import { blockingConflicts } from "./rules";
+import { animalLabel, blockingConflicts, summarize } from "./rules";
 import {
   sessionStepsSelect,
   stepKey,

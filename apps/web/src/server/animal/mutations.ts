@@ -1,6 +1,5 @@
 import "server-only";
 import {
-  toDbDate,
   toLocalDateTime,
   type AnimalCreateData,
   type AnimalUpdateData,
@@ -43,6 +42,7 @@ import {
   updateCommitmentIntents,
 } from "./rules";
 import { recomputeCurrentWeight } from "./weighings";
+import { toDbDate } from "@/server/db-dates";
 
 const fieldError = (field: string, message: string) =>
   new ValidationError(message, { [field]: message });

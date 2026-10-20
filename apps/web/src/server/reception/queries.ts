@@ -5,7 +5,6 @@ import {
   isSessionOpen,
   type ReceptionPurchase,
   type ReceptionPurchaseListResult,
-  fromDbDate,
 } from "@ifarm/shared";
 import type { Prisma } from "@/server/db";
 import { prisma } from "@/server/db";
@@ -15,6 +14,7 @@ import { categoryLabel } from "../purchase/reception";
 import { purchaseStatus } from "../purchase/rules";
 import { isPending } from "./rules";
 import { sessionStatus } from "@/server/management-session/session-steps";
+import { fromDbDate } from "@/server/db-dates";
 
 // Área de recepções: dados físicos da compra (quem vende, o que foi negociado em
 // quantidade, o que já chegou). Nada de preços, custos ou situação financeira.

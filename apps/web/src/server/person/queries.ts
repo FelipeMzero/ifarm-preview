@@ -1,7 +1,6 @@
 import "server-only";
 import { z } from "zod";
 import {
-  fromDbDate,
   PersonType,
   type PersonInput,
   type PersonListResult,
@@ -9,6 +8,7 @@ import {
 } from "@ifarm/shared";
 import { prisma } from "@/server/db";
 import { NotFoundError } from "../errors";
+import { fromDbDate } from "@/server/db-dates";
 
 export const personQuerySchema = z.object({
   page: z.coerce.number().int().min(0).optional().default(0),
