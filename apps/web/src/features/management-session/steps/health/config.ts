@@ -14,7 +14,7 @@ export type HealthConfig = {
   doseType: HealthDoseType;
   doseMl: number | null;
   doseWeightKg: number | null;
-  withdrawalUntil: string | null;
+  withdrawalEndDate: string | null;
   nextDueDate: string | null;
 };
 
@@ -62,7 +62,7 @@ export function healthToPlanForm(step: SessionStepView): Partial<PlanStepForm> {
     doseType: c.doseType ?? "NONE",
     doseMl: c.doseMl != null ? String(c.doseMl) : "",
     doseWeightKg: c.doseWeightKg != null ? String(c.doseWeightKg) : "",
-    withdrawalUntil: c.withdrawalUntil ?? "",
+    withdrawalEndDate: c.withdrawalEndDate ?? "",
     nextDueDate: c.nextDueDate ?? "",
   };
 }

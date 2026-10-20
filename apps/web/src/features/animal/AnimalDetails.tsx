@@ -811,7 +811,7 @@ export default function AnimalDetails({
                         </TableCell>
                         <TableCell>{h.veterinarianName ?? "—"}</TableCell>
                         <TableCell>
-                          {formatDateOnly(h.withdrawalUntil)}
+                          {formatDateOnly(h.withdrawalEndDate)}
                         </TableCell>
                         <TableCell>{formatDateOnly(h.nextDueDate)}</TableCell>
                         <TableCell className="text-right tabular-nums">

@@ -73,9 +73,9 @@ export default function HealthStep({
 
   const details = [
     config.veterinarianName && ["Veterinário", config.veterinarianName],
-    config.withdrawalUntil && [
+    config.withdrawalEndDate && [
       "Carência até",
-      formatDay(config.withdrawalUntil),
+      formatDay(config.withdrawalEndDate),
     ],
     config.nextDueDate && ["Próxima dose", formatDay(config.nextDueDate)],
     hasDose && ["Dose", describeDose(config)],

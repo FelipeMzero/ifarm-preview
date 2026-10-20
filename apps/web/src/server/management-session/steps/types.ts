@@ -10,8 +10,8 @@ export type Tx = Prisma.TransactionClient;
 export type SessionCtx = {
   id: string;
   propertyId: string;
-  scheduledDate: Date;
-  managementDate: Date | null;
+  scheduledAt: Date;
+  performedAt: Date | null;
 };
 
 export type StepAnimal = {
@@ -63,7 +63,7 @@ export interface StepModule<
   /** Grava (ou substitui) o registro da etapa para o animal. */
   save(
     tx: Tx,
-    session: SessionCtx & { managementDate: Date },
+    session: SessionCtx & { performedAt: Date },
     step: S,
     animal: StepAnimal,
     payload: TPayload,
@@ -76,7 +76,7 @@ export interface StepModule<
    */
   consolidate(
     tx: Tx,
-    session: SessionCtx & { managementDate: Date },
+    session: SessionCtx & { performedAt: Date },
     step: S,
     effectiveAt: Date,
   ): Promise<void>;

@@ -30,7 +30,7 @@ export const managementSessionApiSchema = z.object({
       `Máximo de ${FIELD_LIMITS.managementSession.title} caracteres`,
     ),
   // Data e hora previstas ("AAAA-MM-DDTHH:mm", no fuso local).
-  scheduledDate: dateTimeField.transform(toLocalDateTime),
+  scheduledAt: dateTimeField.transform(toLocalDateTime),
   notes: z
     .string()
     .max(
@@ -48,7 +48,7 @@ export const managementSessionApiSchema = z.object({
 
 export const managementSessionStartApiSchema = z.object({
   // Data e hora em que o manejo acontece ("AAAA-MM-DDTHH:mm", no fuso local).
-  managementDate: dateTimeField.transform(toLocalDateTime),
+  performedAt: dateTimeField.transform(toLocalDateTime),
 });
 
 export const participantsApiSchema = z.object({

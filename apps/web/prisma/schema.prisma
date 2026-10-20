@@ -309,7 +309,7 @@ model Brand {
   registrationBody   String?   @map("registration_body") // prefeitura, órgão estadual, cartório
   registrationCity   String?   @map("registration_city")
   registrationState  String?   @map("registration_state") // UF
-  registeredAt       DateTime? @map("registered_at") @db.Date
+  registrationDate   DateTime? @map("registration_date") @db.Date
   deactivatedAt      DateTime? @map("deactivated_at")
 
   ownerId String @map("owner_id") @db.Uuid
@@ -328,13 +328,13 @@ model Brand {
 }
 
 model ManagementSession {
-  id             String    @id @default(uuid()) @db.Uuid
-  title          String // identifica a sessão na listagem (ex.: "Pesagem mensal da recria")
-  notes          String?
-  scheduledDate  DateTime  @map("scheduled_date") // data prevista, usada para lembretes/agendamento
-  managementDate DateTime? @map("management_date") // data em que o manejo de fato ocorreu
-  confirmedAt    DateTime? @map("confirmed_at")
-  cancelledAt    DateTime? @map("cancelled_at")
+  id          String    @id @default(uuid()) @db.Uuid
+  title       String // identifica a sessão na listagem (ex.: "Pesagem mensal da recria")
+  notes       String?
+  scheduledAt DateTime  @map("scheduled_at") // data e hora previstas, usadas para lembretes/agendamento
+  performedAt DateTime? @map("performed_at") // data e hora em que o manejo de fato ocorreu
+  confirmedAt DateTime? @map("confirmed_at")
+  cancelledAt DateTime? @map("cancelled_at")
 
   propertyId String   @map("property_id") @db.Uuid
   property   Property @relation(fields: [propertyId], references: [id], onDelete: Restrict)
@@ -360,7 +360,7 @@ model ManagementSession {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  @@index([propertyId, scheduledDate])
+  @@index([propertyId, scheduledAt])
   // Sessões abertas são sempre poucas: a checagem de compromissos dos animais parte
   // delas, sem passar pelo histórico (docs/data-dictionary.md, 2.9).
   @@index([propertyId], map: "management_session_open_idx", where: { confirmedAt: null, cancelledAt: null })
@@ -666,15 +666,15 @@ model BatchManagementSuggestion {
 }
 
 model HealthManagement {
-  id              String                   @id @default(uuid()) @db.Uuid
-  title           String?
-  withdrawalUntil DateTime?                @map("withdrawal_until") @db.Date
-  nextDueDate     DateTime?                @map("next_due_date") @db.Date
-  doseType        HealthManagementDoseType @default(NONE) @map("dose_type")
-  doseMl          Decimal?                 @map("dose_ml") @db.Decimal(10, 2) // FIXED: ml por animal; PER_WEIGHT: ml a cada doseWeightKg
-  doseWeightKg    Decimal?                 @map("dose_weight_kg") @db.Decimal(10, 2) // PER_WEIGHT: peso de referência (ex.: 1 ml a cada 50 kg)
+  id                String                   @id @default(uuid()) @db.Uuid
+  title             String?
+  withdrawalEndDate DateTime?                @map("withdrawal_end_date") @db.Date
+  nextDueDate       DateTime?                @map("next_due_date") @db.Date
+  doseType          HealthManagementDoseType @default(NONE) @map("dose_type")
+  doseMl            Decimal?                 @map("dose_ml") @db.Decimal(10, 2) // FIXED: ml por animal; PER_WEIGHT: ml a cada doseWeightKg
+  doseWeightKg      Decimal?                 @map("dose_weight_kg") @db.Decimal(10, 2) // PER_WEIGHT: peso de referência (ex.: 1 ml a cada 50 kg)
 
-  performedAt DateTime @map("performed_at") // data do procedimento; em sessão, copiada da data da sessão
+  performedAt DateTime @map("performed_at") // data e hora do procedimento; em sessão, copiada da data da sessão
 
   items HealthManagementItem[]
   step  ManagementStep? // etapa da sessão que aplica este procedimento (null = avulso), uma vez que a mesma sessão pode ter vários manejos sanitários.
@@ -736,10 +736,10 @@ enum HealthManagementDoseType {
 }
 
 model AnimalPropertyTransfer {
-  id           String   @id @default(uuid()) @db.Uuid
-  transferDate DateTime @map("transfer_date")
-  notes        String?
-  gtaNumber    String?  @map("gta_number")
+  id            String   @id @default(uuid()) @db.Uuid
+  transferredAt DateTime @map("transferred_at")
+  notes         String?
+  gtaNumber     String?  @map("gta_number")
 
   confirmedAt DateTime? @map("confirmed_at") // origem confirma o envio
   receivedAt  DateTime? @map("received_at") // destino confirma o recebimento
@@ -811,11 +811,11 @@ model AnimalPropertyHistory {
 }
 
 model AnimalBatchTransfer {
-  id           String    @id @default(uuid()) @db.Uuid
-  transferDate DateTime  @map("transfer_date")
-  notes        String?
-  confirmedAt  DateTime? @map("confirmed_at")
-  cancelledAt  DateTime? @map("cancelled_at")
+  id            String    @id @default(uuid()) @db.Uuid
+  transferredAt DateTime  @map("transferred_at")
+  notes         String?
+  confirmedAt   DateTime? @map("confirmed_at")
+  cancelledAt   DateTime? @map("cancelled_at")
 
   items AnimalBatchTransferItem[]
 
@@ -885,12 +885,12 @@ model AnimalBatchHistory {
 model PurchaseEvent {
   id           String   @id @default(uuid()) @db.Uuid
   title        String // distingue compras do mesmo vendedor
-  purchaseDate DateTime @map("purchase_date")
+  purchaseDate DateTime @map("purchase_date") @db.Date
   notes        String?
 
   // Situação: em andamento (sem confirmedAt/cancelledAt), consolidada ou cancelada.
   // O pagamento é um fato registrado durante o andamento; bloqueia os valores.
-  paidAt           DateTime? @map("paid_at")
+  paymentDate      DateTime? @map("payment_date") @db.Date
   paymentReference String?   @map("payment_reference") // comprovante (PIX, TED...)
   confirmedAt      DateTime? @map("confirmed_at") // consolidada: custos rateados, nada mais muda
   cancelledAt      DateTime? @map("cancelled_at")
@@ -1001,7 +1001,7 @@ model LossEvent {
   id          String   @id @default(uuid()) @db.Uuid
   title       String
   description String?
-  lossDate    DateTime @map("loss_date")
+  occurredAt  DateTime @map("occurred_at")
 
   confirmedAt DateTime? @map("confirmed_at")
   cancelledAt DateTime? @map("cancelled_at")
@@ -1047,8 +1047,8 @@ model SlaughterEvent {
   id            String    @id @default(uuid()) @db.Uuid
   title         String
   description   String?
-  scheduledDate DateTime  @map("scheduled_date") // data prevista no planejamento
-  slaughterDate DateTime? @map("slaughter_date") // data em que o abate de fato ocorreu; informada na consolidação
+  scheduledAt   DateTime  @map("scheduled_at") // data e hora previstas no planejamento
+  slaughteredAt DateTime? @map("slaughtered_at") // data e hora em que o abate de fato ocorreu; informadas na consolidação
 
   confirmedAt DateTime? @map("confirmed_at") // consolidado: aplica o status final nos animais
   cancelledAt DateTime? @map("cancelled_at")

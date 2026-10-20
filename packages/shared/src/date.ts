@@ -1,18 +1,16 @@
 import { z } from "zod";
 
-// Datas sem hora (nascimento, compra, pesagem...) circulam sempre como texto "AAAA-MM-DD": no
-// formulário, no JSON da API e nos schemas. Só viram Date na fronteira com o banco, e a conversão
-// depende de como a coluna guarda o dia:
+// Três tipos de data, que circulam como texto e só viram Date na fronteira com o banco:
 //
-// - Colunas @db.Date (birthDate, withdrawalUntil, nextDueDate...): toDbDate/fromDbDate, em UTC,
-//   que é como o Prisma lê e grava esse tipo.
-// - Colunas timestamp que guardam um dia (purchaseDate, paidAt, lossDate...): gravadas
-//   à meia-noite local; toLocalDay/fromLocalDay, no fuso de quem executa (o servidor).
+// - Só o dia (colunas @db.Date: birthDate, purchaseDate, paymentDate...): "AAAA-MM-DD";
+//   toDbDate/fromDbDate, em UTC, que é como o Prisma lê e grava esse tipo.
+// - Data e hora informadas pelo usuário (manejos, transferências, perdas, abates):
+//   "AAAA-MM-DDTHH:mm", sem fuso, como o <input type="datetime-local"> entrega; o servidor as
+//   interpreta no fuso local (toLocalDateTime/fromLocalDateTime).
+// - Instantes gravados pelo sistema (createdAt, confirmedAt...): Date de verdade.
 //
-// Não vale para instantes gravados pelo sistema (createdAt, deactivatedAt...), que são Date de
-// verdade. Data e hora informadas pelo usuário (datas da sessão de manejo e da transferência) circulam como
-// "AAAA-MM-DDTHH:mm", sem fuso, como o <input type="datetime-local"> entrega; o servidor as
-// interpreta no fuso local (toLocalDateTime/fromLocalDateTime).
+// toLocalDay/fromLocalDay tratam um dia no fuso local: "hoje", o dia de um instante (ex.: comparar
+// um manejo com o nascimento) e cálculos de tela (idade, gráficos).
 
 /** Data opcional: "AAAA-MM-DD" ou vazia. */
 export const dateField = z
@@ -32,12 +30,12 @@ export function fromDbDate(value: Date): string {
   return value.toISOString().slice(0, 10);
 }
 
-/** "AAAA-MM-DD" → Date à meia-noite local, para gravar numa coluna timestamp que guarda um dia. */
+/** "AAAA-MM-DD" → Date à meia-noite local (ex.: cálculo de idade, eixo de gráfico). */
 export function toLocalDay(value: string): Date {
   return new Date(`${value}T00:00:00`);
 }
 
-/** Date lido de uma coluna timestamp que guarda um dia → "AAAA-MM-DD" no fuso local. */
+/** Date → o dia dele ("AAAA-MM-DD") no fuso local. */
 export function fromLocalDay(value: Date): string {
   return value.toLocaleDateString("en-CA");
 }
@@ -74,19 +72,9 @@ export function today(): string {
   return fromLocalDay(new Date());
 }
 
-/** "AAAA-MM-DDTHH:mm" → "DD/MM/AAAA HH:mm", sem criar Date. */
-export function formatDateTime(value: string): string {
-  return `${formatDate(value.slice(0, 10))} ${value.slice(11, 16)}`;
-}
-
-/**
- * Data e hora de um evento ("DD/MM/AAAA às HH:mm"). Registros antigos, gravados só com o dia,
- * vêm à meia-noite (ou sem hora); neles só a data é mostrada.
- */
+/** "AAAA-MM-DDTHH:mm" → "DD/MM/AAAA às HH:mm", sem criar Date. */
 export function formatEventDateTime(value: string): string {
-  const time = value.slice(11, 16);
-  const date = formatDate(value.slice(0, 10));
-  return time && time !== "00:00" ? `${date} às ${time}` : date;
+  return `${formatDate(value.slice(0, 10))} às ${value.slice(11, 16)}`;
 }
 
 /** "AAAA-MM-DD" → "DD/MM/AAAA", sem criar Date. */

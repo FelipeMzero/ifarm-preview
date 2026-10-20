@@ -6,7 +6,6 @@ import {
   unavailableReason,
 } from "@ifarm/shared";
 import { Prisma } from "@/server/db";
-import { effectiveAt } from "@/server/event-time";
 import { BusinessError } from "@/server/errors";
 import { transferStatus } from "./rules";
 
@@ -65,14 +64,14 @@ export async function confirmTransferInTx(tx: Tx, id: string) {
   }
 
   const now = new Date();
-  if (transfer.transferDate > now) {
+  if (transfer.transferredAt > now) {
     throw new ConfirmError(
       "A data da transferência é futura. Ajuste a data para confirmar.",
     );
   }
 
-  // A data e hora programadas (transferências antigas, só com o dia: ver effectiveAt).
-  const effectiveDate = effectiveAt(transfer.transferDate, now);
+  // Os animais mudam de lote na data e hora programadas.
+  const effectiveDate = transfer.transferredAt;
 
   const inactive = transfer.items.filter(({ animal }) =>
     unavailableReason(animal, transfer.propertyId),

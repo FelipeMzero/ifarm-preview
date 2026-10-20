@@ -12,7 +12,7 @@ type BatchRef = { id: string; name: string };
 
 export type BatchTransferRow = {
   id: string;
-  transferDate: string;
+  transferredAt: string;
   notes: string | null;
   originBatches: string[];
   destinationBatch: BatchRef;
@@ -49,7 +49,7 @@ export type TransferAnimal = {
 
 export type BatchTransferDetail = {
   id: string;
-  transferDate: string;
+  transferredAt: string;
   notes: string;
   destinationBatch: BatchRef;
   propertyId: string;

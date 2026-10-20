@@ -7,7 +7,7 @@ import { FIELD_LIMITS } from "../field-limits";
 export const batchTransferSchema = z.object({
   destinationBatchId: z.uuid("Selecione o lote de destino."),
   // Data e hora programadas ("AAAA-MM-DDTHH:mm", no fuso local).
-  transferDate: dateTimeField,
+  transferredAt: dateTimeField,
   notes: z
     .string()
     .max(

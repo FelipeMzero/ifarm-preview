@@ -25,5 +25,5 @@ export function TransferStatusBadge({
   );
 }
 
-// Data e hora programadas da transferência (ver formatEventDateTime).
+// Data e hora programadas da transferência.
 export const formatTransferDate = formatEventDateTime;

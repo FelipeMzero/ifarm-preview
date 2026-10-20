@@ -22,8 +22,8 @@ export type ReceptionSummary = {
   sessionId: string;
   title: string;
   status: ManagementSessionStatus;
-  managementDate: string | null;
-  scheduledDate: string;
+  performedAt: string | null;
+  scheduledAt: string;
   entryBatch: Ref;
   gtaNumber: string | null;
   invoiceNumber: string | null;

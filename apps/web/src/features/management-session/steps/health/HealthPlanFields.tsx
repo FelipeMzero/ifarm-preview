@@ -82,7 +82,7 @@ export default function HealthPlanFields({
         />
         <FieldRow cols={2}>
           <FormField
-            name={`steps.${index}.withdrawalUntil`}
+            name={`steps.${index}.withdrawalEndDate`}
             control={control}
             label="Carência até"
             render={({ field, id }) => (

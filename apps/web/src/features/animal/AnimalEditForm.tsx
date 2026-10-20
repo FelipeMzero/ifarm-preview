@@ -1,5 +1,6 @@
 "use client";
 
+import { formatInstant } from "./format";
 import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -188,7 +189,7 @@ export function AnimalEditForm({
   const displayBatchName = pendingBatchName ?? animal.currentBatchName;
   const displayNeutering = animal.neutered
     ? animal.neuteredAt
-      ? `Castrado em ${new Date(animal.neuteredAt).toLocaleDateString("pt-BR")}`
+      ? `Castrado em ${formatInstant(animal.neuteredAt)}`
       : "Castrado"
     : "Não castrado";
 

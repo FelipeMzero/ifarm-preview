@@ -5,6 +5,7 @@ import {
   sessionStatus,
   type ReceptionPurchase,
   type ReceptionPurchaseListResult,
+  fromDbDate,
 } from "@ifarm/shared";
 import type { Prisma } from "@/server/db";
 import { prisma } from "@/server/db";
@@ -52,8 +53,8 @@ function toReceptionPurchase(e: ReceptionPurchaseRow): ReceptionPurchase {
     sessionId: r.managementSessionId,
     title: r.managementSession.title,
     status: sessionStatus(r.managementSession),
-    managementDate: day(r.managementSession.managementDate),
-    scheduledDate: fromLocalDay(r.managementSession.scheduledDate),
+    performedAt: day(r.managementSession.performedAt),
+    scheduledAt: fromLocalDay(r.managementSession.scheduledAt),
     entryBatch: r.entryBatch,
     gtaNumber: r.gtaNumber,
     invoiceNumber: r.invoiceNumber,
@@ -64,7 +65,7 @@ function toReceptionPurchase(e: ReceptionPurchaseRow): ReceptionPurchase {
   return {
     id: e.id,
     title: e.title,
-    purchaseDate: fromLocalDay(e.purchaseDate),
+    purchaseDate: fromDbDate(e.purchaseDate),
     notes: e.notes,
     seller: e.seller,
     // Recepções só em compras em andamento; consolidadas e canceladas são consulta.

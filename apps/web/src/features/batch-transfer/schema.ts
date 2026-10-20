@@ -3,7 +3,7 @@ import { FIELD_LIMITS } from "@ifarm/shared";
 
 export const batchTransferFormSchema = z.object({
   destinationBatchId: z.string().min(1, "Este campo é obrigatório"),
-  transferDate: z.string().min(1, "Este campo é obrigatório"),
+  transferredAt: z.string().min(1, "Este campo é obrigatório"),
   notes: z
     .string()
     .max(

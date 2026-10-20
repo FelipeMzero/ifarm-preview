@@ -75,7 +75,7 @@ Em vez de uma coluna `status`, o estado de planos e eventos é derivado de colun
 | `confirmed_at` preenchido | Confirmado/efetivado |
 | nenhum dos dois | Pendente/planejado |
 
-Na sessão de manejo há um estado a mais: `management_date` preenchido e ainda não confirmada = **em andamento** (ver 7.1).
+Na sessão de manejo há um estado a mais: `performed_at` preenchido e ainda não confirmada = **em andamento** (ver 7.1).
 
 ### 2.2 Desativação e encerramento
 
@@ -197,8 +197,9 @@ Se for necessária auditoria completa (quem, quando, cada valor), o caminho é u
 
 - Registro avulso lançado com a data de hoje: grava o instante atual.
 - Registro avulso em dia passado: grava a meia-noite local do dia.
-- Registro de sessão: recebe a data do manejo (`management_date`). Na consolidação, recebe o instante da consolidação se o manejo for de hoje, ou a data do manejo se for de outro dia.
-- A data de um manejo não pode ser futura nem anterior ao nascimento do animal.
+- Registro de sessão: recebe a data e hora do manejo (`performed_at` da sessão), também na consolidação. Sessões antigas, gravadas só com o dia (meia-noite), seguem a regra anterior: o instante da consolidação se o manejo for de hoje, ou a meia-noite do dia do manejo.
+- Registro avulso e correção: recebem a data e hora informadas (registro avulso: padrão agora).
+- A data e hora de um manejo não podem ser futuras nem anteriores ao dia do nascimento do animal.
 
 ### 2.9 Compromissos pendentes
 
@@ -536,8 +537,8 @@ Uma **sessão de manejo** reúne o trabalho feito num grupo de animais no curral
 | `id` | uuid | | uuid | PK | Identificador. |
 | `title` | text | | | | Título exibido nas listagens (ex.: "Pesagem mensal da recria"). Até 100 caracteres. |
 | `notes` | text | N | | | Observação. Até 500 caracteres. |
-| `scheduled_date` | timestamp | | | | Data prevista (planejamento, lembretes). |
-| `management_date` | timestamp | N | | | Data em que o manejo acontece de fato. Preenchida ao **iniciar o registro** (padrão: hoje). Não pode ser futura. Todos os registros da sessão recebem essa data. |
+| `scheduled_at` | timestamp | | | | Data e hora previstas (planejamento, lembretes). |
+| `performed_at` | timestamp | N | | | Data e hora em que o manejo acontece de fato. Preenchida ao **iniciar o registro** (padrão: agora). Não pode ser futura. Todos os registros da sessão recebem essa data e hora. |
 | `confirmed_at` | timestamp | N | | | Consolidação: os registros passam a valer (ver 2.6). A sessão não pode mais ser alterada. |
 | `cancelled_at` | timestamp | N | | | Cancelamento: nenhum registro da sessão passa a valer. |
 | `property_id` | uuid | | | FK → `property` | Propriedade. |
@@ -547,8 +548,8 @@ Uma **sessão de manejo** reúne o trabalho feito num grupo de animais no curral
 
 | Estado | Condição | O que é permitido |
 |---|---|---|
-| Planejada | sem `management_date`, `confirmed_at` e `cancelled_at` | Editar planejamento, incluir animais, iniciar, cancelar |
-| Em andamento | `management_date` preenchido, sem `confirmed_at`/`cancelled_at` | Registrar etapas, corrigir registros, incluir/remover animais, alterar a data, consolidar, cancelar |
+| Planejada | sem `performed_at`, `confirmed_at` e `cancelled_at` | Editar planejamento, incluir animais, iniciar, cancelar |
+| Em andamento | `performed_at` preenchido, sem `confirmed_at`/`cancelled_at` | Registrar etapas, corrigir registros, incluir/remover animais, alterar a data, consolidar, cancelar |
 | Consolidada | `confirmed_at` preenchido | Só leitura |
 | Cancelada | `cancelled_at` preenchido | Só leitura |
 
@@ -556,13 +557,13 @@ As etapas da sessão ficam em `management_step` (ver 7.2).
 
 **Consolidação** (em uma transação):
 1. Remove da sessão os participantes sem nenhum registro.
-2. Exige ao menos um animal manejado, todos ativos na propriedade e sem compromisso conflitante em outra operação aberta (ver 2.9), e `management_date` que não seja futura.
+2. Exige ao menos um animal manejado, todos ativos na propriedade e sem compromisso conflitante em outra operação aberta (ver 2.9), e `performed_at` que não seja futura.
 3. Marca `confirmed_at`.
 4. Efetiva as etapas na ordem pesagem → castração → brinco → RFID → sanitário → apartação: normaliza as datas dos registros, recalcula `current_weight`, marca `neutered`, atualiza `current_tag`/`current_rfid` e confirma as transferências de lote da apartação.
 
 Etapas puladas num animal simplesmente não têm efeito sobre ele.
 
-**Índices:** `(property_id, scheduled_date)`; parcial `management_session_open_idx` em `property_id` onde `confirmed_at` e `cancelled_at` são nulos (sessões abertas, ver 2.9).
+**Índices:** `(property_id, scheduled_at)`; parcial `management_session_open_idx` em `property_id` onde `confirmed_at` e `cancelled_at` são nulos (sessões abertas, ver 2.9).
 
 ### 7.2 `management_step` — Etapa da sessão
 
@@ -753,7 +754,7 @@ Um procedimento (vacina, vermífugo, tratamento, exame…) aplicado a um grupo d
 |---|---|---|---|---|---|
 | `id` | uuid | | uuid | PK | Identificador. |
 | `title` | text | N | | | Produto ou descrição (ex.: "Febre aftosa", "Ivermectina 1%"). Até 100 caracteres. |
-| `withdrawal_until` | date | N | | | Fim da carência: até essa data o animal não pode ser abatido ou ter o leite comercializado. |
+| `withdrawal_end_date` | date | N | | | Fim da carência: até essa data o animal não pode ser abatido ou ter o leite comercializado. |
 | `next_due_date` | date | N | | | Próxima dose/aplicação prevista (lembretes). |
 | `dose_type` | `health_management_dose_type` | | `NONE` | | Regra de dose. Com animais já registrados, não pode passar de `NONE` para uma regra com dose, nem o contrário. |
 | `dose_ml` | numeric(10,2) | N | | | Dose em ml: por animal (`FIXED`) ou a cada `dose_weight_kg` (`PER_WEIGHT`). Obrigatória e maior que 0 nesses casos; nula em `NONE`. |
@@ -810,7 +811,7 @@ Plano de mover animais de um ou mais lotes para um lote de destino. Estado deriv
 | Coluna | Tipo | Nulo | Padrão | Chave | Descrição e regras |
 |---|---|---|---|---|---|
 | `id` | uuid | | uuid | PK | Identificador. |
-| `transfer_date` | timestamp | | | | Data da transferência (dia). Não pode ser futura na confirmação, nem anterior à entrada dos animais no lote atual. |
+| `transferred_at` | timestamp | | | | Data e hora da transferência. Não pode ser futura na confirmação, nem anterior à entrada dos animais no lote atual. |
 | `notes` | text | N | | | Observação. Até 500 caracteres. |
 | `confirmed_at` | timestamp | N | | | Confirmação: os animais mudam de lote. |
 | `cancelled_at` | timestamp | N | | | Cancelamento: nenhum animal muda de lote. |
@@ -847,7 +848,7 @@ Envio de animais de uma propriedade para outra, em duas confirmações: a origem
 | Coluna | Tipo | Nulo | Padrão | Chave | Descrição e regras |
 |---|---|---|---|---|---|
 | `id` | uuid | | uuid | PK | Identificador. |
-| `transfer_date` | timestamp | | | | Data do envio. |
+| `transferred_at` | timestamp | | | | Data e hora do envio. |
 | `notes` | text | N | | | Observação. |
 | `gta_number` | text | N | | | Número da GTA (Guia de Trânsito Animal). |
 | `confirmed_at` | timestamp | N | | | Origem confirmou o envio. |
@@ -900,12 +901,12 @@ purchase_event 1──* purchase_category 1──* purchased_animal *──1 ani
 | Coluna | Tipo | Nulo | Padrão | Chave | Descrição e regras |
 |---|---|---|---|---|---|
 | `id` | uuid | | uuid | PK | Identificador. |
-| `purchase_date` | timestamp | | | | Data da compra (negociação). |
+| `purchase_date` | date | | | | Data da compra (negociação). |
 | `gta_number` | text | N | | | Número da GTA. |
 | `invoice_number` | text | N | | | Número da nota fiscal. |
 | `notes` | text | N | | | Observação. |
 | `closed_at` | timestamp | N | | | Negociação fechada: os valores da negociação ficam congelados (a compra e suas categorias não podem mais ser alteradas) e o custo de cada animal (`purchased_animal.cost`) é rateado. Exige os preços da forma escolhida em todas as categorias. Pode acontecer antes, durante ou depois das recepções. |
-| `paid_at` | timestamp | N | | | Pagamento concluído. Só em compra fechada. |
+| `payment_date` | date | N | | | Data do pagamento. Só em compra fechada. |
 | `cancelled_at` | timestamp | N | | | Compra cancelada. Só é possível sem animais recebidos e sem pagamento; as recepções ainda vazias são canceladas junto. |
 | `seller_id` | uuid | | | FK → `person` | Vendedor. |
 | `destination_property_id` | uuid | | | FK → `property` | Propriedade que recebe os animais. |
@@ -1053,7 +1054,7 @@ Tokens temporários (verificação de e-mail, redefinição de senha): `id` (PK)
 |---|---|
 | **Apartação** | Separar os animais em lotes diferentes ao final do manejo, conforme o resultado (peso, avaliação). No sistema, é a última etapa da sessão. |
 | **Arroba (@)** | Unidade de peso do gado: 15 kg de carcaça. Para peso vivo usa-se 30 kg por arroba (rendimento de ~50%). |
-| **Carência** | Período após um medicamento em que o animal não pode ser abatido ou ter o leite vendido (`withdrawal_until`). |
+| **Carência** | Período após um medicamento em que o animal não pode ser abatido ou ter o leite vendido (`withdrawal_end_date`). |
 | **CAR / CIB / CCIR** | Cadastros oficiais do imóvel rural: Ambiental Rural, Imobiliário Brasileiro e Certificado do INCRA. |
 | **Consolidação** | Efetivar uma sessão de manejo: os registros passam a valer. |
 | **Contramarca** | Segunda marca a ferro, aplicada quando o animal muda de dono. |

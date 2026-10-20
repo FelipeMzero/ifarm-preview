@@ -92,7 +92,7 @@ export const purchaseFormSchema = z.object({
 export type PurchaseFormData = z.infer<typeof purchaseFormSchema>;
 
 export const paymentFormSchema = z.object({
-  paidAt: z.string().min(1, "Este campo é obrigatório"),
+  paymentDate: z.string().min(1, "Este campo é obrigatório"),
   paymentReference: z
     .string()
     .max(

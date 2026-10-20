@@ -1,3 +1,5 @@
+import { fromDbDate } from "@ifarm/shared";
+
 // Indicadores do lote (GMD, peso médio ao longo do tempo, compras), sem banco.
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -90,7 +92,7 @@ export function groupPurchases(receptions: ReceptionInBatch[]) {
     .sort((a, b) => b.purchaseDate.getTime() - a.purchaseDate.getTime())
     .map((e) => ({
       id: e.id,
-      date: e.purchaseDate.toISOString(),
+      date: fromDbDate(e.purchaseDate),
       seller: e.seller,
       animalCount: e.animalCount,
       confirmed: e.confirmedAt != null,

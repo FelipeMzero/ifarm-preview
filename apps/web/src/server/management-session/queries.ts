@@ -44,11 +44,11 @@ function buildWhere(query: ManagementSessionQuery, propertyId: string) {
     where.confirmedAt = null;
     where.cancelledAt = null;
   } else if (query.status === "planned") {
-    where.managementDate = null;
+    where.performedAt = null;
     where.confirmedAt = null;
     where.cancelledAt = null;
   } else if (query.status === "in_progress") {
-    where.managementDate = { not: null };
+    where.performedAt = { not: null };
     where.confirmedAt = null;
     where.cancelledAt = null;
   } else if (query.status === "confirmed") {
@@ -95,7 +95,7 @@ export async function listManagementSessions(
           select: { id: true },
         },
       },
-      orderBy: [{ scheduledDate: "desc" }, { createdAt: "desc" }],
+      orderBy: [{ scheduledAt: "desc" }, { createdAt: "desc" }],
       skip: query.page * query.pageSize,
       take: query.pageSize,
     }),
@@ -107,10 +107,8 @@ export async function listManagementSessions(
       const health = new Map(s.healthManagements.map((h) => [h.id, h]));
       return {
         id: s.id,
-        scheduledDate: fromLocalDateTime(s.scheduledDate),
-        managementDate: s.managementDate
-          ? fromLocalDateTime(s.managementDate)
-          : null,
+        scheduledAt: fromLocalDateTime(s.scheduledAt),
+        performedAt: s.performedAt ? fromLocalDateTime(s.performedAt) : null,
         title: s.title,
         notes: s.notes,
         steps: toSessionSteps(s.steps).map((step) => {
@@ -172,9 +170,9 @@ export async function getManagementSession(
   return {
     id: session.id,
     status: session.status,
-    scheduledDate: fromLocalDateTime(session.scheduledDate),
-    managementDate: session.managementDate
-      ? fromLocalDateTime(session.managementDate)
+    scheduledAt: fromLocalDateTime(session.scheduledAt),
+    performedAt: session.performedAt
+      ? fromLocalDateTime(session.performedAt)
       : null,
     title: row.title,
     notes: row.notes ?? "",

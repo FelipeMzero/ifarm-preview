@@ -96,7 +96,7 @@ export async function listBatchTransfers(
           },
         },
       },
-      orderBy: [{ transferDate: "desc" }, { createdAt: "desc" }],
+      orderBy: [{ transferredAt: "desc" }, { createdAt: "desc" }],
       skip: query.page * query.pageSize,
       take: query.pageSize,
     }),
@@ -106,7 +106,7 @@ export async function listBatchTransfers(
   return {
     data: transfers.map((t) => ({
       id: t.id,
-      transferDate: fromLocalDateTime(t.transferDate),
+      transferredAt: fromLocalDateTime(t.transferredAt),
       notes: t.notes,
       originBatches: originBatchNames(t),
       destinationBatch: t.destinationBatch,
@@ -156,7 +156,7 @@ export async function getBatchTransfer(
 
   return {
     id: transfer.id,
-    transferDate: fromLocalDateTime(transfer.transferDate),
+    transferredAt: fromLocalDateTime(transfer.transferredAt),
     notes: transfer.notes ?? "",
     destinationBatch: transfer.destinationBatch,
     propertyId: transfer.propertyId,

@@ -1,5 +1,4 @@
 import "server-only";
-import { toLocalDay, today } from "@ifarm/shared";
 import {
   normalizeStepOrder,
   REPEATABLE_STEP_TYPES,
@@ -41,8 +40,8 @@ export async function loadSession(
   return {
     id: session.id,
     propertyId: session.propertyId,
-    scheduledDate: session.scheduledDate,
-    managementDate: session.managementDate,
+    scheduledAt: session.scheduledAt,
+    performedAt: session.performedAt,
     status: sessionStatus(session),
     steps: toSessionSteps(session.steps),
   };
@@ -61,17 +60,13 @@ export async function requireSessionIn(
 }
 
 export function requireManagementDate(session: LoadedSession) {
-  if (!session.managementDate) {
+  if (!session.performedAt) {
     throw new StepError(
       "Informe a data do manejo para iniciar o registro.",
       409,
     );
   }
-  return { ...session, managementDate: session.managementDate };
-}
-
-export function startOfToday() {
-  return toLocalDay(today());
+  return { ...session, performedAt: session.performedAt };
 }
 
 // Animais que não podem participar: fora da propriedade ou inativos.

@@ -187,7 +187,7 @@ export const batchStep = defineStep({
           destinationBatchId: batch.id,
           propertyId: session.propertyId,
           managementSessionId: session.id,
-          transferDate: session.managementDate,
+          transferredAt: session.performedAt,
           notes: "Apartação em sessão de manejo",
         },
         select: { id: true },
@@ -214,7 +214,7 @@ export const batchStep = defineStep({
     for (const t of transfers) {
       await tx.animalBatchTransfer.update({
         where: { id: t.id },
-        data: { transferDate: session.managementDate },
+        data: { transferredAt: session.performedAt },
       });
       await confirmTransferInTx(tx, t.id);
     }

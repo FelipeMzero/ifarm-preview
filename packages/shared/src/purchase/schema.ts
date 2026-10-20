@@ -108,7 +108,7 @@ export const purchaseSchema = z.object({
 
 // Pagamento: data informada (padrão: hoje) e referência opcional.
 export const purchasePaymentSchema = z.object({
-  paidAt: z.iso.date("Informe uma data válida.").optional(),
+  paymentDate: z.iso.date("Informe uma data válida.").optional(),
   paymentReference: optionalText(FIELD_LIMITS.purchase.paymentReference),
 });
 

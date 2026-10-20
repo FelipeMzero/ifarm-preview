@@ -45,18 +45,16 @@ function buildColumns(handlers: {
   return [
     {
       header: "Data",
-      accessorKey: "scheduledDate",
+      accessorKey: "scheduledAt",
       cell: ({ row }) => {
-        const { scheduledDate, managementDate } = row.original;
+        const { scheduledAt, performedAt } = row.original;
         return (
           <div className="flex flex-col leading-tight">
-            <span>
-              {formatSessionDateTime(managementDate ?? scheduledDate)}
-            </span>
-            {managementDate &&
-              managementDate.slice(0, 10) !== scheduledDate.slice(0, 10) && (
+            <span>{formatSessionDateTime(performedAt ?? scheduledAt)}</span>
+            {performedAt &&
+              performedAt.slice(0, 10) !== scheduledAt.slice(0, 10) && (
                 <span className="text-xs text-muted-foreground">
-                  prevista {formatSessionDateTime(scheduledDate)}
+                  prevista {formatSessionDateTime(scheduledAt)}
                 </span>
               )}
           </div>

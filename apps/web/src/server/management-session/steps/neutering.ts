@@ -149,7 +149,7 @@ export const neuteringStep = defineStep({
           animalId: animal.id,
           techniqueId: payload.techniqueId,
           notes: payload.notes,
-          neuteredAt: session.managementDate,
+          neuteredAt: session.performedAt,
         },
       });
     }

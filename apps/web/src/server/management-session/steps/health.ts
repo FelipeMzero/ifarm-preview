@@ -48,7 +48,7 @@ export const healthStep = defineStep({
       doseType: z.enum(HealthManagementDoseType).default("NONE"),
       doseMl: positiveNumber,
       doseWeightKg: positiveNumber,
-      withdrawalUntil: optionalDate,
+      withdrawalEndDate: optionalDate,
       nextDueDate: optionalDate,
     })
     .refine((v) => v.doseType === "NONE" || v.doseMl != null, {
@@ -83,7 +83,7 @@ export const healthStep = defineStep({
       doseMl: plan.doseType === "NONE" ? null : (plan.doseMl ?? null),
       doseWeightKg:
         plan.doseType === "PER_WEIGHT" ? (plan.doseWeightKg ?? null) : null,
-      withdrawalUntil: plan.withdrawalUntil,
+      withdrawalEndDate: plan.withdrawalEndDate,
       nextDueDate: plan.nextDueDate,
     };
 
@@ -122,7 +122,7 @@ export const healthStep = defineStep({
         ...data,
         managementSessionId: session.id,
         // Provisória: a data definitiva é a do manejo, gravada na consolidação.
-        performedAt: session.managementDate ?? session.scheduledDate,
+        performedAt: session.performedAt ?? session.scheduledAt,
       },
     });
     return { type: "health" as const, healthManagementId: created.id };
@@ -164,7 +164,7 @@ export const healthStep = defineStep({
         doseType: hm.doseType,
         doseMl: hm.doseMl?.toNumber() ?? null,
         doseWeightKg: hm.doseWeightKg?.toNumber() ?? null,
-        withdrawalUntil: toDateOnly(hm.withdrawalUntil),
+        withdrawalEndDate: toDateOnly(hm.withdrawalEndDate),
         nextDueDate: toDateOnly(hm.nextDueDate),
       },
     };

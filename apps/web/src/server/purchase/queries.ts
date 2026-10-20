@@ -5,6 +5,7 @@ import {
   sessionStatus,
   type PurchaseDetail,
   type PurchaseListResult,
+  fromDbDate,
 } from "@ifarm/shared";
 import { prisma, type Prisma } from "@/server/db";
 import { getOrAssignCurrentProperty } from "../current-property/queries";
@@ -99,7 +100,7 @@ export async function listPurchases(
       return {
         id: e.id,
         title: e.title,
-        purchaseDate: fromLocalDay(e.purchaseDate),
+        purchaseDate: fromDbDate(e.purchaseDate),
         seller: e.seller,
         categories: e.categories.map(
           (c) => `${c.expectedQuantity} ${categoryLabel(c)}`,
@@ -115,7 +116,7 @@ export async function listPurchases(
           ? values.reduce((s, v) => s + v!, 0)
           : null,
         status: purchaseStatus(e),
-        paid: e.paidAt != null,
+        paid: e.paymentDate != null,
       };
     }),
     total,
@@ -193,11 +194,11 @@ export async function getPurchase(id: string): Promise<PurchaseDetail> {
     id: event.id,
     title: event.title,
     status: purchaseStatus(event),
-    purchaseDate: fromLocalDay(event.purchaseDate),
+    purchaseDate: fromDbDate(event.purchaseDate),
     notes: event.notes ?? "",
     seller: event.seller,
     destinationProperty: event.destinationProperty,
-    paidAt: day(event.paidAt),
+    paymentDate: event.paymentDate ? fromDbDate(event.paymentDate) : null,
     paymentReference: event.paymentReference,
     confirmedAt: event.confirmedAt?.toISOString() ?? null,
     cancelledAt: event.cancelledAt?.toISOString() ?? null,
@@ -208,8 +209,8 @@ export async function getPurchase(id: string): Promise<PurchaseDetail> {
       sessionId: r.managementSessionId,
       title: r.managementSession.title,
       status: sessionStatus(r.managementSession),
-      scheduledDate: fromLocalDay(r.managementSession.scheduledDate),
-      managementDate: day(r.managementSession.managementDate),
+      scheduledAt: fromLocalDay(r.managementSession.scheduledAt),
+      performedAt: day(r.managementSession.performedAt),
       entryBatch: r.entryBatch,
       gtaNumber: r.gtaNumber,
       invoiceNumber: r.invoiceNumber,

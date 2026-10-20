@@ -51,8 +51,8 @@ export async function loadAnimalContext(db: Tx, id: string, animalId: string) {
     session: {
       id: session.id,
       status: session.status,
-      managementDate: session.managementDate
-        ? fromLocalDateTime(session.managementDate)
+      performedAt: session.performedAt
+        ? fromLocalDateTime(session.performedAt)
         : null,
     },
     steps,

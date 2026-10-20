@@ -88,13 +88,13 @@ function PaymentForm({
     formState: { isSubmitting },
   } = useForm<PaymentFormData>({
     resolver: zodResolver(paymentFormSchema),
-    defaultValues: { paidAt: todayIso(), paymentReference: "" },
+    defaultValues: { paymentDate: todayIso(), paymentReference: "" },
   });
 
   async function onSubmit(data: PaymentFormData) {
     try {
       await purchaseClient.payPurchase(purchaseId, {
-        paidAt: data.paidAt,
+        paymentDate: data.paymentDate,
         paymentReference: data.paymentReference || undefined,
       });
       toast.success("Pagamento registrado.");
@@ -107,7 +107,7 @@ function PaymentForm({
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <FormField
-        name="paidAt"
+        name="paymentDate"
         control={control}
         label="Data do pagamento"
         required

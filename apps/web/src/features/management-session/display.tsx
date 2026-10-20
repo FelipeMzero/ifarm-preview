@@ -75,5 +75,5 @@ export const STEP_ICONS: Record<StepType, LucideIcon> = {
   batch: Boxes,
 };
 
-// Datas da sessão (prevista e de realização): data e hora (ver formatEventDateTime).
+// Datas da sessão (prevista e de realização): data e hora.
 export const formatSessionDateTime = formatEventDateTime;

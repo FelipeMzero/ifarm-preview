@@ -20,7 +20,7 @@ export const planStepFormSchema = z
     doseType: z.string().optional(),
     doseMl: z.string().optional(),
     doseWeightKg: z.string().optional(),
-    withdrawalUntil: z.string().optional(),
+    withdrawalEndDate: z.string().optional(),
     nextDueDate: z.string().optional(),
     suggestedBatchIds: z.array(z.string()).optional(),
     suggestedTechniqueId: z.string().optional(),
@@ -69,7 +69,7 @@ export function toStepPayload(step: PlanStepForm) {
       doseType: step.doseType || "NONE",
       doseMl: step.doseMl ? Number(step.doseMl) : null,
       doseWeightKg: step.doseWeightKg ? Number(step.doseWeightKg) : null,
-      withdrawalUntil: step.withdrawalUntil || null,
+      withdrawalEndDate: step.withdrawalEndDate || null,
       nextDueDate: step.nextDueDate || null,
     };
   }
@@ -94,7 +94,7 @@ export const planFormSchema = z.object({
       FIELD_LIMITS.managementSession.title,
       `Máximo de ${FIELD_LIMITS.managementSession.title} caracteres`,
     ),
-  scheduledDate: z.string().min(1, "Este campo é obrigatório"),
+  scheduledAt: z.string().min(1, "Este campo é obrigatório"),
   notes: z
     .string()
     .max(

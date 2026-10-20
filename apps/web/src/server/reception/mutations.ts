@@ -47,17 +47,12 @@ export async function createReception(
       data: {
         propertyId,
         title: `Recepção ${trip} — ${event.title}`,
-        scheduledDate: new Date(),
-        managementDate: now,
+        scheduledAt: new Date(),
+        performedAt: now,
       },
     });
 
-    await applyPlanSteps(
-      tx,
-      { ...session, managementDate: now },
-      [],
-      data.steps,
-    );
+    await applyPlanSteps(tx, { ...session, performedAt: now }, [], data.steps);
 
     const reception = await tx.purchaseReception.create({
       data: {

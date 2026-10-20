@@ -1,6 +1,6 @@
 import "server-only";
 import {
-  toLocalDay,
+  toDbDate,
   today,
   type PurchaseData,
   type PurchasePaymentData,
@@ -27,7 +27,7 @@ export async function createPurchase(data: PurchaseData, userId: string) {
   const event = await prisma.purchaseEvent.create({
     data: {
       title: data.title,
-      purchaseDate: toLocalDay(data.purchaseDate),
+      purchaseDate: toDbDate(data.purchaseDate),
       notes: data.notes,
       sellerId: data.sellerId,
       destinationPropertyId: propertyId,
@@ -73,7 +73,7 @@ export async function updatePurchase(id: string, data: PurchaseData) {
       (c) => c.id == null || !existingIds.has(c.id),
     );
 
-    if (event.paidAt) {
+    if (event.paymentDate) {
       const changedValue = data.categories.some((c) => {
         const saved = event.categories.find((s) => s.id === c.id);
         return saved && !sameValue(saved, c);
@@ -132,7 +132,7 @@ export async function updatePurchase(id: string, data: PurchaseData) {
       where: { id },
       data: {
         title: data.title,
-        purchaseDate: toLocalDay(data.purchaseDate),
+        purchaseDate: toDbDate(data.purchaseDate),
         notes: data.notes,
         sellerId: data.sellerId,
       },
@@ -143,12 +143,12 @@ export async function updatePurchase(id: string, data: PurchaseData) {
 // Registra o pagamento de uma compra em andamento (data informada ou hoje). Exige o
 // valor de todas as categorias conhecido; a partir daí os valores ficam bloqueados.
 export async function payPurchase(id: string, data: PurchasePaymentData) {
-  const paidDay = data.paidAt ?? today();
+  const paidDay = data.paymentDate ?? today();
   if (paidDay > today()) {
     throw new PurchaseError(
       "A data do pagamento não pode ser futura.",
       400,
-      "paidAt",
+      "paymentDate",
     );
   }
 
@@ -158,7 +158,7 @@ export async function payPurchase(id: string, data: PurchasePaymentData) {
       include: { categories: { include: { breed: true } } },
     });
     if (!event) throw new PurchaseError("Compra não encontrada.", 404);
-    if (event.confirmedAt || event.cancelledAt || event.paidAt) {
+    if (event.confirmedAt || event.cancelledAt || event.paymentDate) {
       throw new PurchaseError(
         "Só é possível registrar o pagamento de uma compra em andamento e ainda não paga.",
         409,
@@ -180,7 +180,7 @@ export async function payPurchase(id: string, data: PurchasePaymentData) {
     await tx.purchaseEvent.update({
       where: { id },
       data: {
-        paidAt: toLocalDay(paidDay),
+        paymentDate: toDbDate(paidDay),
         paymentReference: data.paymentReference,
       },
     });
@@ -193,11 +193,11 @@ export async function undoPurchasePayment(id: string) {
   const undone = await prisma.purchaseEvent.updateMany({
     where: {
       id,
-      paidAt: { not: null },
+      paymentDate: { not: null },
       confirmedAt: null,
       cancelledAt: null,
     },
-    data: { paidAt: null, paymentReference: null },
+    data: { paymentDate: null, paymentReference: null },
   });
   if (undone.count !== 1) {
     throw new PurchaseError(
@@ -226,7 +226,7 @@ export async function consolidatePurchase(id: string) {
         409,
       );
     }
-    if (!event.paidAt) {
+    if (!event.paymentDate) {
       throw new PurchaseError(
         "Registre o pagamento antes de consolidar a compra.",
         409,
@@ -285,7 +285,7 @@ export async function cancelPurchase(id: string) {
         409,
       );
     }
-    if (event.paidAt) {
+    if (event.paymentDate) {
       throw new PurchaseError("Uma compra paga não pode ser cancelada.", 409);
     }
     if (event._count.purchasedAnimals) {

@@ -285,7 +285,7 @@ export async function getAnimalDetails(id: string): Promise<AnimalFullDetails> {
           reception: {
             select: {
               gtaNumber: true,
-              managementSession: { select: { managementDate: true } },
+              managementSession: { select: { performedAt: true } },
             },
           },
         },
@@ -332,7 +332,7 @@ export async function getAnimalDetails(id: string): Promise<AnimalFullDetails> {
       typeName: h.management.type.name,
       title: h.management.title,
       veterinarianName: h.management.veterinarian?.name ?? null,
-      withdrawalUntil: toDateOnly(h.management.withdrawalUntil),
+      withdrawalEndDate: toDateOnly(h.management.withdrawalEndDate),
       nextDueDate: toDateOnly(h.management.nextDueDate),
       doseMl: h.doseMl?.toNumber() ?? null,
       notes: h.notes,
@@ -373,13 +373,13 @@ export async function getAnimalDetails(id: string): Promise<AnimalFullDetails> {
         const unitPrice = category.unitPrice?.toNumber() ?? null;
         // Peso de entrada = pesagem feita no dia da recepção, se houver.
         const receptionDay = toDateOnly(
-          purchased.reception.managementSession.managementDate,
+          purchased.reception.managementSession.performedAt,
         );
         const entryWeighing = weighings.find(
           (w) => w.date.slice(0, 10) === receptionDay,
         );
         return {
-          date: event.purchaseDate.toISOString(),
+          date: fromDbDate(event.purchaseDate),
           sellerId: event.seller.id,
           sellerName: event.seller.name,
           pricingType: category.pricingType,

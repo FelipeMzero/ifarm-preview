@@ -5,10 +5,11 @@ import {
   toLocalDay,
 } from "@ifarm/shared";
 
-// Data e hora de um manejo (instante ISO), no fuso local; registros antigos, gravados à
-// meia-noite, aparecem só com a data.
+// Data e hora de um evento (instante ISO), no fuso local. Aceita também um dia ("AAAA-MM-DD"),
+// porque as linhas do tempo misturam eventos com hora e datas que são só o dia (compra).
 export function formatInstant(iso: string | null | undefined): string {
   if (!iso) return "—";
+  if (iso.length === 10) return formatDay(iso);
   return formatEventDateTime(fromLocalDateTime(new Date(iso)));
 }
 
@@ -16,8 +17,10 @@ export function formatInstant(iso: string | null | undefined): string {
 export const toInputDateTime = (iso: string) =>
   fromLocalDateTime(new Date(iso));
 
+// Instante ISO ou dia ("AAAA-MM-DD", ex.: data da compra) → "DD/MM/AAAA".
 export function formatDate(iso: string | null | undefined): string {
   if (!iso) return "—";
+  if (iso.length === 10) return formatDay(iso);
   return new Date(iso).toLocaleDateString("pt-BR");
 }
 

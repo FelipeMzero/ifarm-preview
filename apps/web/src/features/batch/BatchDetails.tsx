@@ -728,14 +728,14 @@ function PendingTransfersCard({
   const rows = [
     ...batch.pendingTransfers.incoming.map((t) => ({
       id: t.id,
-      date: t.transferDate,
+      date: t.transferredAt,
       icon: <ArrowDownLeft className="size-3.5" />,
       text: `Entrada de ${t.animalCount} animal(is)`,
       notes: t.notes,
     })),
     ...batch.pendingTransfers.outgoing.map((t) => ({
       id: t.id,
-      date: t.transferDate,
+      date: t.transferredAt,
       icon: <ArrowUpRight className="size-3.5" />,
       text: `Saída de ${t.animalCount} animal(is) para ${t.destinationBatch.name}`,
       notes: t.notes,

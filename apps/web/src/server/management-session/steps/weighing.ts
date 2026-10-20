@@ -90,7 +90,7 @@ export const weighingStep = defineStep({
           animalId: animal.id,
           weight: payload.weightKg,
           notes: payload.notes,
-          weighedAt: session.managementDate,
+          weighedAt: session.performedAt,
         },
       });
     }

@@ -68,7 +68,7 @@ type ManagementSessionFormProps = {
 function toFormValues(detail: ManagementSessionDetail): PlanFormData {
   return {
     title: detail.title,
-    scheduledDate: detail.scheduledDate,
+    scheduledAt: detail.scheduledAt,
     notes: detail.notes ?? "",
     steps: detail.steps.map((step) => ({
       type: step.type,
@@ -113,7 +113,7 @@ export function ManagementSessionForm({
     resolver: zodResolver(planFormSchema),
     defaultValues: {
       title: "",
-      scheduledDate: nowDateTime(),
+      scheduledAt: nowDateTime(),
       notes: "",
       steps: [],
     },
@@ -203,7 +203,7 @@ export function ManagementSessionForm({
   async function onSubmit(data: PlanFormData) {
     const payload = {
       title: data.title,
-      scheduledDate: data.scheduledDate,
+      scheduledAt: data.scheduledAt,
       notes: data.notes,
       steps: data.steps.map(toStepPayload),
       animalIds: selected.map((a) => a.id),
@@ -297,8 +297,8 @@ export function ManagementSessionForm({
         <Info className="mt-0.5 size-4 shrink-0" />
         {detail?.status === "confirmed"
           ? `Manejo consolidado em ${new Date(detail.confirmedAt!).toLocaleString("pt-BR")}${
-              detail.managementDate
-                ? ` (realizado em ${formatSessionDateTime(detail.managementDate)})`
+              detail.performedAt
+                ? ` (realizado em ${formatSessionDateTime(detail.performedAt)})`
                 : ""
             }. Não pode mais ser alterado.`
           : detail?.status === "cancelled"
@@ -373,7 +373,7 @@ export function ManagementSessionForm({
                 )}
               />
               <FormField
-                name="scheduledDate"
+                name="scheduledAt"
                 control={control}
                 label="Data prevista"
                 required

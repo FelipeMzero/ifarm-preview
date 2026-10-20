@@ -243,7 +243,7 @@ async function seedNeuteringTechniques() {
 // são marcados com a marca do dono da fazenda em que estão.
 const BRANDS: Record<
   PropKey,
-  Omit<Prisma.BrandUncheckedCreateInput, "ownerId" | "registeredAt"> & {
+  Omit<Prisma.BrandUncheckedCreateInput, "ownerId" | "registrationDate"> & {
     registeredDaysAgo: number;
   }
 > = {
@@ -273,7 +273,7 @@ async function seedBrands(people: Record<PersonKey, string>) {
     const brand = await prisma.brand.create({
       data: {
         ...data,
-        registeredAt: dateAgo(registeredDaysAgo),
+        registrationDate: dateAgo(registeredDaysAgo),
         ownerId: people[PROPERTIES[key].ownerKey],
       },
     });
@@ -1351,8 +1351,8 @@ async function seedLossesAndSlaughters(ctx: Ctx, animals: SeededAnimal[]) {
         data: {
           title: "Abate para consumo",
           description: exit.notes,
-          scheduledDate: ago(exit.daysAgo + 2),
-          slaughterDate: date,
+          scheduledAt: ago(exit.daysAgo + 2),
+          slaughteredAt: date,
           confirmedAt: date,
           propertyId,
           items: { create: items },
@@ -1365,7 +1365,7 @@ async function seedLossesAndSlaughters(ctx: Ctx, animals: SeededAnimal[]) {
         data: {
           title: type === "DEAD" ? "Óbito" : "Desaparecimento",
           description: exit.notes,
-          lossDate: date,
+          occurredAt: date,
           confirmedAt: date,
           propertyId,
           items: { create: items.map((item) => ({ ...item, type })) },
@@ -1396,8 +1396,8 @@ async function seedSessions(ctx: Ctx, animals: SeededAnimal[]) {
       const session = await prisma.managementSession.create({
         data: {
           propertyId: ctx.properties[prop],
-          scheduledDate: ago(daysAgo),
-          managementDate: ago(daysAgo),
+          scheduledAt: ago(daysAgo),
+          performedAt: ago(daysAgo),
           confirmedAt: ago(daysAgo),
           title: `Pesagem mensal de ${sessionDate.toLocaleDateString("pt-BR", { month: "long" })}`,
           notes: "Pesagem mensal do rebanho",
@@ -1483,7 +1483,7 @@ async function seedSessions(ctx: Ctx, animals: SeededAnimal[]) {
             doseType: "PER_WEIGHT",
             doseMl: 1,
             doseWeightKg: 50,
-            withdrawalUntil: dateAgo(daysAgo - 35),
+            withdrawalEndDate: dateAgo(daysAgo - 35),
             items: {
               create: weighed.map((a) => ({
                 animalId: a.id,
@@ -1505,7 +1505,7 @@ async function seedSessions(ctx: Ctx, animals: SeededAnimal[]) {
             doseType: "PER_WEIGHT",
             doseMl: 1,
             doseWeightKg: 10,
-            withdrawalUntil: dateAgo(daysAgo - 30),
+            withdrawalEndDate: dateAgo(daysAgo - 30),
             nextDueDate: dateAgo(daysAgo - 60),
             items: {
               create: weighed.map((a) => ({
@@ -1536,7 +1536,7 @@ async function seedSessions(ctx: Ctx, animals: SeededAnimal[]) {
   const planned = await prisma.managementSession.create({
     data: {
       propertyId: ctx.properties.SR,
-      scheduledDate: ago(-18),
+      scheduledAt: ago(-18),
       title: "Pesagem e vermifugação da recria",
       notes: "Próxima pesagem mensal",
       participants: { create: recria.map((a) => ({ animalId: a.id })) },
@@ -1552,7 +1552,7 @@ async function seedSessions(ctx: Ctx, animals: SeededAnimal[]) {
       doseType: "PER_WEIGHT",
       doseMl: 1,
       doseWeightKg: 50,
-      withdrawalUntil: dateAgo(-18 - 35),
+      withdrawalEndDate: dateAgo(-18 - 35),
     },
   });
   await prisma.managementStep.createMany({
@@ -1638,7 +1638,7 @@ async function seedSpecialCases(ctx: Ctx, animals: SeededAnimal[]) {
       title: "Pneumonia — antibiótico",
       veterinarianId: ctx.people.vet,
       performedAt: ago(9),
-      withdrawalUntil: dateAgo(-19),
+      withdrawalEndDate: dateAgo(-19),
       doseType: "PER_WEIGHT",
       doseMl: 1,
       doseWeightKg: 10,
@@ -1724,7 +1724,7 @@ async function seedPurchases(ctx: Ctx, animals: SeededAnimal[]) {
       data: {
         title: p.title,
         purchaseDate: ago(p.daysAgo),
-        paidAt: ago(p.daysAgo),
+        paymentDate: ago(p.daysAgo),
         notes: p.notes,
         sellerId: ctx.people[p.seller],
         destinationPropertyId: ctx.properties[p.prop],
@@ -1797,8 +1797,8 @@ async function seedPurchases(ctx: Ctx, animals: SeededAnimal[]) {
         data: {
           propertyId: ctx.properties[p.prop],
           title: `Recepção ${tripIndex + 1} — ${p.title}`,
-          scheduledDate: ago(entryDaysAgo),
-          managementDate: ago(entryDaysAgo),
+          scheduledAt: ago(entryDaysAgo),
+          performedAt: ago(entryDaysAgo),
           confirmedAt: ago(entryDaysAgo),
           participants: { create: arrived.map((a) => ({ animalId: a.id })) },
         },
@@ -1909,7 +1909,7 @@ async function seedTransfers(
   for (const m of moves.values()) {
     await prisma.animalBatchTransfer.create({
       data: {
-        transferDate: dateAgo(m.daysAgo),
+        transferredAt: ago(m.daysAgo),
         confirmedAt: ago(m.daysAgo),
         notes: m.to.endsWith("Recria")
           ? "Desmama"
@@ -1934,7 +1934,7 @@ async function seedTransfers(
     const daysAgo = moved[0].spec.batches.at(-1)![1];
     await prisma.animalPropertyTransfer.create({
       data: {
-        transferDate: ago(daysAgo),
+        transferredAt: ago(daysAgo),
         confirmedAt: ago(daysAgo + 1),
         receivedAt: ago(daysAgo),
         gtaNumber: "MT-5566778",
@@ -1958,7 +1958,7 @@ async function seedTransfers(
       .slice(0, n);
   await prisma.animalBatchTransfer.create({
     data: {
-      transferDate: dateAgo(-5),
+      transferredAt: eventAt(-5),
       notes: "Apartar os mais pesados da recria para a engorda",
       destinationBatchId: ctx.batches["SR:Engorda"],
       propertyId: ctx.properties.SR,
@@ -1969,7 +1969,7 @@ async function seedTransfers(
   });
   await prisma.animalBatchTransfer.create({
     data: {
-      transferDate: dateAgo(0),
+      transferredAt: eventAt(0),
       notes: "Separar animais em tratamento",
       destinationBatchId: ctx.batches["SR:Quarentena"],
       propertyId: ctx.properties.SR,
@@ -1992,7 +1992,7 @@ async function seedTransfers(
   );
   await prisma.animalBatchTransfer.create({
     data: {
-      transferDate: dateAgo(30),
+      transferredAt: eventAt(30),
       cancelledAt: ago(28),
       notes: "Reforço de vacas para a estação de monta (desistimos)",
       destinationBatchId: ctx.batches["SR:Reprodução"],
@@ -2005,7 +2005,7 @@ async function seedTransfers(
   );
   await prisma.animalBatchTransfer.create({
     data: {
-      transferDate: dateAgo(-10),
+      transferredAt: eventAt(-10),
       notes: "Completar a terminação",
       destinationBatchId: ctx.batches["BV:Terminação"],
       propertyId: ctx.properties.BV,
@@ -2046,6 +2046,13 @@ const WORKFLOW_TX = { timeout: 120_000 };
 const atHour = (n: number, hour: number) =>
   new Date(TODAY.getTime() - n * DAY_MS + hour * 60 * 60 * 1000);
 
+// Data e hora informadas de um evento (sessão, transferência) `n` dias atrás, às 8h; negativo
+// = futuro. Hoje, nunca depois de agora, para o evento não ficar no futuro.
+function eventAt(n: number) {
+  const at = atHour(n, 8);
+  return n === 0 && at > new Date() ? new Date() : at;
+}
+
 // Cria a sessão já iniciada na data informada, com as etapas do plano.
 async function createStartedSession(
   tx: Tx,
@@ -2063,8 +2070,8 @@ async function createStartedSession(
       propertyId: data.propertyId,
       title: data.title,
       notes: data.notes,
-      scheduledDate: dateAgo(data.daysAgo),
-      managementDate: dateAgo(data.daysAgo),
+      scheduledAt: eventAt(data.daysAgo),
+      performedAt: eventAt(data.daysAgo),
       participants: data.animalIds
         ? { create: data.animalIds.map((animalId) => ({ animalId })) }
         : undefined,
@@ -2244,7 +2251,7 @@ async function seedOpenSessions(ctx: Ctx) {
     });
     await tx.managementSession.update({
       where: { id: session.id },
-      data: { managementDate: null, cancelledAt: atHour(6, 7) },
+      data: { performedAt: null, cancelledAt: atHour(6, 7) },
     });
   }, WORKFLOW_TX);
 }
@@ -2272,7 +2279,7 @@ async function createOpenPurchase(
       notes: data.notes,
       sellerId: ctx.people[data.seller],
       destinationPropertyId: ctx.properties.SR,
-      paidAt: data.paidDaysAgo != null ? dateAgo(data.paidDaysAgo) : null,
+      paymentDate: data.paidDaysAgo != null ? dateAgo(data.paidDaysAgo) : null,
       paymentReference: data.paymentReference,
       cancelledAt:
         data.cancelledDaysAgo != null ? atHour(data.cancelledDaysAgo, 9) : null,
@@ -2330,7 +2337,7 @@ async function receive(
     {
       id: session.id,
       propertyId: session.propertyId,
-      managementDate: session.managementDate!,
+      performedAt: session.performedAt!,
     },
     reception!,
     { categoryId, ageMonths, name: null },

@@ -103,7 +103,7 @@ export async function createBatchTransfer(
     await assertNoConflicts(tx, animalIds, { kind: "transfer" });
     return tx.animalBatchTransfer.create({
       data: {
-        transferDate: toLocalDateTime(data.transferDate),
+        transferredAt: toLocalDateTime(data.transferredAt),
         notes: data.notes,
         destinationBatchId: data.destinationBatchId,
         propertyId,
@@ -157,7 +157,7 @@ export async function updateBatchTransfer(id: string, data: BatchTransferData) {
     const updated = await tx.animalBatchTransfer.updateMany({
       where: { id, confirmedAt: null, cancelledAt: null },
       data: {
-        transferDate: toLocalDateTime(data.transferDate),
+        transferredAt: toLocalDateTime(data.transferredAt),
         notes: data.notes,
         destinationBatchId: data.destinationBatchId,
       },

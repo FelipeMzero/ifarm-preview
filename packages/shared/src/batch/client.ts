@@ -105,13 +105,13 @@ export type BatchFullDetails = {
   pendingTransfers: {
     incoming: {
       id: string;
-      transferDate: string;
+      transferredAt: string;
       animalCount: number;
       notes: string | null;
     }[];
     outgoing: {
       id: string;
-      transferDate: string;
+      transferredAt: string;
       destinationBatch: { id: string; name: string };
       animalCount: number;
       notes: string | null;

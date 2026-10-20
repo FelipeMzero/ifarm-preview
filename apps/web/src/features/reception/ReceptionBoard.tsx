@@ -258,11 +258,11 @@ export function ReceptionBoard({ id }: { id: string }) {
       </div>
 
       <div className="flex flex-wrap items-center gap-x-6 gap-y-1 text-sm text-muted-foreground">
-        {detail.managementDate && (
+        {detail.performedAt && (
           <span className="flex items-center gap-1">
             Data da recepção:{" "}
             <span className="font-medium text-foreground">
-              {formatSessionDateTime(detail.managementDate)}
+              {formatSessionDateTime(detail.performedAt)}
             </span>
             {inProgress && (
               <Button
@@ -357,7 +357,7 @@ export function ReceptionBoard({ id }: { id: string }) {
 
       <SessionDateDialog
         open={dateDialog}
-        initial={detail.managementDate ?? nowDateTime()}
+        initial={detail.performedAt ?? nowDateTime()}
         title="Data da recepção"
         description="Data em que os animais chegaram. Todos os registros da recepção recebem esta data."
         confirmLabel="Salvar"

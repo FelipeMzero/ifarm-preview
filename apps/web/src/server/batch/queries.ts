@@ -226,7 +226,7 @@ export async function getBatchDetails(id: string): Promise<BatchFullDetails> {
     }),
     prisma.animalBatchTransfer.findMany({
       where: { ...pendingWhere, destinationBatchId: id },
-      orderBy: { transferDate: "asc" },
+      orderBy: { transferredAt: "asc" },
       include: { _count: { select: { items: true } } },
     }),
     // Planos para outros lotes que incluem animais que hoje estão neste lote.
@@ -236,7 +236,7 @@ export async function getBatchDetails(id: string): Promise<BatchFullDetails> {
         destinationBatchId: { not: id },
         items: { some: { animal: { currentBatchId: id } } },
       },
-      orderBy: { transferDate: "asc" },
+      orderBy: { transferredAt: "asc" },
       include: {
         destinationBatch: { select: { id: true, name: true } },
         items: {
@@ -360,13 +360,13 @@ export async function getBatchDetails(id: string): Promise<BatchFullDetails> {
     pendingTransfers: {
       incoming: incomingPending.map((t) => ({
         id: t.id,
-        transferDate: fromLocalDateTime(t.transferDate),
+        transferredAt: fromLocalDateTime(t.transferredAt),
         animalCount: t._count.items,
         notes: t.notes,
       })),
       outgoing: outgoingPending.map((t) => ({
         id: t.id,
-        transferDate: fromLocalDateTime(t.transferDate),
+        transferredAt: fromLocalDateTime(t.transferredAt),
         destinationBatch: t.destinationBatch,
         animalCount: t.items.length,
         notes: t.notes,

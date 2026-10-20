@@ -48,8 +48,8 @@ function buildColumns(handlers: {
   return [
     {
       header: "Data",
-      accessorKey: "transferDate",
-      cell: ({ row }) => formatTransferDate(row.original.transferDate),
+      accessorKey: "transferredAt",
+      cell: ({ row }) => formatTransferDate(row.original.transferredAt),
     },
     {
       id: "route",
@@ -328,7 +328,7 @@ export default function BatchTransferList() {
         title="Confirmar transferência"
         description={
           actionRow
-            ? `${actionRow.animalCount} animal(is) serão movidos para o lote "${actionRow.destinationBatch.name}" em ${formatTransferDate(actionRow.transferDate)}. Após confirmada, a transferência não poderá mais ser alterada.${
+            ? `${actionRow.animalCount} animal(is) serão movidos para o lote "${actionRow.destinationBatch.name}" em ${formatTransferDate(actionRow.transferredAt)}. Após confirmada, a transferência não poderá mais ser alterada.${
                 stockingWarning?.transferId === actionRow.id
                   ? ` Atenção, lotação excedida: ${stockingWarning.text}`
                   : ""

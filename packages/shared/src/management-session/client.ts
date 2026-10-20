@@ -14,8 +14,8 @@ type Ref = { id: string; name: string };
 
 export type ManagementSessionRow = {
   id: string;
-  scheduledDate: string;
-  managementDate: string | null;
+  scheduledAt: string;
+  performedAt: string | null;
   title: string;
   notes: string | null;
   steps: string[];
@@ -95,8 +95,8 @@ export type ReceptionInfo = {
 export type ManagementSessionDetail = {
   id: string;
   status: ManagementSessionStatus;
-  scheduledDate: string;
-  managementDate: string | null;
+  scheduledAt: string;
+  performedAt: string | null;
   title: string;
   notes: string;
   propertyId: string;
@@ -118,7 +118,7 @@ export type SessionAnimalContext = {
   session: {
     id: string;
     status: ManagementSessionStatus;
-    managementDate: string | null;
+    performedAt: string | null;
   };
   steps: SessionStepView[];
   animal: StepAnimalDetail;
@@ -136,7 +136,7 @@ export type ManagementOptions = {
 
 export type ManagementSessionPayload = {
   title: string;
-  scheduledDate: string;
+  scheduledAt: string;
   notes?: string;
   steps: Record<string, unknown>[];
   animalIds: string[];
@@ -218,10 +218,10 @@ export function createManagementSessionClient(request: ApiRequest) {
       );
     },
 
-    async startManagementSession(id: string, managementDate: string) {
+    async startManagementSession(id: string, performedAt: string) {
       const response = await request(
         `${SESSION_BY_ID(id)}/start`,
-        jsonRequest("POST", { managementDate }),
+        jsonRequest("POST", { performedAt }),
       );
       return readJson<{ success: true }>(
         response,

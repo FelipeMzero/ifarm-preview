@@ -255,7 +255,7 @@ function identifierStep(adapter: IdentifierAdapter) {
           animalId: animal.id,
           value: payload.value,
           notes: payload.notes,
-          identifiedAt: session.managementDate,
+          identifiedAt: session.performedAt,
         });
       }
     },

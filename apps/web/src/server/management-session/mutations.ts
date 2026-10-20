@@ -67,7 +67,7 @@ export async function createManagementSession(
       data: {
         propertyId,
         title: data.title,
-        scheduledDate: data.scheduledDate,
+        scheduledAt: data.scheduledAt,
         notes: data.notes,
         participants: {
           create: animalIds.map((animalId) => ({ animalId })),
@@ -77,7 +77,7 @@ export async function createManagementSession(
 
     const steps = await applyPlanSteps(
       tx,
-      { ...created, managementDate: null },
+      { ...created, performedAt: null },
       [],
       data.steps,
     );
@@ -140,7 +140,7 @@ export async function updateManagementSession(
       where: { id },
       data: {
         title: data.title,
-        scheduledDate: data.scheduledDate,
+        scheduledAt: data.scheduledAt,
         notes: data.notes,
       },
     });
@@ -214,12 +214,12 @@ export async function startManagementSession(
   id: string,
   data: ManagementSessionStartData,
 ) {
-  const { managementDate } = data;
-  if (managementDate > new Date()) {
+  const { performedAt } = data;
+  if (performedAt > new Date()) {
     throw new StepError(
       "A data do manejo não pode ser futura.",
       400,
-      "managementDate",
+      "performedAt",
     );
   }
 
@@ -232,7 +232,7 @@ export async function startManagementSession(
     );
     await tx.managementSession.update({
       where: { id },
-      data: { managementDate },
+      data: { performedAt },
     });
   });
 }

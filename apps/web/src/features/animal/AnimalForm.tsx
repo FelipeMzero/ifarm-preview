@@ -310,7 +310,7 @@ export default function AnimalForm({
               label="Data de Entrada"
               control={control}
               render={({ field, id }) => (
-                <Input {...field} id={id} type="date" />
+                <Input {...field} id={id} type="datetime-local" />
               )}
             />
           </FieldRow>
@@ -410,7 +410,7 @@ export default function AnimalForm({
                 label="Data da Castração"
                 control={control}
                 render={({ field, id }) => (
-                  <Input {...field} id={id} type="date" />
+                  <Input {...field} id={id} type="datetime-local" />
                 )}
               />
               <FormField

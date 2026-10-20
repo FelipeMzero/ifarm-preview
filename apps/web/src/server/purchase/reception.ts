@@ -2,7 +2,6 @@ import "server-only";
 import { z } from "zod";
 import { Prisma } from "@/server/db";
 import { FIELD_LIMITS, fromLocalDay, toDbDate } from "@ifarm/shared";
-import { effectiveAt } from "@/server/event-time";
 import { BusinessError } from "@/server/errors";
 
 type Tx = Prisma.TransactionClient;
@@ -175,7 +174,7 @@ export const receiveAnimalSchema = z.object({
 // ligado à categoria da compra e participante da sessão.
 export async function receiveAnimal(
   tx: Tx,
-  session: { id: string; propertyId: string; managementDate: Date },
+  session: { id: string; propertyId: string; performedAt: Date },
   reception: Reception,
   input: z.infer<typeof receiveAnimalSchema>,
 ) {
@@ -203,12 +202,12 @@ export async function receiveAnimal(
     );
   }
 
-  // Entrada na fazenda: a data e hora da recepção (ver effectiveAt).
-  const enteredAt = effectiveAt(session.managementDate, new Date());
+  // Entrada na fazenda: a data e hora da recepção.
+  const enteredAt = session.performedAt;
 
   let birthDate: Date | null = null;
   if (input.ageMonths != null) {
-    const d = new Date(session.managementDate);
+    const d = new Date(session.performedAt);
     d.setMonth(d.getMonth() - input.ageMonths);
     // @db.Date: grava o dia (UTC 00:00) correspondente à data local.
     birthDate = toDbDate(fromLocalDay(d));

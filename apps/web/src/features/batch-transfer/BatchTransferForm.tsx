@@ -85,7 +85,7 @@ type BatchTransferFormProps = {
 function toFormValues(detail: BatchTransferDetail): BatchTransferFormData {
   return {
     destinationBatchId: detail.destinationBatch.id,
-    transferDate: detail.transferDate,
+    transferredAt: detail.transferredAt,
     notes: detail.notes ?? "",
   };
 }
@@ -132,7 +132,7 @@ export function BatchTransferForm({
     resolver: zodResolver(batchTransferFormSchema),
     defaultValues: {
       destinationBatchId: initialDestinationBatchId ?? "",
-      transferDate: nowDateTime(),
+      transferredAt: nowDateTime(),
       notes: "",
     },
   });
@@ -512,7 +512,7 @@ export function BatchTransferForm({
                   )}
                 />
                 <FormField
-                  name="transferDate"
+                  name="transferredAt"
                   control={control}
                   label="Data da Transferência"
                   required

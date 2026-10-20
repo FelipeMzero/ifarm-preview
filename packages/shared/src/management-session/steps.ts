@@ -80,13 +80,13 @@ export type ManagementSessionStatus =
   "planned" | "in_progress" | "confirmed" | "cancelled";
 
 export function sessionStatus(s: {
-  managementDate: Date | string | null;
+  performedAt: Date | string | null;
   confirmedAt: Date | string | null;
   cancelledAt: Date | string | null;
 }): ManagementSessionStatus {
   if (s.cancelledAt) return "cancelled";
   if (s.confirmedAt) return "confirmed";
-  if (s.managementDate) return "in_progress";
+  if (s.performedAt) return "in_progress";
   return "planned";
 }
 

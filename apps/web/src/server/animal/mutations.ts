@@ -2,7 +2,6 @@ import "server-only";
 import {
   toDbDate,
   toLocalDateTime,
-  toLocalDay,
   type AnimalCreateData,
   type AnimalUpdateData,
   type CommitmentIntent,
@@ -11,6 +10,7 @@ import {
   type NeuteringCreateData,
   type WeighingCorrectionData,
   type WeighingCreateData,
+  fromLocalDay,
 } from "@ifarm/shared";
 import { prisma, Prisma } from "@/server/db";
 import { getOrAssignCurrentProperty } from "../current-property/queries";
@@ -72,7 +72,7 @@ export async function createAnimal(data: AnimalCreateData, userId: string) {
   }
 
   const entryDate = data.propertyEntryDate
-    ? toLocalDay(data.propertyEntryDate)
+    ? toLocalDateTime(data.propertyEntryDate)
     : new Date();
 
   const animal = await write(() =>
@@ -142,7 +142,7 @@ export async function createAnimal(data: AnimalCreateData, userId: string) {
             animalId: created.id,
             techniqueId: data.neuteringTechniqueId,
             neuteredAt: data.neuteringDate
-              ? toLocalDay(data.neuteringDate)
+              ? toLocalDateTime(data.neuteringDate)
               : entryDate,
           },
         });
@@ -157,16 +157,17 @@ export async function createAnimal(data: AnimalCreateData, userId: string) {
           select: { name: true },
         });
 
-        const purchaseDate = data.acquisitionDate
-          ? toLocalDay(data.acquisitionDate)
-          : entryDate;
+        // Dia da compra (@db.Date): o da aquisição ou o da entrada na fazenda.
+        const purchaseDate = toDbDate(
+          data.acquisitionDate ?? fromLocalDay(entryDate),
+        );
         const purchaseEvent = await tx.purchaseEvent.create({
           data: {
             title: `Compra avulsa de ${seller.name}`,
             purchaseDate,
             notes: data.purchaseNotes,
             // Já terminou: paga (com o valor informado) e consolidada.
-            paidAt: data.purchasePrice != null ? purchaseDate : null,
+            paymentDate: data.purchasePrice != null ? purchaseDate : null,
             confirmedAt: now,
             sellerId: data.sellerId!,
             destinationPropertyId: propertyId,
@@ -188,8 +189,8 @@ export async function createAnimal(data: AnimalCreateData, userId: string) {
           data: {
             propertyId,
             title: `Recepção de compra (${seller.name})`,
-            scheduledDate: entryDate,
-            managementDate: entryDate,
+            scheduledAt: entryDate,
+            performedAt: entryDate,
             confirmedAt: now,
             participants: { create: { animalId: created.id } },
           },
@@ -342,7 +343,7 @@ export async function updateAnimal(id: string, data: AnimalUpdateData) {
         await tx.animalNeutering.create({
           data: {
             animalId: id,
-            neuteredAt: toLocalDay(data.neuteredAt),
+            neuteredAt: toLocalDateTime(data.neuteredAt),
             techniqueId: data.neuteringTechniqueId,
             notes: data.neuteringNotes,
           },

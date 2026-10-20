@@ -339,8 +339,8 @@ export function AnimalStepPage({
           {context.session.status === "planned"
             ? "O registro desta sessão ainda não foi iniciado."
             : `Sessão ${context.session.status === "confirmed" ? "consolidada" : "cancelada"}${
-                context.session.managementDate
-                  ? ` (manejo de ${formatSessionDateTime(context.session.managementDate)})`
+                context.session.performedAt
+                  ? ` (manejo de ${formatSessionDateTime(context.session.performedAt)})`
                   : ""
               }: somente visualização.`}
         </p>

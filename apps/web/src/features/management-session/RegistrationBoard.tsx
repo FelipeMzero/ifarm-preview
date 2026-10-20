@@ -287,14 +287,14 @@ export function RegistrationBoard({ id }: { id: string }) {
         <span>
           Prevista:{" "}
           <span className="text-foreground">
-            {formatSessionDateTime(detail.scheduledDate)}
+            {formatSessionDateTime(detail.scheduledAt)}
           </span>
         </span>
-        {detail.managementDate && (
+        {detail.performedAt && (
           <span className="flex items-center gap-1">
             Data do manejo:{" "}
             <span className="font-medium text-foreground">
-              {formatSessionDateTime(detail.managementDate)}
+              {formatSessionDateTime(detail.performedAt)}
             </span>
             {inProgress && (
               <Button
@@ -399,7 +399,7 @@ export function RegistrationBoard({ id }: { id: string }) {
 
       <SessionDateDialog
         open={dateDialog}
-        initial={detail.managementDate ?? nowDateTime()}
+        initial={detail.performedAt ?? nowDateTime()}
         title="Data do manejo"
         description="Data em que o manejo está sendo feito. Todos os registros da sessão recebem esta data."
         confirmLabel="Salvar"

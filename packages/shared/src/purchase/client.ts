@@ -61,8 +61,8 @@ export type PurchaseReception = {
   sessionId: string;
   title: string;
   status: ManagementSessionStatus;
-  scheduledDate: string;
-  managementDate: string | null;
+  scheduledAt: string;
+  performedAt: string | null;
   entryBatch: Ref;
   gtaNumber: string | null;
   invoiceNumber: string | null;
@@ -77,7 +77,7 @@ export type PurchaseDetail = {
   notes: string;
   seller: Ref;
   destinationProperty: Ref;
-  paidAt: string | null;
+  paymentDate: string | null;
   paymentReference: string | null;
   confirmedAt: string | null;
   cancelledAt: string | null;
@@ -146,7 +146,7 @@ export function createPurchaseClient(request: ApiRequest) {
 
     async payPurchase(
       id: string,
-      data: { paidAt: string; paymentReference?: string },
+      data: { paymentDate: string; paymentReference?: string },
     ) {
       const response = await request(
         `${PURCHASE_BY_ID(id)}/pay`,

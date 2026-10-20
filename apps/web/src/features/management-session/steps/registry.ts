@@ -61,7 +61,7 @@ const CLIENT_STEP_MODULES: Record<StepType, ClientStepModule> = {
       doseType: "NONE",
       doseMl: "",
       doseWeightKg: "",
-      withdrawalUntil: "",
+      withdrawalEndDate: "",
       nextDueDate: "",
     }),
     toPlanForm: healthToPlanForm,

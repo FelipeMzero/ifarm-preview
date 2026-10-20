@@ -9,8 +9,11 @@ import { FIELD_LIMITS } from "../field-limits";
 
 /** Data opcional; vazia vira null. */
 const optionalDate = dateField.transform((v) => v || null);
-/** Data opcional; vazia vira undefined ("não alterar"). */
-const keepDate = dateField.transform((v) => v || undefined);
+/** Data e hora opcionais ("AAAA-MM-DDTHH:mm"); vazias viram null. */
+const optionalDateTime = z
+  .union([dateTimeField, z.literal("")])
+  .optional()
+  .transform((v) => v || null);
 /**
  * Data e hora de um manejo avulso ou da correção de um registro ("AAAA-MM-DDTHH:mm"); vazia
  * vira undefined (registro avulso: agora; correção: não alterar).
@@ -55,7 +58,8 @@ export const animalCreateSchema = z
     origin: z.enum(AnimalOrigin, "Este campo não pode ser vazio"),
 
     birthDate: optionalDate,
-    propertyEntryDate: optionalDate,
+    // Entrada na fazenda: data e hora (vazia = agora).
+    propertyEntryDate: optionalDateTime,
 
     batchId: z.string().min(1, "Este campo não pode ser vazio"),
     currentWeightKg: z
@@ -64,7 +68,8 @@ export const animalCreateSchema = z
       .transform((v) => (v ? parseFloat(v) : null)),
 
     neutered: z.boolean().optional().default(false),
-    neuteringDate: optionalDate,
+    // Castração: data e hora (vazia = a da entrada).
+    neuteringDate: optionalDateTime,
     neuteringTechniqueId: z
       .string()
       .optional()
@@ -176,7 +181,7 @@ export const animalUpdateSchema = z.object({
     .optional()
     .transform((v) => v || null),
 
-  neuteredAt: keepDate,
+  neuteredAt: eventDateTime,
   neuteringTechniqueId: z
     .string()
     .optional()

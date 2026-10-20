@@ -1,5 +1,4 @@
 import "server-only";
-import { effectiveAt } from "@/server/event-time";
 import { unavailableAnimalsMessage, unavailableReason } from "@ifarm/shared";
 import { assertNoConflicts } from "@/server/animal/commitments";
 import { animalLabel, summarize } from "@ifarm/shared";
@@ -33,7 +32,7 @@ export async function consolidateSession(tx: Tx, id: string, at?: Date) {
     ),
   );
 
-  if (session.managementDate > new Date()) {
+  if (session.performedAt > new Date()) {
     throw new StepError(
       "A data do manejo é futura. Ajuste a data para consolidar.",
     );
@@ -113,14 +112,18 @@ export async function consolidateSession(tx: Tx, id: string, at?: Date) {
     );
   }
 
-  const effectiveDate = effectiveAt(session.managementDate, now);
-
   const steps = [...session.steps].sort(
     (a, b) =>
       stepModule(a.type).consolidateOrder - stepModule(b.type).consolidateOrder,
   );
   for (const step of steps) {
-    await stepModule(step.type).consolidate(tx, session, step, effectiveDate);
+    // Os registros passam a valer na data e hora do manejo.
+    await stepModule(step.type).consolidate(
+      tx,
+      session,
+      step,
+      session.performedAt,
+    );
   }
 
   return { handled: handled.length, removed: notHandled.length };

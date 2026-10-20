@@ -147,7 +147,7 @@ erDiagram
     String registration_body "❓"
     String registration_city "❓"
     String registration_state "❓"
-    DateTime registered_at "❓"
+    DateTime registration_date "❓"
     DateTime deactivated_at "❓"
     String owner_id 
     DateTime created_at 
@@ -159,8 +159,8 @@ erDiagram
     String id "🗝️"
     String title 
     String notes "❓"
-    DateTime scheduled_date 
-    DateTime management_date "❓"
+    DateTime scheduled_at 
+    DateTime performed_at "❓"
     DateTime confirmed_at "❓"
     DateTime cancelled_at "❓"
     String property_id 
@@ -323,7 +323,7 @@ erDiagram
   "health_management" {
     String management_session_id "🗝️"
     String title "❓"
-    DateTime withdrawal_until "❓"
+    DateTime withdrawal_end_date "❓"
     DateTime next_due_date "❓"
     HealthManagementDoseType dose_type 
     Decimal dose_ml "❓"
@@ -358,7 +358,7 @@ erDiagram
 
   "animal_property_transfer" {
     String origin_batch_id "🗝️"
-    DateTime transfer_date 
+    DateTime transferred_at 
     String notes "❓"
     String gta_number "❓"
     DateTime confirmed_at "❓"
@@ -397,7 +397,7 @@ erDiagram
 
   "animal_batch_transfer" {
     String management_session_id "🗝️"
-    DateTime transfer_date 
+    DateTime transferred_at 
     String notes "❓"
     DateTime confirmed_at "❓"
     DateTime cancelled_at "❓"
@@ -436,7 +436,7 @@ erDiagram
     String title 
     DateTime purchase_date 
     String notes "❓"
-    DateTime paid_at "❓"
+    DateTime payment_date "❓"
     String payment_reference "❓"
     DateTime confirmed_at "❓"
     DateTime cancelled_at "❓"
@@ -491,7 +491,7 @@ erDiagram
     String id "🗝️"
     String title 
     String description "❓"
-    DateTime loss_date 
+    DateTime occurred_at 
     DateTime confirmed_at "❓"
     DateTime cancelled_at "❓"
     String property_id 
@@ -515,8 +515,8 @@ erDiagram
     String id "🗝️"
     String title 
     String description "❓"
-    DateTime scheduled_date 
-    DateTime slaughter_date "❓"
+    DateTime scheduled_at 
+    DateTime slaughtered_at "❓"
     DateTime confirmed_at "❓"
     DateTime cancelled_at "❓"
     String property_id 

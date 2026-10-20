@@ -142,7 +142,7 @@ export function ReceptionPurchaseDetail({ id }: { id: string }) {
                   <span className="font-medium">{r.title}</span>
                   <SessionStatusBadge status={r.status} />
                   <span className="text-muted-foreground">
-                    {formatDay(r.managementDate ?? r.scheduledDate)}
+                    {formatDay(r.performedAt ?? r.scheduledAt)}
                   </span>
                   <span className="text-muted-foreground">
                     Lote de entrada: {r.entryBatch.name}

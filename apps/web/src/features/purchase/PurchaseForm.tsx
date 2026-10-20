@@ -207,7 +207,7 @@ export function PurchaseForm({ id }: { id?: string }) {
 
   const editable = !detail || detail.status === "open";
   // Paga: o que define o valor fica bloqueado até desfazer o pagamento.
-  const locked = !!detail?.paidAt;
+  const locked = !!detail?.paymentDate;
 
   // Garante o rótulo do vendedor gravado, mesmo fora da busca atual.
   const sellerOptions =
@@ -300,7 +300,7 @@ export function PurchaseForm({ id }: { id?: string }) {
   // Por que ainda não dá para consolidar (null = pode).
   const consolidateBlocker = !detail
     ? null
-    : !detail.paidAt
+    : !detail.paymentDate
       ? "Registre o pagamento antes"
       : received === 0
         ? "Nenhum animal recebido"
@@ -347,17 +347,17 @@ export function PurchaseForm({ id }: { id?: string }) {
             )}
           </div>
           {detail && <PurchaseStatusBadge status={detail.status} />}
-          {detail?.paidAt && (
+          {detail?.paymentDate && (
             <Badge
               variant="outline"
               title={detail.paymentReference ?? undefined}
             >
-              Paga em {formatDay(detail.paidAt)}
+              Paga em {formatDay(detail.paymentDate)}
             </Badge>
           )}
           {detail && detail.status === "open" && (
             <div className="ml-auto flex flex-wrap gap-2">
-              {received === 0 && !detail.paidAt && (
+              {received === 0 && !detail.paymentDate && (
                 <Button
                   type="button"
                   variant="ghost"
@@ -367,7 +367,7 @@ export function PurchaseForm({ id }: { id?: string }) {
                   <Ban className="size-4" /> Cancelar compra
                 </Button>
               )}
-              {detail.paidAt ? (
+              {detail.paymentDate ? (
                 <Button
                   type="button"
                   variant="outline"
@@ -410,8 +410,8 @@ export function PurchaseForm({ id }: { id?: string }) {
               ? `Compra cancelada em ${new Date(detail.cancelledAt!).toLocaleString("pt-BR")}: desconsiderada.`
               : detail.status === "confirmed"
                 ? `Compra consolidada em ${new Date(detail.confirmedAt!).toLocaleString("pt-BR")}: custos rateados entre os animais recebidos. Não pode mais ser alterada.`
-                : detail.paidAt
-                  ? `Paga em ${formatDay(detail.paidAt)}${
+                : detail.paymentDate
+                  ? `Paga em ${formatDay(detail.paymentDate)}${
                       detail.paymentReference
                         ? ` (${detail.paymentReference})`
                         : ""
@@ -543,7 +543,7 @@ export function PurchaseForm({ id }: { id?: string }) {
                       <span className="font-medium">{r.title}</span>
                       <SessionStatusBadge status={r.status} />
                       <span className="text-muted-foreground">
-                        {formatDay(r.managementDate ?? r.scheduledDate)}
+                        {formatDay(r.performedAt ?? r.scheduledAt)}
                       </span>
                       <span className="text-muted-foreground">
                         Lote de entrada: {r.entryBatch.name}
