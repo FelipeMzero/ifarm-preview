@@ -1,4 +1,5 @@
 import "server-only";
+import { effectiveAt } from "@/server/event-time";
 import { unavailableAnimalsMessage, unavailableReason } from "@ifarm/shared";
 import { assertNoConflicts } from "@/server/animal/commitments";
 import { animalLabel, summarize } from "@ifarm/shared";
@@ -7,7 +8,6 @@ import {
   requireManagementDate,
   requireSessionIn,
   sessionIntent,
-  startOfToday,
   StepError,
 } from "@/server/management-session/shared";
 import {
@@ -33,8 +33,7 @@ export async function consolidateSession(tx: Tx, id: string, at?: Date) {
     ),
   );
 
-  const today = startOfToday();
-  if (session.managementDate > today) {
+  if (session.managementDate > new Date()) {
     throw new StepError(
       "A data do manejo é futura. Ajuste a data para consolidar.",
     );
@@ -114,18 +113,14 @@ export async function consolidateSession(tx: Tx, id: string, at?: Date) {
     );
   }
 
-  // Manejo de hoje usa o horário da consolidação (como nas transferências).
-  const effectiveAt =
-    session.managementDate.getTime() === today.getTime()
-      ? now
-      : session.managementDate;
+  const effectiveDate = effectiveAt(session.managementDate, now);
 
   const steps = [...session.steps].sort(
     (a, b) =>
       stepModule(a.type).consolidateOrder - stepModule(b.type).consolidateOrder,
   );
   for (const step of steps) {
-    await stepModule(step.type).consolidate(tx, session, step, effectiveAt);
+    await stepModule(step.type).consolidate(tx, session, step, effectiveDate);
   }
 
   return { handled: handled.length, removed: notHandled.length };

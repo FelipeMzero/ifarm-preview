@@ -1,5 +1,6 @@
 "use client";
 
+import { toInputDateTime } from "./format";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
@@ -11,7 +12,7 @@ import { DialogFooter } from "@/components/ui/dialog";
 import { FormField } from "@/components/our/FormField";
 import FieldRow from "@/components/our/FieldRow";
 import { animalClient } from "@/lib/clients";
-import { ApiError, type AnimalWeighing } from "@ifarm/shared";
+import { ApiError, type AnimalWeighing, nowDateTime } from "@ifarm/shared";
 import { weighingCorrectionSchema, WeighingCorrectionFormData } from "./schema";
 
 interface AnimalWeighingCorrectionFormProps {
@@ -24,7 +25,6 @@ interface AnimalWeighingCorrectionFormProps {
 }
 
 // yyyy-mm-dd no fuso local, formato do input de data
-const toInputDate = (iso: string) => new Date(iso).toLocaleDateString("en-CA");
 
 export function AnimalWeighingCorrectionForm({
   animalId,
@@ -37,7 +37,7 @@ export function AnimalWeighingCorrectionForm({
     resolver: zodResolver(weighingCorrectionSchema),
     defaultValues: {
       weightKg: String(weighing.weightKg),
-      date: toInputDate(weighing.date),
+      date: toInputDateTime(weighing.date),
       notes: weighing.notes ?? "",
     },
   });
@@ -46,7 +46,7 @@ export function AnimalWeighingCorrectionForm({
     const dateChanged =
       !weighing.fromSession &&
       !!data.date &&
-      data.date !== toInputDate(weighing.date);
+      data.date !== toInputDateTime(weighing.date);
 
     try {
       await animalClient.correctWeighing(animalId, weighing.id, {
@@ -102,9 +102,9 @@ export function AnimalWeighingCorrectionForm({
             <Input
               {...field}
               id={id}
-              type="date"
-              min={birthDate ?? undefined}
-              max={new Date().toLocaleDateString("en-CA")}
+              type="datetime-local"
+              min={birthDate ? `${birthDate}T00:00` : undefined}
+              max={nowDateTime()}
               disabled={weighing.fromSession}
               title={
                 weighing.fromSession

@@ -1,6 +1,7 @@
 import "server-only";
 import {
   toDbDate,
+  toLocalDateTime,
   toLocalDay,
   type AnimalCreateData,
   type AnimalUpdateData,
@@ -31,7 +32,6 @@ import {
   assertNotBeforeBirth,
   assertNotFuture,
   resolveEventDate,
-  withDay,
 } from "./eventDate";
 import {
   INVALID_TECHNIQUE_MESSAGE,
@@ -432,8 +432,9 @@ export async function correctWeighing(
 
   let weighedAt: Date | undefined;
   if (data.date) {
-    await assertNotBeforeBirth(animalId, data.date);
-    weighedAt = withDay(data.date, weighing.weighedAt);
+    weighedAt = toLocalDateTime(data.date);
+    assertNotFuture(weighedAt);
+    await assertNotBeforeBirth(animalId, weighedAt);
   }
 
   const weightChanged = !weighing.weight.equals(data.weightKg);
@@ -556,9 +557,9 @@ export async function correctNeutering(
 
   let neuteredAt: Date | undefined;
   if (data.date) {
-    assertNotFuture(data.date);
-    await assertNotBeforeBirth(animalId, data.date);
-    neuteredAt = withDay(data.date, neutering.neuteredAt);
+    neuteredAt = toLocalDateTime(data.date);
+    assertNotFuture(neuteredAt);
+    await assertNotBeforeBirth(animalId, neuteredAt);
   }
 
   const firstCorrection = neutering.correctedAt === null;

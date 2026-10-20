@@ -1,7 +1,7 @@
 import "server-only";
 import { z } from "zod";
 import {
-  fromLocalDay,
+  fromLocalDateTime,
   unavailableReason,
   type BatchTransferDetail,
   type BatchTransferListResult,
@@ -106,7 +106,7 @@ export async function listBatchTransfers(
   return {
     data: transfers.map((t) => ({
       id: t.id,
-      transferDate: fromLocalDay(t.transferDate),
+      transferDate: fromLocalDateTime(t.transferDate),
       notes: t.notes,
       originBatches: originBatchNames(t),
       destinationBatch: t.destinationBatch,
@@ -156,7 +156,7 @@ export async function getBatchTransfer(
 
   return {
     id: transfer.id,
-    transferDate: fromLocalDay(transfer.transferDate),
+    transferDate: fromLocalDateTime(transfer.transferDate),
     notes: transfer.notes ?? "",
     destinationBatch: transfer.destinationBatch,
     propertyId: transfer.propertyId,

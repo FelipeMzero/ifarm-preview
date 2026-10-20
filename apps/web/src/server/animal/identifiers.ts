@@ -1,7 +1,7 @@
 import "server-only";
 import {
   FIELD_LIMITS,
-  today,
+  toLocalDateTime,
   type AnimalIdentifierRecord,
   type IdentifierChangeData,
   type IdentifierCorrectionData,
@@ -13,7 +13,6 @@ import {
   effectiveTagging,
 } from "@/server/management-session/effective";
 import { assertNoConflicts } from "@/server/animal/commitments";
-import { withDay } from "@/server/animal/eventDate";
 import { BusinessError } from "@/server/errors";
 
 type Tx = Prisma.TransactionClient;
@@ -227,10 +226,10 @@ export async function correctIdentifier(
 
     let identifiedAt: Date | undefined;
     if (data.date) {
-      if (data.date > today()) {
+      identifiedAt = toLocalDateTime(data.date);
+      if (identifiedAt > new Date()) {
         throw new IdentifierError("A data não pode ser futura.", 400, "date");
       }
-      identifiedAt = withDay(data.date, record.identifiedAt);
     }
 
     const valueChanged = data.value !== record.value;

@@ -23,9 +23,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useCurrentProperty } from "@/features/shell/CurrentPropertyProvider";
-import { SessionStatusBadge, formatSessionDate, todayIso } from "./display";
+import { SessionStatusBadge, formatSessionDateTime } from "./display";
 import { managementSessionClient } from "@/lib/clients";
-import { type ManagementSessionRow } from "@ifarm/shared";
+import { type ManagementSessionRow, nowDateTime } from "@ifarm/shared";
 
 const DEFAULT_PAGE_SIZE = 10;
 
@@ -50,12 +50,15 @@ function buildColumns(handlers: {
         const { scheduledDate, managementDate } = row.original;
         return (
           <div className="flex flex-col leading-tight">
-            <span>{formatSessionDate(managementDate ?? scheduledDate)}</span>
-            {managementDate && managementDate !== scheduledDate && (
-              <span className="text-xs text-muted-foreground">
-                prevista {formatSessionDate(scheduledDate)}
-              </span>
-            )}
+            <span>
+              {formatSessionDateTime(managementDate ?? scheduledDate)}
+            </span>
+            {managementDate &&
+              managementDate.slice(0, 10) !== scheduledDate.slice(0, 10) && (
+                <span className="text-xs text-muted-foreground">
+                  prevista {formatSessionDateTime(scheduledDate)}
+                </span>
+              )}
           </div>
         );
       },
@@ -261,7 +264,7 @@ export default function ManagementSessionList() {
     // Inicia com a data de hoje; a data pode ser corrigida no cabeçalho do registro.
     onStart: async (id) => {
       try {
-        await managementSessionClient.startManagementSession(id, todayIso());
+        await managementSessionClient.startManagementSession(id, nowDateTime());
         toast.success("Registro iniciado com a data de hoje.");
         router.push(`/manejos/${id}/registro`);
       } catch (e) {

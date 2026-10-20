@@ -1,4 +1,20 @@
-import { formatDate as formatDay, toLocalDay } from "@ifarm/shared";
+import {
+  formatDate as formatDay,
+  formatEventDateTime,
+  fromLocalDateTime,
+  toLocalDay,
+} from "@ifarm/shared";
+
+// Data e hora de um manejo (instante ISO), no fuso local; registros antigos, gravados à
+// meia-noite, aparecem só com a data.
+export function formatInstant(iso: string | null | undefined): string {
+  if (!iso) return "—";
+  return formatEventDateTime(fromLocalDateTime(new Date(iso)));
+}
+
+// Instante ISO → valor do <input type="datetime-local">, no fuso local.
+export const toInputDateTime = (iso: string) =>
+  fromLocalDateTime(new Date(iso));
 
 export function formatDate(iso: string | null | undefined): string {
   if (!iso) return "—";

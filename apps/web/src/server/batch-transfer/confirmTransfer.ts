@@ -6,6 +6,7 @@ import {
   unavailableReason,
 } from "@ifarm/shared";
 import { Prisma } from "@/server/db";
+import { effectiveAt } from "@/server/event-time";
 import { BusinessError } from "@/server/errors";
 import { transferStatus } from "./rules";
 
@@ -15,12 +16,6 @@ export class ConfirmError extends BusinessError {
   constructor(message: string, status = 409) {
     super(message, status);
   }
-}
-
-function startOfDay(date: Date) {
-  const d = new Date(date);
-  d.setHours(0, 0, 0, 0);
-  return d;
 }
 
 // Efetiva o plano: registra o lote de origem de cada item, fecha o histórico ativo de
@@ -70,19 +65,14 @@ export async function confirmTransferInTx(tx: Tx, id: string) {
   }
 
   const now = new Date();
-  const today = startOfDay(now);
-  if (transfer.transferDate > today) {
+  if (transfer.transferDate > now) {
     throw new ConfirmError(
       "A data da transferência é futura. Ajuste a data para confirmar.",
     );
   }
 
-  // Transferência datada de hoje usa o horário da confirmação, para não
-  // terminar antes de uma entrada no lote atual ocorrida mais cedo no dia.
-  const effectiveAt =
-    transfer.transferDate.getTime() === today.getTime()
-      ? now
-      : transfer.transferDate;
+  // A data e hora programadas (transferências antigas, só com o dia: ver effectiveAt).
+  const effectiveDate = effectiveAt(transfer.transferDate, now);
 
   const inactive = transfer.items.filter(({ animal }) =>
     unavailableReason(animal, transfer.propertyId),
@@ -111,7 +101,9 @@ export async function confirmTransferInTx(tx: Tx, id: string) {
     where: { animalId: { in: animalIds }, exitedAt: null },
   });
 
-  const enteredLater = activeHistories.filter((h) => h.enteredAt > effectiveAt);
+  const enteredLater = activeHistories.filter(
+    (h) => h.enteredAt > effectiveDate,
+  );
   if (enteredLater.length) {
     const byId = new Map(transfer.items.map((i) => [i.animalId, i.animal]));
     throw new ConfirmError(
@@ -148,7 +140,7 @@ export async function confirmTransferInTx(tx: Tx, id: string) {
   if (activeHistories.length) {
     await tx.animalBatchHistory.updateMany({
       where: { id: { in: activeHistories.map((h) => h.id) } },
-      data: { exitedAt: effectiveAt },
+      data: { exitedAt: effectiveDate },
     });
   }
 
@@ -156,7 +148,7 @@ export async function confirmTransferInTx(tx: Tx, id: string) {
     data: transfer.items.map((item) => ({
       animalId: item.animalId,
       batchId: transfer.destinationBatchId,
-      enteredAt: effectiveAt,
+      enteredAt: effectiveDate,
       notes: item.notes ?? transfer.notes,
     })),
   });

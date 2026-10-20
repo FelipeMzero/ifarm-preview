@@ -1,10 +1,10 @@
 import "server-only";
-import { participantStatus } from "@ifarm/shared";
+import { fromLocalDateTime, participantStatus } from "@ifarm/shared";
 import {
   effectiveNeutering,
   effectiveWeighing,
 } from "@/server/management-session/effective";
-import { loadSession, toDateOnly } from "@/server/management-session/shared";
+import { loadSession } from "@/server/management-session/shared";
 import {
   countDone,
   describeSteps,
@@ -51,7 +51,9 @@ export async function loadAnimalContext(db: Tx, id: string, animalId: string) {
     session: {
       id: session.id,
       status: session.status,
-      managementDate: toDateOnly(session.managementDate),
+      managementDate: session.managementDate
+        ? fromLocalDateTime(session.managementDate)
+        : null,
     },
     steps,
     animal: {

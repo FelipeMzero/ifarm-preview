@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
-import { FIELD_LIMITS } from "@ifarm/shared";
+import { FIELD_LIMITS, nowDateTime } from "@ifarm/shared";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -82,12 +82,6 @@ type BatchTransferFormProps = {
   onSuccess?: (id: string) => void;
 };
 
-function todayIso() {
-  const now = new Date();
-  const offset = now.getTimezoneOffset() * 60_000;
-  return new Date(now.getTime() - offset).toISOString().slice(0, 10);
-}
-
 function toFormValues(detail: BatchTransferDetail): BatchTransferFormData {
   return {
     destinationBatchId: detail.destinationBatch.id,
@@ -138,7 +132,7 @@ export function BatchTransferForm({
     resolver: zodResolver(batchTransferFormSchema),
     defaultValues: {
       destinationBatchId: initialDestinationBatchId ?? "",
-      transferDate: todayIso(),
+      transferDate: nowDateTime(),
       notes: "",
     },
   });
@@ -523,7 +517,7 @@ export function BatchTransferForm({
                   label="Data da Transferência"
                   required
                   render={({ field, id: fieldId }) => (
-                    <Input {...field} id={fieldId} type="date" />
+                    <Input {...field} id={fieldId} type="datetime-local" />
                   )}
                 />
               </FieldRow>

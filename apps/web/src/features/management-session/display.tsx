@@ -1,4 +1,4 @@
-import { formatDate } from "@ifarm/shared";
+import { formatEventDateTime } from "@ifarm/shared";
 import {
   Boxes,
   Nfc,
@@ -75,11 +75,5 @@ export const STEP_ICONS: Record<StepType, LucideIcon> = {
   batch: Boxes,
 };
 
-// Datas da sessão são dias (sem horário).
-export function formatSessionDate(value: string) {
-  return formatDate(value.slice(0, 10));
-}
-
-export function todayIso() {
-  return new Date().toLocaleDateString("en-CA");
-}
+// Datas da sessão (prevista e de realização): data e hora (ver formatEventDateTime).
+export const formatSessionDateTime = formatEventDateTime;

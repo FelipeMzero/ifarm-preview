@@ -41,7 +41,11 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { animalClient } from "@/lib/clients";
-import { ApiError, type AnimalNeuteringRecord } from "@ifarm/shared";
+import {
+  ApiError,
+  type AnimalNeuteringRecord,
+  nowDateTime,
+} from "@ifarm/shared";
 import { AnimalNeuteringCorrectionForm } from "./AnimalNeuteringCorrectionForm";
 import { neuteringTechniqueClient } from "@/lib/clients";
 import { type NeuteringTechnique } from "@ifarm/shared";
@@ -49,7 +53,7 @@ import { techniqueItems } from "@/features/neutering-technique/items";
 import { SelectField } from "@/components/our/SelectField";
 import type { Commitment } from "@ifarm/shared";
 import { CommitmentNotice } from "./CommitmentNotice";
-import { formatDate } from "./format";
+import { formatDate, formatInstant } from "./format";
 
 interface AnimalNeuteringHistoryDialogProps {
   animalId: string;
@@ -74,8 +78,8 @@ function NeuteringCorrectionNote({
 
   const was = [
     neutering.originalDate &&
-    formatDate(neutering.originalDate) !== formatDate(neutering.date)
-      ? formatDate(neutering.originalDate)
+    formatInstant(neutering.originalDate) !== formatInstant(neutering.date)
+      ? formatInstant(neutering.originalDate)
       : null,
     neutering.originalTechniqueId !== neutering.techniqueId
       ? (neutering.originalTechniqueName ?? "sem técnica")
@@ -91,8 +95,6 @@ function NeuteringCorrectionNote({
     </div>
   );
 }
-
-const todayInput = () => new Date().toLocaleDateString("en-CA");
 
 // Registro na hora. Se o animal já é castrado, é uma recastração (motivo obrigatório).
 function NeuteringRegisterPanel({
@@ -113,7 +115,7 @@ function NeuteringRegisterPanel({
   latest: AnimalNeuteringRecord | null | undefined;
   onChanged: () => void;
 }) {
-  const [date, setDate] = useState(todayInput);
+  const [date, setDate] = useState(nowDateTime);
   const [techniqueId, setTechniqueId] = useState("");
   const [notes, setNotes] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -144,7 +146,7 @@ function NeuteringRegisterPanel({
       toast.success(
         neutered ? "Recastração registrada." : "Castração registrada.",
       );
-      setDate(todayInput());
+      setDate(nowDateTime());
       setTechniqueId("");
       setNotes("");
       onChanged();
@@ -169,7 +171,7 @@ function NeuteringRegisterPanel({
             {!neutered
               ? "não castrado"
               : latest
-                ? `castrado em ${formatDate(latest.date)}${latest.techniqueName ? ` (${latest.techniqueName})` : ""}`
+                ? `castrado em ${formatInstant(latest.date)}${latest.techniqueName ? ` (${latest.techniqueName})` : ""}`
                 : "castrado (sem registro)"}
           </span>
         )}
@@ -192,10 +194,10 @@ function NeuteringRegisterPanel({
       >
         <Input
           aria-label="Data da castração"
-          type="date"
+          type="datetime-local"
           value={date}
-          min={birthDate ?? undefined}
-          max={todayInput()}
+          min={birthDate ? `${birthDate}T00:00` : undefined}
+          max={nowDateTime()}
           aria-invalid={errors.date ? true : undefined}
           onChange={(e) => {
             setDate(e.target.value);
@@ -345,7 +347,7 @@ export function AnimalNeuteringHistoryDialog({
             </DialogTitle>
             <DialogDescription>
               {editing
-                ? `Castração de ${formatDate(editing.date)}.`
+                ? `Castração de ${formatInstant(editing.date)}.`
                 : "Registre a castração ou corrija as lançadas com erro. As alterações são gravadas imediatamente."}
             </DialogDescription>
           </DialogHeader>
@@ -410,7 +412,7 @@ export function AnimalNeuteringHistoryDialog({
                     <TableRow key={n.id}>
                       <TableCell>
                         <div className="font-medium">
-                          {formatDate(n.date)}
+                          {formatInstant(n.date)}
                           {isRecastration(n) && (
                             <span className="ml-2 text-xs font-normal text-muted-foreground">
                               recastração
@@ -465,7 +467,7 @@ export function AnimalNeuteringHistoryDialog({
             <AlertDialogTitle>Excluir castração</AlertDialogTitle>
             <AlertDialogDescription>
               {cancelling
-                ? `A castração de ${formatDate(cancelling.date)} deixará de aparecer no histórico. O registro é mantido para auditoria.`
+                ? `A castração de ${formatInstant(cancelling.date)} deixará de aparecer no histórico. O registro é mantido para auditoria.`
                 : null}
               {isLastOne &&
                 " É a única castração registrada: o animal continua castrado (por exemplo, se já chegou castrado)?"}

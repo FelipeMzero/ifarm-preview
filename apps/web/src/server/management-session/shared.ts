@@ -1,6 +1,5 @@
 import "server-only";
-import { z } from "zod";
-import { fromLocalDay, toLocalDay, today } from "@ifarm/shared";
+import { toLocalDay, today } from "@ifarm/shared";
 import {
   normalizeStepOrder,
   REPEATABLE_STEP_TYPES,
@@ -71,17 +70,9 @@ export function requireManagementDate(session: LoadedSession) {
   return { ...session, managementDate: session.managementDate };
 }
 
-// Data (sem horário) no fuso local, como nas demais datas de manejo.
-export const dateOnlySchema = z
-  .string()
-  .regex(/^\d{4}-\d{2}-\d{2}$/, "Informe uma data válida.")
-  .transform((v) => toLocalDay(v));
-
 export function startOfToday() {
   return toLocalDay(today());
 }
-
-export const toDateOnly = (d: Date | null) => (d ? fromLocalDay(d) : null);
 
 // Animais que não podem participar: fora da propriedade ou inativos.
 export async function invalidAnimals(

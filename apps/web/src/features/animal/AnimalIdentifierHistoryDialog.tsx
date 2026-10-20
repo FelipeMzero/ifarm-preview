@@ -44,7 +44,7 @@ import {
 } from "./AnimalIdentifierCorrectionForm";
 import type { Commitment } from "@ifarm/shared";
 import { CommitmentNotice } from "./CommitmentNotice";
-import { formatDate } from "./format";
+import { formatDate, formatInstant } from "./format";
 
 interface AnimalIdentifierHistoryDialogProps {
   animalId: string;
@@ -272,7 +272,7 @@ export function AnimalIdentifierHistoryDialog({
             <DialogTitle>{editing ? `Corrigir ${label}` : label}</DialogTitle>
             <DialogDescription>
               {editing
-                ? `Registro de ${formatDate(editing.date)}.`
+                ? `Registro de ${formatInstant(editing.date)}.`
                 : `Troque o ${label.toLowerCase()} ou corrija registros lançados com erro. As alterações são gravadas imediatamente.`}
             </DialogDescription>
           </DialogHeader>
@@ -330,7 +330,7 @@ export function AnimalIdentifierHistoryDialog({
                 <TableBody>
                   {records.map((r, index) => (
                     <TableRow key={r.id}>
-                      <TableCell>{formatDate(r.date)}</TableCell>
+                      <TableCell>{formatInstant(r.date)}</TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
                           <span
@@ -397,7 +397,7 @@ export function AnimalIdentifierHistoryDialog({
         title={`Excluir registro de ${label}`}
         description={
           cancelling
-            ? `O registro "${displayValue(cancelling.value)}" de ${formatDate(cancelling.date)} deixará de aparecer no histórico, e o ${label.toLowerCase()} atual passará a ser o do registro anterior. O registro é mantido para auditoria.`
+            ? `O registro "${displayValue(cancelling.value)}" de ${formatInstant(cancelling.date)} deixará de aparecer no histórico, e o ${label.toLowerCase()} atual passará a ser o do registro anterior. O registro é mantido para auditoria.`
             : ""
         }
         confirmLabel="Excluir"

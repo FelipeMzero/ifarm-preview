@@ -1,5 +1,6 @@
 "use client";
 
+import { toInputDateTime } from "./format";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
@@ -11,7 +12,7 @@ import { DialogFooter } from "@/components/ui/dialog";
 import { FormField } from "@/components/our/FormField";
 import FieldRow from "@/components/our/FieldRow";
 import { SelectField } from "@/components/our/SelectField";
-import { type NeuteringTechnique } from "@ifarm/shared";
+import { type NeuteringTechnique, nowDateTime } from "@ifarm/shared";
 import { techniqueItems } from "@/features/neutering-technique/items";
 import { animalClient } from "@/lib/clients";
 import { ApiError, type AnimalNeuteringRecord } from "@ifarm/shared";
@@ -31,7 +32,6 @@ interface AnimalNeuteringCorrectionFormProps {
 }
 
 // yyyy-mm-dd no fuso local, formato do input de data
-const toInputDate = (iso: string) => new Date(iso).toLocaleDateString("en-CA");
 
 export function AnimalNeuteringCorrectionForm({
   animalId,
@@ -44,7 +44,7 @@ export function AnimalNeuteringCorrectionForm({
   const form = useForm<NeuteringCorrectionFormData>({
     resolver: zodResolver(neuteringCorrectionSchema),
     defaultValues: {
-      date: toInputDate(neutering.date),
+      date: toInputDateTime(neutering.date),
       techniqueId: neutering.techniqueId ?? "",
       notes: neutering.notes ?? "",
     },
@@ -54,7 +54,7 @@ export function AnimalNeuteringCorrectionForm({
     const dateChanged =
       !neutering.fromSession &&
       !!data.date &&
-      data.date !== toInputDate(neutering.date);
+      data.date !== toInputDateTime(neutering.date);
 
     try {
       await animalClient.correctNeutering(animalId, neutering.id, {
@@ -93,9 +93,9 @@ export function AnimalNeuteringCorrectionForm({
             <Input
               {...field}
               id={id}
-              type="date"
-              min={birthDate ?? undefined}
-              max={new Date().toLocaleDateString("en-CA")}
+              type="datetime-local"
+              min={birthDate ? `${birthDate}T00:00` : undefined}
+              max={nowDateTime()}
               disabled={neutering.fromSession}
               title={
                 neutering.fromSession

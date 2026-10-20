@@ -2,6 +2,7 @@ import "server-only";
 import { z } from "zod";
 import { Prisma } from "@/server/db";
 import { FIELD_LIMITS, fromLocalDay, toDbDate } from "@ifarm/shared";
+import { effectiveAt } from "@/server/event-time";
 import { BusinessError } from "@/server/errors";
 
 type Tx = Prisma.TransactionClient;
@@ -202,13 +203,8 @@ export async function receiveAnimal(
     );
   }
 
-  // Recepção de hoje usa o instante do registro (ordem entre os eventos do dia).
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const enteredAt =
-    session.managementDate.getTime() === today.getTime()
-      ? new Date()
-      : session.managementDate;
+  // Entrada na fazenda: a data e hora da recepção (ver effectiveAt).
+  const enteredAt = effectiveAt(session.managementDate, new Date());
 
   let birthDate: Date | null = null;
   if (input.ageMonths != null) {

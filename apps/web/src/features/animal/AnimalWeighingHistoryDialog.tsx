@@ -31,12 +31,12 @@ import {
 } from "@/components/ui/table";
 import { ConfirmDialog } from "@/components/our/ConfirmDialog";
 import { animalClient } from "@/lib/clients";
-import { ApiError, type AnimalWeighing } from "@ifarm/shared";
+import { ApiError, type AnimalWeighing, nowDateTime } from "@ifarm/shared";
 import { AnimalWeighingCorrectionForm } from "./AnimalWeighingCorrectionForm";
 import { WeighingCorrectionNote } from "./WeighingCorrectionNote";
 import type { Commitment } from "@ifarm/shared";
 import { CommitmentNotice } from "./CommitmentNotice";
-import { formatDate, formatKg } from "./format";
+import { formatInstant, formatKg } from "./format";
 
 interface AnimalWeighingHistoryDialogProps {
   animalId: string;
@@ -48,8 +48,6 @@ interface AnimalWeighingHistoryDialogProps {
   // Chamado após corrigir ou excluir, para quem abriu atualizar o peso atual.
   onChanged: () => void;
 }
-
-const todayInput = () => new Date().toLocaleDateString("en-CA");
 
 // Registro na hora: a nova pesagem entra no histórico e o peso atual é recalculado.
 function WeighingRegisterPanel({
@@ -67,7 +65,7 @@ function WeighingRegisterPanel({
   onChanged: () => void;
 }) {
   const [weight, setWeight] = useState("");
-  const [date, setDate] = useState(todayInput);
+  const [date, setDate] = useState(nowDateTime);
   const [notes, setNotes] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
@@ -87,13 +85,13 @@ function WeighingRegisterPanel({
     try {
       await animalClient.createWeighing(animalId, {
         weightKg: weight,
-        date: date === todayInput() ? undefined : date,
+        date,
         notes,
       });
       toast.success(`Pesagem de ${formatKg(Number(weight))} registrada.`);
       setWeight("");
       setNotes("");
-      setDate(todayInput());
+      setDate(nowDateTime());
       onChanged();
     } catch (err) {
       if (err instanceof ApiError && err.errors) setErrors(err.errors);
@@ -116,7 +114,7 @@ function WeighingRegisterPanel({
             <span className="font-medium">{formatKg(latest.weightKg)}</span>
             <span className="text-muted-foreground">
               {" "}
-              em {formatDate(latest.date)}
+              em {formatInstant(latest.date)}
             </span>
           </>
         ) : (
@@ -149,10 +147,10 @@ function WeighingRegisterPanel({
         />
         <Input
           aria-label="Data da pesagem"
-          type="date"
+          type="datetime-local"
           value={date}
-          min={birthDate ?? undefined}
-          max={todayInput()}
+          min={birthDate ? `${birthDate}T00:00` : undefined}
+          max={nowDateTime()}
           aria-invalid={errors.date ? true : undefined}
           onChange={(e) => {
             setDate(e.target.value);
@@ -253,7 +251,7 @@ export function AnimalWeighingHistoryDialog({
             <DialogTitle>{editing ? "Corrigir Pesagem" : "Peso"}</DialogTitle>
             <DialogDescription>
               {editing
-                ? `Pesagem de ${formatDate(editing.date)}.`
+                ? `Pesagem de ${formatInstant(editing.date)}.`
                 : "Registre uma pesagem ou corrija as lançadas com erro. As alterações são gravadas imediatamente."}
             </DialogDescription>
           </DialogHeader>
@@ -311,7 +309,7 @@ export function AnimalWeighingHistoryDialog({
                 <TableBody>
                   {weighings.map((w) => (
                     <TableRow key={w.id}>
-                      <TableCell>{formatDate(w.date)}</TableCell>
+                      <TableCell>{formatInstant(w.date)}</TableCell>
                       <TableCell className="text-right tabular-nums">
                         <div className="font-medium">
                           {formatKg(w.weightKg)}
@@ -358,7 +356,7 @@ export function AnimalWeighingHistoryDialog({
         title="Excluir pesagem"
         description={
           cancelling
-            ? `A pesagem de ${formatKg(cancelling.weightKg)} em ${formatDate(cancelling.date)} deixará de aparecer no histórico e nos cálculos. O registro é mantido para auditoria.`
+            ? `A pesagem de ${formatKg(cancelling.weightKg)} em ${formatInstant(cancelling.date)} deixará de aparecer no histórico e nos cálculos. O registro é mantido para auditoria.`
             : ""
         }
         confirmLabel="Excluir"

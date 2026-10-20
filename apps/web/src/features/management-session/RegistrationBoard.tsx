@@ -28,10 +28,10 @@ import { ConfirmDialog } from "@/components/our/ConfirmDialog";
 import { ErrorPage } from "@/components/our/ErrorPage";
 import ListSkeleton from "@/components/our/ListSkeleton";
 import { AnimalPicker } from "@/features/batch-transfer/AnimalPicker";
-import { type TransferAnimal } from "@ifarm/shared";
+import { type TransferAnimal, nowDateTime } from "@ifarm/shared";
 import { useCurrentProperty } from "@/features/shell/CurrentPropertyProvider";
 import type { ParticipantStatus } from "@ifarm/shared";
-import { SessionStatusBadge, formatSessionDate, todayIso } from "./display";
+import { SessionStatusBadge, formatSessionDateTime } from "./display";
 import { managementSessionClient } from "@/lib/clients";
 import {
   type ManagementSessionDetail,
@@ -130,7 +130,7 @@ export function RegistrationBoard({ id }: { id: string }) {
   // O registro começa com a data de hoje; se precisar, ela é corrigida no cabeçalho.
   async function startToday(animalId?: string) {
     try {
-      await managementSessionClient.startManagementSession(id, todayIso());
+      await managementSessionClient.startManagementSession(id, nowDateTime());
       toast.success("Registro iniciado com a data de hoje.");
       if (animalId) router.push(`/manejos/${id}/registro/${animalId}`);
       else reload();
@@ -287,14 +287,14 @@ export function RegistrationBoard({ id }: { id: string }) {
         <span>
           Prevista:{" "}
           <span className="text-foreground">
-            {formatSessionDate(detail.scheduledDate)}
+            {formatSessionDateTime(detail.scheduledDate)}
           </span>
         </span>
         {detail.managementDate && (
           <span className="flex items-center gap-1">
             Data do manejo:{" "}
             <span className="font-medium text-foreground">
-              {formatSessionDate(detail.managementDate)}
+              {formatSessionDateTime(detail.managementDate)}
             </span>
             {inProgress && (
               <Button
@@ -399,7 +399,7 @@ export function RegistrationBoard({ id }: { id: string }) {
 
       <SessionDateDialog
         open={dateDialog}
-        initial={detail.managementDate ?? todayIso()}
+        initial={detail.managementDate ?? nowDateTime()}
         title="Data do manejo"
         description="Data em que o manejo está sendo feito. Todos os registros da sessão recebem esta data."
         confirmLabel="Salvar"

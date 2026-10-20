@@ -22,11 +22,12 @@ import {
   NewValueMark,
   SEX_ICON,
 } from "@/features/animal/display";
-import { ParticipantStatusBadge, STEP_ICONS, todayIso } from "./display";
+import { ParticipantStatusBadge, STEP_ICONS } from "./display";
 import {
   type SessionParticipant,
   type SessionStepView,
   type SessionValues,
+  nowDateTime,
 } from "@ifarm/shared";
 
 // Partes do registro de uma sessão compartilhadas entre o registro de manejo e a
@@ -406,9 +407,9 @@ function DateForm({
   return (
     <form onSubmit={submit} className="space-y-4">
       <Input
-        type="date"
+        type="datetime-local"
         value={date}
-        max={todayIso()}
+        max={nowDateTime()}
         required
         onChange={(e) => setDate(e.target.value)}
       />

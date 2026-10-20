@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { dateField } from "../date";
+import { dateField, dateTimeField } from "../date";
 import { AnimalOrigin, Sex } from "../enums";
 import { FIELD_LIMITS } from "../field-limits";
 
@@ -11,6 +11,14 @@ import { FIELD_LIMITS } from "../field-limits";
 const optionalDate = dateField.transform((v) => v || null);
 /** Data opcional; vazia vira undefined ("não alterar"). */
 const keepDate = dateField.transform((v) => v || undefined);
+/**
+ * Data e hora de um manejo avulso ou da correção de um registro ("AAAA-MM-DDTHH:mm"); vazia
+ * vira undefined (registro avulso: agora; correção: não alterar).
+ */
+const eventDateTime = z
+  .union([dateTimeField, z.literal("")])
+  .optional()
+  .transform((v) => v || undefined);
 
 export const animalCreateSchema = z
   .object({
@@ -185,7 +193,7 @@ export const weighingCorrectionSchema = z.object({
   weightKg: z.coerce
     .number("Informe um peso válido")
     .positive("O peso deve ser maior que zero"),
-  date: keepDate,
+  date: eventDateTime,
   notes: z
     .string()
     .optional()
@@ -194,7 +202,7 @@ export const weighingCorrectionSchema = z.object({
 export type WeighingCorrectionData = z.infer<typeof weighingCorrectionSchema>;
 
 export const neuteringCorrectionSchema = z.object({
-  date: keepDate,
+  date: eventDateTime,
   techniqueId: z
     .string()
     .optional()
@@ -217,7 +225,7 @@ export const weighingCreateSchema = z.object({
   weightKg: z.coerce
     .number("Informe um peso válido")
     .positive("O peso deve ser maior que zero"),
-  date: keepDate,
+  date: eventDateTime,
   notes: z
     .string()
     .optional()
@@ -226,7 +234,7 @@ export const weighingCreateSchema = z.object({
 
 // Registro avulso de castração feito pelo histórico de castrações (gravado na hora).
 export const neuteringCreateSchema = z.object({
-  date: z.string().min(1, "Informe a data").pipe(z.iso.date("Data inválida")),
+  date: z.string().min(1, "Informe a data").pipe(dateTimeField),
   // Castração feita na fazenda: a técnica é sempre conhecida.
   techniqueId: z.string("Informe a técnica.").min(1, "Informe a técnica."),
   notes: z
@@ -260,7 +268,7 @@ export const identifierCorrectionSchema = z.object({
     .trim()
     .optional()
     .transform((v) => v || null),
-  date: keepDate,
+  date: eventDateTime,
   notes: z
     .string()
     .optional()

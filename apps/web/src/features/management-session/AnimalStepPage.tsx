@@ -29,7 +29,7 @@ import { useCurrentProperty } from "@/features/shell/CurrentPropertyProvider";
 import {
   ParticipantStatusBadge,
   STEP_ICONS,
-  formatSessionDate,
+  formatSessionDateTime,
 } from "./display";
 import { managementSessionClient } from "@/lib/clients";
 import {
@@ -340,7 +340,7 @@ export function AnimalStepPage({
             ? "O registro desta sessão ainda não foi iniciado."
             : `Sessão ${context.session.status === "confirmed" ? "consolidada" : "cancelada"}${
                 context.session.managementDate
-                  ? ` (manejo de ${formatSessionDate(context.session.managementDate)})`
+                  ? ` (manejo de ${formatSessionDateTime(context.session.managementDate)})`
                   : ""
               }: somente visualização.`}
         </p>

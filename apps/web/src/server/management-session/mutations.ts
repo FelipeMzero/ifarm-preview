@@ -29,7 +29,6 @@ import {
   requireManagementDate,
   requireSessionIn,
   sessionIntent,
-  startOfToday,
   StepError,
   type LoadedSession,
 } from "./shared";
@@ -216,7 +215,7 @@ export async function startManagementSession(
   data: ManagementSessionStartData,
 ) {
   const { managementDate } = data;
-  if (managementDate > startOfToday()) {
+  if (managementDate > new Date()) {
     throw new StepError(
       "A data do manejo não pode ser futura.",
       400,

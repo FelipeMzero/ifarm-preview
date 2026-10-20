@@ -2,7 +2,7 @@ import "server-only";
 import { z } from "zod";
 import {
   fromDbDate,
-  fromLocalDay,
+  fromLocalDateTime,
   type BatchDetail,
   type BatchFullDetails,
   type BatchListResult,
@@ -360,13 +360,13 @@ export async function getBatchDetails(id: string): Promise<BatchFullDetails> {
     pendingTransfers: {
       incoming: incomingPending.map((t) => ({
         id: t.id,
-        transferDate: fromLocalDay(t.transferDate),
+        transferDate: fromLocalDateTime(t.transferDate),
         animalCount: t._count.items,
         notes: t.notes,
       })),
       outgoing: outgoingPending.map((t) => ({
         id: t.id,
-        transferDate: fromLocalDay(t.transferDate),
+        transferDate: fromLocalDateTime(t.transferDate),
         destinationBatch: t.destinationBatch,
         animalCount: t.items.length,
         notes: t.notes,

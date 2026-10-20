@@ -2,7 +2,7 @@ import "server-only";
 import {
   animalLabel,
   summarize,
-  toLocalDay,
+  toLocalDateTime,
   type BatchTransferData,
 } from "@ifarm/shared";
 import { prisma } from "@/server/db";
@@ -103,7 +103,7 @@ export async function createBatchTransfer(
     await assertNoConflicts(tx, animalIds, { kind: "transfer" });
     return tx.animalBatchTransfer.create({
       data: {
-        transferDate: toLocalDay(data.transferDate),
+        transferDate: toLocalDateTime(data.transferDate),
         notes: data.notes,
         destinationBatchId: data.destinationBatchId,
         propertyId,
@@ -157,7 +157,7 @@ export async function updateBatchTransfer(id: string, data: BatchTransferData) {
     const updated = await tx.animalBatchTransfer.updateMany({
       where: { id, confirmedAt: null, cancelledAt: null },
       data: {
-        transferDate: toLocalDay(data.transferDate),
+        transferDate: toLocalDateTime(data.transferDate),
         notes: data.notes,
         destinationBatchId: data.destinationBatchId,
       },

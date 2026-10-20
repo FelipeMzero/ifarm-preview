@@ -1,7 +1,7 @@
 import "server-only";
 import { z } from "zod";
 import {
-  fromLocalDay,
+  fromLocalDateTime,
   participantStatus,
   sessionStatus,
   sessionStepsSelect,
@@ -19,7 +19,7 @@ import { NotFoundError } from "../errors";
 import { describeReception } from "../purchase/reception";
 import { loadAnimalContext } from "./animalContext";
 import { managementSessionQuerySchema } from "./schemas";
-import { loadSession, toDateOnly } from "./shared";
+import { loadSession } from "./shared";
 import {
   countDone,
   describeSteps,
@@ -107,8 +107,10 @@ export async function listManagementSessions(
       const health = new Map(s.healthManagements.map((h) => [h.id, h]));
       return {
         id: s.id,
-        scheduledDate: fromLocalDay(s.scheduledDate),
-        managementDate: toDateOnly(s.managementDate),
+        scheduledDate: fromLocalDateTime(s.scheduledDate),
+        managementDate: s.managementDate
+          ? fromLocalDateTime(s.managementDate)
+          : null,
         title: s.title,
         notes: s.notes,
         steps: toSessionSteps(s.steps).map((step) => {
@@ -170,8 +172,10 @@ export async function getManagementSession(
   return {
     id: session.id,
     status: session.status,
-    scheduledDate: fromLocalDay(session.scheduledDate),
-    managementDate: toDateOnly(session.managementDate),
+    scheduledDate: fromLocalDateTime(session.scheduledDate),
+    managementDate: session.managementDate
+      ? fromLocalDateTime(session.managementDate)
+      : null,
     title: row.title,
     notes: row.notes ?? "",
     propertyId: session.propertyId,

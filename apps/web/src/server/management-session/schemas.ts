@@ -1,6 +1,5 @@
 import { z } from "zod";
-import { FIELD_LIMITS } from "@ifarm/shared";
-import { dateOnlySchema } from "@/server/management-session/shared";
+import { dateTimeField, FIELD_LIMITS, toLocalDateTime } from "@ifarm/shared";
 import { planStepSchema } from "@/server/management-session/steps";
 
 export const managementSessionQuerySchema = z.object({
@@ -30,7 +29,8 @@ export const managementSessionApiSchema = z.object({
       FIELD_LIMITS.managementSession.title,
       `Máximo de ${FIELD_LIMITS.managementSession.title} caracteres`,
     ),
-  scheduledDate: dateOnlySchema,
+  // Data e hora previstas ("AAAA-MM-DDTHH:mm", no fuso local).
+  scheduledDate: dateTimeField.transform(toLocalDateTime),
   notes: z
     .string()
     .max(
@@ -47,7 +47,8 @@ export const managementSessionApiSchema = z.object({
 });
 
 export const managementSessionStartApiSchema = z.object({
-  managementDate: dateOnlySchema,
+  // Data e hora em que o manejo acontece ("AAAA-MM-DDTHH:mm", no fuso local).
+  managementDate: dateTimeField.transform(toLocalDateTime),
 });
 
 export const participantsApiSchema = z.object({

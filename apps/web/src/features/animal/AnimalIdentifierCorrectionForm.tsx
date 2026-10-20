@@ -1,5 +1,6 @@
 "use client";
 
+import { toInputDateTime } from "./format";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -11,7 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { DialogFooter } from "@/components/ui/dialog";
 import { FormField } from "@/components/our/FormField";
 import FieldRow from "@/components/our/FieldRow";
-import { FIELD_LIMITS } from "@ifarm/shared";
+import { FIELD_LIMITS, nowDateTime } from "@ifarm/shared";
 import { animalClient } from "@/lib/clients";
 import {
   ApiError,
@@ -32,7 +33,6 @@ export const IDENTIFIER_MAX_LENGTH: Record<IdentifierKind, number> = {
 type FormData = { value: string; date?: string; notes?: string };
 
 // yyyy-mm-dd no fuso local, formato do input de data
-const toInputDate = (iso: string) => new Date(iso).toLocaleDateString("en-CA");
 
 interface AnimalIdentifierCorrectionFormProps {
   animalId: string;
@@ -65,7 +65,7 @@ export function AnimalIdentifierCorrectionForm({
     ),
     defaultValues: {
       value: record.value ?? "",
-      date: toInputDate(record.date),
+      date: toInputDateTime(record.date),
       notes: record.notes ?? "",
     },
   });
@@ -74,7 +74,7 @@ export function AnimalIdentifierCorrectionForm({
     const dateChanged =
       !record.fromSession &&
       !!data.date &&
-      data.date !== toInputDate(record.date);
+      data.date !== toInputDateTime(record.date);
 
     try {
       await animalClient.correctIdentifier(animalId, kind, record.id, {
@@ -129,8 +129,8 @@ export function AnimalIdentifierCorrectionForm({
             <Input
               {...field}
               id={id}
-              type="date"
-              max={new Date().toLocaleDateString("en-CA")}
+              type="datetime-local"
+              max={nowDateTime()}
               disabled={record.fromSession}
               title={
                 record.fromSession

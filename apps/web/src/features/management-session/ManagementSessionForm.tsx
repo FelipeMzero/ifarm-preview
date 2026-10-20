@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
-import { FIELD_LIMITS } from "@ifarm/shared";
+import { FIELD_LIMITS, nowDateTime } from "@ifarm/shared";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -40,7 +40,7 @@ import {
 } from "@/features/batch-transfer/SelectedAnimals";
 import { type TransferAnimal } from "@ifarm/shared";
 import { useCurrentProperty } from "@/features/shell/CurrentPropertyProvider";
-import { SessionStatusBadge, formatSessionDate, todayIso } from "./display";
+import { SessionStatusBadge, formatSessionDateTime } from "./display";
 import { planFormSchema, toStepPayload, type PlanFormData } from "./schema";
 import { managementSessionClient } from "@/lib/clients";
 import {
@@ -113,7 +113,7 @@ export function ManagementSessionForm({
     resolver: zodResolver(planFormSchema),
     defaultValues: {
       title: "",
-      scheduledDate: todayIso(),
+      scheduledDate: nowDateTime(),
       notes: "",
       steps: [],
     },
@@ -298,7 +298,7 @@ export function ManagementSessionForm({
         {detail?.status === "confirmed"
           ? `Manejo consolidado em ${new Date(detail.confirmedAt!).toLocaleString("pt-BR")}${
               detail.managementDate
-                ? ` (realizado em ${formatSessionDate(detail.managementDate)})`
+                ? ` (realizado em ${formatSessionDateTime(detail.managementDate)})`
                 : ""
             }. Não pode mais ser alterado.`
           : detail?.status === "cancelled"
@@ -378,7 +378,7 @@ export function ManagementSessionForm({
                 label="Data prevista"
                 required
                 render={({ field, id: fieldId }) => (
-                  <Input {...field} id={fieldId} type="date" />
+                  <Input {...field} id={fieldId} type="datetime-local" />
                 )}
               />
             </FieldRow>

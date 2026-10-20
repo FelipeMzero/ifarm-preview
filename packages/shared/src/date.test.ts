@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
   dateField,
+  dateTimeField,
+  formatDateTime,
+  formatEventDateTime,
+  fromLocalDateTime,
+  toLocalDateTime,
   formatDate,
   fromDbDate,
   fromLocalDay,
@@ -44,5 +49,32 @@ describe("toLocalDay / fromLocalDay", () => {
     const d = toLocalDay("2026-05-10");
     expect([d.getHours(), d.getMinutes()]).toEqual([0, 0]);
     expect(fromLocalDay(d)).toBe("2026-05-10");
+  });
+});
+
+describe("data e hora", () => {
+  it("ida e volta preservam data e hora locais", () => {
+    const d = toLocalDateTime("2026-05-10T14:30");
+    expect([d.getHours(), d.getMinutes()]).toEqual([14, 30]);
+    expect(fromLocalDateTime(d)).toBe("2026-05-10T14:30");
+  });
+
+  it("dateTimeField aceita AAAA-MM-DDTHH:mm e rejeita o resto", () => {
+    expect(dateTimeField.safeParse("2026-05-10T14:30").success).toBe(true);
+    expect(dateTimeField.safeParse("2026-05-10").success).toBe(false);
+    expect(dateTimeField.safeParse("2026-02-30T10:00").success).toBe(false);
+    expect(dateTimeField.safeParse("2026-05-10T25:00").success).toBe(false);
+  });
+
+  it("formatDateTime formata no padrão brasileiro", () => {
+    expect(formatDateTime("2026-05-10T14:30")).toBe("10/05/2026 14:30");
+  });
+});
+
+describe("formatEventDateTime", () => {
+  it("mostra a hora quando houver e omite a meia-noite dos registros antigos", () => {
+    expect(formatEventDateTime("2026-05-10T14:30")).toBe("10/05/2026 às 14:30");
+    expect(formatEventDateTime("2026-05-10T00:00")).toBe("10/05/2026");
+    expect(formatEventDateTime("2026-05-10")).toBe("10/05/2026");
   });
 });

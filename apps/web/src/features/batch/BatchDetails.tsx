@@ -67,7 +67,7 @@ import { cn } from "@/lib/utils";
 import { BatchGoalChart } from "./BatchGoalChart";
 import { projectBatch } from "./projection";
 import { batchClient } from "@/lib/clients";
-import { type BatchFullDetails } from "@ifarm/shared";
+import { type BatchFullDetails, formatEventDateTime } from "@ifarm/shared";
 
 function formatAdg(value: number | null | undefined) {
   if (value == null) return "—";
@@ -773,7 +773,7 @@ function PendingTransfersCard({
                   )}
                 </span>
                 <time className="shrink-0 text-xs tabular-nums text-muted-foreground">
-                  {formatDateOnly(r.date)}
+                  {formatEventDateTime(r.date)}
                 </time>
               </button>
             </li>

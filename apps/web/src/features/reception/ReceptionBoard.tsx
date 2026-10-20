@@ -13,13 +13,13 @@ import { ErrorPage } from "@/components/our/ErrorPage";
 import ListSkeleton from "@/components/our/ListSkeleton";
 import {
   SessionStatusBadge,
-  formatSessionDate,
-  todayIso,
+  formatSessionDateTime,
 } from "@/features/management-session/display";
 import { managementSessionClient } from "@/lib/clients";
 import {
   type ManagementSessionDetail,
   type SessionParticipant,
+  nowDateTime,
 } from "@ifarm/shared";
 import {
   ParticipantTabs,
@@ -262,7 +262,7 @@ export function ReceptionBoard({ id }: { id: string }) {
           <span className="flex items-center gap-1">
             Data da recepção:{" "}
             <span className="font-medium text-foreground">
-              {formatSessionDate(detail.managementDate)}
+              {formatSessionDateTime(detail.managementDate)}
             </span>
             {inProgress && (
               <Button
@@ -357,7 +357,7 @@ export function ReceptionBoard({ id }: { id: string }) {
 
       <SessionDateDialog
         open={dateDialog}
-        initial={detail.managementDate ?? todayIso()}
+        initial={detail.managementDate ?? nowDateTime()}
         title="Data da recepção"
         description="Data em que os animais chegaram. Todos os registros da recepção recebem esta data."
         confirmLabel="Salvar"

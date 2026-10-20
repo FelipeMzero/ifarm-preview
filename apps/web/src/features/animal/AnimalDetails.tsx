@@ -64,6 +64,7 @@ import {
   formatDuration,
   formatKg,
   formatSignedKg,
+  formatInstant,
 } from "./format";
 import {
   CountBadge,
@@ -343,7 +344,7 @@ export default function AnimalDetails({
                 {formatSignedKg(weightDelta)} desde a pesagem anterior
               </span>
             ) : lastWeighing ? (
-              `Pesado em ${formatDate(lastWeighing.date)}`
+              `Pesado em ${formatInstant(lastWeighing.date)}`
             ) : (
               "Sem pesagens"
             )
@@ -532,7 +533,7 @@ export default function AnimalDetails({
                             {event.title}
                           </p>
                           <time className="shrink-0 text-xs tabular-nums text-muted-foreground">
-                            {formatDate(event.date)}
+                            {formatInstant(event.date)}
                           </time>
                         </div>
                         {event.description && (
@@ -605,7 +606,7 @@ export default function AnimalDetails({
                       const gmd = diff != null && days ? diff / days : null;
                       return (
                         <TableRow key={w.id}>
-                          <TableCell>{formatDate(w.date)}</TableCell>
+                          <TableCell>{formatInstant(w.date)}</TableCell>
                           <TableCell className="text-right tabular-nums">
                             <div className="font-medium">
                               {formatKg(w.weightKg)}
@@ -743,7 +744,7 @@ export default function AnimalDetails({
                       <TableBody>
                         {section.rows.map((row, i) => (
                           <TableRow key={row.id}>
-                            <TableCell>{formatDate(row.date)}</TableCell>
+                            <TableCell>{formatInstant(row.date)}</TableCell>
                             <TableCell>
                               <div className="flex items-center gap-2">
                                 <span className="font-medium">
@@ -799,7 +800,7 @@ export default function AnimalDetails({
                   <TableBody>
                     {animal.health.map((h) => (
                       <TableRow key={h.id}>
-                        <TableCell>{formatDate(h.date)}</TableCell>
+                        <TableCell>{formatInstant(h.date)}</TableCell>
                         <TableCell>
                           <div className="font-medium">{h.typeName}</div>
                           {(h.title || h.notes) && (
@@ -856,7 +857,7 @@ export default function AnimalDetails({
                       <TableRow key={n.id}>
                         <TableCell>
                           <div className="flex items-center gap-2">
-                            {formatDate(n.date)}
+                            {formatInstant(n.date)}
                             {i < animal.neutering.length - 1 && (
                               <Badge variant="secondary">Recastração</Badge>
                             )}

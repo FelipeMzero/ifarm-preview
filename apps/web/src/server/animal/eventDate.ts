@@ -1,51 +1,45 @@
 import "server-only";
-import { formatDate, fromDbDate, toLocalDay, today } from "@ifarm/shared";
+import {
+  formatDate,
+  fromDbDate,
+  fromLocalDay,
+  toLocalDateTime,
+} from "@ifarm/shared";
 import { prisma } from "@/server/db";
 import { ValidationError } from "../errors";
 
-// Datas de manejos avulsos (pesagem, castração, identificação), recebidas como "AAAA-MM-DD".
+// Data e hora de manejos avulsos e de correções (pesagem, castração, identificação),
+// recebidas como "AAAA-MM-DDTHH:mm" e interpretadas no fuso local.
 
 const dateError = (message: string) =>
   new ValidationError(message, { date: message });
 
-export function assertNotFuture(day: string) {
-  if (day > today()) throw dateError("A data não pode ser futura.");
+export function assertNotFuture(at: Date) {
+  if (at > new Date()) throw dateError("A data não pode ser futura.");
 }
 
-export async function assertNotBeforeBirth(animalId: string, day: string) {
+// O nascimento é só um dia: vale qualquer horário a partir dele.
+export async function assertNotBeforeBirth(animalId: string, at: Date) {
   const animal = await prisma.animal.findUnique({
     where: { id: animalId },
     select: { birthDate: true },
   });
   const birthDay = animal?.birthDate ? fromDbDate(animal.birthDate) : null;
-  if (birthDay && day < birthDay) {
+  if (birthDay && fromLocalDay(at) < birthDay) {
     throw dateError(
       `A data não pode ser anterior ao nascimento do animal (${formatDate(birthDay)}).`,
     );
   }
 }
 
-// Instante a gravar num manejo avulso: hoje usa a hora atual (fica depois dos registros
-// anteriores do dia); dias passados ficam à meia-noite local.
+// Instante a gravar num manejo avulso: a data e hora informadas, ou agora se vier vazia.
 export async function resolveEventDate(
   animalId: string,
-  day: string | undefined,
+  value: string | undefined,
 ): Promise<Date> {
-  if (!day || day === today()) return new Date();
-  assertNotFuture(day);
-  await assertNotBeforeBirth(animalId, day);
-  return toLocalDay(day);
-}
-
-// Correção de data: troca só o dia e mantém o horário original, para não alterar a ordem
-// entre registros do mesmo dia.
-export function withDay(day: string, original: Date): Date {
-  const at = toLocalDay(day);
-  at.setHours(
-    original.getHours(),
-    original.getMinutes(),
-    original.getSeconds(),
-    original.getMilliseconds(),
-  );
+  if (!value) return new Date();
+  const at = toLocalDateTime(value);
+  assertNotFuture(at);
+  await assertNotBeforeBirth(animalId, at);
   return at;
 }

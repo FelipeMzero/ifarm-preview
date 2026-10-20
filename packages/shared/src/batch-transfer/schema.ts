@@ -1,11 +1,13 @@
 import { z } from "zod";
+import { dateTimeField } from "../date";
 import { FIELD_LIMITS } from "../field-limits";
 
 // Contrato da API de transferências entre lotes (o formulário tem estado próprio, em
-// features/batch-transfer/schema.ts). Data como "AAAA-MM-DD"; o servidor converte.
+// features/batch-transfer/schema.ts). Data e hora como "AAAA-MM-DDTHH:mm"; o servidor converte.
 export const batchTransferSchema = z.object({
   destinationBatchId: z.uuid("Selecione o lote de destino."),
-  transferDate: z.iso.date("Informe uma data válida."),
+  // Data e hora programadas ("AAAA-MM-DDTHH:mm", no fuso local).
+  transferDate: dateTimeField,
   notes: z
     .string()
     .max(

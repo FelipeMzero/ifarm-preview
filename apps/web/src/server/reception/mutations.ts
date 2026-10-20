@@ -2,7 +2,7 @@ import "server-only";
 import { z } from "zod";
 import { receptionDocumentsSchema } from "@ifarm/shared";
 import { prisma } from "@/server/db";
-import { applyPlanSteps, startOfToday } from "../management-session/shared";
+import { applyPlanSteps } from "../management-session/shared";
 import { planStepSchema } from "../management-session/steps";
 import { StepError } from "../management-session/steps/types";
 import { validateReceptionInput } from "../purchase/reception";
@@ -42,19 +42,19 @@ export async function createReception(
     });
 
     const trip = event._count.receptions + 1;
-    const today = startOfToday();
+    const now = new Date();
     const session = await tx.managementSession.create({
       data: {
         propertyId,
         title: `Recepção ${trip} — ${event.title}`,
-        scheduledDate: today,
-        managementDate: today,
+        scheduledDate: new Date(),
+        managementDate: now,
       },
     });
 
     await applyPlanSteps(
       tx,
-      { ...session, managementDate: today },
+      { ...session, managementDate: now },
       [],
       data.steps,
     );
