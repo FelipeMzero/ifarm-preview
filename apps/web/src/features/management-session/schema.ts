@@ -1,8 +1,10 @@
 import { z } from "zod";
 import {
   FIELD_LIMITS,
+  HealthManagementDoseType,
   managementSessionFieldsSchema,
   STEP_TYPES,
+  type PlanStepPayload,
 } from "@ifarm/shared";
 
 // Uma etapa no formulário de planejamento. Os campos extras só valem para o tipo
@@ -20,7 +22,7 @@ export const planStepFormSchema = z
       )
       .optional(),
     veterinarianId: z.string().optional(),
-    doseType: z.string().optional(),
+    doseType: z.enum(HealthManagementDoseType).optional(),
     doseMl: z.string().optional(),
     doseWeightKg: z.string().optional(),
     withdrawalEndDate: z.string().optional(),
@@ -60,16 +62,17 @@ export const planStepFormSchema = z
 
 export type PlanStepForm = z.infer<typeof planStepFormSchema>;
 
-// Campos vazios viram null; o servidor valida cada etapa pelo schema do seu tipo.
-export function toStepPayload(step: PlanStepForm) {
+// Do formulário (um objeto com os campos de todos os tipos) para o contrato da API
+// (planStepSchema, em @ifarm/shared): campos vazios viram null.
+export function toStepPayload(step: PlanStepForm): PlanStepPayload {
   if (step.type === "health") {
     return {
       type: step.type,
       healthManagementId: step.healthManagementId || undefined,
-      typeId: step.typeId,
+      typeId: step.typeId ?? "",
       title: step.title || null,
       veterinarianId: step.veterinarianId || null,
-      doseType: step.doseType || "NONE",
+      doseType: step.doseType ?? "NONE",
       doseMl: step.doseMl ? Number(step.doseMl) : null,
       doseWeightKg: step.doseWeightKg ? Number(step.doseWeightKg) : null,
       withdrawalEndDate: step.withdrawalEndDate || null,

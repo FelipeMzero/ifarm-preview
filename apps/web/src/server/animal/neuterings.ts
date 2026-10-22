@@ -43,4 +43,3 @@ export async function isValidNeuteringTechnique(
 }
 
 export const INVALID_TECHNIQUE_MESSAGE = "Técnica de castração inválida.";
-export const REQUIRED_TECHNIQUE_MESSAGE = "Informe a técnica.";

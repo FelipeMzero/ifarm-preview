@@ -4,7 +4,7 @@ import {
   toQueryString,
   type ApiRequest,
 } from "../client";
-import type { ReceiveAnimalPayload } from "./schema";
+import type { ManagementSessionPayload, ReceiveAnimalPayload } from "./schema";
 import type {
   ManagementSessionStatus,
   ParticipantStatus,
@@ -133,15 +133,6 @@ export type ManagementOptions = {
   neuteringTechniques: Ref[];
   people: Ref[];
   batches: Ref[];
-};
-
-export type ManagementSessionPayload = {
-  title: string;
-  scheduledAt: string;
-  notes?: string;
-  steps: Record<string, unknown>[];
-  animalIds: string[];
-  propertyId?: string;
 };
 
 export type ManagementSessionListResult = {

@@ -1,10 +1,10 @@
 import "server-only";
 import { z } from "zod";
+import { batchPayloadSchema, batchPlanSchema } from "@ifarm/shared";
 import { confirmTransferInTx } from "@/server/batch-transfer/confirmTransfer";
 import {
   defineStep,
   StepError,
-  stepNotesSchema,
   type SessionCtx,
   type Tx,
 } from "@/server/management-session/steps/types";
@@ -35,10 +35,7 @@ export const batchStep = defineStep({
   // Por último: a transferência valida o animal depois dos demais manejos.
   consolidateOrder: 90,
 
-  planSchema: z.object({
-    type: z.literal("batch"),
-    suggestedBatchIds: z.array(z.uuid()).default([]),
-  }),
+  planSchema: batchPlanSchema,
 
   async prepare(tx, session, plan) {
     const ids = [...new Set(plan.suggestedBatchIds)];
@@ -148,11 +145,7 @@ export const batchStep = defineStep({
     return records;
   },
 
-  payloadSchema: z.object({
-    // null = permanecer no lote atual.
-    batchId: z.uuid().nullable(),
-    notes: stepNotesSchema,
-  }),
+  payloadSchema: batchPayloadSchema,
 
   async save(tx, session, _step, animal, payload) {
     await removeAnimal(tx, session, animal.id);

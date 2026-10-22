@@ -1,10 +1,10 @@
 import "server-only";
 import { z } from "zod";
+import { weighingPayloadSchema, weighingPlanSchema } from "@ifarm/shared";
 import { recomputeCurrentWeight } from "@/server/animal/weighings";
 import {
   defineStep,
   StepError,
-  stepNotesSchema,
   type Tx,
 } from "@/server/management-session/steps/types";
 
@@ -18,7 +18,7 @@ export const weighingStep = defineStep({
   type: "weighing",
   consolidateOrder: 10,
 
-  planSchema: z.object({ type: z.literal("weighing") }),
+  planSchema: weighingPlanSchema,
 
   async prepare(tx, session) {
     await tx.weighingManagement.upsert({
@@ -63,13 +63,7 @@ export const weighingStep = defineStep({
     );
   },
 
-  payloadSchema: z.object({
-    weightKg: z.coerce
-      .number("Informe um peso válido")
-      .positive("O peso deve ser maior que zero")
-      .max(3000, "Peso acima do limite (3000 kg)"),
-    notes: stepNotesSchema,
-  }),
+  payloadSchema: weighingPayloadSchema,
 
   async save(tx, session, _step, animal, payload) {
     const management = await container(tx, session.id);

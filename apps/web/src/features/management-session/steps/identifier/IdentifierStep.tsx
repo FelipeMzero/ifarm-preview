@@ -2,34 +2,34 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { FieldSet } from "@/components/ui/field";
 import { FormField } from "@/components/our/FormField";
-import { FIELD_LIMITS } from "@ifarm/shared";
+import {
+  FIELD_LIMITS,
+  IDENTIFIER_MAX_LENGTH,
+  identifierPayloadSchemaFor,
+  type IdentifierKind,
+  type IdentifierPayload,
+} from "@ifarm/shared";
 import type { StepScreenProps } from "../types";
 import { handleStepError } from "../formHelpers";
 
 type IdentifierRecord = { value: string; notes: string | null };
 
-type FormData = { value: string; notes?: string };
+type FormData = IdentifierPayload;
 
-// Brinco e RFID têm a mesma tela; muda o campo do animal e o limite de tamanho.
+// Brinco e RFID têm a mesma tela; muda o campo do animal e o limite de tamanho (do
+// schema do tipo, em @ifarm/shared).
 function createIdentifierStep(config: {
   label: string;
   current: (animal: StepScreenProps["animal"]) => string | null;
-  maxLength: number;
+  kind: IdentifierKind;
   placeholder: string;
 }) {
-  const schema = z.object({
-    value: z
-      .string()
-      .trim()
-      .min(1, "Este campo é obrigatório")
-      .max(config.maxLength, `Máximo de ${config.maxLength} caracteres`),
-    notes: z.string().optional(),
-  });
+  const schema = identifierPayloadSchemaFor(config.kind);
+  const maxLength = IDENTIFIER_MAX_LENGTH[config.kind];
 
   return function IdentifierStep({
     formId,
@@ -39,7 +39,7 @@ function createIdentifierStep(config: {
     onSubmit,
   }: StepScreenProps<IdentifierRecord>) {
     const form = useForm<FormData>({
-      resolver: zodResolver(schema),
+      resolver: zodResolver(schema, undefined, { raw: true }),
       defaultValues: { value: record?.value ?? "", notes: record?.notes ?? "" },
     });
 
@@ -77,7 +77,7 @@ function createIdentifierStep(config: {
                 {...field}
                 id={id}
                 autoComplete="off"
-                maxLength={config.maxLength}
+                maxLength={maxLength}
                 placeholder={config.placeholder}
                 className="h-14 max-w-100 text-2xl md:text-2xl"
               />
@@ -91,6 +91,7 @@ function createIdentifierStep(config: {
             render={({ field, id }) => (
               <Textarea
                 {...field}
+                value={field.value ?? ""}
                 id={id}
                 maxLength={FIELD_LIMITS.managementSession.stepNotes}
                 placeholder="Motivo da troca, perda do anterior..."
@@ -108,13 +109,13 @@ function createIdentifierStep(config: {
 export const TagStep = createIdentifierStep({
   label: "Brinco",
   current: (a) => a.earTag,
-  maxLength: FIELD_LIMITS.animal.earTag,
+  kind: "tag",
   placeholder: "Número do brinco",
 });
 
 export const RfidStep = createIdentifierStep({
   label: "RFID",
   current: (a) => a.rfid,
-  maxLength: FIELD_LIMITS.animal.rfid,
+  kind: "rfid",
   placeholder: "Leia ou digite o RFID",
 });

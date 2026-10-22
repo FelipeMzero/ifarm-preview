@@ -3,12 +3,11 @@ import { z } from "zod";
 import {
   defineStep,
   StepError,
-  stepNotesSchema,
   type Tx,
 } from "@/server/management-session/steps/types";
+import { neuteringPayloadSchema, neuteringPlanSchema } from "@ifarm/shared";
 import {
   INVALID_TECHNIQUE_MESSAGE,
-  REQUIRED_TECHNIQUE_MESSAGE,
   isValidNeuteringTechnique,
 } from "@/server/animal/neuterings";
 
@@ -22,11 +21,7 @@ export const neuteringStep = defineStep({
   type: "neutering",
   consolidateOrder: 20,
 
-  planSchema: z.object({
-    type: z.literal("neutering"),
-    // Técnica prevista: vem pré-selecionada no registro, que pode escolher outra.
-    suggestedTechniqueId: z.uuid().nullish().default(null),
-  }),
+  planSchema: neuteringPlanSchema,
 
   async prepare(tx, session, plan) {
     const techniqueId = plan.suggestedTechniqueId ?? null;
@@ -113,13 +108,7 @@ export const neuteringStep = defineStep({
     );
   },
 
-  payloadSchema: z.object({
-    // Castração feita na fazenda: a técnica é sempre conhecida.
-    techniqueId: z
-      .string(REQUIRED_TECHNIQUE_MESSAGE)
-      .min(1, REQUIRED_TECHNIQUE_MESSAGE),
-    notes: stepNotesSchema,
-  }),
+  payloadSchema: neuteringPayloadSchema,
 
   async save(tx, session, _step, animal, payload) {
     const management = await container(tx, session.id);

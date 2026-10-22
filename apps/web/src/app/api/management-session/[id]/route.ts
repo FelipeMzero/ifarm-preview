@@ -3,7 +3,7 @@ import { requireSession } from "@/app/api/session";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
 import { getManagementSession } from "@/server/management-session/queries";
 import { updateManagementSession } from "@/server/management-session/mutations";
-import { managementSessionApiSchema } from "@/server/management-session/schemas";
+import { managementSessionSchema } from "@ifarm/shared";
 import { errorResponse, validationErrorResponse } from "../../http";
 
 type Params = { params: Promise<{ id: string }> };
@@ -27,9 +27,7 @@ export async function PUT(request: NextRequest, { params }: Params) {
 
   try {
     const { id } = await params;
-    const validation = managementSessionApiSchema.safeParse(
-      await request.json(),
-    );
+    const validation = managementSessionSchema.safeParse(await request.json());
     if (!validation.success) return validationErrorResponse(validation.error);
 
     await updateManagementSession(id, validation.data);

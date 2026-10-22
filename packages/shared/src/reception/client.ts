@@ -5,6 +5,7 @@ import {
   type ApiRequest,
 } from "../client";
 import type { ManagementSessionStatus } from "../management-session/steps";
+import type { CreateReceptionPayload } from "./schema";
 
 // Área de recepções: a compra vista por quem recebe os animais (sem valores).
 
@@ -90,13 +91,7 @@ export function createReceptionClient(request: ApiRequest) {
       );
     },
 
-    async createReception(
-      purchaseId: string,
-      data: ReceptionDocuments & {
-        entryBatchId: string;
-        steps: Record<string, unknown>[];
-      },
-    ) {
+    async createReception(purchaseId: string, data: CreateReceptionPayload) {
       const response = await request(
         `${RECEPTION_PURCHASES}/${purchaseId}/receptions`,
         jsonRequest("POST", data),

@@ -1,11 +1,14 @@
 import "server-only";
 import { z } from "zod";
-import { FIELD_LIMITS } from "@ifarm/shared";
+import {
+  identifierPayloadSchemaFor,
+  rfidPlanSchema,
+  tagPlanSchema,
+} from "@ifarm/shared";
 import { takenInSession } from "@/server/management-session/rules";
 import {
   defineStep,
   StepError,
-  stepNotesSchema,
   type StepAnimal,
   type Tx,
 } from "@/server/management-session/steps/types";
@@ -18,14 +21,15 @@ type IdentifierItem = {
   notes: string | null;
 };
 
-// O que difere entre brinco e RFID: tabelas e campo do animal.
+// O que difere entre brinco e RFID: tipo, schema do planejamento (cada um o seu, de
+// @ifarm/shared), tabelas e campo do animal.
 type IdentifierAdapter = {
   type: "tag" | "rfid";
+  planSchema: z.ZodType<{ type: "tag" } | { type: "rfid" }>;
   label: string;
   /** "o brinco" / "o RFID", para as mensagens. */
   article: string;
   animalField: "currentTag" | "currentRfid";
-  maxLength: number;
   findContainer(tx: Tx, sessionId: string): Promise<{ id: string } | null>;
   upsertContainer(tx: Tx, sessionId: string): Promise<unknown>;
   deleteContainer(tx: Tx, id: string): Promise<unknown>;
@@ -60,10 +64,10 @@ const sessionFilter = (sessionId: string, animalIds?: string[]) => ({
 
 const tagAdapter: IdentifierAdapter = {
   type: "tag",
+  planSchema: tagPlanSchema,
   label: "Brinco",
   article: "o brinco",
   animalField: "currentTag",
-  maxLength: FIELD_LIMITS.animal.earTag,
   findContainer: (tx, sessionId) =>
     tx.tagManagement.findUnique({ where: { managementSessionId: sessionId } }),
   upsertContainer: (tx, sessionId) =>
@@ -96,10 +100,10 @@ const tagAdapter: IdentifierAdapter = {
 
 const rfidAdapter: IdentifierAdapter = {
   type: "rfid",
+  planSchema: rfidPlanSchema,
   label: "RFID",
   article: "o RFID",
   animalField: "currentRfid",
-  maxLength: FIELD_LIMITS.animal.rfid,
   findContainer: (tx, sessionId) =>
     tx.rfidManagement.findUnique({ where: { managementSessionId: sessionId } }),
   upsertContainer: (tx, sessionId) =>
@@ -163,7 +167,7 @@ function identifierStep(adapter: IdentifierAdapter) {
     type: adapter.type,
     consolidateOrder: adapter.type === "tag" ? 30 : 40,
 
-    planSchema: z.object({ type: z.literal(adapter.type) }),
+    planSchema: adapter.planSchema,
 
     async prepare(tx, session) {
       await adapter.upsertContainer(tx, session.id);
@@ -194,14 +198,7 @@ function identifierStep(adapter: IdentifierAdapter) {
       );
     },
 
-    payloadSchema: z.object({
-      value: z
-        .string()
-        .trim()
-        .min(1, "Este campo é obrigatório")
-        .max(adapter.maxLength, `Máximo de ${adapter.maxLength} caracteres`),
-      notes: stepNotesSchema,
-    }),
+    payloadSchema: identifierPayloadSchemaFor(adapter.type),
 
     async save(tx, session, _step, animal: StepAnimal, payload) {
       const management = await adapter.findContainer(tx, session.id);

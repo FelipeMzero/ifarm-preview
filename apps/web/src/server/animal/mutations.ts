@@ -9,6 +9,7 @@ import {
   type WeighingCorrectionData,
   type WeighingCreateData,
   fromLocalDay,
+  REQUIRED_TECHNIQUE_MESSAGE,
 } from "@ifarm/shared";
 import { prisma, Prisma } from "@/server/db";
 import { getOrAssignCurrentProperty } from "../current-property/queries";
@@ -33,7 +34,6 @@ import {
 } from "./eventDate";
 import {
   INVALID_TECHNIQUE_MESSAGE,
-  REQUIRED_TECHNIQUE_MESSAGE,
   isValidNeuteringTechnique,
 } from "./neuterings";
 import {

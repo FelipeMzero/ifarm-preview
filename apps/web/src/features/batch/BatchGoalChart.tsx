@@ -19,6 +19,7 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart";
 import { DAY_MS } from "@/features/animal/format";
+import { timeDomain, timeTicks } from "@/lib/time-domain";
 import type { BatchProjection } from "@ifarm/shared";
 
 const chartConfig = {
@@ -87,6 +88,7 @@ export function BatchGoalChart({
   }
 
   const data = [...history, ...projected].sort((a, b) => a.ts - b.ts);
+  const xDomain = timeDomain(data.map((d) => d.ts));
   const values = data
     .flatMap((d) => [d.avgWeightKg, d.projectedKg])
     .filter((v): v is number => v != null);
@@ -107,7 +109,8 @@ export function BatchGoalChart({
           dataKey="ts"
           type="number"
           scale="time"
-          domain={["dataMin", "dataMax"]}
+          domain={xDomain}
+          ticks={timeTicks(xDomain)}
           tickFormatter={formatShortDate}
           tickLine={false}
           axisLine={false}

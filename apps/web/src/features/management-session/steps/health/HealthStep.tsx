@@ -2,30 +2,22 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { FieldSet } from "@/components/ui/field";
 import { FormField } from "@/components/our/FormField";
-import { FIELD_LIMITS } from "@ifarm/shared";
+import {
+  FIELD_LIMITS,
+  healthPayloadSchemaFor,
+  type HealthPayload,
+} from "@ifarm/shared";
 import type { StepScreenProps } from "../types";
 import { formatDay, handleStepError } from "../formHelpers";
 import { describeDose, doseFor, type HealthConfig } from "./config";
 
 type HealthRecord = { doseMl: number | null; notes: string | null };
 
-// Com dose no procedimento, a dose aplicada é obrigatória.
-function makeSchema(hasDose: boolean) {
-  return z.object({
-    doseMl: z
-      .string()
-      .optional()
-      .refine((v) => !hasDose || !!v, "Informe a dose aplicada")
-      .refine((v) => !v || Number(v) > 0, "A dose deve ser maior que zero"),
-    notes: z.string().optional(),
-  });
-}
-type FormData = z.infer<ReturnType<typeof makeSchema>>;
+type FormData = HealthPayload;
 
 export default function HealthStep({
   formId,
@@ -47,7 +39,10 @@ export default function HealthStep({
   const suggestion = hasDose ? doseFor(config, weightKg) : null;
 
   const form = useForm<FormData>({
-    resolver: zodResolver(makeSchema(hasDose)),
+    // Com dose no procedimento, a dose aplicada é obrigatória.
+    resolver: zodResolver(healthPayloadSchemaFor(hasDose), undefined, {
+      raw: true,
+    }),
     defaultValues: {
       // Sem dose registrada: já vem com a dose calculada, para só conferir.
       doseMl:
@@ -62,10 +57,7 @@ export default function HealthStep({
 
   async function submit(data: FormData) {
     try {
-      await onSubmit({
-        doseMl: hasDose ? (data.doseMl ?? "") : null,
-        notes: data.notes,
-      });
+      await onSubmit({ ...data, doseMl: hasDose ? data.doseMl : null });
     } catch (error) {
       handleStepError(form, error);
     }
@@ -116,6 +108,7 @@ export default function HealthStep({
             render={({ field, id }) => (
               <Input
                 {...field}
+                value={field.value ?? ""}
                 id={id}
                 type="number"
                 inputMode="decimal"
@@ -137,6 +130,7 @@ export default function HealthStep({
           render={({ field, id }) => (
             <Textarea
               {...field}
+              value={field.value ?? ""}
               id={id}
               maxLength={FIELD_LIMITS.managementSession.stepNotes}
               placeholder="Reação adversa, aplicação incompleta..."

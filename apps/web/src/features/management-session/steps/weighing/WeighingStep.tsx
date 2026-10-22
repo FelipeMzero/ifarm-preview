@@ -2,25 +2,21 @@
 
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { FieldSet } from "@/components/ui/field";
 import { FormField } from "@/components/our/FormField";
-import { FIELD_LIMITS } from "@ifarm/shared";
+import {
+  FIELD_LIMITS,
+  weighingPayloadSchema,
+  type WeighingPayload,
+} from "@ifarm/shared";
 import type { StepScreenProps } from "../types";
 import { formatDay, formatKg, handleStepError } from "../formHelpers";
 
 type WeighingRecord = { weightKg: number; notes: string | null };
 
-const schema = z.object({
-  weightKg: z
-    .string()
-    .min(1, "Informe o peso")
-    .refine((v) => Number(v) > 0, "O peso deve ser maior que zero"),
-  notes: z.string().optional(),
-});
-type FormData = z.infer<typeof schema>;
+type FormData = WeighingPayload;
 
 // Variação acima disso em relação à última pesagem provavelmente é erro de digitação.
 const SUSPICIOUS_VARIATION = 0.3;
@@ -33,7 +29,7 @@ export default function WeighingStep({
   onSubmit,
 }: StepScreenProps<WeighingRecord>) {
   const form = useForm<FormData>({
-    resolver: zodResolver(schema),
+    resolver: zodResolver(weighingPayloadSchema, undefined, { raw: true }),
     defaultValues: {
       weightKg: record ? String(record.weightKg) : "",
       notes: record?.notes ?? "",
@@ -50,7 +46,7 @@ export default function WeighingStep({
 
   async function submit(data: FormData) {
     try {
-      await onSubmit({ weightKg: Number(data.weightKg), notes: data.notes });
+      await onSubmit(data);
     } catch (error) {
       handleStepError(form, error);
     }
@@ -113,6 +109,7 @@ export default function WeighingStep({
           render={({ field, id }) => (
             <Textarea
               {...field}
+              value={field.value ?? ""}
               id={id}
               maxLength={FIELD_LIMITS.managementSession.stepNotes}
               className="resize-none"

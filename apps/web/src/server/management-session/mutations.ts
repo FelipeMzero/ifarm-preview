@@ -2,6 +2,7 @@ import "server-only";
 import type { z } from "zod";
 import {
   OPEN_SESSION_STATUSES,
+  type ManagementSessionData,
   type ManagementSessionStartData,
   type ReceiveAnimalData,
   type ReceptionDocumentsData,
@@ -18,7 +19,6 @@ import {
 import { loadAnimalContext } from "./animalContext";
 import { consolidateSession } from "./consolidate";
 import { clearAnimalStep, saveAnimalStep } from "./records";
-import type { managementSessionApiSchema } from "./schemas";
 import {
   applyPlanSteps,
   invalidAnimals,
@@ -33,8 +33,6 @@ import { countDone, loadStepRecords, stepModule } from "./steps";
 import type { Tx } from "./steps/types";
 import { stepKey } from "@/server/management-session/session-steps";
 import { animalLabel, summarize } from "@/server/animal/rules";
-
-type ManagementSessionData = z.output<typeof managementSessionApiSchema>;
 
 // Planeja uma sessão: data prevista, etapas e animais participantes.
 export async function createManagementSession(

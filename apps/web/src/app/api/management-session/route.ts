@@ -6,7 +6,7 @@ import {
   managementSessionQuerySchema,
 } from "@/server/management-session/queries";
 import { createManagementSession } from "@/server/management-session/mutations";
-import { managementSessionApiSchema } from "@/server/management-session/schemas";
+import { managementSessionSchema } from "@ifarm/shared";
 import { errorResponse, validationErrorResponse } from "../http";
 
 export async function GET(request: NextRequest) {
@@ -38,9 +38,7 @@ export async function POST(request: NextRequest) {
   if (response) return response;
 
   try {
-    const validation = managementSessionApiSchema.safeParse(
-      await request.json(),
-    );
+    const validation = managementSessionSchema.safeParse(await request.json());
     if (!validation.success) return validationErrorResponse(validation.error);
 
     const data = await createManagementSession(

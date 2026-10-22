@@ -2,14 +2,17 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { TriangleAlert } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { FieldSet } from "@/components/ui/field";
 import { FormField } from "@/components/our/FormField";
 import { SelectField } from "@/components/our/SelectField";
 import { techniqueItems } from "@/features/neutering-technique/items";
-import { FIELD_LIMITS } from "@ifarm/shared";
+import {
+  FIELD_LIMITS,
+  neuteringPayloadSchema,
+  type NeuteringPayload,
+} from "@ifarm/shared";
 import type { StepScreenProps } from "../types";
 import { formatDay, handleStepError } from "../formHelpers";
 
@@ -24,11 +27,7 @@ export type NeuteringConfig = {
   suggestedTechnique?: { id: string; name: string; active: boolean } | null;
 };
 
-const schema = z.object({
-  techniqueId: z.string().min(1, "Informe a técnica."),
-  notes: z.string().optional(),
-});
-type FormData = z.infer<typeof schema>;
+type FormData = NeuteringPayload;
 
 export default function NeuteringStep({
   formId,
@@ -45,7 +44,7 @@ export default function NeuteringStep({
   const suggested = planned?.active ? planned : null;
 
   const form = useForm<FormData>({
-    resolver: zodResolver(schema),
+    resolver: zodResolver(neuteringPayloadSchema, undefined, { raw: true }),
     defaultValues: {
       techniqueId: record?.techniqueId ?? suggested?.id ?? "",
       notes: record?.notes ?? "",
@@ -115,6 +114,7 @@ export default function NeuteringStep({
           render={({ field, id }) => (
             <Textarea
               {...field}
+              value={field.value ?? ""}
               id={id}
               maxLength={FIELD_LIMITS.managementSession.stepNotes}
               placeholder="Complicações, sangramento..."

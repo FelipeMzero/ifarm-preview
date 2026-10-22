@@ -2,13 +2,16 @@
 
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { ArrowRight, Check } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { FieldSet } from "@/components/ui/field";
 import { FormField } from "@/components/our/FormField";
 import { SelectField } from "@/components/our/SelectField";
-import { FIELD_LIMITS } from "@ifarm/shared";
+import {
+  batchPayloadSchema,
+  FIELD_LIMITS,
+  type BatchPayload,
+} from "@ifarm/shared";
 import { cn } from "@/lib/utils";
 import type { StepScreenProps } from "../types";
 import { handleStepError } from "../formHelpers";
@@ -21,9 +24,8 @@ type BatchRecord = {
 
 type BatchConfig = { suggestedBatches?: { id: string; name: string }[] };
 
-// "" = permanecer no lote atual.
-const schema = z.object({ batchId: z.string(), notes: z.string().optional() });
-type FormData = z.infer<typeof schema>;
+// "" = permanecer no lote atual (o schema converte para null).
+type FormData = BatchPayload;
 
 function Choice({
   selected,
@@ -73,7 +75,7 @@ export default function BatchStep({
   onSubmit,
 }: StepScreenProps<BatchRecord>) {
   const form = useForm<FormData>({
-    resolver: zodResolver(schema),
+    resolver: zodResolver(batchPayloadSchema, undefined, { raw: true }),
     defaultValues: {
       batchId: record?.batch?.id ?? "",
       notes: record?.notes ?? "",
@@ -97,7 +99,7 @@ export default function BatchStep({
 
   async function submit(data: FormData) {
     try {
-      await onSubmit({ batchId: data.batchId || null, notes: data.notes });
+      await onSubmit(data);
     } catch (error) {
       handleStepError(form, error);
     }
@@ -143,7 +145,7 @@ export default function BatchStep({
           render={({ field, id }) => (
             <SelectField
               id={id}
-              value={otherSelected ? field.value : ""}
+              value={otherSelected ? (field.value ?? "") : ""}
               onValueChange={(v) => field.onChange(v)}
               items={others.map((b) => ({ value: b.id, label: b.name }))}
               placeholder="Escolher outro lote..."
@@ -161,6 +163,7 @@ export default function BatchStep({
           render={({ field, id }) => (
             <Textarea
               {...field}
+              value={field.value ?? ""}
               id={id}
               maxLength={FIELD_LIMITS.managementSession.stepNotes}
               placeholder="Motivo da apartação..."

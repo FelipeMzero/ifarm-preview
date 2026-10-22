@@ -9,6 +9,7 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart";
 import { toLocalDay, type AnimalWeighing } from "@ifarm/shared";
+import { timeDomain, timeTicks } from "@/lib/time-domain";
 
 const chartConfig = {
   weightKg: { label: "Peso", color: "var(--primary)" },
@@ -93,6 +94,7 @@ export function AnimalWeightChart({
     return months == null ? null : formatAge(months, birthDateEstimated);
   };
 
+  const xDomain = timeDomain(data.map((d) => d.ts));
   const weights = data.map((d) => d.weightKg);
   const min = Math.min(...weights);
   const max = Math.max(...weights);
@@ -125,7 +127,8 @@ export function AnimalWeightChart({
           dataKey="ts"
           type="number"
           scale="time"
-          domain={["dataMin", "dataMax"]}
+          domain={xDomain}
+          ticks={timeTicks(xDomain)}
           tick={
             birth ? (
               <DateAgeTick ageLabel={ageLabel} />

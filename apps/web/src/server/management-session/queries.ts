@@ -15,7 +15,6 @@ import { NotFoundError } from "../errors";
 import { describeReception } from "../purchase/reception";
 import { loadAnimalContext } from "./animalContext";
 import { SESSION_STATUS_WHERE } from "./rules";
-import { managementSessionQuerySchema } from "./schemas";
 import { loadSession } from "./shared";
 import {
   countDone,
@@ -32,7 +31,20 @@ import {
 } from "@/server/management-session/session-steps";
 import { unavailableReason } from "@/server/animal/rules";
 
-export { managementSessionQuerySchema };
+export const managementSessionQuerySchema = z.object({
+  propertyId: z.uuid().optional(),
+  page: z.coerce.number().int().min(0).optional().default(0),
+  pageSize: z.coerce.number().int().min(1).optional().default(10),
+  search: z.string().trim().optional().default(""),
+  // "open" = planejadas e em andamento.
+  status: z.preprocess(
+    (v) => (v === "" ? undefined : v),
+    z
+      .enum(["open", "planned", "in_progress", "confirmed", "cancelled"])
+      .optional(),
+  ),
+});
+
 export type ManagementSessionQuery = z.infer<
   typeof managementSessionQuerySchema
 >;

@@ -1,9 +1,9 @@
 import { z } from "zod";
 import { dateTimeField, toLocalDateTime } from "../date";
 import { FIELD_LIMITS } from "../field-limits";
+import { planStepSchema } from "./plan-steps";
 
-// Contratos da API de sessões de manejo. O planejamento (etapas) fica no servidor: o
-// schema de cada etapa depende dos módulos de etapa (server/management-session/steps).
+// Contratos da API de sessões de manejo. As etapas do planejamento estão em ./plan-steps.
 
 /**
  * Campos da sessão (sem as etapas): o servidor os estende com as etapas do planejamento e
@@ -29,6 +29,18 @@ export const managementSessionFieldsSchema = z.object({
     .optional()
     .transform((v) => v || null),
 });
+
+// Criação/alteração de uma sessão: os campos, as etapas do planejamento e os animais.
+export const managementSessionSchema = managementSessionFieldsSchema.extend({
+  // Pode ficar vazio só numa recepção de compra (receber os animais já é o trabalho),
+  // que é criada pela área de recepções; nas demais sessões a rota exige um manejo.
+  steps: z.array(planStepSchema),
+  animalIds: z.array(z.uuid()).default([]),
+  propertyId: z.uuid().optional(),
+});
+
+export type ManagementSessionPayload = z.input<typeof managementSessionSchema>;
+export type ManagementSessionData = z.output<typeof managementSessionSchema>;
 
 export const managementSessionStartSchema = z.object({
   // Data e hora em que o manejo acontece ("AAAA-MM-DDTHH:mm", no fuso local).

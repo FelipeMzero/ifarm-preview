@@ -19,7 +19,8 @@ import {
   stepKey,
 } from "@/server/management-session/session-steps";
 
-// Registro dos tipos de etapa. Um tipo novo entra aqui (e em packages/shared/src/management-session/steps.ts).
+// Registro dos tipos de etapa. Um tipo novo entra aqui e em packages/shared/src/management-session
+// (steps.ts, plan-steps.ts e step-payloads.ts).
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const STEP_MODULES: Record<StepType, StepModule<any, any, any, any>> = {
   weighing: weighingStep,
@@ -33,25 +34,6 @@ const STEP_MODULES: Record<StepType, StepModule<any, any, any, any>> = {
 export function stepModule(type: StepType) {
   return STEP_MODULES[type];
 }
-
-// Uma etapa enviada pelo planejamento: o tipo escolhe o schema do módulo.
-export const planStepSchema = z
-  .object({ type: z.enum(Object.keys(STEP_MODULES) as [StepType]) })
-  .loose()
-  .transform((value, ctx) => {
-    const parsed = STEP_MODULES[value.type].planSchema.safeParse(value);
-    if (!parsed.success) {
-      for (const issue of parsed.error.issues) {
-        ctx.addIssue({
-          code: "custom",
-          message: issue.message,
-          path: issue.path,
-        });
-      }
-      return z.NEVER;
-    }
-    return parsed.data as { type: StepType } & Record<string, unknown>;
-  });
 
 export async function describeSteps(
   tx: Tx,

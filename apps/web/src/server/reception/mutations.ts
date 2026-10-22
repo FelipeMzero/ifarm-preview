@@ -1,21 +1,9 @@
 import "server-only";
-import { z } from "zod";
-import { receptionDocumentsSchema } from "@ifarm/shared";
+import type { CreateReceptionData } from "@ifarm/shared";
 import { prisma } from "@/server/db";
 import { applyPlanSteps } from "../management-session/shared";
-import { planStepSchema } from "../management-session/steps";
 import { StepError } from "../management-session/steps/types";
 import { validateReceptionInput } from "../purchase/reception";
-
-// Abertura de recepção: documentos da carga, lote de entrada e os manejos feitos em cada
-// animal recebido (opcional: receber já pode ser tudo). Fica no servidor porque o schema das
-// etapas depende dos módulos de etapa.
-export const createReceptionSchema = receptionDocumentsSchema.extend({
-  entryBatchId: z.uuid("Selecione o lote de entrada."),
-  steps: z.array(planStepSchema).default([]),
-});
-
-export type CreateReceptionData = z.output<typeof createReceptionSchema>;
 
 // "Receber animais": abre uma recepção (viagem) da compra. A compra incorpora uma
 // sessão de manejo, criada já iniciada com a data de hoje, para receber os animais e

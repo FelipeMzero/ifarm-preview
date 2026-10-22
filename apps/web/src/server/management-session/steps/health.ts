@@ -1,70 +1,28 @@
 import "server-only";
 import { z } from "zod";
-import { FIELD_LIMITS } from "@ifarm/shared";
-import { HealthManagementDoseType } from "@/generated/prisma/enums";
+import {
+  FIELD_LIMITS,
+  healthPayloadSchema,
+  healthPlanSchema,
+  REQUIRED_DOSE_MESSAGE,
+} from "@ifarm/shared";
 import {
   doseChangeBlocker,
   plannedDose,
   requiresDose,
 } from "@/server/management-session/rules";
-import {
-  defineStep,
-  StepError,
-  stepNotesSchema,
-} from "@/server/management-session/steps/types";
+import { defineStep, StepError } from "@/server/management-session/steps/types";
 import { fromDbDate, toDbDate } from "@/server/db-dates";
 
-const optionalDate = z
-  .string()
-  .regex(/^\d{4}-\d{2}-\d{2}$/, "Informe uma data válida.")
-  .nullish()
-  .or(z.literal(""))
-  .transform((v) => (v ? toDbDate(v) : null));
-
+// Datas do procedimento chegam como "AAAA-MM-DD" (ou null); no banco são @db.Date.
+const toDbDay = (v: string | null) => (v ? toDbDate(v) : null);
 const toDateOnly = (d: Date | null) => (d ? fromDbDate(d) : null);
-
-const positiveNumber = z.coerce
-  .number("Informe um valor válido")
-  .positive("Informe um valor maior que zero")
-  .nullish();
 
 export const healthStep = defineStep({
   type: "health",
   consolidateOrder: 50,
 
-  planSchema: z
-    .object({
-      type: z.literal("health"),
-      healthManagementId: z.uuid().optional(),
-      typeId: z.uuid("Selecione o tipo do procedimento."),
-      title: z
-        .string()
-        .trim()
-        .max(
-          FIELD_LIMITS.managementSession.healthTitle,
-          `Máximo de ${FIELD_LIMITS.managementSession.healthTitle} caracteres`,
-        )
-        .nullish()
-        .transform((v) => v || null),
-      veterinarianId: z
-        .uuid()
-        .nullish()
-        .or(z.literal(""))
-        .transform((v) => v || null),
-      doseType: z.enum(HealthManagementDoseType).default("NONE"),
-      doseMl: positiveNumber,
-      doseWeightKg: positiveNumber,
-      withdrawalEndDate: optionalDate,
-      nextDueDate: optionalDate,
-    })
-    .refine((v) => v.doseType === "NONE" || v.doseMl != null, {
-      message: "Informe a dose.",
-      path: ["doseMl"],
-    })
-    .refine((v) => v.doseType !== "PER_WEIGHT" || v.doseWeightKg != null, {
-      message: "Informe o peso de referência.",
-      path: ["doseWeightKg"],
-    }),
+  planSchema: healthPlanSchema,
 
   async prepare(tx, session, plan) {
     const type = await tx.healthManagementType.findFirst({
@@ -87,8 +45,8 @@ export const healthStep = defineStep({
       veterinarianId: plan.veterinarianId,
       doseType: plan.doseType,
       ...plannedDose(plan),
-      withdrawalEndDate: plan.withdrawalEndDate,
-      nextDueDate: plan.nextDueDate,
+      withdrawalEndDate: toDbDay(plan.withdrawalEndDate),
+      nextDueDate: toDbDay(plan.nextDueDate),
     };
 
     if (plan.healthManagementId) {
@@ -184,15 +142,9 @@ export const healthStep = defineStep({
     );
   },
 
-  payloadSchema: z.object({
-    // Obrigatória quando o procedimento tem dose (validado em save, que conhece a regra).
-    doseMl: z
-      .union([z.literal(""), z.null(), z.coerce.number()])
-      .optional()
-      .transform((v) => (v === "" || v == null ? null : v))
-      .refine((v) => v == null || v > 0, "A dose deve ser maior que zero"),
-    notes: stepNotesSchema,
-  }),
+  // A dose é obrigatória quando o procedimento tem dose: validado em save, que conhece
+  // o procedimento (a tela usa healthPayloadSchemaFor).
+  payloadSchema: healthPayloadSchema,
 
   async save(tx, _session, step, animal, payload) {
     const hm = await tx.healthManagement.findUnique({
@@ -203,7 +155,7 @@ export const healthStep = defineStep({
     // Quem aplicou sabe a dose: não é estimada depois pelo peso.
     const withDose = requiresDose(hm.doseType);
     if (withDose && payload.doseMl == null) {
-      throw new StepError("Informe a dose aplicada.", 400, "doseMl");
+      throw new StepError(REQUIRED_DOSE_MESSAGE, 400, "doseMl");
     }
     const doseMl = withDose ? payload.doseMl : null;
 

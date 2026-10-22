@@ -89,14 +89,3 @@ export function defineStep<S extends SessionStep, TPlan, TPayload, TRecord>(
 ) {
   return module;
 }
-
-// Observação por animal, comum a todas as etapas.
-export const stepNotesSchema = z
-  .string()
-  .trim()
-  .max(
-    FIELD_LIMITS.managementSession.stepNotes,
-    `Máximo de ${FIELD_LIMITS.managementSession.stepNotes} caracteres`,
-  )
-  .nullish()
-  .transform((v) => v || null);
