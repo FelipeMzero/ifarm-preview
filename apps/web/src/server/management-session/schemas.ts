@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { dateTimeField, FIELD_LIMITS, toLocalDateTime } from "@ifarm/shared";
+import { managementSessionFieldsSchema } from "@ifarm/shared";
 import { planStepSchema } from "@/server/management-session/steps";
 
 export const managementSessionQuerySchema = z.object({
@@ -20,25 +20,7 @@ export type ManagementSessionQueryData = z.infer<
   typeof managementSessionQuerySchema
 >;
 
-export const managementSessionApiSchema = z.object({
-  title: z
-    .string()
-    .trim()
-    .min(1, "Este campo é obrigatório")
-    .max(
-      FIELD_LIMITS.managementSession.title,
-      `Máximo de ${FIELD_LIMITS.managementSession.title} caracteres`,
-    ),
-  // Data e hora previstas ("AAAA-MM-DDTHH:mm", no fuso local).
-  scheduledAt: dateTimeField.transform(toLocalDateTime),
-  notes: z
-    .string()
-    .max(
-      FIELD_LIMITS.managementSession.notes,
-      `Máximo de ${FIELD_LIMITS.managementSession.notes} caracteres`,
-    )
-    .optional()
-    .transform((v) => v || null),
+export const managementSessionApiSchema = managementSessionFieldsSchema.extend({
   // Pode ficar vazio só numa recepção de compra (receber os animais já é o trabalho),
   // que é criada pela área de recepções; nas demais sessões a rota exige um manejo.
   steps: z.array(planStepSchema),

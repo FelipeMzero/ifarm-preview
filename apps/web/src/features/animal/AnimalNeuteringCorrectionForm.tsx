@@ -18,8 +18,8 @@ import { animalClient } from "@/lib/clients";
 import { ApiError, type AnimalNeuteringRecord } from "@ifarm/shared";
 import {
   neuteringCorrectionSchema,
-  NeuteringCorrectionFormData,
-} from "./schema";
+  type NeuteringCorrectionPayload as NeuteringCorrectionFormData,
+} from "@ifarm/shared";
 
 interface AnimalNeuteringCorrectionFormProps {
   animalId: string;
@@ -42,7 +42,7 @@ export function AnimalNeuteringCorrectionForm({
   onSaved,
 }: AnimalNeuteringCorrectionFormProps) {
   const form = useForm<NeuteringCorrectionFormData>({
-    resolver: zodResolver(neuteringCorrectionSchema),
+    resolver: zodResolver(neuteringCorrectionSchema, undefined, { raw: true }),
     defaultValues: {
       date: toInputDateTime(neutering.date),
       techniqueId: neutering.techniqueId ?? "",

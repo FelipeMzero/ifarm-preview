@@ -46,10 +46,9 @@ import {
   formatDay,
 } from "./display";
 import {
-  purchaseFormSchema,
-  type PurchaseCategoryForm,
-  type PurchaseFormData,
-} from "./schema";
+  purchaseSchema,
+  type PurchasePayload as PurchaseFormData,
+} from "@ifarm/shared";
 import { purchaseClient } from "@/lib/clients";
 import { ApiError, isSessionOpen, type PurchaseDetail } from "@ifarm/shared";
 
@@ -64,7 +63,6 @@ function toFormValues(detail: PurchaseDetail): PurchaseFormData {
     notes: detail.notes ?? "",
     categories: detail.categories.map((c) => ({
       id: c.id,
-      receivedQuantity: c.receivedQuantity,
       sex: c.sex,
       minAgeMonths: str(c.minAgeMonths),
       maxAgeMonths: str(c.maxAgeMonths),
@@ -78,26 +76,6 @@ function toFormValues(detail: PurchaseDetail): PurchaseFormData {
       costSplit: c.costSplit,
       notes: c.notes ?? "",
     })),
-  };
-}
-
-// Campos vazios viram null; só os campos da forma de preço escolhida são enviados.
-function toCategoryPayload(c: PurchaseCategoryForm) {
-  const n = (v?: string) => (v ? Number(v) : null);
-  return {
-    id: c.id,
-    sex: c.sex,
-    minAgeMonths: n(c.minAgeMonths),
-    maxAgeMonths: n(c.maxAgeMonths),
-    breedId: c.breedId || null,
-    expectedQuantity: Number(c.expectedQuantity),
-    pricingType: c.pricingType,
-    unitPrice: c.pricingType === "LUMP_SUM" ? null : n(c.unitPrice),
-    totalPrice: c.pricingType === "LUMP_SUM" ? n(c.totalPrice) : null,
-    invoicedWeight: c.pricingType === "PER_ARROBA" ? n(c.invoicedWeight) : null,
-    shrinkPercent: c.pricingType === "PER_ARROBA" ? n(c.shrinkPercent) : null,
-    costSplit: c.pricingType === "LUMP_SUM" ? c.costSplit : "EQUAL",
-    notes: c.notes || null,
   };
 }
 
@@ -124,7 +102,9 @@ export function PurchaseForm({ id }: { id?: string }) {
     setValue,
     formState: { isSubmitting, isDirty },
   } = useForm<PurchaseFormData>({
-    resolver: zodResolver(purchaseFormSchema),
+    // raw: valida com o schema da API e envia os valores do formulário; a API converte
+    // e descarta os campos que não são da forma de preço escolhida.
+    resolver: zodResolver(purchaseSchema, undefined, { raw: true }),
     defaultValues: {
       title: "",
       sellerId: "",
@@ -216,14 +196,7 @@ export function PurchaseForm({ id }: { id?: string }) {
       : sellerItems;
 
   async function onSubmit(data: PurchaseFormData) {
-    const payload = {
-      title: data.title,
-      sellerId: data.sellerId,
-      purchaseDate: data.purchaseDate,
-      notes: data.notes,
-      categories: data.categories.map(toCategoryPayload),
-      propertyId: currentProperty?.id,
-    };
+    const payload = { ...data, propertyId: currentProperty?.id };
     try {
       if (id) {
         await purchaseClient.updatePurchase(id, payload);
@@ -475,6 +448,7 @@ export function PurchaseForm({ id }: { id?: string }) {
             render={({ field, id: fieldId }) => (
               <Textarea
                 {...field}
+                value={field.value ?? ""}
                 id={fieldId}
                 maxLength={FIELD_LIMITS.purchase.notes}
                 className="resize-none"

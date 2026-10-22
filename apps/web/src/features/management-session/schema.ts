@@ -1,6 +1,9 @@
 import { z } from "zod";
-import { FIELD_LIMITS } from "@ifarm/shared";
-import { STEP_TYPES } from "@ifarm/shared";
+import {
+  FIELD_LIMITS,
+  managementSessionFieldsSchema,
+  STEP_TYPES,
+} from "@ifarm/shared";
 
 // Uma etapa no formulário de planejamento. Os campos extras só valem para o tipo
 // correspondente (castração, sanitário e apartação); os demais tipos não têm configuração.
@@ -85,24 +88,10 @@ export function toStepPayload(step: PlanStepForm) {
   return { type: step.type };
 }
 
-export const planFormSchema = z.object({
-  title: z
-    .string()
-    .trim()
-    .min(1, "Este campo é obrigatório")
-    .max(
-      FIELD_LIMITS.managementSession.title,
-      `Máximo de ${FIELD_LIMITS.managementSession.title} caracteres`,
-    ),
-  scheduledAt: z.string().min(1, "Este campo é obrigatório"),
-  notes: z
-    .string()
-    .max(
-      FIELD_LIMITS.managementSession.notes,
-      `Máximo de ${FIELD_LIMITS.managementSession.notes} caracteres`,
-    )
-    .optional(),
+// Formulário de planejamento: os campos da sessão com as regras da API
+// (managementSessionFieldsSchema) e as etapas da tela.
+export const planFormSchema = managementSessionFieldsSchema.extend({
   steps: z.array(planStepFormSchema).min(1, "Adicione ao menos um manejo."),
 });
 
-export type PlanFormData = z.infer<typeof planFormSchema>;
+export type PlanFormData = z.input<typeof planFormSchema>;

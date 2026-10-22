@@ -42,11 +42,10 @@ import {
 } from "@/components/our/SearchCombobox";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import {
-  AnimalFormData,
-  animalFormSchema,
-  EnumAnimalOrigin,
-  EnumSex,
-} from "./schema";
+  animalCreateSchema,
+  type AnimalCreatePayload as AnimalFormData,
+} from "@ifarm/shared";
+import { AnimalOrigin, Sex } from "@ifarm/shared";
 import { Separator } from "@/components/ui/separator";
 import { FormActionBar } from "@/components/our/FormActionBar";
 import { ANIMAL_ORIGIN_ITEMS, SEX_ITEMS } from "@ifarm/shared";
@@ -83,15 +82,16 @@ export default function AnimalForm({
     setError,
     formState: { isSubmitting },
   } = useForm<AnimalFormData>({
-    resolver: zodResolver(animalFormSchema),
+    // raw: valida com o schema da API e envia os valores do formulário (a API converte).
+    resolver: zodResolver(animalCreateSchema, undefined, { raw: true }),
     defaultValues: {
       currentTag: "",
       currentRfid: "",
       name: "",
-      sex: EnumSex.MALE,
+      sex: Sex.MALE,
       birthDate: "",
       propertyEntryDate: "",
-      origin: EnumAnimalOrigin.UNDEFINED,
+      origin: AnimalOrigin.UNDEFINED,
       neutered: false,
       neuteringDate: "",
       neuteringTechniqueId: "",
@@ -453,7 +453,7 @@ export default function AnimalForm({
             />
           </FieldRow>
 
-          {origin === EnumAnimalOrigin.PURCHASE && (
+          {origin === AnimalOrigin.PURCHASE && (
             <>
               <FieldRow cols={3}>
                 <FormField

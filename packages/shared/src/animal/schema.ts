@@ -2,8 +2,10 @@ import { z } from "zod";
 import { dateField, dateTimeField } from "../date";
 import { AnimalOrigin, Sex } from "../enums";
 import { FIELD_LIMITS } from "../field-limits";
+import type { IdentifierKind } from "./client";
 
-// Contratos da API de animais (os formulários têm estado próprio, em features/animal/schema.ts).
+// Contratos da API de animais. Os formulários de animal validam com estes mesmos schemas
+// (zodResolver em modo raw: a tela valida e envia os valores do formulário; a API converte).
 // Datas como "AAAA-MM-DD"; o servidor converte conforme a coluna (nascimento é @db.Date; as
 // demais são timestamps que guardam o dia).
 
@@ -14,6 +16,20 @@ const optionalDateTime = z
   .union([dateTimeField, z.literal("")])
   .optional()
   .transform((v) => v || null);
+/**
+ * Peso em kg: texto (vindo do formulário) ou número. Vazio é recusado; vira número
+ * positivo.
+ */
+const weightKgField = z
+  .union([z.string(), z.number()])
+  .refine((v) => v !== "", "Este campo não pode ser vazio")
+  .transform(Number)
+  .pipe(
+    z
+      .number("Informe um peso válido")
+      .positive("O peso deve ser maior que zero"),
+  );
+
 /**
  * Data e hora de um manejo avulso ou da correção de um registro ("AAAA-MM-DDTHH:mm"); vazia
  * vira undefined (registro avulso: agora; correção: não alterar).
@@ -195,9 +211,7 @@ export const animalUpdateSchema = z.object({
 export type AnimalUpdateData = z.infer<typeof animalUpdateSchema>;
 
 export const weighingCorrectionSchema = z.object({
-  weightKg: z.coerce
-    .number("Informe um peso válido")
-    .positive("O peso deve ser maior que zero"),
+  weightKg: weightKgField,
   date: eventDateTime,
   notes: z
     .string()
@@ -227,9 +241,7 @@ export const neuteringCancelSchema = z.object({
 
 // Registro avulso de pesagem feito pelo histórico de pesagens (gravado na hora).
 export const weighingCreateSchema = z.object({
-  weightKg: z.coerce
-    .number("Informe um peso válido")
-    .positive("O peso deve ser maior que zero"),
+  weightKg: weightKgField,
   date: eventDateTime,
   notes: z
     .string()
@@ -265,6 +277,21 @@ export const identifierChangeSchema = z.object({
 
 export type IdentifierChangeData = z.output<typeof identifierChangeSchema>;
 
+/** Tamanho máximo do valor de cada identificador. */
+export const IDENTIFIER_MAX_LENGTH: Record<IdentifierKind, number> = {
+  tag: FIELD_LIMITS.animal.earTag,
+  rfid: FIELD_LIMITS.animal.rfid,
+};
+
+const identifierValue = (kind: IdentifierKind) =>
+  z
+    .string()
+    .trim()
+    .max(
+      IDENTIFIER_MAX_LENGTH[kind],
+      `Máximo de ${IDENTIFIER_MAX_LENGTH[kind]} caracteres`,
+    );
+
 // Correção de um registro de brinco/RFID.
 export const identifierCorrectionSchema = z.object({
   // Vazio = o registro passa a ser de remoção do identificador.
@@ -283,6 +310,22 @@ export const identifierCorrectionSchema = z.object({
 export type IdentifierCorrectionData = z.output<
   typeof identifierCorrectionSchema
 >;
+
+// Os mesmos schemas com o tamanho máximo do tipo (brinco ou RFID): usados pela API e
+// pelos formulários.
+export const identifierChangeSchemaFor = (kind: IdentifierKind) =>
+  identifierChangeSchema.extend({
+    value: identifierValue(kind)
+      .nullish()
+      .transform((v) => v || null),
+  });
+
+export const identifierCorrectionSchemaFor = (kind: IdentifierKind) =>
+  identifierCorrectionSchema.extend({
+    value: identifierValue(kind)
+      .optional()
+      .transform((v) => v || null),
+  });
 
 export type WeighingCreateData = z.output<typeof weighingCreateSchema>;
 export type NeuteringCreateData = z.output<typeof neuteringCreateSchema>;

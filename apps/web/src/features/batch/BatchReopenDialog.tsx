@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { Info, Loader2, TriangleAlert } from "lucide-react";
 import { toast } from "sonner";
 
@@ -25,20 +24,13 @@ import {
 import { FIELD_LIMITS } from "@ifarm/shared";
 import { StockingNotice } from "@/features/area/StockingNotice";
 import { batchClient } from "@/lib/clients";
-import { ApiError } from "@ifarm/shared";
+import {
+  ApiError,
+  batchReopenSchema,
+  type BatchReopenPayload,
+} from "@ifarm/shared";
 
-const reopenSchema = z.object({
-  areaId: z.string().min(1, "Selecione a área do lote."),
-  notes: z
-    .string()
-    .max(
-      FIELD_LIMITS.batch.notes,
-      `Máximo de ${FIELD_LIMITS.batch.notes} caracteres`,
-    )
-    .optional(),
-});
-
-type ReopenData = z.infer<typeof reopenSchema>;
+type ReopenData = BatchReopenPayload;
 
 type PreviousArea = { id: string; name: string; available: boolean };
 
@@ -63,7 +55,7 @@ export function BatchReopenDialog({
   const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const form = useForm<ReopenData>({
-    resolver: zodResolver(reopenSchema),
+    resolver: zodResolver(batchReopenSchema, undefined, { raw: true }),
     defaultValues: { areaId: "", notes: "" },
   });
   const areaId = form.watch("areaId");

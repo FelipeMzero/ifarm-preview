@@ -23,7 +23,7 @@ import {
   ReceivedCount,
   formatBRL,
 } from "./display";
-import type { PurchaseFormData } from "./schema";
+import type { PurchasePayload as PurchaseFormData } from "@ifarm/shared";
 import {
   type PurchaseCategory,
   type PurchaseCostSplit,
@@ -182,7 +182,14 @@ function CategoryCard({
           control={control}
           label="Idade mín. (meses)"
           render={({ field, id }) => (
-            <Input {...field} id={id} type="number" min={0} step={1} />
+            <Input
+              {...field}
+              value={field.value ?? ""}
+              id={id}
+              type="number"
+              min={0}
+              step={1}
+            />
           )}
         />
         <FormField
@@ -190,7 +197,14 @@ function CategoryCard({
           control={control}
           label="Idade máx. (meses)"
           render={({ field, id }) => (
-            <Input {...field} id={id} type="number" min={0} step={1} />
+            <Input
+              {...field}
+              value={field.value ?? ""}
+              id={id}
+              type="number"
+              min={0}
+              step={1}
+            />
           )}
         />
         <FormField
@@ -247,6 +261,7 @@ function CategoryCard({
             render={({ field, id }) => (
               <Input
                 {...field}
+                value={field.value ?? ""}
                 id={id}
                 type="number"
                 min={0}
@@ -268,6 +283,7 @@ function CategoryCard({
             render={({ field, id }) => (
               <Input
                 {...field}
+                value={field.value ?? ""}
                 id={id}
                 type="number"
                 min={0}
@@ -287,6 +303,7 @@ function CategoryCard({
               render={({ field, id }) => (
                 <Input
                   {...field}
+                  value={field.value ?? ""}
                   id={id}
                   type="number"
                   min={0}
@@ -303,6 +320,7 @@ function CategoryCard({
               render={({ field, id }) => (
                 <Input
                   {...field}
+                  value={field.value ?? ""}
                   id={id}
                   type="number"
                   min={0}

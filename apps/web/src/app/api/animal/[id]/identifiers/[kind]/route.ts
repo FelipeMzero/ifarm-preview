@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { identifierChangeSchema } from "@ifarm/shared";
+import { identifierChangeSchemaFor } from "@ifarm/shared";
 import { requireSession } from "@/app/api/session";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
 import { CommitmentError } from "@/server/animal/commitments";
@@ -8,7 +8,7 @@ import {
   isIdentifierKind,
   listIdentifiers,
 } from "@/server/animal/identifiers";
-import { errorResponse } from "../../../../http";
+import { errorResponse, validationErrorResponse } from "../../../../http";
 
 type Params = { params: Promise<{ id: string; kind: string }> };
 
@@ -39,15 +39,10 @@ export async function POST(request: NextRequest, { params }: Params) {
     const { id, kind } = await params;
     if (!isIdentifierKind(kind)) return notFound();
 
-    const validation = identifierChangeSchema.safeParse(
+    const validation = identifierChangeSchemaFor(kind).safeParse(
       await request.json().catch(() => ({})),
     );
-    if (!validation.success) {
-      return NextResponse.json(
-        { success: false, message: "Parâmetros inválidos." },
-        { status: 400 },
-      );
-    }
+    if (!validation.success) return validationErrorResponse(validation.error);
 
     await addIdentifier(kind, id, validation.data);
     return NextResponse.json({ success: true }, { status: 201 });

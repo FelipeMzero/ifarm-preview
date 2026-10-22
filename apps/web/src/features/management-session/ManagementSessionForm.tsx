@@ -110,7 +110,7 @@ export function ManagementSessionForm({
     setError,
     formState: { isSubmitting, errors },
   } = useForm<PlanFormData>({
-    resolver: zodResolver(planFormSchema),
+    resolver: zodResolver(planFormSchema, undefined, { raw: true }),
     defaultValues: {
       title: "",
       scheduledAt: nowDateTime(),

@@ -3,7 +3,6 @@
 import { toInputDateTime } from "./format";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -12,11 +11,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { DialogFooter } from "@/components/ui/dialog";
 import { FormField } from "@/components/our/FormField";
 import FieldRow from "@/components/our/FieldRow";
-import { FIELD_LIMITS, nowDateTime } from "@ifarm/shared";
+import { nowDateTime } from "@ifarm/shared";
 import { animalClient } from "@/lib/clients";
 import {
   ApiError,
   type AnimalIdentifierRecord,
+  IDENTIFIER_MAX_LENGTH,
+  identifierCorrectionSchemaFor,
+  type IdentifierCorrectionPayload,
   type IdentifierKind,
 } from "@ifarm/shared";
 
@@ -25,12 +27,7 @@ export const IDENTIFIER_LABELS: Record<IdentifierKind, string> = {
   rfid: "RFID",
 };
 
-export const IDENTIFIER_MAX_LENGTH: Record<IdentifierKind, number> = {
-  tag: FIELD_LIMITS.animal.earTag,
-  rfid: FIELD_LIMITS.animal.rfid,
-};
-
-type FormData = { value: string; date?: string; notes?: string };
+type FormData = IdentifierCorrectionPayload;
 
 // yyyy-mm-dd no fuso local, formato do input de data
 
@@ -51,18 +48,9 @@ export function AnimalIdentifierCorrectionForm({
 }: AnimalIdentifierCorrectionFormProps) {
   const label = IDENTIFIER_LABELS[kind];
   const form = useForm<FormData>({
-    resolver: zodResolver(
-      z.object({
-        value: z
-          .string()
-          .max(
-            IDENTIFIER_MAX_LENGTH[kind],
-            `Máximo de ${IDENTIFIER_MAX_LENGTH[kind]} caracteres`,
-          ),
-        date: z.string().optional(),
-        notes: z.string().optional(),
-      }),
-    ),
+    resolver: zodResolver(identifierCorrectionSchemaFor(kind), undefined, {
+      raw: true,
+    }),
     defaultValues: {
       value: record.value ?? "",
       date: toInputDateTime(record.date),

@@ -18,7 +18,10 @@ import {
 } from "@/components/ui/dialog";
 import { FormField } from "@/components/our/FormField";
 import { formatBRL } from "./display";
-import { paymentFormSchema, type PaymentFormData } from "./schema";
+import {
+  purchasePaymentSchema,
+  type PurchasePaymentPayload as PaymentFormData,
+} from "@ifarm/shared";
 import { purchaseClient } from "@/lib/clients";
 
 const todayIso = () => new Date().toLocaleDateString("en-CA");
@@ -87,16 +90,13 @@ function PaymentForm({
     handleSubmit,
     formState: { isSubmitting },
   } = useForm<PaymentFormData>({
-    resolver: zodResolver(paymentFormSchema),
+    resolver: zodResolver(purchasePaymentSchema, undefined, { raw: true }),
     defaultValues: { paymentDate: todayIso(), paymentReference: "" },
   });
 
   async function onSubmit(data: PaymentFormData) {
     try {
-      await purchaseClient.payPurchase(purchaseId, {
-        paymentDate: data.paymentDate,
-        paymentReference: data.paymentReference || undefined,
-      });
+      await purchaseClient.payPurchase(purchaseId, data);
       toast.success("Pagamento registrado.");
       onPaid();
     } catch (e) {
@@ -123,6 +123,7 @@ function PaymentForm({
         render={({ field, id }) => (
           <Input
             {...field}
+            value={field.value ?? ""}
             id={id}
             maxLength={FIELD_LIMITS.purchase.paymentReference}
           />

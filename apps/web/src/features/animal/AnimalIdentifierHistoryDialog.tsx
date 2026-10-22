@@ -37,10 +37,10 @@ import {
   type AnimalIdentifierRecord,
   type IdentifierKind,
 } from "@ifarm/shared";
+import { IDENTIFIER_MAX_LENGTH } from "@ifarm/shared";
 import {
   AnimalIdentifierCorrectionForm,
   IDENTIFIER_LABELS,
-  IDENTIFIER_MAX_LENGTH,
 } from "./AnimalIdentifierCorrectionForm";
 import type { Commitment } from "@ifarm/shared";
 import { CommitmentNotice } from "./CommitmentNotice";

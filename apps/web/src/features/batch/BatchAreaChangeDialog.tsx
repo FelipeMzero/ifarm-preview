@@ -19,9 +19,18 @@ import {
   SearchCombobox,
   SearchComboboxItem,
 } from "@/components/our/SearchCombobox";
-import { BatchAreaChangeData, batchAreaChangeSchema } from "./schema";
+import { z } from "zod";
+import { batchFieldsSchema } from "@ifarm/shared";
 import { batchClient } from "@/lib/clients";
 import { StockingNotice } from "@/features/area/StockingNotice";
+
+// Estado do diálogo: a área de destino e a descrição da troca, que viram
+// newAreaId/areaChangeDescription no PUT do lote.
+const batchAreaChangeSchema = z.object({
+  newAreaId: z.string().min(1, "A área de destino deve ser selecionada."),
+  description: batchFieldsSchema.shape.notes,
+});
+export type BatchAreaChangeData = z.input<typeof batchAreaChangeSchema>;
 
 interface BatchAreaChangeDialogProps {
   open: boolean;
@@ -45,7 +54,7 @@ export function BatchAreaChangeDialog({
   const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const form = useForm<BatchAreaChangeData>({
-    resolver: zodResolver(batchAreaChangeSchema),
+    resolver: zodResolver(batchAreaChangeSchema, undefined, { raw: true }),
     defaultValues: { newAreaId: "", description: "" },
   });
   const newAreaId = form.watch("newAreaId");

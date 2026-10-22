@@ -1,6 +1,5 @@
 import "server-only";
 import {
-  FIELD_LIMITS,
   toLocalDateTime,
   type AnimalIdentifierRecord,
   type IdentifierChangeData,
@@ -37,7 +36,6 @@ type IdentifierRecord = {
 type IdentifierAdapter = {
   label: string;
   animalField: "currentTag" | "currentRfid";
-  maxLength: number;
   list(tx: Tx, animalId: string): Promise<IdentifierRecord[]>;
   find(
     tx: Tx,
@@ -73,7 +71,6 @@ const ADAPTERS: Record<IdentifierKind, IdentifierAdapter> = {
   tag: {
     label: "Brinco",
     animalField: "currentTag",
-    maxLength: FIELD_LIMITS.animal.earTag,
     list: async (tx, animalId) =>
       (
         await tx.animalTagging.findMany({
@@ -103,7 +100,6 @@ const ADAPTERS: Record<IdentifierKind, IdentifierAdapter> = {
   rfid: {
     label: "RFID",
     animalField: "currentRfid",
-    maxLength: FIELD_LIMITS.animal.rfid,
     list: async (tx, animalId) =>
       (
         await tx.animalRfidTagging.findMany({
@@ -205,13 +201,6 @@ export async function correctIdentifier(
   data: IdentifierCorrectionData,
 ) {
   const adapter = ADAPTERS[kind];
-  if (data.value && data.value.length > adapter.maxLength) {
-    throw new IdentifierError(
-      `Máximo de ${adapter.maxLength} caracteres`,
-      400,
-      "value",
-    );
-  }
 
   await prisma.$transaction(async (tx) => {
     const record = await adapter.find(tx, animalId, Number(recordIdParam));
@@ -252,13 +241,6 @@ export async function addIdentifier(
   { value, notes }: IdentifierChangeData,
 ) {
   const adapter = ADAPTERS[kind];
-  if (value && value.length > adapter.maxLength) {
-    throw new IdentifierError(
-      `Máximo de ${adapter.maxLength} caracteres`,
-      400,
-      "value",
-    );
-  }
 
   await prisma.$transaction(async (tx) => {
     await assertNoConflicts(tx, [animalId], { kind: "record", type: kind });

@@ -5,6 +5,31 @@ import { FIELD_LIMITS } from "../field-limits";
 // Contratos da API de sessões de manejo. O planejamento (etapas) fica no servidor: o
 // schema de cada etapa depende dos módulos de etapa (server/management-session/steps).
 
+/**
+ * Campos da sessão (sem as etapas): o servidor os estende com as etapas do planejamento e
+ * o formulário, com as etapas da tela.
+ */
+export const managementSessionFieldsSchema = z.object({
+  title: z
+    .string()
+    .trim()
+    .min(1, "Este campo é obrigatório")
+    .max(
+      FIELD_LIMITS.managementSession.title,
+      `Máximo de ${FIELD_LIMITS.managementSession.title} caracteres`,
+    ),
+  // Data e hora previstas ("AAAA-MM-DDTHH:mm", no fuso local).
+  scheduledAt: dateTimeField.transform(toLocalDateTime),
+  notes: z
+    .string()
+    .max(
+      FIELD_LIMITS.managementSession.notes,
+      `Máximo de ${FIELD_LIMITS.managementSession.notes} caracteres`,
+    )
+    .optional()
+    .transform((v) => v || null),
+});
+
 export const managementSessionStartSchema = z.object({
   // Data e hora em que o manejo acontece ("AAAA-MM-DDTHH:mm", no fuso local).
   performedAt: dateTimeField.transform(toLocalDateTime),

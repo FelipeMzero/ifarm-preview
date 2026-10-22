@@ -56,13 +56,22 @@ import {
 } from "./SelectedAnimals";
 import { animalClient } from "@/lib/clients";
 import { TransferStatusBadge } from "./display";
-import { BatchTransferFormData, batchTransferFormSchema } from "./schema";
+import { z } from "zod";
+import { batchTransferSchema } from "@ifarm/shared";
 import { batchTransferClient } from "@/lib/clients";
 import {
   ApiError,
   type BatchTransferDetail,
   type TransferAnimal,
 } from "@ifarm/shared";
+
+// Dados da transferência com as regras da API; os animais são escolhidos à parte e entram
+// no envio (animalIds), com a propriedade atual.
+const batchTransferFormSchema = batchTransferSchema.omit({
+  animalIds: true,
+  propertyId: true,
+});
+type BatchTransferFormData = z.input<typeof batchTransferFormSchema>;
 
 type FormStep = "data" | "animals";
 
@@ -129,7 +138,7 @@ export function BatchTransferForm({
     setError,
     formState: { isSubmitting, errors },
   } = useForm<BatchTransferFormData>({
-    resolver: zodResolver(batchTransferFormSchema),
+    resolver: zodResolver(batchTransferFormSchema, undefined, { raw: true }),
     defaultValues: {
       destinationBatchId: initialDestinationBatchId ?? "",
       transferredAt: nowDateTime(),

@@ -6,6 +6,7 @@ import {
 } from "../client";
 import type { PurchaseCostSplit, PurchasePricingType, Sex } from "../enums";
 import type { ManagementSessionStatus } from "../management-session/steps";
+import type { PurchasePayload, PurchasePaymentPayload } from "./schema";
 
 export type PurchaseStatus = "open" | "confirmed" | "cancelled";
 
@@ -87,15 +88,6 @@ export type PurchaseDetail = {
 };
 
 /** Corpo enviado na criação e na edição (validado por purchaseSchema). */
-export type PurchasePayload = {
-  title: string;
-  sellerId: string;
-  purchaseDate: string;
-  notes?: string;
-  categories: Record<string, unknown>[];
-  propertyId?: string;
-};
-
 export type PurchaseListParams = {
   page?: number;
   pageSize?: number;
@@ -144,10 +136,7 @@ export function createPurchaseClient(request: ApiRequest) {
       );
     },
 
-    async payPurchase(
-      id: string,
-      data: { paymentDate: string; paymentReference?: string },
-    ) {
+    async payPurchase(id: string, data: PurchasePaymentPayload) {
       const response = await request(
         `${PURCHASE_BY_ID(id)}/pay`,
         jsonRequest("POST", data),

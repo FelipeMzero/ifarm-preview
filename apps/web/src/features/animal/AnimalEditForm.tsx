@@ -37,13 +37,25 @@ import {
   ANIMAL_STATUS_LABELS,
   SEX_ITEMS,
 } from "@ifarm/shared";
-import { AnimalEditFormData, animalEditFormSchema } from "./schema";
+import { z } from "zod";
+import { animalUpdateSchema } from "@ifarm/shared";
+
 import { Separator } from "@/components/ui/separator";
 import { AnimalBatchChangeDialog } from "./AnimalBatchChangeDialog";
 import { AnimalWeighingHistoryDialog } from "./AnimalWeighingHistoryDialog";
 import { AnimalIdentifierHistoryDialog } from "./AnimalIdentifierHistoryDialog";
 import { AnimalNeuteringHistoryDialog } from "./AnimalNeuteringHistoryDialog";
 import type { Commitment } from "@ifarm/shared";
+
+// Edição pelo cadastro: os dados básicos, com as regras da API (troca de lote,
+// identificação, pesagem e castração têm diálogos próprios e entram no mesmo PUT).
+const animalEditFormSchema = animalUpdateSchema.pick({
+  name: true,
+  sex: true,
+  birthDate: true,
+  breedId: true,
+});
+type AnimalEditFormData = z.input<typeof animalEditFormSchema>;
 
 type AnimalEditFormProps = {
   id: string;
@@ -88,7 +100,7 @@ export function AnimalEditForm({
     setError,
     formState: { isSubmitting },
   } = useForm<AnimalEditFormData>({
-    resolver: zodResolver(animalEditFormSchema),
+    resolver: zodResolver(animalEditFormSchema, undefined, { raw: true }),
     defaultValues: {
       name: "",
       sex: "MALE",

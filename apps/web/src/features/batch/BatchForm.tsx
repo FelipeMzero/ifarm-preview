@@ -28,10 +28,19 @@ import {
   SearchComboboxItem,
 } from "@/components/our/SearchCombobox";
 import { useCurrentProperty } from "@/features/shell/CurrentPropertyProvider";
-import { BatchFormData, batchFormSchema, BatchAreaChangeData } from "./schema";
+import { z } from "zod";
+import { batchFieldsSchema, requireBatchGoal } from "@ifarm/shared";
+import type { BatchAreaChangeData } from "./BatchAreaChangeDialog";
 import { batchClient } from "@/lib/clients";
 import { ApiError, type BatchDetail } from "@ifarm/shared";
 import { BatchAreaChangeDialog } from "./BatchAreaChangeDialog";
+
+// Um formulário para criar e editar: os campos e as regras da API (batchFieldsSchema e a
+// meta, RN-LOTE-04), mais a área. Na edição a área só é exibida; a troca vai pelo diálogo.
+const batchFormSchema = batchFieldsSchema
+  .extend({ areaId: z.string().min(1, "Este campo é obrigatório") })
+  .superRefine(requireBatchGoal);
+type BatchFormData = z.input<typeof batchFormSchema>;
 
 type BatchFormProps = {
   id?: string;
@@ -62,6 +71,10 @@ export function BatchForm({ id, title, onCancel, onSuccess }: BatchFormProps) {
   const [editingBatch, setEditingBatch] = useState<BatchDetail | null>(null);
   const [pendingAreaId, setPendingAreaId] = useState<string | null>(null);
   const [pendingAreaName, setPendingAreaName] = useState<string | null>(null);
+  // Descrição da troca de área informada no diálogo (vai junto com newAreaId).
+  const [pendingAreaDescription, setPendingAreaDescription] = useState<
+    string | undefined
+  >(undefined);
   const [areaChangeOpen, setAreaChangeOpen] = useState(false);
 
   const [areaItems, setAreaItems] = useState<SearchComboboxItem[]>([]);
@@ -76,7 +89,7 @@ export function BatchForm({ id, title, onCancel, onSuccess }: BatchFormProps) {
     setError,
     formState: { isSubmitting },
   } = useForm<BatchFormData>({
-    resolver: zodResolver(batchFormSchema),
+    resolver: zodResolver(batchFormSchema, undefined, { raw: true }),
     defaultValues: {
       name: "",
       areaId: "",
@@ -166,6 +179,7 @@ export function BatchForm({ id, title, onCancel, onSuccess }: BatchFormProps) {
 
         if (pendingAreaId) {
           updateData.newAreaId = pendingAreaId;
+          updateData.areaChangeDescription = pendingAreaDescription;
         }
 
         await batchClient.updateBatch(id, updateData);
@@ -174,6 +188,7 @@ export function BatchForm({ id, title, onCancel, onSuccess }: BatchFormProps) {
         reset(toFormValues(fresh));
         setPendingAreaId(null);
         setPendingAreaName(null);
+        setPendingAreaDescription(undefined);
         toast.success("Registro atualizado com sucesso!");
         onSuccess?.();
       } else {
@@ -205,6 +220,7 @@ export function BatchForm({ id, title, onCancel, onSuccess }: BatchFormProps) {
   ) {
     setPendingAreaId(data.newAreaId);
     setPendingAreaName(areaName ?? "Área selecionada");
+    setPendingAreaDescription(data.description);
     setValue("areaId", data.newAreaId, { shouldValidate: true });
   }
 

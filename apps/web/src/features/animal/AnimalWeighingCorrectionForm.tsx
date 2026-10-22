@@ -13,7 +13,10 @@ import { FormField } from "@/components/our/FormField";
 import FieldRow from "@/components/our/FieldRow";
 import { animalClient } from "@/lib/clients";
 import { ApiError, type AnimalWeighing, nowDateTime } from "@ifarm/shared";
-import { weighingCorrectionSchema, WeighingCorrectionFormData } from "./schema";
+import {
+  weighingCorrectionSchema,
+  type WeighingCorrectionPayload as WeighingCorrectionFormData,
+} from "@ifarm/shared";
 
 interface AnimalWeighingCorrectionFormProps {
   animalId: string;
@@ -34,7 +37,7 @@ export function AnimalWeighingCorrectionForm({
   onSaved,
 }: AnimalWeighingCorrectionFormProps) {
   const form = useForm<WeighingCorrectionFormData>({
-    resolver: zodResolver(weighingCorrectionSchema),
+    resolver: zodResolver(weighingCorrectionSchema, undefined, { raw: true }),
     defaultValues: {
       weightKg: String(weighing.weightKg),
       date: toInputDateTime(weighing.date),

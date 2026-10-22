@@ -28,30 +28,22 @@ import {
   type PlanFormData,
 } from "@/features/management-session/schema";
 import { managementSessionClient } from "@/lib/clients";
-import { type ManagementOptions } from "@ifarm/shared";
+import {
+  receptionDocumentsSchema,
+  type ManagementOptions,
+} from "@ifarm/shared";
 import { useCurrentProperty } from "@/features/shell/CurrentPropertyProvider";
 import { receptionClient } from "@/lib/clients";
 
-const receptionFormSchema = z.object({
+// Documentos da carga com as regras da API (podem ser informados depois, na tela da
+// recepção), o lote de entrada e os manejos de chegada (opcionais: receber os animais já
+// é o trabalho da recepção).
+const receptionFormSchema = receptionDocumentsSchema.extend({
   entryBatchId: z.string().min(1, "Selecione o lote de entrada"),
-  // Documentos da carga (podem ser informados depois, na tela da recepção).
-  gtaNumber: z
-    .string()
-    .max(
-      FIELD_LIMITS.purchase.gtaNumber,
-      `Máximo de ${FIELD_LIMITS.purchase.gtaNumber} caracteres`,
-    ),
-  invoiceNumber: z
-    .string()
-    .max(
-      FIELD_LIMITS.purchase.invoiceNumber,
-      `Máximo de ${FIELD_LIMITS.purchase.invoiceNumber} caracteres`,
-    ),
-  // Opcional: receber os animais já é o trabalho da recepção.
   steps: z.array(planStepFormSchema),
 });
 
-type ReceptionFormData = z.infer<typeof receptionFormSchema>;
+type ReceptionFormData = z.input<typeof receptionFormSchema>;
 
 // Manejos de chegada mais comuns: identificar e pesar cada animal.
 const DEFAULT_STEPS: ReceptionFormData["steps"] = [
@@ -119,7 +111,7 @@ function ReceptionForm({
     handleSubmit,
     formState: { isSubmitting },
   } = useForm<ReceptionFormData>({
-    resolver: zodResolver(receptionFormSchema),
+    resolver: zodResolver(receptionFormSchema, undefined, { raw: true }),
     defaultValues: {
       entryBatchId: "",
       gtaNumber: "",
@@ -189,6 +181,7 @@ function ReceptionForm({
           render={({ field, id }) => (
             <Input
               {...field}
+              value={field.value ?? ""}
               id={id}
               maxLength={FIELD_LIMITS.purchase.gtaNumber}
             />
@@ -201,6 +194,7 @@ function ReceptionForm({
           render={({ field, id }) => (
             <Input
               {...field}
+              value={field.value ?? ""}
               id={id}
               maxLength={FIELD_LIMITS.purchase.invoiceNumber}
             />

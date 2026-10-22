@@ -5,30 +5,30 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { EnumAnimalOrigin, EnumAnimalStatus, EnumSex } from "./schema";
+import { AnimalOrigin, AnimalStatus, Sex } from "@ifarm/shared";
 
 type BadgeVariant = "default" | "secondary" | "destructive" | "outline";
 
 export const ORIGIN_VARIANT: Record<string, BadgeVariant> = {
-  [EnumAnimalOrigin.BIRTH]: "default",
-  [EnumAnimalOrigin.PURCHASE]: "secondary",
-  [EnumAnimalOrigin.DONATION]: "outline",
-  [EnumAnimalOrigin.REFERENCE]: "outline",
+  [AnimalOrigin.BIRTH]: "default",
+  [AnimalOrigin.PURCHASE]: "secondary",
+  [AnimalOrigin.DONATION]: "outline",
+  [AnimalOrigin.REFERENCE]: "outline",
 };
 
 export const STATUS_VARIANT: Record<string, BadgeVariant> = {
-  [EnumAnimalStatus.ACTIVE]: "default",
-  [EnumAnimalStatus.SOLD]: "secondary",
-  [EnumAnimalStatus.DONATED]: "secondary",
-  [EnumAnimalStatus.DEAD]: "destructive",
-  [EnumAnimalStatus.MISSING]: "outline",
-  [EnumAnimalStatus.SLAUGHTERED]: "destructive",
-  [EnumAnimalStatus.REFERENCE]: "outline",
+  [AnimalStatus.ACTIVE]: "default",
+  [AnimalStatus.SOLD]: "secondary",
+  [AnimalStatus.DONATED]: "secondary",
+  [AnimalStatus.DEAD]: "destructive",
+  [AnimalStatus.MISSING]: "outline",
+  [AnimalStatus.SLAUGHTERED]: "destructive",
+  [AnimalStatus.REFERENCE]: "outline",
 };
 
 export const SEX_ICON: Record<string, React.ReactNode> = {
-  [EnumSex.MALE]: <Mars className="size-5 text-blue-700" />,
-  [EnumSex.FEMALE]: <Venus className="size-5 text-pink-700" />,
+  [Sex.MALE]: <Mars className="size-5 text-blue-700" />,
+  [Sex.FEMALE]: <Venus className="size-5 text-pink-700" />,
 };
 
 // Marca um valor registrado na sessão de manejo e que ainda não vale fora dela.

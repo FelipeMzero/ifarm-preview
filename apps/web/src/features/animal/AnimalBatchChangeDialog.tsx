@@ -19,9 +19,18 @@ import {
   SearchCombobox,
   SearchComboboxItem,
 } from "@/components/our/SearchCombobox";
-import { AnimalBatchChangeData, animalBatchChangeSchema } from "./schema";
+import { z } from "zod";
+
 import { batchClient } from "@/lib/clients";
 import { StockingNotice } from "@/features/area/StockingNotice";
+
+// Estado do diálogo: o lote de destino é escolhido antes de salvar a edição (vira
+// newBatchId/batchChangeNotes no PUT do animal).
+const animalBatchChangeSchema = z.object({
+  newBatchId: z.string().min(1, "Este campo não pode ser vazio"),
+  notes: z.string().optional(),
+});
+type AnimalBatchChangeData = z.infer<typeof animalBatchChangeSchema>;
 
 interface AnimalBatchChangeDialogProps {
   open: boolean;

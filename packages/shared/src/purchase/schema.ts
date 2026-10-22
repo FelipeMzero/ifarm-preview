@@ -10,12 +10,12 @@ const optionalText = (max: number) =>
     .nullish()
     .transform((v) => v || null);
 
-// Número opcional: vazio/nulo = não informado.
+// Número opcional, como texto (formulário) ou número: vazio/nulo = não informado.
 const optionalNumber = (schema: z.ZodNumber) =>
   z
-    .union([z.literal(""), z.null(), z.coerce.number()])
+    .union([z.string(), z.number(), z.null()])
     .optional()
-    .transform((v) => (v === "" || v == null ? null : v))
+    .transform((v) => (v === "" || v == null ? null : Number(v)))
     .pipe(schema.nullable());
 
 // Categoria da negociação. O preço da forma escolhida é obrigatório já na criação; só o
@@ -23,7 +23,7 @@ const optionalNumber = (schema: z.ZodNumber) =>
 // forma escolhida são descartados.
 export const purchaseCategorySchema = z
   .object({
-    id: z.coerce.number().int().optional(),
+    id: z.number().int().optional(),
     sex: z.enum(Sex),
     minAgeMonths: optionalNumber(z.number().int().min(0, "Idade inválida")),
     maxAgeMonths: optionalNumber(z.number().int().min(0, "Idade inválida")),
@@ -32,10 +32,16 @@ export const purchaseCategorySchema = z
       .nullish()
       .or(z.literal(""))
       .transform((v) => v || null),
-    expectedQuantity: z.coerce
-      .number("Informe a quantidade")
-      .int("Informe um número inteiro")
-      .min(1, "A quantidade deve ser ao menos 1"),
+    expectedQuantity: z
+      .union([z.string(), z.number()])
+      .refine((v) => v !== "", "Informe a quantidade")
+      .transform(Number)
+      .pipe(
+        z
+          .number("Informe a quantidade")
+          .int("Informe um número inteiro")
+          .min(1, "A quantidade deve ser ao menos 1"),
+      ),
     pricingType: z.enum(PurchasePricingType),
     unitPrice: optionalNumber(z.number().min(0, "Valor inválido")),
     totalPrice: optionalNumber(z.number().min(0, "Valor inválido")),
@@ -86,8 +92,9 @@ export const purchaseCategorySchema = z
 
 export type PurchaseCategoryData = z.infer<typeof purchaseCategorySchema>;
 
-// Contrato da API de compras (o formulário tem estado próprio, em features/purchase/schema.ts).
-// Datas como "AAAA-MM-DD"; o servidor converte (toLocalDay).
+// Contrato da API de compras. O formulário valida com estes mesmos schemas (zodResolver em
+// modo raw: a tela valida e envia os valores do formulário; a API converte e descarta os
+// campos que não são da forma de preço escolhida). Datas como "AAAA-MM-DD".
 export const purchaseSchema = z.object({
   title: z
     .string()
@@ -118,6 +125,8 @@ export const receptionDocumentsSchema = z.object({
   invoiceNumber: optionalText(FIELD_LIMITS.purchase.invoiceNumber),
 });
 
+export type PurchasePayload = z.input<typeof purchaseSchema>;
 export type PurchaseData = z.output<typeof purchaseSchema>;
+export type PurchasePaymentPayload = z.input<typeof purchasePaymentSchema>;
 export type PurchasePaymentData = z.output<typeof purchasePaymentSchema>;
 export type ReceptionDocumentsData = z.output<typeof receptionDocumentsSchema>;
