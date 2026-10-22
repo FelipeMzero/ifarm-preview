@@ -1,51 +1,79 @@
 # Arquitetura
 
-A arquitetura da plataforma segue o modelo de Arquitetura em Camadas (Layered Architecture), priorizando desacoplamento entre interfaces, escalabilidade, manutenibilidade e centralização das regras de negócio.
+A arquitetura da plataforma segue o modelo de Arquitetura em Camadas (Layered Architecture), priorizando desacoplamento entre interfaces, manutenibilidade e centralização das regras de negócio.
 
-O sistema adota uma abordagem baseada em uma API centralizada, responsável por autenticação, autorização, processamento das regras de negócio e acesso aos dados.
+O sistema adota uma API centralizada, responsável por autenticação, autorização, processamento das regras de negócio e acesso aos dados. A plataforma web e os aplicativos móveis são clientes dessa mesma API.
 
-A estrutura é dividida em três camadas principais, como mostrado a seguir.
-
-## 1 - Camada de Apresentação (Interfaces com o Usuário):
-
-Responsável pela interação direta com os usuários e dispositivos externos. É composta por aplicações independentes que consomem os serviços disponibilizados pela API central.
-
-- (i) Plataforma Web: Aplicação utilizada para operações administrativas, monitoramento estratégico, visualização de indicadores, relatórios e gerenciamento geral do sistema.
-
-- (ii) Aplicativos Móveis (Android/iOS): Aplicações destinadas às operações em campo, projetadas com suporte à estratégia offline-first, permitindo registros locais e sincronização posterior dos dados com a API quando houver conectividade.
-
-## 2 - Camada de Negócios (API Centralizada e Segurança)
-
-Responsável pela centralização das regras de negócio, autenticação, autorização e processamento das operações do sistema.
-
-A API aplica mecanismos de autenticação e controle de acesso, sendo responsável pelo gerenciamento de sessões e aplicação das regras de controle de acesso baseado em funções (RBAC), garantindo que cada perfil possua acesso apenas aos recursos autorizados.
-
-## 3 - Camada de Persistência e Acesso a dados
-
-Banco de dados relacional robusto encarregado do armazenamento seguro e persistente de todas as entidades do sistema.
-
-O Prisma ORM atua como camada intermediária entre a API e o BD, abstraindo operações SQL através de uma interface tipada e segura, facilitando manutenção, produtividade e integridade das operações.
+A estrutura é dividida em quatro camadas. Cada camada depende apenas da camada abaixo dela: a apresentação nunca acessa diretamente as regras de negócio nem o banco de dados. Entre a apresentação e a API há um contrato compartilhado (`packages/shared`), usado pelos dois lados para que ambos falem a mesma língua.
 
 ```mermaid
-graph LR
+flowchart TB
+  subgraph L1["1 · Apresentação"]
+    direction LR
+    Web["🌐 Web<br/>apps/web: páginas e features"]
+    App["📱 Mobile<br/>apps/mobile"]
+  end
 
-Web["🌐 Web"]
-Android["🤖 Android"]
-iOS["🍎 iOS"]
+  Contract["Contrato da API · packages/shared<br/>schemas, tipos e clientes HTTP"]
 
-API["⚙️ API + Auth"]
-Prisma["🛆 Prisma ORM"]
-DB["🛢️ PostgreSQL"]
+  subgraph L2["2 · API HTTP/JSON · apps/web/src/app/api"]
+    Api["sessão, permissão, validação da entrada<br/>e tradução de erros para HTTP"]
+  end
 
-Web --> API
-Android --> API
-iOS --> API
+  subgraph L3["3 · Domínio · apps/web/src/server"]
+    Domain["consultas, escritas e regras de negócio<br/>(não conhece HTTP)"]
+  end
 
-API --> Prisma
-Prisma --> DB
+  subgraph L4["4 · Persistência"]
+    direction LR
+    Prisma["Prisma ORM<br/>modelo em apps/web/prisma"]
+    DB[("PostgreSQL")]
+  end
+
+  Web --> Contract
+  App --> Contract
+  Contract -- "HTTP" --> Api
+  Api -. "valida com os schemas" .-> Contract
+  Api --> Domain
+  Domain --> Prisma
+  Prisma --> DB
 ```
 
-## 4 - Fluxo de Autenticação
+## 1 - Camada de Apresentação
+
+Responsável pela interação direta com os usuários. É composta por aplicações independentes que consomem a API central por meio dos clientes HTTP do contrato. Esta camada não contém regras de negócio: ela exibe o que a API decide (situações, bloqueios e motivos) e, no máximo, antecipa validações para orientar o usuário antes do envio.
+
+- (i) Plataforma Web (`apps/web`: páginas em `src/app/(protected)`, componentes em `src/features` e `src/components`): aplicação utilizada para operações administrativas, monitoramento, visualização de indicadores, relatórios e gerenciamento geral do sistema. O `src/proxy.ts` faz uma verificação prévia de sessão e de perfil antes de exibir cada página; a autorização definitiva é feita pela API.
+
+- (ii) Aplicativos Móveis (`apps/mobile`, Android/iOS): aplicações destinadas às operações em campo, projetadas para a estratégia offline-first, permitindo registros locais e sincronização posterior dos dados com a API quando houver conectividade.
+
+## 2 - Camada de API (HTTP/JSON)
+
+Porta de entrada do sistema (`apps/web/src/app/api`). Cada rota recebe a requisição, verifica a sessão do usuário, aplica o controle de acesso, valida os dados de entrada com os schemas do contrato e delega a operação à camada de domínio. Ao final, converte o resultado, ou o erro, na resposta HTTP correspondente.
+
+A autenticação é feita pelo better-auth, que gerencia sessões baseadas em cookie. A autorização segue o controle de acesso baseado em funções (RBAC): a tabela `RESOURCE_ACCESS` (`src/lib/permissions.ts`) define, para cada recurso, os perfis sem acesso, garantindo que cada perfil acesse apenas os recursos autorizados.
+
+Esta camada não contém regras de negócio nem acessa o banco de dados.
+
+## 3 - Camada de Domínio (Regras de Negócio)
+
+Centraliza as regras de negócio do sistema (`apps/web/src/server`). Cada domínio (pessoas, lotes, compras, manejos...) é organizado em consultas (`queries`), operações de escrita (`mutations`) e regras puras (`rules`), estas últimas cobertas por testes automatizados.
+
+O código desta camada é executado exclusivamente no servidor e não conhece HTTP: comunica falhas por meio de erros do próprio domínio (registro não encontrado, validação, conflito, regra de negócio violada), que a camada de API traduz em respostas. Por isso, as mesmas regras podem ser reutilizadas fora das rotas, como na carga inicial de dados e em scripts de manutenção.
+
+## 4 - Camada de Persistência
+
+Banco de dados relacional (PostgreSQL) encarregado do armazenamento seguro e persistente de todas as entidades do sistema.
+
+O Prisma ORM atua como intermediário entre a camada de domínio e o banco de dados, abstraindo as operações SQL por meio de uma interface tipada e segura. O modelo de dados é definido em `apps/web/prisma/schema.prisma`, e apenas a camada de domínio acessa o banco. Detalhes de armazenamento, como o formato das datas gravadas, também ficam restritos a essa camada.
+
+## Contrato da API
+
+O pacote `packages/shared` define o contrato entre a apresentação e a API: os schemas de validação dos dados enviados, os tipos das respostas e os clientes HTTP de cada recurso. A plataforma web e os aplicativos móveis usam os mesmos clientes, e a API valida as requisições com os mesmos schemas. Assim, as duas pontas permanecem sempre consistentes.
+
+Como todo o conteúdo do contrato é incluído nas aplicações cliente, ele contém apenas o que o cliente precisa executar e que pode ser exposto: validações de formulário, simulações interativas e o vocabulário de situações exibido nas telas. As regras de decisão, os cálculos de valores e os detalhes de persistência permanecem no servidor. O contrato não depende do banco de dados nem de recursos exclusivos do servidor.
+
+## 5 - Fluxo de Autenticação
 
 ```mermaid
 sequenceDiagram
@@ -81,60 +109,5 @@ sequenceDiagram
 
     Backend-->>Frontend: Dados protegidos
     Frontend-->>User: Exibir perfil
-```
 
-```mermaid
-flowchart TB
-  subgraph Apresentacao["Apresentação"]
-    direction LR
-    Pages["app/(protected)/pessoas<br/>páginas"]
-    Features["features/person<br/>PersonForm, PersonList, PersonDetails"]
-    WebClients["lib/clients.ts<br/>web: fetch do navegador"]
-    Mobile["apps/mobile<br/>(futuro)"]
-    MobileClients["lib/clients.ts<br/>mobile: URL da API + cookie"]
-  end
-
-  subgraph Shared["packages/shared · contrato entre os lados"]
-    direction LR
-    Schema["person/schema.ts<br/>personSchema"]
-    Client["person/client.ts<br/>createPersonClient, PersonRow"]
-    ClientBase["client.ts<br/>ApiError, readJson, toQueryString"]
-    Utils["date · enums · tax-id · field-limits"]
-  end
-
-  subgraph Http["Interface HTTP"]
-    Routes["app/api/person/*<br/>sessão → valida → chama server → responde"]
-    HttpErr["app/api/http.ts<br/>erro → status HTTP"]
-  end
-
-  subgraph Server["Negócio e dados · server-only"]
-    Queries["server/person/queries.ts"]
-    Mutations["server/person/mutations.ts"]
-    Rules["server/person/rules.ts<br/>regras puras"]
-    Infra["server/errors · db-errors · address"]
-  end
-
-  Prisma["Prisma ORM"]
-  DB[("PostgreSQL")]
-
-  Pages --> Features
-  Features --> WebClients
-  Features --> Schema
-  Mobile -.-> MobileClients
-  WebClients --> Client
-  MobileClients -.-> Client
-  Client --> ClientBase
-  Client -- "HTTP /api/person" --> Routes
-  Routes --> Schema
-  Routes --> Queries
-  Routes --> Mutations
-  Routes --> HttpErr
-  Mutations --> Rules
-  Mutations --> Infra
-  Queries --> Utils
-  Mutations --> Utils
-  Queries --> Prisma
-  Mutations --> Prisma
-  Schema --> Utils
-  Prisma --> DB
 ```
