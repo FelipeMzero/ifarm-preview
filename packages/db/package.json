@@ -8,13 +8,15 @@
     "./enums": "./src/generated/prisma/enums.ts"
   },
   "dependencies": {
-    "@prisma/adapter-pg": "7.7.0",
-    "@prisma/client": "7.7.0",
-    "dotenv": "^17.4.2",
-    "pg": "^8.20.0",
-    "server-only": "^0.0.1"
+    "@prisma/adapter-pg": "catalog:",
+    "@prisma/client": "catalog:",
+    "pg": "catalog:",
+    "server-only": "catalog:"
   },
   "devDependencies": {
-    "@types/pg": "^8.20.0"
+    "@types/pg": "catalog:",
+    "dotenv": "catalog:",
+    "prisma": "catalog:",
+    "prisma-erd-generator": "^2.4.3"
   }
 }

@@ -44,17 +44,17 @@ docker compose up -d
 
 ### 3. Sincronizar o Prisma ORM
 
-Gere o cliente do Prisma e sincronize o banco de dados com o schema atual:
+Gere o cliente do Prisma e sincronize o banco de dados com o schema atual (comandos rodados na raiz do repositório):
 
 ```bash
-pnpm prisma generate
-pnpm prisma db push
+pnpm db:generate
+pnpm db:push
 ```
 
 Depois, rode o seed para criar o usuário admin (credenciais definidas em `SEED_ADMIN_EMAIL`/`SEED_ADMIN_PASSWORD` no `.env`) e alguns dados fictícios:
 
 ```bash
-pnpm prisma db seed
+pnpm db:seed
 ```
 
 ---
@@ -79,19 +79,19 @@ O projeto estará disponível em: http://localhost:3000
 
 ## 🔍 Comandos Úteis
 
-| Comando                  | Descrição                                                              |
-| :----------------------- | :--------------------------------------------------------------------- |
-| pnpm prisma studio       | Abre uma interface gráfica para visualizar e editar os dados do banco. |
-| pnpm exec prisma db seed | Roda novamente o seed (cria admin e dados de exemplo).                 |
-| docker compose logs -f   | Visualiza os logs do banco de dados em tempo real.                     |
-| docker compose down      | Para e remove os containers do projeto.                                |
+| Comando                | Descrição                                                                        |
+| :--------------------- | :------------------------------------------------------------------------------- |
+| pnpm db:studio         | Abre uma interface gráfica para visualizar e editar os dados do banco (na raiz). |
+| pnpm db:seed           | Roda novamente o seed (cria admin e dados de exemplo) (na raiz).                 |
+| docker compose logs -f | Visualiza os logs do banco de dados em tempo real.                               |
+| docker compose down    | Para e remove os containers do projeto.                                          |
 
 ---
 
 ## 📂 Estrutura do Banco de Dados
 
-O projeto utiliza o PostgreSQL. O esquema de dados é definido no arquivo packages/db/prisma/schema.prisma (na raiz do monorepo). Sempre que realizar alterações neste arquivo, lembre-se de rodar o comando abaixo para sincronizar o banco.
+O projeto utiliza o PostgreSQL. O esquema de dados é definido no arquivo packages/db/prisma/schema.prisma (na raiz do monorepo). Sempre que realizar alterações neste arquivo, lembre-se de rodar o comando abaixo, na raiz, para sincronizar o banco.
 
 ```bash
-pnpm prisma db push
+pnpm db:push
 ```

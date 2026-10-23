@@ -16,8 +16,9 @@ Monorepo pnpm (use sempre `pnpm`, nunca `npm`/`npx`):
 - `packages/domain` (`@ifarm/domain`): domínio do servidor (consultas, escritas e regras).
   Importado por módulo: `@ifarm/domain/<domínio>/<arquivo>`.
 - `packages/db` (`@ifarm/db`): schema do Prisma (`prisma/schema.prisma`), o cliente gerado
-  (`@ifarm/db/client`, `@ifarm/db/enums`) e a instância do banco (`prisma`, de `@ifarm/db`). O
-  CLI do Prisma roda a partir de `apps/web` (`pnpm prisma …`), apontando para esse schema.
+  (`@ifarm/db/client`, `@ifarm/db/enums`), a instância do banco (`prisma`, de `@ifarm/db`) e o
+  CLI do Prisma (`prisma.config.ts`, que lê o `DATABASE_URL` do `apps/web/.env`). Na raiz:
+  `pnpm db:generate`, `db:push`, `db:seed` e `db:studio`.
 
 Arquitetura em camadas descrita em `docs/architecture.md`; requisitos de cada módulo em
 `docs/requirements/mod-XX-<nome>.md`.
@@ -97,7 +98,7 @@ função de `@ifarm/domain` → `NextResponse.json`; no `catch`, `errorResponse(
 - Filtros de listagem: converta o valor da tela para o `XListParams` com uma tabela tipada
   (fora da tabela = sem filtro), ou pelo schema do shared (como `toAnimalListParams`).
 - Mostre o que a API decide (situação, bloqueio, motivo); não recalcule regra na tela. Enums
-  vêm de `@ifarm/shared`, nunca de `@/generated/prisma`.
+  vêm de `@ifarm/shared`, nunca de `@ifarm/db/enums`.
 - Gráficos com eixo de datas: `timeDomain` e `timeTicks` (`lib/time-domain.ts`).
 
 ## 4. Shared ou servidor?
@@ -133,9 +134,9 @@ servidor, mova-a nesse momento (funções puras: só os imports mudam).
 
 ## 6. Antes de concluir
 
-Em `apps/web`:
+Na raiz, `pnpm test` (roda os testes de cada app/pacote). Em `apps/web`:
 
-- `pnpm exec tsc --noEmit -p .` e `pnpm test`;
+- `pnpm exec tsc --noEmit -p .`;
 - `pnpm build`;
 - `pnpm exec eslint <arquivos alterados>`, olhando **erros e avisos** (imports sem uso aparecem
   como aviso). O lint do projeto tem problemas antigos: não introduza novos;
@@ -146,7 +147,11 @@ Em `apps/web`:
 Teste o fluxo no app: não há testes com banco, então a ligação entre a mutation e a regra só é
 verificada no uso.
 
-Testes unitários (vitest, rodados pelo `pnpm test` do web) ficam ao lado do código
-(`*.test.ts`), no shared e no domain. Ao mover ou renomear algo exportado, procure os usos nos
-pacotes e em `apps/web` (`src/` **e** `scripts/`: o seed e os scripts rodam com `tsx`,
-fora do Next). Mudou o schema do banco? Rode `pnpm prisma generate` em `apps/web`.
+Testes unitários (vitest) ficam ao lado do código (`*.test.ts`); cada app/pacote com testes
+tem o próprio script `test` (`pnpm test` dentro dele roda só os dele). Ao mover ou renomear
+algo exportado, procure os usos nos pacotes e em `apps/web` (`src/` **e** `scripts/`: o seed e
+os scripts rodam com `tsx`, fora do Next). Mudou o schema do banco? Rode `pnpm db:generate` na
+raiz.
+
+Dependência usada por mais de um app/pacote: a versão fica no `catalog` do
+`pnpm-workspace.yaml`, e o `package.json` declara `"catalog:"`.

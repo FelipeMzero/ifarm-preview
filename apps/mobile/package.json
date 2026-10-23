@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "main": "index.ts",
   "dependencies": {
-    "@better-auth/expo": "^1.6.23",
-    "better-auth": "^1.6.23",
+    "@better-auth/expo": "catalog:",
+    "better-auth": "catalog:",
     "expo": "~54.0.36",
     "expo-constants": "~18.0.13",
     "expo-linking": "~8.0.12",

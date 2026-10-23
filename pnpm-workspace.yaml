@@ -2,6 +2,20 @@ packages:
   - "apps/*"
   - "packages/*"
 
+# Versões das dependências usadas por mais de um app/pacote (no package.json: "catalog:").
+catalog:
+  "@better-auth/expo": "^1.6.23"
+  "@prisma/adapter-pg": "7.7.0"
+  "@prisma/client": "7.7.0"
+  "@types/pg": "^8.20.0"
+  better-auth: "^1.6.23"
+  dotenv: "^17.4.2"
+  pg: "^8.20.0"
+  prisma: "7.7.0"
+  server-only: "^0.0.1"
+  vitest: "^5.0.2"
+  zod: "^4.4.3"
+
 allowBuilds:
   "@prisma/engines": false
   core-js-pure: false
