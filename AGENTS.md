@@ -1,18 +1,13 @@
-<!-- BEGIN:nextjs-agent-rules -->
-
-# This is NOT the Next.js you know
-
-This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
-<!-- END:nextjs-agent-rules -->
-
 # Como adicionar uma feature ao iFarm
 
 Monorepo pnpm (use sempre `pnpm`, nunca `npm`/`npx`):
 
 - `apps/api`: API REST em Hono, consumida pelo web e pelo mobile. Rotas (`src/routes`), o
   servidor da autenticação (`src/auth.ts`, better-auth) e o seed (`scripts/seed.ts`).
-- `apps/web`: Next.js, só telas. O `next.config.ts` repassa `/api/*` para a API (mesma origem
-  para o navegador); o cliente da autenticação fica em `src/lib/auth-client.ts`.
+- `apps/web`: React + Vite (SPA), só telas. As rotas ficam em `src/router.tsx` (React Router) e
+  as páginas em `src/pages/`; as que exigem login passam pelo `src/layouts/ProtectedLayout.tsx`
+  (sessão vinda da API e `RESOURCE_ACCESS`). Em desenvolvimento o Vite repassa `/api/*` para a
+  API (`vite.config.ts`); o cliente da autenticação fica em `src/lib/auth-client.ts`.
 - `apps/mobile`: Expo / React Native. Consome a mesma API.
 - `packages/shared` (`@ifarm/shared`): contrato da API, as poucas regras que o cliente executa e
   as permissões (`permissions.ts`: a API usa para negar, as telas para esconder).
@@ -22,11 +17,11 @@ Monorepo pnpm (use sempre `pnpm`, nunca `npm`/`npx`):
   (`@ifarm/db/client`, `@ifarm/db/enums`), a instância do banco (`prisma`, de `@ifarm/db`) e o
   CLI do Prisma (`prisma.config.ts`) e o container do PostgreSQL (`docker-compose.yaml`). Na
   raiz: `pnpm db:generate`, `db:push`, `db:seed` e `db:studio`.
-- Variáveis de ambiente: cada app/pacote que roda um processo tem o próprio `.env` (modelo no
-  `.env.example`): `apps/api/.env` (banco, autenticação e seed), `apps/web/.env` (`API_URL`, lido
-  no build, e o segredo da sessão) e `packages/db/.env` (container e CLI). Os pacotes só leem o
-  `process.env`; quem carrega o arquivo é o processo (Next, `tsx --env-file`,
-  `prisma.config.ts`).
+- Variáveis de ambiente: cada app/pacote que precisa de configuração tem o próprio `.env` (modelo
+  no `.env.example`): `apps/api/.env` (banco, autenticação e seed), `packages/db/.env` (container
+  e CLI) e `apps/mobile/.env` (endereço da API). O web não tem: o Vite repassa `/api/*` para
+  `localhost:3001`. Os pacotes só leem o `process.env`; quem carrega o arquivo é o processo
+  (`tsx --env-file`, `prisma.config.ts`, Expo).
 
 Arquitetura em camadas descrita em `docs/architecture.md`; requisitos de cada módulo em
 `docs/requirements/mod-XX-<nome>.md`.
@@ -46,22 +41,22 @@ Arquitetura em camadas descrita em `docs/architecture.md`; requisitos de cada m�
 
 ## 2. Onde cada coisa vai
 
-| O que você está escrevendo                               | Onde vai                                                                                                                                        |
-| -------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| Dados que o cliente **envia** (corpo de POST/PUT)        | `packages/shared/src/<domínio>/schema.ts`: schema Zod; `XPayload = z.input`, `XData = z.output`                                                 |
-| **Filtros e paginação** de uma listagem                  | mesmo `schema.ts`: `xQuerySchema`; `XQuery = z.output`, `XListParams = Partial<XQuery>`                                                         |
-| Tipos das **respostas** e funções que chamam a API       | `packages/shared/src/<domínio>/client.ts` (`createXClient`), com os tipos derivados do `schema.ts`; registrado em `apps/web/src/lib/clients.ts` |
-| Leitura do banco                                         | `packages/domain/src/<domínio>/queries.ts`                                                                                                      |
-| Escrita no banco / transação                             | `packages/domain/src/<domínio>/mutations.ts`, escritas dentro de `write()`                                                                      |
-| Regra de negócio (decidir, calcular, bloquear, situação) | `packages/domain/src/<domínio>/rules.ts`, puro, com `rules.test.ts` ao lado                                                                     |
-| Filtro de listagem por situação (consulta)               | `X_STATUS_WHERE` no `rules.ts`, ao lado da função de situação, coberto por `packages/domain/src/status-where.test.ts`                           |
-| Erro de negócio                                          | classes de `packages/domain/src/errors.ts`                                                                                                      |
-| Conversão de formato do banco (ex.: datas `@db.Date`)    | `packages/domain/src/db-dates.ts` e utilitários do domínio; nunca no shared                                                                     |
-| Endpoint                                                 | `apps/api/src/routes/<domínio>.ts` (router do Hono, montado em `/api/<domínio>` no `src/index.ts`)                                              |
-| Permissão                                                | `RESOURCE_ACCESS` em `packages/shared/src/permissions.ts` (a chave é o segmento da URL da página)                                               |
-| Tela, formulário, lista                                  | `apps/web/src/features/<domínio>/`                                                                                                              |
-| Página e menu                                            | `app/(protected)/<rota-pt>/page.tsx` (só monta a feature); item em `features/shell/nav.ts`                                                      |
-| Enum                                                     | o do banco, espelhado em `shared/src/enums.ts` (rótulos em `enum-labels.ts`); a UI usa sempre o do shared                                       |
+| O que você está escrevendo                               | Onde vai                                                                                                                                              |
+| -------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Dados que o cliente **envia** (corpo de POST/PUT)        | `packages/shared/src/<domínio>/schema.ts`: schema Zod; `XPayload = z.input`, `XData = z.output`                                                       |
+| **Filtros e paginação** de uma listagem                  | mesmo `schema.ts`: `xQuerySchema`; `XQuery = z.output`, `XListParams = Partial<XQuery>`                                                               |
+| Tipos das **respostas** e funções que chamam a API       | `packages/shared/src/<domínio>/client.ts` (`createXClient`), com os tipos derivados do `schema.ts`; registrado em `apps/web/src/lib/clients.ts`       |
+| Leitura do banco                                         | `packages/domain/src/<domínio>/queries.ts`                                                                                                            |
+| Escrita no banco / transação                             | `packages/domain/src/<domínio>/mutations.ts`, escritas dentro de `write()`                                                                            |
+| Regra de negócio (decidir, calcular, bloquear, situação) | `packages/domain/src/<domínio>/rules.ts`, puro, com `rules.test.ts` ao lado                                                                           |
+| Filtro de listagem por situação (consulta)               | `X_STATUS_WHERE` no `rules.ts`, ao lado da função de situação, coberto por `packages/domain/src/status-where.test.ts`                                 |
+| Erro de negócio                                          | classes de `packages/domain/src/errors.ts`                                                                                                            |
+| Conversão de formato do banco (ex.: datas `@db.Date`)    | `packages/domain/src/db-dates.ts` e utilitários do domínio; nunca no shared                                                                           |
+| Endpoint                                                 | `apps/api/src/routes/<domínio>.ts` (router do Hono, montado em `/api/<domínio>` no `src/index.ts`)                                                    |
+| Permissão                                                | `RESOURCE_ACCESS` em `packages/shared/src/permissions.ts` (a chave é o segmento da URL da página)                                                     |
+| Tela, formulário, lista                                  | `apps/web/src/features/<domínio>/`                                                                                                                    |
+| Página e menu                                            | `src/pages/<rota-pt>/page.tsx` (só monta a feature; parâmetros com `useRouteParams`), registrada em `src/router.tsx`; item em `features/shell/nav.ts` |
+| Enum                                                     | o do banco, espelhado em `shared/src/enums.ts` (rótulos em `enum-labels.ts`); a UI usa sempre o do shared                                             |
 
 ## 3. Regras de cada camada
 
@@ -161,6 +156,6 @@ raiz.
 Dependência usada por mais de um app/pacote: a versão fica no `catalog` do
 `pnpm-workspace.yaml`, e o `package.json` declara `"catalog:"`.
 
-Lint: cada app/pacote tem o próprio `eslint.config.mjs` (o web com as regras do Next; a API e os
-pacotes com o typescript-eslint) e o script `lint`. A regra do projeto (ponto e vírgula) se repete em
+Lint: cada app/pacote tem o próprio `eslint.config.mjs` (typescript-eslint; o web também com as
+regras de hooks do React) e o script `lint`. A regra do projeto (ponto e vírgula) se repete em
 cada um: ao mudá-la, mude em todos. O mobile não tem lint.

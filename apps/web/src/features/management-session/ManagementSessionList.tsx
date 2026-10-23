@@ -1,5 +1,3 @@
-"use client";
-
 import { ColumnDef } from "@tanstack/react-table";
 import {
   ClipboardList,
@@ -10,7 +8,7 @@ import {
   Search,
   XCircle,
 } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useNavigate } from "react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -188,7 +186,7 @@ function buildColumns(handlers: {
 }
 
 export default function ManagementSessionList() {
-  const router = useRouter();
+  const navigate = useNavigate();
   const { property: currentProperty } = useCurrentProperty();
 
   const [sessions, setSessions] = useState<ManagementSessionRow[]>([]);
@@ -270,18 +268,18 @@ export default function ManagementSessionList() {
   }
 
   const columns = buildColumns({
-    onRegister: (id) => router.push(`/manejos/${id}/registro`),
+    onRegister: (id) => navigate(`/manejos/${id}/registro`),
     // Inicia com a data de hoje; a data pode ser corrigida no cabeçalho do registro.
     onStart: async (id) => {
       try {
         await managementSessionClient.startManagementSession(id, nowDateTime());
         toast.success("Registro iniciado com a data de hoje.");
-        router.push(`/manejos/${id}/registro`);
+        navigate(`/manejos/${id}/registro`);
       } catch (e) {
         toast.error((e as Error).message);
       }
     },
-    onEdit: (id) => router.push(`/manejos/${id}`),
+    onEdit: (id) => navigate(`/manejos/${id}`),
     onCancel: setCancelling,
   });
 
@@ -300,7 +298,7 @@ export default function ManagementSessionList() {
     <div className="w-full max-w-6xl space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold">Sessões de Manejo</h1>
-        <Button onClick={() => router.push("/manejos/novo")}>
+        <Button onClick={() => navigate("/manejos/novo")}>
           <Plus className="size-4" /> Adicionar
         </Button>
       </div>

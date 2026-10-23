@@ -1,5 +1,3 @@
-"use client";
-
 import { formatInstant } from "./format";
 import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";

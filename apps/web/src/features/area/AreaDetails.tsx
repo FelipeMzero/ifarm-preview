@@ -1,7 +1,5 @@
-"use client";
-
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useNavigate } from "react-router";
 import { Boxes, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -32,7 +30,7 @@ export function AreaDetails({
   onOpenChange,
   onDelete,
 }: AreaDetailsProps) {
-  const router = useRouter();
+  const navigate = useNavigate();
   const [history, setHistory] = useState<{
     areaId: string;
     entries: AreaOccupancyHistoryEntry[];
@@ -132,7 +130,7 @@ export function AreaDetails({
                     variant="ghost"
                     size="sm"
                     onClick={() =>
-                      router.push(`/lotes/${area.occupancy!.batch.id}/detalhes`)
+                      navigate(`/lotes/${area.occupancy!.batch.id}/detalhes`)
                     }
                   >
                     <Boxes className="size-3.5" /> Ver lote

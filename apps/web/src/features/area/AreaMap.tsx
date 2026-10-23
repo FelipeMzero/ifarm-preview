@@ -1,5 +1,3 @@
-"use client";
-
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useForm, useWatch, type Path } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -33,7 +31,7 @@ import {
   Clock,
   Hourglass,
 } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useNavigate } from "react-router";
 import { cn } from "@/lib/utils";
 
 import "@geoman-io/leaflet-geoman-free";
@@ -84,9 +82,9 @@ import {
 } from "./occupancy";
 
 const markerIconDefault = L.icon({
-  iconUrl: markerIcon as unknown as string,
-  iconRetinaUrl: markerIcon2x as unknown as string,
-  shadowUrl: markerShadow as unknown as string,
+  iconUrl: markerIcon,
+  iconRetinaUrl: markerIcon2x,
+  shadowUrl: markerShadow,
   iconSize: [25, 41],
   iconAnchor: [12, 41],
   popupAnchor: [1, -34],
@@ -622,7 +620,7 @@ async function geocodeAddress(
 }
 
 export default function AreaMap() {
-  const router = useRouter();
+  const navigate = useNavigate();
   const { property: currentProperty } = useCurrentProperty();
 
   const [areas, setAreas] = useState<AreaRow[]>([]);
@@ -1192,7 +1190,7 @@ export default function AreaMap() {
                                   size="sm"
                                   className="h-8 justify-start text-xs font-normal"
                                   onClick={() =>
-                                    router.push(
+                                    navigate(
                                       `/lotes/${area.occupancy!.batch.id}/detalhes`,
                                     )
                                   }
@@ -1404,7 +1402,7 @@ export default function AreaMap() {
             <AlertDialogCancel variant="secondary">Voltar</AlertDialogCancel>
             <AlertDialogAction
               onClick={() =>
-                occupiedArea && router.push(`/lotes/${occupiedArea.batch.id}`)
+                occupiedArea && navigate(`/lotes/${occupiedArea.batch.id}`)
               }
             >
               Trocar área

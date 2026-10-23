@@ -1,5 +1,3 @@
-"use client";
-
 import { useState } from "react";
 import { ChevronRight, CircleAlert, Loader2, Trash2 } from "lucide-react";
 

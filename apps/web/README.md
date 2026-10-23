@@ -2,7 +2,7 @@
 
 > Parte do monorepo iFarm — veja o [README da raiz](../../README.md) para a visão geral.
 
-Este é um projeto desenvolvido com Next.js, só com as telas. Os dados vêm da [API](../../apps/api/README.md) (`apps/api`): o `next.config.ts` repassa as chamadas a `/api/*` para ela, de modo que, para o navegador, tudo continua no mesmo endereço.
+Aplicação web do iFarm: uma SPA em React, com [Vite](https://vite.dev/) e [React Router](https://reactrouter.com/), só com as telas. Os dados vêm da [API](../../apps/api/README.md) (`apps/api`): o navegador chama `/api/*` no próprio endereço do site, e quem repassa para a API é o Vite (em desenvolvimento) ou o proxy reverso (em produção).
 
 ## 🚀 Pré-requisitos
 
@@ -12,22 +12,9 @@ Este é um projeto desenvolvido com Next.js, só com as telas. Os dados vêm da 
 
 ---
 
-## 🛠️ Configuração
-
-Dentro de `apps/web`, copie o modelo de exemplo e preencha com seus dados locais:
-
-```bash
-cp .env.example .env
-```
-
-- `API_URL`: o endereço da API (em desenvolvimento, `http://localhost:3001`). É lido no **build**: em produção, defina-o antes do `pnpm build`.
-- `BETTER_AUTH_SECRET`: o mesmo valor do `apps/api/.env`. O web lê o cookie da sessão para decidir quais páginas mostrar (a autorização de verdade é da API).
-
----
-
 ## 💻 Executando o Projeto
 
-Após concluir a configuração, inicie o servidor de desenvolvimento. Na raiz do repositório, `pnpm dev` sobe a API e o web juntos; dentro de `apps/web`, sobe só o web:
+Inicie o servidor de desenvolvimento. Na raiz do repositório, `pnpm dev` sobe a API e o web juntos; dentro de `apps/web`, sobe só o web:
 
 ```bash
 pnpm dev
@@ -35,14 +22,40 @@ pnpm dev
 
 O projeto estará disponível em: http://localhost:3000
 
+O Vite repassa as chamadas a `/api/*` para a API em `http://localhost:3001`. Se ela estiver em outro endereço, defina `API_URL` ao subir o web (ex.: `API_URL=http://192.168.0.10:3001 pnpm dev`).
+
+---
+
+## 📦 Produção
+
+O `pnpm build` gera arquivos estáticos em `dist/` (HTML, JS e CSS), sem servidor Node próprio. Para publicar, o proxy reverso (Nginx, Caddy…) deve:
+
+- repassar `/api/*` para a API;
+- servir os arquivos de `dist/` e, para qualquer outro caminho, o `dist/index.html` (as rotas são resolvidas no navegador).
+
+Para conferir o build localmente, com o mesmo repasse do desenvolvimento: `pnpm preview`.
+
 ---
 
 ## 🔍 Comandos Úteis
 
-| Comando      | Descrição                                                                      |
-| :----------- | :----------------------------------------------------------------------------- |
-| `pnpm dev`   | Sobe o servidor de desenvolvimento (na raiz, junto com a API)                  |
-| `pnpm build` | Gera o build de produção (na raiz ou em `apps/web`)                            |
-| `pnpm lint`  | Roda o lint do web (em `apps/web`; na raiz, roda o de todos os apps e pacotes) |
+| Comando        | Descrição                                                                      |
+| :------------- | :----------------------------------------------------------------------------- |
+| `pnpm dev`     | Sobe o servidor de desenvolvimento (na raiz, junto com a API)                  |
+| `pnpm build`   | Verifica os tipos e gera o build de produção em `dist/`                        |
+| `pnpm preview` | Serve o build de `dist/` em http://localhost:3000 (em `apps/web`)              |
+| `pnpm lint`    | Roda o lint do web (em `apps/web`; na raiz, roda o de todos os apps e pacotes) |
 
 Os comandos da API e do seed estão no [README do apps/api](../../apps/api/README.md), e os do banco no [README do packages/db](../../packages/db/README.md).
+
+---
+
+## 📂 Estrutura
+
+| Caminho                       | O que fica ali                                                        |
+| :---------------------------- | :-------------------------------------------------------------------- |
+| `index.html` e `src/main.tsx` | A entrada da aplicação: fontes, CSS global, tema e o roteador         |
+| `src/router.tsx`              | As URLs das páginas (cada página é carregada sob demanda)             |
+| `src/pages/`                  | Uma pasta por URL, com o `page.tsx` que monta a feature               |
+| `src/layouts/`                | `ProtectedLayout` (login, permissão e menu) e `GuestLayout` (o login) |
+| `src/features/`               | As telas, formulários e listas de cada domínio                        |

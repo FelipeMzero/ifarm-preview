@@ -1,5 +1,3 @@
-"use client";
-
 import { FIELD_LIMITS } from "@ifarm/shared";
 import { UseFormReturn } from "react-hook-form";
 import { Hexagon, Loader2, MapPin, Ruler } from "lucide-react";

@@ -1,5 +1,3 @@
-"use client";
-
 import { ColumnDef, VisibilityState } from "@tanstack/react-table";
 import {
   ArrowRightLeft,
@@ -12,7 +10,7 @@ import {
   PackageOpen,
   RotateCcw,
 } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useNavigate } from "react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -165,7 +163,7 @@ function buildColumns(
 }
 
 export default function BatchList() {
-  const router = useRouter();
+  const navigate = useNavigate();
   const { property: currentProperty } = useCurrentProperty();
 
   const [batches, setBatches] = useState<BatchRow[]>([]);
@@ -266,7 +264,7 @@ export default function BatchList() {
   }
 
   const columns = buildColumns(
-    (id) => router.push(`/lotes/${id}`),
+    (id) => navigate(`/lotes/${id}`),
     setViewingDetailsId,
     requestClose,
     setReopeningBatch,
@@ -291,7 +289,7 @@ export default function BatchList() {
         <div>
           <h1 className="text-xl font-semibold">Lotes</h1>
         </div>
-        <Button onClick={() => router.push("/lotes/novo")}>
+        <Button onClick={() => navigate("/lotes/novo")}>
           <Plus className="size-4" /> Adicionar
         </Button>
       </div>
@@ -441,7 +439,7 @@ export default function BatchList() {
             <AlertDialogAction
               onClick={() =>
                 batchWithAnimals &&
-                router.push(
+                navigate(
                   `/lotes/transferencias/nova?origem=${batchWithAnimals.row.id}`,
                 )
               }

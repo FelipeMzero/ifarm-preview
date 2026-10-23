@@ -1,5 +1,3 @@
-"use client";
-
 import { useFieldArray, useFormState, type Control } from "react-hook-form";
 import { ArrowDown, ArrowUp, CircleAlert, Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";

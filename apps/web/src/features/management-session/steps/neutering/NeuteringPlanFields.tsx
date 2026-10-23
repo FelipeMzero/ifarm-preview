@@ -1,5 +1,3 @@
-"use client";
-
 import { useWatch } from "react-hook-form";
 import { FormField } from "@/components/our/FormField";
 import { SelectField } from "@/components/our/SelectField";

@@ -1,7 +1,5 @@
-"use client";
-
 import React, { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useNavigate } from "react-router";
 import { toast } from "sonner";
 import {
   ArrowLeft,
@@ -159,7 +157,7 @@ export default function AnimalDetails({
   id: string;
   onClose?: () => void;
 }) {
-  const router = useRouter();
+  const navigate = useNavigate();
   const [animal, setAnimal] = useState<AnimalFullDetails | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
@@ -187,7 +185,7 @@ export default function AnimalDetails({
       await animalClient.deleteAnimal(id);
       toast.success("Registro excluído com sucesso!");
       if (onClose) onClose();
-      else router.push("/animais");
+      else navigate("/animais");
     } catch (e) {
       toast.error(
         (e as Error).message || "Não foi possível excluir o registro.",
@@ -261,7 +259,7 @@ export default function AnimalDetails({
         )}
       >
         {!onClose && (
-          <Button variant="ghost" size="sm" onClick={() => router.back()}>
+          <Button variant="ghost" size="sm" onClick={() => navigate(-1)}>
             <ArrowLeft className="size-4" /> Voltar
           </Button>
         )}
@@ -269,7 +267,7 @@ export default function AnimalDetails({
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => router.push(`/animais/${animal.id}`)}
+            onClick={() => navigate(`/animais/${animal.id}`)}
           >
             <Pencil className="size-4" /> Editar
           </Button>
@@ -462,7 +460,7 @@ export default function AnimalDetails({
                         type="button"
                         className="text-left underline-offset-4 hover:underline"
                         onClick={() =>
-                          router.push(`/pessoas/${purchase.sellerId}/detalhes`)
+                          navigate(`/pessoas/${purchase.sellerId}/detalhes`)
                         }
                       >
                         {purchase.sellerName}

@@ -1,5 +1,3 @@
-"use client";
-
 import { ColumnDef } from "@tanstack/react-table";
 import { KeyRound, Plus, Power, Users } from "lucide-react";
 import { useEffect, useState } from "react";

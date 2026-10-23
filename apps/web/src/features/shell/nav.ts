@@ -100,9 +100,8 @@ export function findNavMatch(pathname: string) {
     .sort((a, b) => b.item.href.length - a.item.href.length)[0];
 }
 
-// Seções do menu que o usuário recolheu, lembradas por navegador. O layout lê o
-// cookie no servidor para o menu já chegar no estado certo (sem abrir e fechar ao
-// carregar); valores que não são seções existentes são ignorados.
+// Seções do menu que o usuário recolheu, lembradas por navegador (num cookie, lido ao
+// montar o menu); valores que não são seções existentes são ignorados.
 export const CLOSED_SECTIONS_COOKIE = "sidebar_closed_sections";
 const CLOSED_SECTIONS_MAX_AGE = 60 * 60 * 24 * 365;
 
@@ -118,7 +117,14 @@ export function parseClosedSections(value: string | undefined): string[] {
   }
 }
 
-// Só no navegador (chamado ao abrir/fechar uma seção).
+export function readClosedSections(): string[] {
+  const entry = document.cookie
+    .split("; ")
+    .find((c) => c.startsWith(`${CLOSED_SECTIONS_COOKIE}=`));
+  return parseClosedSections(entry?.slice(CLOSED_SECTIONS_COOKIE.length + 1));
+}
+
+// Chamado ao abrir/fechar uma seção.
 export function saveClosedSections(labels: Iterable<string>) {
   const value = encodeURIComponent([...labels].join(","));
   document.cookie = `${CLOSED_SECTIONS_COOKIE}=${value}; path=/; max-age=${CLOSED_SECTIONS_MAX_AGE}`;

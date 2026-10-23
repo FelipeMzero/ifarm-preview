@@ -1,7 +1,5 @@
-"use client";
-
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useNavigate } from "react-router";
 import { ArrowLeft, ChevronRight, Plus } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -18,7 +16,7 @@ import { type ReceptionPurchase } from "@ifarm/shared";
 // A compra vista por quem recebe: o que foi negociado (em quantidade), o que já
 // chegou e as recepções. Daqui se abre uma nova recepção.
 export function ReceptionPurchaseDetail({ id }: { id: string }) {
-  const router = useRouter();
+  const navigate = useNavigate();
   const [purchase, setPurchase] = useState<ReceptionPurchase | null>(null);
   const [failed, setFailed] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -56,7 +54,7 @@ export function ReceptionPurchaseDetail({ id }: { id: string }) {
         variant="ghost"
         size="sm"
         className="w-fit"
-        onClick={() => router.push("/recepcoes")}
+        onClick={() => navigate("/recepcoes")}
       >
         <ArrowLeft className="size-4" /> Recepções
       </Button>
@@ -136,7 +134,7 @@ export function ReceptionPurchaseDetail({ id }: { id: string }) {
               <li key={r.id}>
                 <button
                   type="button"
-                  onClick={() => router.push(`/recepcoes/${r.sessionId}`)}
+                  onClick={() => navigate(`/recepcoes/${r.sessionId}`)}
                   className="flex w-full flex-wrap items-center gap-x-4 gap-y-1 rounded-lg border border-border bg-card p-3 text-left text-sm transition-colors hover:bg-accent/40"
                 >
                   <span className="font-medium">{r.title}</span>
@@ -172,7 +170,7 @@ export function ReceptionPurchaseDetail({ id }: { id: string }) {
         purchaseId={purchase.id}
         open={dialogOpen}
         onOpenChange={setDialogOpen}
-        onCreated={(sessionId) => router.push(`/recepcoes/${sessionId}`)}
+        onCreated={(sessionId) => navigate(`/recepcoes/${sessionId}`)}
       />
     </div>
   );

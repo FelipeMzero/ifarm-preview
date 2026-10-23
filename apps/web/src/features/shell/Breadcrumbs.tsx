@@ -1,8 +1,6 @@
-"use client";
-
 import { Fragment } from "react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { Link } from "react-router";
+import { useLocation } from "react-router";
 import {
   Breadcrumb,
   BreadcrumbEllipsis,
@@ -86,7 +84,7 @@ function buildCrumbs(pathname: string): Crumb[] {
 }
 
 export function AppBreadcrumb() {
-  const pathname = usePathname();
+  const { pathname } = useLocation();
   const crumbs = buildCrumbs(pathname);
   if (!crumbs.length) return null;
 
@@ -130,7 +128,7 @@ export function AppBreadcrumb() {
                   </BreadcrumbPage>
                 ) : crumb.href ? (
                   <BreadcrumbLink asChild className="truncate">
-                    <Link href={crumb.href}>{crumb.label}</Link>
+                    <Link to={crumb.href}>{crumb.label}</Link>
                   </BreadcrumbLink>
                 ) : (
                   <span className="truncate">{crumb.label}</span>

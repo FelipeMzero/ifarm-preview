@@ -1,5 +1,3 @@
-"use client";
-
 import { toLocalDay } from "@ifarm/shared";
 import {
   CartesianGrid,

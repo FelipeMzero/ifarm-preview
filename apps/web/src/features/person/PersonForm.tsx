@@ -1,5 +1,3 @@
-"use client";
-
 import {
   FIELD_LIMITS,
   PersonType,

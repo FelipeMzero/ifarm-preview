@@ -1,5 +1,3 @@
-"use client";
-
 import { ColumnDef, VisibilityState } from "@tanstack/react-table";
 import {
   IdCard,
@@ -11,7 +9,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { CowHead } from "@/components/icons/cow-head";
-import { useRouter } from "next/navigation";
+import { useNavigate } from "react-router";
 
 import React, { useEffect, useState } from "react";
 
@@ -171,7 +169,7 @@ export default function AnimalList({
   /** Parâmetros da URL: busca e filtros sobrevivem ao recarregar/compartilhar. */
   initialQuery?: QueryParams;
 }) {
-  const router = useRouter();
+  const navigate = useNavigate();
   const { property: currentProperty } = useCurrentProperty();
   const [animals, setAnimals] = useState<AnimalRow[]>([]);
   const [pageIndex, setPageIndex] = useState(0);
@@ -215,8 +213,11 @@ export default function AnimalList({
     if (debouncedSearch) query.set("busca", debouncedSearch);
     filtersToQuery(debouncedFilters, query);
     const qs = query.toString();
-    router.replace(`/animais${qs ? `?${qs}` : ""}`, { scroll: false });
-  }, [debouncedSearch, debouncedFilters, router]);
+    navigate(`/animais${qs ? `?${qs}` : ""}`, {
+      replace: true,
+      preventScrollReset: true,
+    });
+  }, [debouncedSearch, debouncedFilters, navigate]);
 
   function handleFiltersChange(next: AnimalListFilters) {
     setFilters(next);
@@ -281,7 +282,7 @@ export default function AnimalList({
   const activeFilterCount = countActiveFilters(filters);
 
   const columns = buildColumns(
-    (id) => router.push(`/animais/${id}`),
+    (id) => navigate(`/animais/${id}`),
     setViewingDetailsId,
     setPendingDeleteId,
   );
@@ -305,7 +306,7 @@ export default function AnimalList({
         <div>
           <h1 className="text-xl font-semibold">Animais</h1>
         </div>
-        <Button onClick={() => router.push("/animais/novo")}>
+        <Button onClick={() => navigate("/animais/novo")}>
           <Plus className="size-4" /> Adicionar
         </Button>
       </div>

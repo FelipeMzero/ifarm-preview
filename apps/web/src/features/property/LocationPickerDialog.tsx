@@ -1,7 +1,5 @@
-"use client";
-
 import { useState } from "react";
-import dynamic from "next/dynamic";
+import { lazyComponent } from "@/lib/lazy";
 import { MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,8 +10,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
-const LocationPickerMap = dynamic(() => import("./LocationPickerMap"), {
-  ssr: false,
+const LocationPickerMap = lazyComponent(() => import("./LocationPickerMap"), {
   loading: () => (
     <div className="flex size-full items-center justify-center text-muted-foreground">
       Carregando mapa...

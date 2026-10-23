@@ -1,7 +1,5 @@
-"use client";
-
 import React, { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useNavigate } from "react-router";
 import {
   ArrowDownLeft,
   ArrowLeft,
@@ -129,7 +127,7 @@ export default function BatchDetails({
   id: string;
   onClose?: () => void;
 }) {
-  const router = useRouter();
+  const navigate = useNavigate();
   const [batch, setBatch] = useState<BatchFullDetails | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [simulatedAdg, setSimulatedAdg] = useState("");
@@ -200,7 +198,7 @@ export default function BatchDetails({
 
   function goTo(path: string) {
     onClose?.();
-    router.push(path);
+    navigate(path);
   }
 
   return (
@@ -212,7 +210,7 @@ export default function BatchDetails({
         )}
       >
         {!onClose && (
-          <Button variant="ghost" size="sm" onClick={() => router.back()}>
+          <Button variant="ghost" size="sm" onClick={() => navigate(-1)}>
             <ArrowLeft className="size-4" /> Voltar
           </Button>
         )}

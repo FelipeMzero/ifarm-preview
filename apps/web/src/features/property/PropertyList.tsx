@@ -1,5 +1,3 @@
-"use client";
-
 import { ColumnDef, VisibilityState } from "@tanstack/react-table";
 import {
   IdCard,
@@ -12,7 +10,7 @@ import {
   Fence,
   User,
 } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useNavigate } from "react-router";
 
 import { useEffect, useState } from "react";
 
@@ -168,7 +166,7 @@ function buildColumns(
 }
 
 export default function PropertyList() {
-  const router = useRouter();
+  const navigate = useNavigate();
   const { refresh: refreshCurrentProperty } = useCurrentProperty();
   const [properties, setProperties] = useState<PropertyRow[]>([]);
   const [pageIndex, setPageIndex] = useState(0);
@@ -250,7 +248,7 @@ export default function PropertyList() {
 
   const columns = buildColumns(
     setTogglingId,
-    (id) => router.push(`/propriedades/${id}`),
+    (id) => navigate(`/propriedades/${id}`),
     setViewingDetailsId,
   );
 
@@ -273,7 +271,7 @@ export default function PropertyList() {
         <div>
           <h1 className="text-xl font-semibold">Propriedades</h1>
         </div>
-        <Button onClick={() => router.push("/propriedades/novo")}>
+        <Button onClick={() => navigate("/propriedades/novo")}>
           <Plus className="size-4" /> Adicionar
         </Button>
       </div>

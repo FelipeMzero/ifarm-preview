@@ -1,8 +1,6 @@
-"use client";
-
 import { ColumnDef } from "@tanstack/react-table";
 import { ChevronRight, Search, Truck } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useNavigate } from "react-router";
 import { useEffect, useState } from "react";
 
 import { DataTable } from "@/components/our/DataTable";
@@ -118,7 +116,7 @@ function buildColumns(
 }
 
 export default function ReceptionPurchaseList() {
-  const router = useRouter();
+  const navigate = useNavigate();
   const { property: currentProperty } = useCurrentProperty();
 
   const [purchases, setPurchases] = useState<ReceptionPurchase[]>([]);
@@ -174,7 +172,7 @@ export default function ReceptionPurchaseList() {
     };
   }, [pageIndex, pageSize, debouncedSearch, filter, currentProperty?.id]);
 
-  const columns = buildColumns((id) => router.push(`/recepcoes/compras/${id}`));
+  const columns = buildColumns((id) => navigate(`/recepcoes/compras/${id}`));
 
   if (error) {
     return (

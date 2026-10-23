@@ -22,7 +22,7 @@ Dentro de `apps/api`, copie o modelo de exemplo e preencha com seus dados locais
 cp .env.example .env
 ```
 
-Depois, gere um valor para `BETTER_AUTH_SECRET` (usado para assinar sessões/cookies) e preencha no `.env`. O mesmo valor vai no `apps/web/.env`:
+Depois, gere um valor para `BETTER_AUTH_SECRET` (usado para assinar sessões/cookies) e preencha no `.env` (só a API usa esse segredo):
 
 ```bash
 openssl rand -base64 32
@@ -30,11 +30,20 @@ openssl rand -base64 32
 
 ### 2. Popular o Banco (seed)
 
-Na raiz do repositório, rode o seed para criar o usuário admin (credenciais definidas em `SEED_ADMIN_EMAIL`/`SEED_ADMIN_PASSWORD` no `.env`) e alguns dados fictícios:
+Na raiz do repositório, rode o seed para criar os usuários e alguns dados fictícios:
 
 ```bash
 pnpm db:seed
 ```
+
+Ele cria um usuário de cada papel, todos com a senha `admin1234`:
+
+| E-mail                 | Papel                  |
+| :--------------------- | :--------------------- |
+| `admin@ifarm.local`    | administrador          |
+| `gerente@ifarm.local`  | gerente                |
+| `tecnico@ifarm.local`  | técnico                |
+| `vaqueiro@ifarm.local` | funcionário (vaqueiro) |
 
 ---
 
@@ -46,7 +55,7 @@ Na raiz do repositório, `pnpm dev` sobe a API junto com o web. Só a API, dentr
 pnpm dev
 ```
 
-A API fica em http://localhost:3001 (porta definida em `PORT`). O navegador não a chama diretamente: o web repassa as chamadas a `/api/*` para ela.
+A API fica em http://localhost:3001 (porta definida em `PORT`).
 
 ---
 

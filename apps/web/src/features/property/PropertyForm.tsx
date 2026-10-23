@@ -1,11 +1,9 @@
-"use client";
-
 import { FIELD_LIMITS } from "@ifarm/shared";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { IMaskInput } from "react-imask";
-import dynamic from "next/dynamic";
+import { lazyComponent } from "@/lib/lazy";
 
 import { propertyClient } from "@/lib/clients";
 import { ApiError } from "@ifarm/shared";
@@ -45,8 +43,7 @@ import PersonForm from "../person/PersonForm";
 const MASKED_INPUT_CLASSNAME =
   "h-10 w-full min-w-0 rounded-lg border border-input bg-input/40 px-2.5 py-1 text-base transition-colors outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 aria-invalid:border-destructive aria-invalid:focus:ring-3 aria-invalid:ring-destructive/20 md:text-sm dark:bg-input/30 dark:disabled:bg-input/80 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40";
 
-const LocationPickerMap = dynamic(() => import("./LocationPickerMap"), {
-  ssr: false,
+const LocationPickerMap = lazyComponent(() => import("./LocationPickerMap"), {
   loading: () => (
     <div className="flex size-full items-center justify-center text-muted-foreground">
       Carregando mapa...

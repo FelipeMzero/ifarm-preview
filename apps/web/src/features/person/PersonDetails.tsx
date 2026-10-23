@@ -1,7 +1,5 @@
-"use client";
-
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useNavigate } from "react-router";
 import { toast } from "sonner";
 import {
   ArrowLeft,
@@ -114,7 +112,7 @@ export default function PersonDetails({
   id: string;
   onClose?: () => void;
 }) {
-  const router = useRouter();
+  const navigate = useNavigate();
   const [person, setPerson] = useState<PersonInput | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -146,7 +144,7 @@ export default function PersonDetails({
       await personClient.deletePerson(id);
       toast.success("Registro excluído com sucesso!");
       if (onClose) onClose();
-      else router.push("/pessoas");
+      else navigate("/pessoas");
     } catch (e) {
       toast.error(
         (e as Error).message || "Não foi possível excluir o registro.",
@@ -194,7 +192,7 @@ export default function PersonDetails({
         }
       >
         {!onClose && (
-          <Button variant="ghost" size="sm" onClick={() => router.back()}>
+          <Button variant="ghost" size="sm" onClick={() => navigate(-1)}>
             <ArrowLeft className="size-4" /> Voltar
           </Button>
         )}

@@ -1,7 +1,5 @@
-"use client";
-
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useNavigate } from "react-router";
 import { ArrowLeft, CircleCheckBig, Loader2, Search, X } from "lucide-react";
 import { toast } from "sonner";
 
@@ -49,7 +47,7 @@ const EMPTY_MESSAGES = {
 // passam pelos manejos de chegada. Por baixo é uma sessão de manejo; as telas de cada
 // etapa são as mesmas do registro de manejo.
 export function ReceptionBoard({ id }: { id: string }) {
-  const router = useRouter();
+  const navigate = useNavigate();
   const boardPath = `/recepcoes/${id}`;
 
   const [detail, setDetail] = useState<ManagementSessionDetail | null>(null);
@@ -96,7 +94,7 @@ export function ReceptionBoard({ id }: { id: string }) {
     return (
       <ErrorPage
         message="Esta sessão não é uma recepção de compra."
-        onRetry={() => router.push("/recepcoes")}
+        onRetry={() => navigate("/recepcoes")}
       />
     );
   }
@@ -127,7 +125,7 @@ export function ReceptionBoard({ id }: { id: string }) {
   );
 
   function openAnimal(animalId: string) {
-    router.push(`${boardPath}/${animalId}`);
+    navigate(`${boardPath}/${animalId}`);
   }
 
   // Enter na busca com um único animal "a manejar" (ou um único resultado) já abre o
@@ -195,7 +193,7 @@ export function ReceptionBoard({ id }: { id: string }) {
     try {
       await managementSessionClient.cancelManagementSession(id);
       toast.success("Recepção cancelada.");
-      router.push(purchaseUrl);
+      navigate(purchaseUrl);
     } catch (e) {
       toast.error((e as Error).message);
     }
@@ -218,7 +216,7 @@ export function ReceptionBoard({ id }: { id: string }) {
         variant="ghost"
         size="sm"
         className="w-fit"
-        onClick={() => router.push(purchaseUrl)}
+        onClick={() => navigate(purchaseUrl)}
       >
         <ArrowLeft className="size-4" /> {reception.purchaseTitle}
       </Button>

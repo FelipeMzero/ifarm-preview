@@ -1,7 +1,5 @@
-"use client";
-
 import { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useNavigate } from "react-router";
 import {
   ArrowLeft,
   CalendarDays,
@@ -59,7 +57,7 @@ const EMPTY_MESSAGES = {
 };
 
 export function RegistrationBoard({ id }: { id: string }) {
-  const router = useRouter();
+  const navigate = useNavigate();
   const { property: currentProperty } = useCurrentProperty();
 
   const [detail, setDetail] = useState<ManagementSessionDetail | null>(null);
@@ -132,7 +130,7 @@ export function RegistrationBoard({ id }: { id: string }) {
     try {
       await managementSessionClient.startManagementSession(id, nowDateTime());
       toast.success("Registro iniciado com a data de hoje.");
-      if (animalId) router.push(`/manejos/${id}/registro/${animalId}`);
+      if (animalId) navigate(`/manejos/${id}/registro/${animalId}`);
       else reload();
     } catch (e) {
       toast.error((e as Error).message);
@@ -144,7 +142,7 @@ export function RegistrationBoard({ id }: { id: string }) {
       startToday(animalId);
       return;
     }
-    router.push(`/manejos/${id}/registro/${animalId}`);
+    navigate(`/manejos/${id}/registro/${animalId}`);
   }
 
   // Enter na busca com um único animal "a manejar" (ou um único resultado) já abre o
@@ -243,7 +241,7 @@ export function RegistrationBoard({ id }: { id: string }) {
         variant="ghost"
         size="sm"
         className="w-fit"
-        onClick={() => router.push("/manejos")}
+        onClick={() => navigate("/manejos")}
       >
         <ArrowLeft className="size-4" /> Sessões de manejo
       </Button>
@@ -252,10 +250,7 @@ export function RegistrationBoard({ id }: { id: string }) {
         <h1 className="text-2xl font-semibold">{detail.title}</h1>
         <SessionStatusBadge status={status} />
         <div className="ml-auto flex gap-2">
-          <Button
-            variant="outline"
-            onClick={() => router.push(`/manejos/${id}`)}
-          >
+          <Button variant="outline" onClick={() => navigate(`/manejos/${id}`)}>
             <ClipboardList className="size-4" /> Planejamento
           </Button>
           {inProgress && (

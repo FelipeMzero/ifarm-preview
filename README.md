@@ -7,7 +7,7 @@ Plataforma para gestão do ciclo produtivo de fazendas de pecuária de corte (cr
 ```
 apps/
   api/      → Hono (API REST e autenticação). Ver apps/api/README.md
-  web/      → Next.js (telas). Ver apps/web/README.md
+  web/      → React + Vite (telas). Ver apps/web/README.md
   mobile/   → Expo / React Native. Ver apps/mobile/README.md
 packages/
   shared/   → contrato da API (schemas, tipos e clientes) e permissões, usado pela API, pelo web e pelo mobile
@@ -33,7 +33,7 @@ Depois, configure nesta ordem:
 3. **[apps/web](apps/web/README.md)**: o site
 4. **[apps/mobile](apps/mobile/README.md)**: o aplicativo móvel
 
-O web e o mobile **dependem da API estar rodando**. Em desenvolvimento, o `pnpm dev` na raiz sobe a API e o web juntos. O mobile chama a API diretamente (porta 3001); o web a chama pelo próprio endereço, e o Next repassa `/api/*` para ela.
+O web e o mobile **dependem da API estar rodando**. Em desenvolvimento, o `pnpm dev` na raiz sobe a API e o web juntos. O mobile chama a API diretamente (porta 3001); o web a chama pelo próprio endereço, e o Vite repassa `/api/*` para ela.
 
 ## 🔍 Comandos úteis na raiz
 

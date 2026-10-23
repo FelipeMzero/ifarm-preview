@@ -1,5 +1,3 @@
-"use client";
-
 import { useEffect, useState } from "react";
 import { Info, TriangleAlert } from "lucide-react";
 import { cn } from "@/lib/utils";

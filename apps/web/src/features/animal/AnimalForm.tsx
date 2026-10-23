@@ -1,5 +1,3 @@
-"use client";
-
 import { useEffect, useRef, useState, useCallback } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";

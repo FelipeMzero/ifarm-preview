@@ -1,7 +1,5 @@
-"use client";
-
 import { useEffect, useState } from "react";
-import Link from "next/link";
+import { Link } from "react-router";
 import { LandPlot, MapPin, Fence, User } from "lucide-react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -77,7 +75,7 @@ export default function Dashboard() {
           <Fence className="size-8" />
           <p>Nenhuma propriedade cadastrada ainda.</p>
           <Button asChild size="sm">
-            <Link href="/propriedades/novo">Cadastrar propriedade</Link>
+            <Link to="/propriedades/novo">Cadastrar propriedade</Link>
           </Button>
         </div>
       );

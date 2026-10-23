@@ -1,5 +1,3 @@
-"use client";
-
 import { ColumnDef } from "@tanstack/react-table";
 import {
   ArrowRight,
@@ -11,7 +9,7 @@ import {
   Search,
   XCircle,
 } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useNavigate } from "react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -137,7 +135,7 @@ function buildColumns(handlers: {
 }
 
 export default function BatchTransferList() {
-  const router = useRouter();
+  const navigate = useNavigate();
   const { property: currentProperty } = useCurrentProperty();
 
   const [transfers, setTransfers] = useState<BatchTransferRow[]>([]);
@@ -230,7 +228,7 @@ export default function BatchTransferList() {
   }
 
   const columns = buildColumns({
-    onEdit: (id) => router.push(`/lotes/transferencias/${id}`),
+    onEdit: (id) => navigate(`/lotes/transferencias/${id}`),
     onConfirm: (row) => {
       setPendingAction({ type: "confirm", row });
       stockingClient
@@ -266,7 +264,7 @@ export default function BatchTransferList() {
     <div className="w-full max-w-5xl space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold">Transferências entre Lotes</h1>
-        <Button onClick={() => router.push("/lotes/transferencias/nova")}>
+        <Button onClick={() => navigate("/lotes/transferencias/nova")}>
           <Plus className="size-4" /> Adicionar
         </Button>
       </div>

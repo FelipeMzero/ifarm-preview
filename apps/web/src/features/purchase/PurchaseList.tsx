@@ -1,8 +1,6 @@
-"use client";
-
 import { ColumnDef } from "@tanstack/react-table";
 import { Eye, Pencil, Plus, Search, ShoppingCart } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useNavigate } from "react-router";
 import { useEffect, useState } from "react";
 
 import { DataTable } from "@/components/our/DataTable";
@@ -136,7 +134,7 @@ function buildColumns(onOpen: (id: string) => void): ColumnDef<PurchaseRow>[] {
 }
 
 export default function PurchaseList() {
-  const router = useRouter();
+  const navigate = useNavigate();
   const { property: currentProperty } = useCurrentProperty();
 
   const [purchases, setPurchases] = useState<PurchaseRow[]>([]);
@@ -192,7 +190,7 @@ export default function PurchaseList() {
     };
   }, [pageIndex, pageSize, debouncedSearch, filter, currentProperty?.id]);
 
-  const columns = buildColumns((id) => router.push(`/compras/${id}`));
+  const columns = buildColumns((id) => navigate(`/compras/${id}`));
 
   if (error) {
     return (
@@ -209,7 +207,7 @@ export default function PurchaseList() {
     <div className="w-full max-w-6xl space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold">Compras</h1>
-        <Button onClick={() => router.push("/compras/novo")}>
+        <Button onClick={() => navigate("/compras/novo")}>
           <Plus className="size-4" /> Adicionar
         </Button>
       </div>

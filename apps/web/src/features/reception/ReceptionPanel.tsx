@@ -1,5 +1,3 @@
-"use client";
-
 import { useState } from "react";
 import { ArrowRight, Loader2, Plus, TriangleAlert, Truck } from "lucide-react";
 import { toast } from "sonner";

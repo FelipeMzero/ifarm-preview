@@ -1,7 +1,5 @@
-"use client";
-
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useNavigate } from "react-router";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -28,7 +26,7 @@ const loginSchema = z.object({
 type LoginFormData = z.infer<typeof loginSchema>;
 
 export default function LoginForm() {
-  const router = useRouter();
+  const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { handleSubmit, control } = useForm<LoginFormData>({
@@ -49,8 +47,7 @@ export default function LoginForm() {
       return;
     }
 
-    router.replace("/painel");
-    router.refresh();
+    navigate("/painel", { replace: true });
   }
 
   return (

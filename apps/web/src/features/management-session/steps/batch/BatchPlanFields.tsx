@@ -1,5 +1,3 @@
-"use client";
-
 import { Controller } from "react-hook-form";
 import { X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";

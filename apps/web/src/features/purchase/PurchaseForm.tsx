@@ -1,7 +1,5 @@
-"use client";
-
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useNavigate } from "react-router";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -82,7 +80,7 @@ function toFormValues(detail: PurchaseDetail): PurchaseFormData {
 type Action = "pay" | "undoPay" | "consolidate" | "cancel";
 
 export function PurchaseForm({ id }: { id?: string }) {
-  const router = useRouter();
+  const navigate = useNavigate();
   const { property: currentProperty } = useCurrentProperty();
 
   const [detail, setDetail] = useState<PurchaseDetail | null>(null);
@@ -205,7 +203,7 @@ export function PurchaseForm({ id }: { id?: string }) {
       } else {
         const result = await purchaseClient.createPurchase(payload);
         toast.success("Compra registrada!");
-        router.replace(`/compras/${result.data.id}`);
+        navigate(`/compras/${result.data.id}`, { replace: true });
       }
     } catch (error) {
       if (error instanceof ApiError && error.errors) {
@@ -301,7 +299,7 @@ export function PurchaseForm({ id }: { id?: string }) {
           variant="ghost"
           size="sm"
           className="w-fit"
-          onClick={() => router.push("/compras")}
+          onClick={() => navigate("/compras")}
         >
           <ArrowLeft className="size-4" /> Compras
         </Button>
@@ -509,7 +507,7 @@ export function PurchaseForm({ id }: { id?: string }) {
                   <li key={r.id}>
                     <button
                       type="button"
-                      onClick={() => router.push(`/recepcoes/${r.sessionId}`)}
+                      onClick={() => navigate(`/recepcoes/${r.sessionId}`)}
                       className="flex w-full flex-wrap items-center gap-x-4 gap-y-1 rounded-lg border border-border bg-card p-3 text-left text-sm transition-colors hover:bg-accent/40"
                     >
                       <span className="font-medium">{r.title}</span>

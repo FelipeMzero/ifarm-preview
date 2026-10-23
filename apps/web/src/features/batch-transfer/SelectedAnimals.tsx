@@ -1,5 +1,3 @@
-"use client";
-
 import { useState } from "react";
 import { CircleAlert, X } from "lucide-react";
 

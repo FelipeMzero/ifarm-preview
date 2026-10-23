@@ -1,8 +1,6 @@
-"use client";
-
 import { useState } from "react";
-import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { Link } from "react-router";
+import { useLocation, useNavigate } from "react-router";
 import { Beef, ChevronRight, KeyRound, LogOut } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -63,8 +61,8 @@ export function Sidebar({
 }: {
   initialClosedSections: string[];
 }) {
-  const pathname = usePathname();
-  const router = useRouter();
+  const { pathname } = useLocation();
+  const navigate = useNavigate();
   const { data: session } = useSession();
   const user = session?.user;
   const role = user?.role ?? "";
@@ -95,8 +93,7 @@ export function Sidebar({
 
   async function handleLogout() {
     await signOut();
-    router.push("/login");
-    router.refresh();
+    navigate("/login");
   }
 
   return (
@@ -130,7 +127,7 @@ export function Sidebar({
                     isActive={href === activeHref}
                     tooltip={itemLabel}
                   >
-                    <Link href={href}>
+                    <Link to={href}>
                       <Icon />
                       <span>{itemLabel}</span>
                     </Link>

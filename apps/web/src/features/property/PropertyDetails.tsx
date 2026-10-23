@@ -1,7 +1,5 @@
-"use client";
-
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useNavigate } from "react-router";
 import { toast } from "sonner";
 import {
   ArrowLeft,
@@ -44,7 +42,7 @@ export default function PropertyDetails({
   id: string;
   onClose?: () => void;
 }) {
-  const router = useRouter();
+  const navigate = useNavigate();
   const { refresh: refreshCurrentProperty } = useCurrentProperty();
   const [property, setProperty] = useState<PropertyInput | null>(null);
   const [loading, setLoading] = useState(true);
@@ -78,7 +76,7 @@ export default function PropertyDetails({
       toast.success("Registro excluído com sucesso!");
       refreshCurrentProperty();
       if (onClose) onClose();
-      else router.push("/propriedades");
+      else navigate("/propriedades");
     } catch (e) {
       toast.error(
         (e as Error).message || "Não foi possível excluir o registro.",
@@ -125,7 +123,7 @@ export default function PropertyDetails({
         }
       >
         {!onClose && (
-          <Button variant="ghost" size="sm" onClick={() => router.back()}>
+          <Button variant="ghost" size="sm" onClick={() => navigate(-1)}>
             <ArrowLeft className="size-4" /> Voltar
           </Button>
         )}

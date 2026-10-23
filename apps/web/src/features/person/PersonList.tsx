@@ -1,5 +1,3 @@
-"use client";
-
 import { ColumnDef, VisibilityState } from "@tanstack/react-table";
 import {
   Building2,
@@ -12,7 +10,7 @@ import {
   User,
   Users,
 } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useNavigate } from "react-router";
 
 import React, { useEffect, useState } from "react";
 
@@ -190,7 +188,7 @@ function buildColumns(
 }
 
 export default function PersonList() {
-  const router = useRouter();
+  const navigate = useNavigate();
   const [people, setPeople] = useState<PersonRow[]>([]);
   const [pageIndex, setPageIndex] = useState(0);
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
@@ -271,7 +269,7 @@ export default function PersonList() {
 
   const columns = buildColumns(
     setTogglingId,
-    (id) => router.push(`/pessoas/${id}`),
+    (id) => navigate(`/pessoas/${id}`),
     setViewingProfileId,
   );
 
@@ -294,7 +292,7 @@ export default function PersonList() {
         <div>
           <h1 className="text-xl font-semibold">Pessoas</h1>
         </div>
-        <Button onClick={() => router.push("/pessoas/novo")}>
+        <Button onClick={() => navigate("/pessoas/novo")}>
           <Plus className="size-4" /> Adicionar
         </Button>
       </div>

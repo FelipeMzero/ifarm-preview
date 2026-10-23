@@ -1,7 +1,5 @@
-"use client";
-
 import { useEffect, useState } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { useLocation, useNavigate } from "react-router";
 import {
   ArrowLeft,
   ArrowRight,
@@ -82,8 +80,8 @@ export function AnimalStepPage({
   animalId,
   boardPath = sessionBoardPath(sessionId),
 }: AnimalStepPageProps) {
-  const router = useRouter();
-  const pathname = usePathname();
+  const navigate = useNavigate();
+  const { pathname } = useLocation();
   const { property: currentProperty } = useCurrentProperty();
   const [context, setContext] = useState<SessionAnimalContext | null>(null);
   const [options, setOptions] = useState<ManagementOptions>(EMPTY_OPTIONS);
@@ -182,7 +180,7 @@ export function AnimalStepPage({
     return (
       <ErrorPage
         message="Esta sessão não tem manejos definidos."
-        onRetry={() => router.push(boardPath)}
+        onRetry={() => navigate(boardPath)}
       />
     );
   }
@@ -196,7 +194,7 @@ export function AnimalStepPage({
 
   function goNext() {
     if (isLast) {
-      router.push(boardPath);
+      navigate(boardPath);
     } else {
       goTo(index + 1);
     }
@@ -244,7 +242,7 @@ export function AnimalStepPage({
         variant="ghost"
         size="sm"
         className="w-fit"
-        onClick={() => router.push(boardPath)}
+        onClick={() => navigate(boardPath)}
       >
         <ArrowLeft className="size-4" /> Lista de animais
       </Button>
