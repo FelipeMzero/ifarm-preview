@@ -16,7 +16,7 @@ flowchart TB
 
   Contract["Contrato da API · packages/shared<br/>schemas, tipos e clientes HTTP"]
 
-  subgraph L2["2 · API HTTP/JSON · apps/web/src/app/api"]
+  subgraph L2["2 · API HTTP/JSON · apps/api"]
     Api["sessão, permissão, validação da entrada<br/>e tradução de erros para HTTP"]
   end
 
@@ -43,17 +43,17 @@ flowchart TB
 
 Responsável pela interação direta com os usuários. É composta por aplicações independentes que consomem a API central por meio dos clientes HTTP do contrato. Esta camada não contém regras de negócio: ela exibe o que a API decide (situações, bloqueios e motivos) e, no máximo, antecipa validações para orientar o usuário antes do envio.
 
-- (i) Plataforma Web (`apps/web`: páginas em `src/app/(protected)`, componentes em `src/features` e `src/components`): aplicação utilizada para operações administrativas, monitoramento, visualização de indicadores, relatórios e gerenciamento geral do sistema. O `src/proxy.ts` faz uma verificação prévia de sessão e de perfil antes de exibir cada página; a autorização definitiva é feita pela API.
+- (i) Plataforma Web (`apps/web`: páginas em `src/app/(protected)`, componentes em `src/features` e `src/components`): aplicação utilizada para operações administrativas, monitoramento, visualização de indicadores, relatórios e gerenciamento geral do sistema. O `src/proxy.ts` faz uma verificação prévia de sessão e de perfil antes de exibir cada página; a autorização definitiva é feita pela API. As chamadas a `/api` feitas pelo navegador são repassadas à API pelo próprio web (`next.config.ts`), de modo que as duas aplicações ficam na mesma origem.
 
 - (ii) Aplicativos Móveis (`apps/mobile`, Android/iOS): aplicações destinadas às operações em campo, projetadas para a estratégia offline-first, permitindo registros locais e sincronização posterior dos dados com a API quando houver conectividade.
 
 ## 2 - Camada de API (HTTP/JSON)
 
-Porta de entrada do sistema (`apps/web/src/app/api`). Cada rota recebe a requisição, verifica a sessão do usuário, aplica o controle de acesso, valida os dados de entrada com os schemas do contrato e delega a operação à camada de domínio. Ao final, converte o resultado, ou o erro, na resposta HTTP correspondente.
+Porta de entrada do sistema (`apps/api`, construída com o framework Hono e executada separadamente da plataforma web). Cada rota recebe a requisição, verifica a sessão do usuário, aplica o controle de acesso, valida os dados de entrada com os schemas do contrato e delega a operação à camada de domínio. Ao final, converte o resultado, ou o erro, na resposta HTTP correspondente.
 
-A autenticação é feita pelo better-auth, que gerencia sessões baseadas em cookie. A autorização segue o controle de acesso baseado em funções (RBAC): a tabela `RESOURCE_ACCESS` (`src/lib/permissions.ts`) define, para cada recurso, os perfis sem acesso, garantindo que cada perfil acesse apenas os recursos autorizados.
+A autenticação é feita pelo better-auth, que gerencia sessões baseadas em cookie; o servidor de autenticação fica na API (`apps/api/src/auth.ts`), e cada aplicação cliente usa o cliente do better-auth para entrar e sair. A autorização segue o controle de acesso baseado em funções (RBAC): a tabela `RESOURCE_ACCESS` (`packages/shared/src/permissions.ts`) define, para cada recurso, os perfis sem acesso, garantindo que cada perfil acesse apenas os recursos autorizados. A API aplica essa tabela em cada requisição; as aplicações clientes a usam apenas para não exibir o que o perfil não pode acessar.
 
-Esta camada não contém regras de negócio nem acessa o banco de dados.
+Esta camada não contém regras de negócio nem acessa o banco de dados, com uma exceção: o better-auth grava usuários e sessões diretamente no banco, por meio do adaptador do Prisma.
 
 ## 3 - Camada de Domínio (Regras de Negócio)
 

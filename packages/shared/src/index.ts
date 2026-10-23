@@ -40,3 +40,4 @@ export * from "./management-session/schema";
 export * from "./management-session/step-payloads";
 export * from "./management-session/plan-steps";
 export * from "./address/states";
+export * from "./permissions";

@@ -1,15 +1,16 @@
 # iFarm — Sistema de Gestão Pecuária
 
-Plataforma para gestão do ciclo produtivo de fazendas de pecuária de corte (cria, recria, engorda e abate), cobrindo controle de animais, propriedades, áreas de pastagem e usuários. Monorepo com os apps **web** e **mobile**, compartilhando o mesmo backend.
+Plataforma para gestão do ciclo produtivo de fazendas de pecuária de corte (cria, recria, engorda e abate), cobrindo controle de animais, propriedades, áreas de pastagem e usuários. Monorepo com os apps **web** e **mobile**, que consomem a mesma **API**.
 
 ## 📂 Estrutura
 
 ```
 apps/
-  web/      → Next.js (site + API). Ver apps/web/README.md
+  api/      → Hono (API REST e autenticação). Ver apps/api/README.md
+  web/      → Next.js (telas). Ver apps/web/README.md
   mobile/   → Expo / React Native. Ver apps/mobile/README.md
 packages/
-  shared/   → contrato da API (schemas, tipos e clientes), usado pelo web e pelo mobile
+  shared/   → contrato da API (schemas, tipos e clientes) e permissões, usado pela API, pelo web e pelo mobile
   domain/   → regras de negócio e acesso ao banco do servidor (usado pela API)
   db/       → banco de dados: schema e CLI do Prisma, container do PostgreSQL. Ver packages/db/README.md
 docs/       → requisitos, arquitetura e visão do produto
@@ -28,24 +29,26 @@ pnpm install
 Depois, configure nesta ordem:
 
 1. **[packages/db](packages/db/README.md)**: o banco de dados
-2. **[apps/web](apps/web/README.md)**: o site e a API
-3. **[apps/mobile](apps/mobile/README.md)**
+2. **[apps/api](apps/api/README.md)**: a API e a autenticação
+3. **[apps/web](apps/web/README.md)**: o site
+4. **[apps/mobile](apps/mobile/README.md)**: o aplicativo móvel
 
-O `apps/mobile` **depende do `apps/web` estar rodando**, pois consome a API do web pela rede. Sempre suba o web antes de testar o mobile.
+O web e o mobile **dependem da API estar rodando**. Em desenvolvimento, o `pnpm dev` na raiz sobe a API e o web juntos. O mobile chama a API diretamente (porta 3001); o web a chama pelo próprio endereço, e o Next repassa `/api/*` para ela.
 
 ## 🔍 Comandos úteis na raiz
 
 | Comando                         | Descrição                                                       |
 | :------------------------------ | :-------------------------------------------------------------- |
-| `pnpm dev`                      | Sobe o web em desenvolvimento (`pnpm --filter web dev`)         |
+| `pnpm dev`                      | Sobe a API e o web em desenvolvimento                           |
 | `pnpm build`                    | Gera o build de produção do web                                 |
 | `pnpm test`                     | Roda os testes de cada app/pacote                               |
 | `pnpm lint`                     | Roda o lint de cada app/pacote                                  |
 | `pnpm db:generate`              | Gera o cliente do Prisma (e o `docs/ERD.md`) a partir do schema |
 | `pnpm db:push`                  | Sincroniza o banco com o schema                                 |
-| `pnpm db:seed`                  | Roda o seed (admin e dados de exemplo)                          |
+| `pnpm db:seed`                  | Roda o seed da API (admin e dados de exemplo)                   |
 | `pnpm db:studio`                | Abre o Prisma Studio para ver e editar os dados                 |
 | `pnpm format`                   | Formata o código com o Prettier                                 |
+| `pnpm --filter api <script>`    | Roda um script definido em `apps/api/package.json`              |
 | `pnpm --filter web <script>`    | Roda um script definido em `apps/web/package.json`              |
 | `pnpm --filter mobile <script>` | Roda um script definido em `apps/mobile/package.json`           |
 

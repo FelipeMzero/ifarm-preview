@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "pnpm --filter web dev",
+    "dev": "pnpm --parallel --filter web --filter api dev",
     "build": "pnpm --filter web build",
     "lint": "pnpm -r --no-bail lint",
     "test": "pnpm -r test",

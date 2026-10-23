@@ -11,11 +11,11 @@ import * as SecureStore from "expo-secure-store";
 // cookie jar do navegador.
 const baseURL =
   Platform.OS === "web"
-    ? `${window.location.protocol}//${window.location.hostname}:3000`
+    ? `${window.location.protocol}//${window.location.hostname}:3001`
     : process.env.EXPO_PUBLIC_API_URL;
 
 // Origem "crua" da API (sem o /api/auth que o client do better-auth adiciona sozinho),
-// pra usar em fetch normal contra as demais rotas de /api do apps/web.
+// pra usar em fetch normal contra as demais rotas de /api do apps/api.
 export const apiBaseURL = baseURL;
 
 export const authClient = createAuthClient({

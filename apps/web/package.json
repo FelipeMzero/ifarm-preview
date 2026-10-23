@@ -6,16 +6,12 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint",
-    "seed": "tsx --env-file=.env --conditions=react-server scripts/seed.ts"
+    "lint": "eslint"
   },
   "dependencies": {
     "@base-ui/react": "^1.6.0",
-    "@better-auth/expo": "catalog:",
     "@geoman-io/leaflet-geoman-free": "^2.20.0",
     "@hookform/resolvers": "^5.4.0",
-    "@ifarm/db": "workspace:*",
-    "@ifarm/domain": "workspace:*",
     "@ifarm/shared": "workspace:*",
     "@tanstack/react-table": "^8.21.3",
     "@turf/area": "^7.3.5",
@@ -34,7 +30,6 @@
     "react-imask": "^7.6.1",
     "react-leaflet": "^5.0.0",
     "recharts": "^3.10.1",
-    "server-only": "catalog:",
     "shadcn": "^4.11.1",
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.6.0",
@@ -45,13 +40,12 @@
     "@mermaid-js/mermaid-cli": "^11.16.0",
     "@tailwindcss/postcss": "^4",
     "@types/leaflet": "^1.9.21",
-    "@types/node": "^20",
+    "@types/node": "catalog:",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "catalog:",
     "eslint-config-next": "16.2.4",
     "tailwindcss": "^4",
-    "tsx": "^4.21.0",
     "typescript": "catalog:"
   }
 }

@@ -121,7 +121,7 @@ Um registro de sessão é gravado na tabela definitiva durante o registro, mas *
 
 > **Registro efetivo** = (avulso **ou** de sessão consolidada) **e** não cancelado (`cancelled_at` nulo, nas tabelas que têm essa coluna).
 
-Toda consulta de histórico, cálculo ou recálculo de `current_*` deve usar esse filtro. Na aplicação, os filtros ficam em `src/app/api/management-session/effective.ts`.
+Toda consulta de histórico, cálculo ou recálculo de `current_*` deve usar esse filtro. Na aplicação, os filtros ficam em `packages/domain/src/management-session/effective.ts`.
 
 ### 2.7 Correção com rastro e exclusão lógica
 
@@ -999,7 +999,7 @@ As tabelas `user`, `session`, `account` e `verification` seguem o esquema da bib
 | `email` | text | | | UK | E-mail de login. Até 255 caracteres. |
 | `email_verified` | boolean | | `false` | | E-mail verificado. |
 | `image` | text | N | | | URL do avatar. |
-| `role` | text | N | | | Papel: `admin`, `manager` (gerente), `technician` (técnico) ou `worker` (funcionário). Define os recursos acessíveis (`src/lib/permissions.ts`); por exemplo, técnicos não acessam lotes nem manejos. |
+| `role` | text | N | | | Papel: `admin`, `manager` (gerente), `technician` (técnico) ou `worker` (funcionário). Define os recursos acessíveis (`packages/shared/src/permissions.ts`); por exemplo, técnicos não acessam lotes nem manejos. |
 | `banned` | boolean | N | `false` | | Usuário bloqueado. |
 | `ban_reason` | text | N | | | Motivo do bloqueio. |
 | `ban_expires` | timestamp | N | | | Fim do bloqueio. |

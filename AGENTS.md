@@ -9,10 +9,13 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 Monorepo pnpm (use sempre `pnpm`, nunca `npm`/`npx`):
 
-- `apps/web`: Next.js. Telas **e** a API REST (`app/api`) que o web e o mobile consomem; a
-  autenticação (`src/lib/auth.ts`, better-auth) e o seed (`scripts/seed.ts`) também ficam aqui.
+- `apps/api`: API REST em Hono, consumida pelo web e pelo mobile. Rotas (`src/routes`), o
+  servidor da autenticação (`src/auth.ts`, better-auth) e o seed (`scripts/seed.ts`).
+- `apps/web`: Next.js, só telas. O `next.config.ts` repassa `/api/*` para a API (mesma origem
+  para o navegador); o cliente da autenticação fica em `src/lib/auth-client.ts`.
 - `apps/mobile`: Expo / React Native. Consome a mesma API.
-- `packages/shared` (`@ifarm/shared`): contrato da API e as poucas regras que o cliente executa.
+- `packages/shared` (`@ifarm/shared`): contrato da API, as poucas regras que o cliente executa e
+  as permissões (`permissions.ts`: a API usa para negar, as telas para esconder).
 - `packages/domain` (`@ifarm/domain`): domínio do servidor (consultas, escritas e regras).
   Importado por módulo: `@ifarm/domain/<domínio>/<arquivo>`.
 - `packages/db` (`@ifarm/db`): schema do Prisma (`prisma/schema.prisma`), o cliente gerado
@@ -20,8 +23,9 @@ Monorepo pnpm (use sempre `pnpm`, nunca `npm`/`npx`):
   CLI do Prisma (`prisma.config.ts`) e o container do PostgreSQL (`docker-compose.yaml`). Na
   raiz: `pnpm db:generate`, `db:push`, `db:seed` e `db:studio`.
 - Variáveis de ambiente: cada app/pacote que roda um processo tem o próprio `.env` (modelo no
-  `.env.example`): `apps/web/.env` (app e seed) e `packages/db/.env` (container e CLI). Os
-  pacotes só leem o `process.env`; quem carrega o arquivo é o processo (Next, `tsx --env-file`,
+  `.env.example`): `apps/api/.env` (banco, autenticação e seed), `apps/web/.env` (`API_URL`, lido
+  no build, e o segredo da sessão) e `packages/db/.env` (container e CLI). Os pacotes só leem o
+  `process.env`; quem carrega o arquivo é o processo (Next, `tsx --env-file`,
   `prisma.config.ts`).
 
 Arquitetura em camadas descrita em `docs/architecture.md`; requisitos de cada módulo em
@@ -53,8 +57,8 @@ Arquitetura em camadas descrita em `docs/architecture.md`; requisitos de cada m�
 | Filtro de listagem por situação (consulta)               | `X_STATUS_WHERE` no `rules.ts`, ao lado da função de situação, coberto por `packages/domain/src/status-where.test.ts`                           |
 | Erro de negócio                                          | classes de `packages/domain/src/errors.ts`                                                                                                      |
 | Conversão de formato do banco (ex.: datas `@db.Date`)    | `packages/domain/src/db-dates.ts` e utilitários do domínio; nunca no shared                                                                     |
-| Endpoint                                                 | `apps/web/src/app/api/<domínio>/.../route.ts`                                                                                                   |
-| Permissão                                                | `RESOURCE_ACCESS` em `src/lib/permissions.ts` (a chave é o segmento da URL da página)                                                           |
+| Endpoint                                                 | `apps/api/src/routes/<domínio>.ts` (router do Hono, montado em `/api/<domínio>` no `src/index.ts`)                                              |
+| Permissão                                                | `RESOURCE_ACCESS` em `packages/shared/src/permissions.ts` (a chave é o segmento da URL da página)                                               |
 | Tela, formulário, lista                                  | `apps/web/src/features/<domínio>/`                                                                                                              |
 | Página e menu                                            | `app/(protected)/<rota-pt>/page.tsx` (só monta a feature); item em `features/shell/nav.ts`                                                      |
 | Enum                                                     | o do banco, espelhado em `shared/src/enums.ts` (rótulos em `enum-labels.ts`); a UI usa sempre o do shared                                       |
@@ -68,13 +72,15 @@ Arquitetura em camadas descrita em `docs/architecture.md`; requisitos de cada m�
   use `z.union([z.string(), z.number()])` com `.transform(Number).pipe(z.number()…)`.
 - Datas circulam como texto ("AAAA-MM-DD" ou "AAAA-MM-DDTHH:mm"), com `dateField` /
   `dateTimeField`. A conversão para o banco é do servidor.
-- O shared não depende de Prisma, Node nem do `apps/web` (o mobile depende dele). Tudo nele vai
+- O shared não depende de Prisma, Node nem dos apps (o mobile depende dele). Tudo nele vai
   para o navegador e para o app: é **público**. Nada de segredo, decisão de negócio ou cálculo
   sensível.
 
-**Rota da API (`app/api`)**: sempre o mesmo formato, sem Prisma e sem regra:
+**Rota da API (`apps/api/src/routes`)**: sempre o mesmo formato, sem Prisma e sem regra:
 `requireSession(RESOURCE_ACCESS.x)` → `schema.safeParse` (erro → `validationErrorResponse`) →
-função de `@ifarm/domain` → `NextResponse.json`; no `catch`, `errorResponse(error)`.
+função de `@ifarm/domain` → `c.json`; no `catch`, `errorResponse(error)`. Parâmetros com
+`c.req.param()`, corpo com `c.req.json()`. No router, caminhos fixos (`/options`) vêm antes dos
+com parâmetro (`/:id`).
 
 **Domínio (`packages/domain`)**
 
@@ -89,8 +95,7 @@ função de `@ifarm/domain` → `NextResponse.json`; no `catch`, `errorResponse(
 
 **UI (`features/`)**
 
-- Nunca importa de `@ifarm/domain` nem de `@ifarm/db` (só as rotas da API, a autenticação, o seed
-  e os scripts usam esses pacotes).
+- Nunca importa de `@ifarm/domain` nem de `@ifarm/db` (só o `apps/api` usa esses pacotes).
 
 - O formulário valida com o schema do shared: `zodResolver(xSchema, undefined, { raw: true })`.
   Com `raw`, a tela aplica as regras da API e envia os valores do formulário (a API converte).
@@ -139,26 +144,23 @@ servidor, mova-a nesse momento (funções puras: só os imports mudam).
 ## 6. Antes de concluir
 
 Na raiz, `pnpm test` (roda os testes de cada app/pacote). Em cada app/pacote alterado
-(web, shared, domain, db), `pnpm exec eslint <arquivos alterados>`, olhando **erros e avisos**
+(api, web, shared, domain, db), `pnpm exec eslint <arquivos alterados>`, olhando **erros e avisos**
 (imports sem uso aparecem como aviso). O lint do projeto tem problemas antigos: não introduza
-novos. Em `apps/web`:
-
-- `pnpm exec tsc --noEmit -p .`;
-- `pnpm build`;
-- se mexeu no shared, também `pnpm exec tsc --noEmit` em `apps/mobile`.
+novos. Typecheck com `pnpm exec tsc --noEmit -p .` em `apps/api` e em `apps/web` (no web,
+também `pnpm build`); se mexeu no shared, também `pnpm exec tsc --noEmit` em `apps/mobile`.
 
 Teste o fluxo no app: não há testes com banco, então a ligação entre a mutation e a regra só é
 verificada no uso.
 
 Testes unitários (vitest) ficam ao lado do código (`*.test.ts`); cada app/pacote com testes
 tem o próprio script `test` (`pnpm test` dentro dele roda só os dele). Ao mover ou renomear
-algo exportado, procure os usos nos pacotes e em `apps/web` (`src/` **e** `scripts/`: o seed e
-os scripts rodam com `tsx`, fora do Next). Mudou o schema do banco? Rode `pnpm db:generate` na
+algo exportado, procure os usos nos pacotes, em `apps/web/src` e em `apps/api` (`src/` **e**
+`scripts/`: o seed roda à parte, com `tsx`). Mudou o schema do banco? Rode `pnpm db:generate` na
 raiz.
 
 Dependência usada por mais de um app/pacote: a versão fica no `catalog` do
 `pnpm-workspace.yaml`, e o `package.json` declara `"catalog:"`.
 
-Lint: cada app/pacote tem o próprio `eslint.config.mjs` (o web com as regras do Next; os pacotes
-com o typescript-eslint) e o script `lint`. A regra do projeto (ponto e vírgula) se repete em
+Lint: cada app/pacote tem o próprio `eslint.config.mjs` (o web com as regras do Next; a API e os
+pacotes com o typescript-eslint) e o script `lint`. A regra do projeto (ponto e vírgula) se repete em
 cada um: ao mudá-la, mude em todos. O mobile não tem lint.

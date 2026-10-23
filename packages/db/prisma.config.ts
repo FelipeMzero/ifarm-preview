@@ -12,8 +12,8 @@ export default defineConfig({
   schema: "prisma/schema.prisma",
   migrations: {
     path: "prisma/migrations",
-    // O seed fica no web, porque também cria os usuários pela autenticação.
-    seed: "pnpm --filter web seed",
+    // O seed fica na API, porque também cria os usuários pela autenticação.
+    seed: "pnpm --filter api seed",
   },
   datasource: {
     url: process.env["DATABASE_URL"],

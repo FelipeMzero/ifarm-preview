@@ -31,7 +31,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { signOut, useSession } from "@/lib/auth-client";
-import { RESOURCE_ACCESS } from "@/lib/permissions";
+import { RESOURCE_ACCESS } from "@ifarm/shared";
 import { ChangePasswordDialog } from "./ChangePasswordDialog";
 import { findNavMatch, NAV, saveClosedSections } from "./nav";
 import { PropertySwitcher } from "./PropertySwitcher";

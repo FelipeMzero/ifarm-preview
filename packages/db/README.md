@@ -21,7 +21,7 @@ Dentro de `packages/db`, copie o modelo de exemplo e preencha com seus dados loc
 cp .env.example .env
 ```
 
-As variáveis `DB_*` são usadas pelo container, e o `DATABASE_URL`, pelos comandos `pnpm db:*`. O app web tem o próprio `.env`, com o mesmo `DATABASE_URL`.
+As variáveis `DB_*` são usadas pelo container, e o `DATABASE_URL`, pelos comandos `pnpm db:*`. A API tem o próprio `.env`, com o mesmo `DATABASE_URL`.
 
 ### 2. Iniciar o Banco de Dados
 
@@ -40,7 +40,7 @@ pnpm db:generate
 pnpm db:push
 ```
 
-O seed (usuário admin e dados de exemplo) fica no app web, porque também cria os usuários pela autenticação: veja o [README do web](../../apps/web/README.md).
+O seed (usuário admin e dados de exemplo) fica na API, porque também cria os usuários pela autenticação: veja o [README da API](../../apps/api/README.md).
 
 ---
 
@@ -50,7 +50,7 @@ O seed (usuário admin e dados de exemplo) fica no app web, porque também cria 
 | :----------------------- | :--------------------------------------------------------------------- |
 | `pnpm db:generate`       | Gera o cliente do Prisma (e o `docs/ERD.md`) a partir do schema (raiz) |
 | `pnpm db:push`           | Sincroniza o banco com o schema (raiz)                                 |
-| `pnpm db:seed`           | Roda o seed do app web (raiz)                                          |
+| `pnpm db:seed`           | Roda o seed da API (raiz)                                              |
 | `pnpm db:studio`         | Abre uma interface gráfica para ver e editar os dados (raiz)           |
 | `docker compose logs -f` | Visualiza os logs do banco em tempo real (em `packages/db`)            |
 | `docker compose down`    | Para e remove o container do banco (em `packages/db`)                  |

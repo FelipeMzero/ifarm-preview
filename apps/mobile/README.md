@@ -1,10 +1,10 @@
 # iFarm Mobile
 
-App mobile (Expo / React Native) do iFarm. Não tem banco de dados nem backend próprio — consome a API do [apps/web](../web/README.md) pela rede.
+App mobile (Expo / React Native) do iFarm. Não tem banco de dados nem backend próprio — consome a [API](../api/README.md) (`apps/api`) diretamente, pela rede.
 
 ## 🚀 Pré-requisitos
 
-- [apps/web](../web/README.md) configurado e **rodando** (`pnpm --filter web dev`).
+- A [API](../api/README.md) configurada e **rodando** (`pnpm dev` na raiz, ou dentro de `apps/api`).
 - App **Expo Go** instalado no celular ([Android](https://play.google.com/store/apps/details?id=host.exp.exponent) / [iOS](https://apps.apple.com/app/expo-go/id982107779)) — ou um emulador Android/simulador iOS configurado.
 - Celular e computador na **mesma rede Wi-Fi**, se for testar em dispositivo físico.
 
@@ -20,7 +20,7 @@ Dentro da pasta `apps/mobile`:
 cp .env.example .env
 ```
 
-Edite o `.env` e preencha `EXPO_PUBLIC_API_URL` com o IP da máquina que está rodando o `apps/web` **na rede local**:
+Edite o `.env` e preencha `EXPO_PUBLIC_API_URL` com o IP da máquina que está rodando o `apps/api` **na rede local**, na porta da API (3001):
 
 ```bash
 hostname -I        # Linux/Mac — pega o primeiro IP listado
@@ -28,7 +28,7 @@ ipconfig            # Windows — procure por "Endereço IPv4"
 ```
 
 ```env
-EXPO_PUBLIC_API_URL="http://SEU_IP_AQUI:3000"
+EXPO_PUBLIC_API_URL="http://SEU_IP_AQUI:3001"
 ```
 
 > Esse IP muda se você trocar de rede (ex: outro Wi-Fi). Sempre que isso acontecer, atualize o `.env` e reinicie o `pnpm start`.
