@@ -1,3 +1,6 @@
+# PostgreSQL de desenvolvimento. As variáveis DB_* vêm do .env desta pasta.
+name: ifarm
+
 services:
   postgres:
     image: postgres:15

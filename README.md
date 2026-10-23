@@ -6,18 +6,20 @@ Plataforma para gestão do ciclo produtivo de fazendas de pecuária de corte (cr
 
 ```
 apps/
-  web/      → Next.js (site + API + banco de dados). Ver apps/web/README.md
+  web/      → Next.js (site + API). Ver apps/web/README.md
   mobile/   → Expo / React Native. Ver apps/mobile/README.md
 packages/
-  shared/   → código compartilhado entre web e mobile
+  shared/   → contrato da API (schemas, tipos e clientes), usado pelo web e pelo mobile
+  domain/   → regras de negócio e acesso ao banco do servidor (usado pela API)
+  db/       → banco de dados: schema do Prisma, cliente gerado e CLI do Prisma
 docs/       → requisitos, arquitetura e visão do produto
 ```
 
 ## 🚀 Setup
 
-Pré-requisitos: [Node.js](https://nodejs.org/) 22+, [pnpm](https://pnpm.io/), [Docker](https://www.docker.com/) (só para o `apps/web`).
+Pré-requisitos: [Node.js](https://nodejs.org/) 22+, [pnpm](https://pnpm.io/), [Docker](https://www.docker.com/) (para o banco de dados, em `packages/db`).
 
-Na raiz do repositório, instale as dependências dos dois apps com:
+Na raiz do repositório, instale as dependências de todos os apps e pacotes com:
 
 ```bash
 pnpm install
@@ -32,11 +34,19 @@ O `apps/mobile` **depende do `apps/web` estar rodando**, pois consome a API do w
 
 ## 🔍 Comandos úteis na raiz
 
-| Comando                         | Descrição                                             |
-| :------------------------------ | :---------------------------------------------------- |
-| `pnpm dev`                      | Atalho para `pnpm --filter web dev`                   |
-| `pnpm --filter web <script>`    | Roda um script definido em `apps/web/package.json`    |
-| `pnpm --filter mobile <script>` | Roda um script definido em `apps/mobile/package.json` |
+| Comando                         | Descrição                                                       |
+| :------------------------------ | :-------------------------------------------------------------- |
+| `pnpm dev`                      | Sobe o web em desenvolvimento (`pnpm --filter web dev`)         |
+| `pnpm build`                    | Gera o build de produção do web                                 |
+| `pnpm test`                     | Roda os testes de cada app/pacote                               |
+| `pnpm lint`                     | Roda o lint de cada app/pacote                                  |
+| `pnpm db:generate`              | Gera o cliente do Prisma (e o `docs/ERD.md`) a partir do schema |
+| `pnpm db:push`                  | Sincroniza o banco com o schema                                 |
+| `pnpm db:seed`                  | Roda o seed (admin e dados de exemplo)                          |
+| `pnpm db:studio`                | Abre o Prisma Studio para ver e editar os dados                 |
+| `pnpm format`                   | Formata o código com o Prettier                                 |
+| `pnpm --filter web <script>`    | Roda um script definido em `apps/web/package.json`              |
+| `pnpm --filter mobile <script>` | Roda um script definido em `apps/mobile/package.json`           |
 
 ## 📖 Documentação do produto
 

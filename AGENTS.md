@@ -17,8 +17,12 @@ Monorepo pnpm (use sempre `pnpm`, nunca `npm`/`npx`):
   Importado por módulo: `@ifarm/domain/<domínio>/<arquivo>`.
 - `packages/db` (`@ifarm/db`): schema do Prisma (`prisma/schema.prisma`), o cliente gerado
   (`@ifarm/db/client`, `@ifarm/db/enums`), a instância do banco (`prisma`, de `@ifarm/db`) e o
-  CLI do Prisma (`prisma.config.ts`, que lê o `DATABASE_URL` do `apps/web/.env`). Na raiz:
-  `pnpm db:generate`, `db:push`, `db:seed` e `db:studio`.
+  CLI do Prisma (`prisma.config.ts`) e o container do PostgreSQL (`docker-compose.yaml`). Na
+  raiz: `pnpm db:generate`, `db:push`, `db:seed` e `db:studio`.
+- Variáveis de ambiente: cada app/pacote que roda um processo tem o próprio `.env` (modelo no
+  `.env.example`): `apps/web/.env` (app e seed) e `packages/db/.env` (container e CLI). Os
+  pacotes só leem o `process.env`; quem carrega o arquivo é o processo (Next, `tsx --env-file`,
+  `prisma.config.ts`).
 
 Arquitetura em camadas descrita em `docs/architecture.md`; requisitos de cada módulo em
 `docs/requirements/mod-XX-<nome>.md`.

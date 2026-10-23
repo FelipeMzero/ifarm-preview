@@ -2,9 +2,9 @@ import { fileURLToPath } from "node:url";
 import { config } from "dotenv";
 import { defineConfig } from "prisma/config";
 
-// O DATABASE_URL vem do .env do web (o mesmo que o Next e o docker-compose usam).
+// O DATABASE_URL vem do .env desta pasta (modelo em .env.example).
 config({
-  path: fileURLToPath(new URL("../../apps/web/.env", import.meta.url)),
+  path: fileURLToPath(new URL(".env", import.meta.url)),
   quiet: true,
 });
 

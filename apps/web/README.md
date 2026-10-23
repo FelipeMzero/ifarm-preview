@@ -2,7 +2,7 @@
 
 > Parte do monorepo iFarm — veja o [README da raiz](../../README.md) para a visão geral e como configurar o [apps/mobile](../mobile/README.md).
 
-Este é um projeto desenvolvido com Next.js, utilizando Prisma ORM para persistência de dados e Docker para orquestração do banco de dados PostgreSQL. Além do site, também expõe a API (rotas `/api/*`) consumida pelo `apps/mobile`.
+Este é um projeto desenvolvido com Next.js. Além do site, também expõe a API (rotas `/api/*`) consumida pelo `apps/mobile`. As regras de negócio ficam em `packages/domain`, e o banco de dados (PostgreSQL, via Prisma ORM, com o container Docker) em `packages/db`.
 
 ## 🚀 Pré-requisitos
 
@@ -18,17 +18,18 @@ Antes de começar, você precisará ter instalado em sua máquina:
 
 As dependências já devem ter sido instaladas com `pnpm install` na raiz do repositório (veja o [README raiz](../../README.md)).
 
-Agora dentro da pasta `apps/web` siga os passos abaixo para configurar app web:
+Siga os passos abaixo para configurar o app web:
 
 ### 1. Configurar Variáveis de Ambiente
 
-O projeto utiliza um arquivo `.env` para gerenciar credenciais e configurações de conexão, copie o modelo de exemplo e preencha com seus dados locais:
+O web e o banco têm cada um o seu arquivo `.env` (o `DATABASE_URL` aparece nos dois). Copie os modelos de exemplo e preencha com seus dados locais:
 
 ```bash
-cp .env.example .env
+cp apps/web/.env.example apps/web/.env      # app web e seed
+cp packages/db/.env.example packages/db/.env  # container do banco e comandos pnpm db:*
 ```
 
-Depois, gere um valor para `BETTER_AUTH_SECRET` (usado para assinar sessões/cookies) e preencha no `.env`:
+Depois, gere um valor para `BETTER_AUTH_SECRET` (usado para assinar sessões/cookies) e preencha no `apps/web/.env`:
 
 ```bash
 openssl rand -base64 32
@@ -36,7 +37,7 @@ openssl rand -base64 32
 
 ### 2. Iniciar o Banco de Dados
 
-Suba o container do PostgreSQL utilizando o Docker:
+Suba o container do PostgreSQL utilizando o Docker, dentro de `packages/db`:
 
 ```bash
 docker compose up -d
@@ -83,8 +84,8 @@ O projeto estará disponível em: http://localhost:3000
 | :--------------------- | :------------------------------------------------------------------------------- |
 | pnpm db:studio         | Abre uma interface gráfica para visualizar e editar os dados do banco (na raiz). |
 | pnpm db:seed           | Roda novamente o seed (cria admin e dados de exemplo) (na raiz).                 |
-| docker compose logs -f | Visualiza os logs do banco de dados em tempo real.                               |
-| docker compose down    | Para e remove os containers do projeto.                                          |
+| docker compose logs -f | Visualiza os logs do banco de dados em tempo real (em `packages/db`).            |
+| docker compose down    | Para e remove o container do banco (em `packages/db`).                           |
 
 ---
 
