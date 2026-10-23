@@ -123,7 +123,7 @@ export default function LocationPickerMap({
             readOnly
               ? undefined
               : {
-                  dragend: (e: any) => {
+                  dragend: (e) => {
                     const { lat, lng } = e.target.getLatLng();
                     onPick(lat, lng);
                   },

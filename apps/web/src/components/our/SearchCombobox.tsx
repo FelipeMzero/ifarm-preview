@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ControllerFieldState,
   ControllerRenderProps,
@@ -56,8 +56,11 @@ export function SearchCombobox<
   // items pode ser substituído a cada busca (ex: onInputValueChange refazendo a lista).
   // Guarda o label de todo item já visto para não perder o do item selecionado
   // quando ele sair da lista atual (ex: usuário digita algo sem resultado e aperta Esc).
+  // Os itens atuais são procurados primeiro em listItems; o cache só precisa dos anteriores.
   const labelCacheRef = useRef(new Map<string, string>());
-  for (const item of items) labelCacheRef.current.set(item.value, item.label);
+  useEffect(() => {
+    for (const item of items) labelCacheRef.current.set(item.value, item.label);
+  }, [items]);
 
   // Rastreia o texto digitado para saber se ele bate exatamente com algum item
   // existente (usado para decidir quando oferecer a criação de um novo registro).

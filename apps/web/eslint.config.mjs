@@ -6,20 +6,21 @@ const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
 
+  // Pegar a configuração lint deste pacote
+  {
+    languageOptions: {
+      parserOptions: { tsconfigRootDir: import.meta.dirname },
+    },
+  },
+
   {
     rules: {
-      semi: ["error", "always"], // Obriga o uso de ponto e vírgula e marca como erro
+      semi: ["error", "always"],
     },
   },
 
   // Override default ignores of eslint-config-next.
-  globalIgnores([
-    // Default ignores of eslint-config-next:
-    ".next/**",
-    "out/**",
-    "build/**",
-    "next-env.d.ts",
-  ]),
+  globalIgnores([".next/**", "out/**", "build/**", "next-env.d.ts"]),
 ]);
 
 export default eslintConfig;

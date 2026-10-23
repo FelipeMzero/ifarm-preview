@@ -1,6 +1,5 @@
-// @ts-nocheck
 import { cn } from "@/lib/utils";
-import { cva, VariantProps } from "class-variance-authority";
+import { cva } from "class-variance-authority";
 import React from "react";
 
 const fieldRowVariants = cva("grid gap-4", {
@@ -17,11 +16,8 @@ const fieldRowVariants = cva("grid gap-4", {
   },
 });
 
-interface FieldRowProps {
-  className?: string;
+interface FieldRowProps extends React.ComponentProps<"div"> {
   cols?: 1 | 2 | 3 | 4;
-  children?: React.ReactNode;
-  [key: string]: any;
 }
 
 function FieldRow({ className, cols = 1, children, ...props }: FieldRowProps) {

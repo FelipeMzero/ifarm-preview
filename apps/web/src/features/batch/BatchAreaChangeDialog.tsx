@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect, useRef } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -57,7 +57,7 @@ export function BatchAreaChangeDialog({
     resolver: zodResolver(batchAreaChangeSchema, undefined, { raw: true }),
     defaultValues: { newAreaId: "", description: "" },
   });
-  const newAreaId = form.watch("newAreaId");
+  const newAreaId = useWatch({ control: form.control, name: "newAreaId" });
 
   const loadAreas = useCallback(
     async (q: string) => {
@@ -90,6 +90,8 @@ export function BatchAreaChangeDialog({
     if (open) {
       if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
       form.reset({ newAreaId: "", description: "" });
+      // Carga ao abrir o diálogo: o setState do loadAreas só acontece depois do await.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       loadAreas("");
     }
   }, [open, loadAreas, form]);

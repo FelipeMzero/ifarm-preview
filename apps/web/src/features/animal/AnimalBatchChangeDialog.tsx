@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect, useRef } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -61,7 +61,7 @@ export function AnimalBatchChangeDialog({
     resolver: zodResolver(animalBatchChangeSchema),
     defaultValues: { newBatchId: "", notes: "" },
   });
-  const newBatchId = form.watch("newBatchId");
+  const newBatchId = useWatch({ control: form.control, name: "newBatchId" });
 
   const loadBatches = useCallback(
     async (q: string) => {
@@ -99,6 +99,8 @@ export function AnimalBatchChangeDialog({
     if (open) {
       if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
       form.reset({ newBatchId: "", notes: "" });
+      // Carga ao abrir o diálogo: o setState do loadBatches só acontece depois do await.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       loadBatches("");
     }
   }, [open, loadBatches, form]);

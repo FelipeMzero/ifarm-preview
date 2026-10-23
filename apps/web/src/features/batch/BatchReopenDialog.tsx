@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Info, Loader2, TriangleAlert } from "lucide-react";
 import { toast } from "sonner";
@@ -58,7 +58,7 @@ export function BatchReopenDialog({
     resolver: zodResolver(batchReopenSchema, undefined, { raw: true }),
     defaultValues: { areaId: "", notes: "" },
   });
-  const areaId = form.watch("areaId");
+  const areaId = useWatch({ control: form.control, name: "areaId" });
 
   const loadAreas = useCallback(
     async (q: string) => {

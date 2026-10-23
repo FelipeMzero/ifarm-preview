@@ -2,7 +2,7 @@
 
 import { FIELD_LIMITS } from "@ifarm/shared";
 import { UseFormReturn } from "react-hook-form";
-import { Hexagon, Loader2, MapPin, Pencil, Ruler } from "lucide-react";
+import { Hexagon, Loader2, MapPin, Ruler } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -28,7 +28,6 @@ interface AreaFormProps {
   onSubmit: (data: AreaInput) => Promise<void>;
   onCancel: () => void;
   hectaresWarning: string | null;
-  onRedraw?: () => void;
   polygonPointsCount?: number;
   calculatedHectares?: number;
   container?: HTMLElement | null;
@@ -42,13 +41,10 @@ export function AreaForm({
   onSubmit,
   onCancel,
   hectaresWarning,
-  onRedraw,
   polygonPointsCount = 0,
   calculatedHectares = 0,
   container,
 }: AreaFormProps) {
-  const hasPolygon = polygonPointsCount >= 3 || form.watch("polygon") != null;
-
   return (
     <Sheet open={open} onOpenChange={onOpenChange} modal={false}>
       <SheetContent

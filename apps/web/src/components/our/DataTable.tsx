@@ -55,6 +55,9 @@ export function DataTable<TData, TValue>({
 
   const isServerSide = pageCount !== undefined;
 
+  // O TanStack Table não é compatível com o React Compiler (por isso o "use no memo"
+  // acima); não há API alternativa, então o aviso é desligado só aqui.
+  // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
     data,
     columns,

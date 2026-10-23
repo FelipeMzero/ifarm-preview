@@ -4,5 +4,10 @@
   "files.eol": "\n",
   "[prisma]": {
     "editor.defaultFormatter": "Prisma.prisma"
-  }
+  },
+  "eslint.workingDirectories": [
+    {
+      "mode": "auto"
+    }
+  ]
 }

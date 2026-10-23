@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   ArrowLeft,
@@ -132,7 +132,6 @@ export function BatchTransferForm({
     handleSubmit,
     control,
     reset,
-    watch,
     trigger,
     setValue,
     setError,
@@ -146,7 +145,7 @@ export function BatchTransferForm({
     },
   });
 
-  const destinationBatchId = watch("destinationBatchId");
+  const destinationBatchId = useWatch({ control, name: "destinationBatchId" });
   const readOnly = detail !== null && detail.status !== "pending";
 
   const selectedIds = useMemo(
@@ -193,6 +192,8 @@ export function BatchTransferForm({
   );
 
   useEffect(() => {
+    // Carga inicial: o setState do loadBatches só acontece depois do await.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadBatches("");
   }, [loadBatches]);
 
@@ -204,6 +205,8 @@ export function BatchTransferForm({
 
   useEffect(() => {
     if (!id) {
+      // Transferência nova: não há registro para carregar.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsDataLoading(false);
       return;
     }

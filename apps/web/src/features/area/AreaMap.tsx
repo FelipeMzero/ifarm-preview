@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch, type Path } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import L from "leaflet";
 import {
@@ -95,12 +95,20 @@ const markerIconDefault = L.icon({
 L.Marker.prototype.options.icon = markerIconDefault;
 
 if (typeof window !== "undefined" && L && L.Layer) {
+  type LayerMethod = (
+    this: Record<string, unknown>,
+    ...args: unknown[]
+  ) => unknown;
+  const layerProto = L.Layer.prototype as unknown as Record<
+    string,
+    LayerMethod
+  >;
   const patchLayerMethod = (methodName: string, checkProp: string) => {
-    const orig = (L.Layer.prototype as any)[methodName];
+    const orig = layerProto[methodName];
     if (orig) {
-      (L.Layer.prototype as any)[methodName] = function (
-        this: any,
-        ...args: any[]
+      layerProto[methodName] = function (
+        this: Record<string, unknown>,
+        ...args: unknown[]
       ) {
         if (
           !this[checkProp] &&
@@ -372,7 +380,7 @@ function GeomanController({
       hintlineStyle: { color: "hsl(0, 0%, 50%)", dashArray: [5, 5] },
     });
 
-    const handleCreate = (e: any) => {
+    const handleCreate: L.PM.CreateEventHandler = (e) => {
       const layer = e.layer as L.Polygon;
       onPolygonCreated(layer);
 
@@ -381,8 +389,8 @@ function GeomanController({
         onPolygonChange(points);
       }
 
-      if ((layer as any).pm && typeof (layer as any).pm.enable === "function") {
-        (layer as any).pm.enable({
+      if (layer.pm && typeof layer.pm.enable === "function") {
+        layer.pm.enable({
           allowSelfIntersection: false,
           snappable: true,
         });
@@ -412,11 +420,25 @@ function GeomanController({
   return null;
 }
 
+// Mensagem de um erro capturado (o throw pode lançar qualquer coisa).
+function errorMessage(err: unknown): string | undefined {
+  return err instanceof Error ? err.message : undefined;
+}
+
+function isLatLng(pt: unknown): pt is L.LatLngLiteral {
+  return (
+    typeof pt === "object" &&
+    pt !== null &&
+    typeof (pt as L.LatLngLiteral).lat === "number" &&
+    typeof (pt as L.LatLngLiteral).lng === "number"
+  );
+}
+
 function extractPointsFromLayer(
   layer: L.Polygon,
 ): { lat: number; lng: number }[] {
   try {
-    let latlngs: any = layer.getLatLngs();
+    let latlngs: unknown = layer.getLatLngs();
     while (
       Array.isArray(latlngs) &&
       latlngs.length > 0 &&
@@ -425,12 +447,7 @@ function extractPointsFromLayer(
       latlngs = latlngs[0];
     }
     if (!Array.isArray(latlngs)) return [];
-    return latlngs
-      .filter(
-        (pt: any) =>
-          pt && typeof pt.lat === "number" && typeof pt.lng === "number",
-      )
-      .map((pt: any) => ({ lat: pt.lat, lng: pt.lng }));
+    return latlngs.filter(isLatLng).map((pt) => ({ lat: pt.lat, lng: pt.lng }));
   } catch {
     return [];
   }
@@ -475,12 +492,13 @@ function EditablePolygon({
     const setupGeoman = () => {
       if (cancelled) return;
 
-      if (!(leafletLayer as any)._map) {
+      // _map (interno do Leaflet) só existe depois que a camada entra no mapa.
+      if (!(leafletLayer as unknown as { _map?: L.Map })._map) {
         timer = setTimeout(setupGeoman, 50);
         return;
       }
 
-      const pm = (leafletLayer as any).pm;
+      const pm = leafletLayer.pm;
       if (!pm) return;
 
       if (activeEditing) {
@@ -537,7 +555,7 @@ function EditablePolygon({
 
   return (
     <Polygon
-      ref={refCallback as any}
+      ref={refCallback}
       positions={positions}
       pathOptions={
         activeEditing
@@ -623,11 +641,14 @@ export default function AreaMap() {
   );
   const [locatingProperty, setLocatingProperty] = useState(false);
 
+  const currentPropertyId = currentProperty?.id;
   useEffect(() => {
+    // Ao trocar de propriedade, descarta as coordenadas da anterior antes de buscar as novas.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setPropertyCoords(null);
     setBrowserCoords(null);
 
-    if (!currentProperty?.id) {
+    if (!currentPropertyId) {
       setLocatingProperty(false);
       return;
     }
@@ -635,9 +656,9 @@ export default function AreaMap() {
     let active = true;
     setLocatingProperty(true);
 
-    async function loadPropertyCoords() {
+    async function loadPropertyCoords(propertyId: string) {
       try {
-        const details = await propertyClient.getProperty(currentProperty!.id);
+        const details = await propertyClient.getProperty(propertyId);
         if (details.latitude && details.longitude) {
           if (active)
             setPropertyCoords([
@@ -673,14 +694,14 @@ export default function AreaMap() {
       });
     }
 
-    loadPropertyCoords().finally(() => {
+    loadPropertyCoords(currentPropertyId).finally(() => {
       if (active) setLocatingProperty(false);
     });
 
     return () => {
       active = false;
     };
-  }, [currentProperty?.id]);
+  }, [currentPropertyId]);
 
   const [mapInstance, setMapInstance] = useState<L.Map | null>(null);
   const [mapAreaEl, setMapAreaEl] = useState<HTMLDivElement | null>(null);
@@ -716,6 +737,8 @@ export default function AreaMap() {
 
   useEffect(() => {
     if (!currentProperty) {
+      // Sem propriedade selecionada não há o que carregar: encerra o carregamento.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setLoading(false);
       return;
     }
@@ -732,9 +755,10 @@ export default function AreaMap() {
           setAreas(result.data);
           setAreasPropertyId(currentProperty!.id);
         }
-      } catch (err: any) {
+      } catch (err) {
         toast.error(
-          err.message ?? "Não foi possível carregar as áreas de pastagem.",
+          errorMessage(err) ??
+            "Não foi possível carregar as áreas de pastagem.",
         );
       } finally {
         if (active) setLoading(false);
@@ -849,18 +873,6 @@ export default function AreaMap() {
     setSheetOpen(true);
   };
 
-  const handleStartRedraw = useCallback(() => {
-    setSheetOpen(false);
-    if (drawnLayer) {
-      drawnLayer.remove();
-      setDrawnLayer(null);
-    }
-    setPolygonPoints([]);
-    form.setValue("polygon", null, { shouldValidate: true });
-    form.setValue("hectares", "");
-    setIsDrawing(true);
-  }, [drawnLayer, form]);
-
   const onSubmit = async (data: AreaInput) => {
     try {
       if (editingArea) {
@@ -873,13 +885,13 @@ export default function AreaMap() {
       setSheetOpen(false);
       handleCleanup();
       setRefreshKey((k) => k + 1);
-    } catch (err: any) {
+    } catch (err) {
       if (err instanceof ApiError && err.errors) {
         Object.entries(err.errors).forEach(([field, msg]) => {
-          form.setError(field as any, { message: msg });
+          form.setError(field as Path<AreaInput>, { message: msg });
         });
       } else {
-        toast.error(err.message ?? "Não foi possível salvar o registro.");
+        toast.error(errorMessage(err) ?? "Não foi possível salvar o registro.");
       }
     }
   };
@@ -895,9 +907,9 @@ export default function AreaMap() {
       await areaClient.deleteArea(deletingAreaId);
       toast.success("Registro excluído com sucesso!");
       setRefreshKey((k) => k + 1);
-    } catch (err: any) {
+    } catch (err) {
       toast.error(
-        err.message ??
+        errorMessage(err) ??
           "Este registro já possui vínculos e não pode ser excluído.",
       );
     } finally {
@@ -921,19 +933,19 @@ export default function AreaMap() {
           : "Área ativada com sucesso!",
       );
       setRefreshKey((k) => k + 1);
-    } catch (err: any) {
+    } catch (err) {
       if (err instanceof AreaOccupiedError) {
         mapInstance?.closePopup();
         setOccupiedArea({ name: area.name, batch: err.batch });
         setRefreshKey((k) => k + 1);
         return;
       }
-      toast.error(err.message ?? "Erro ao alterar o status do registro.");
+      toast.error(errorMessage(err) ?? "Erro ao alterar o status do registro.");
     }
   };
 
   const calculatedHectares = calculateAreaHectares(polygonPoints);
-  const hectaresInput = form.watch("hectares");
+  const hectaresInput = useWatch({ control: form.control, name: "hectares" });
   const parsedHectaresInput = parseFloat(hectaresInput);
 
   let hectaresWarning: string | null = null;
@@ -1364,7 +1376,6 @@ export default function AreaMap() {
           handleCleanup();
         }}
         hectaresWarning={hectaresWarning}
-        onRedraw={handleStartRedraw}
         polygonPointsCount={polygonPoints.length}
         calculatedHectares={calculatedHectares}
       />

@@ -8,7 +8,7 @@ import {
   ApiError,
 } from "@ifarm/shared";
 import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { IMaskInput } from "react-imask";
 
@@ -56,7 +56,6 @@ export default function PersonForm({
     handleSubmit,
     control,
     reset,
-    watch,
     setValue,
     setError,
     formState: { isSubmitting },
@@ -83,7 +82,7 @@ export default function PersonForm({
     },
   });
 
-  const type = watch("type");
+  const type = useWatch({ control, name: "type" });
   const isCompany = type === PersonType.COMPANY;
 
   useEffect(() => {
@@ -390,7 +389,7 @@ export default function PersonForm({
                   disabled={isZipLoading}
                   placeholder="Ex: 78000-000"
                   onAccept={(value: string) => field.onChange(value)}
-                  onBlur={(e: any) => {
+                  onBlur={(e) => {
                     field.onBlur();
                     handleZipBlur(e.target.value);
                   }}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect, useRef } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowLeft, ArrowRightLeft, ChevronDown, Loader2 } from "lucide-react";
 import { toast } from "sonner";
@@ -84,7 +84,6 @@ export function BatchForm({ id, title, onCancel, onSuccess }: BatchFormProps) {
     handleSubmit,
     control,
     reset,
-    watch,
     setValue,
     setError,
     formState: { isSubmitting },
@@ -100,7 +99,7 @@ export function BatchForm({ id, title, onCancel, onSuccess }: BatchFormProps) {
     },
   });
 
-  const hasMeta = watch("hasMeta");
+  const hasMeta = useWatch({ control, name: "hasMeta" });
 
   const loadAreas = useCallback(
     async (q: string) => {
@@ -126,6 +125,8 @@ export function BatchForm({ id, title, onCancel, onSuccess }: BatchFormProps) {
   );
 
   useEffect(() => {
+    // Carga inicial: o setState do loadAreas só acontece depois do await.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (!isEditing) loadAreas("");
   }, [isEditing, loadAreas]);
 
@@ -141,6 +142,8 @@ export function BatchForm({ id, title, onCancel, onSuccess }: BatchFormProps) {
 
   useEffect(() => {
     if (!id) {
+      // Lote novo: não há registro para carregar.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsDataLoading(false);
       return;
     }

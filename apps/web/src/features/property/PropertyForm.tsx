@@ -2,7 +2,7 @@
 
 import { FIELD_LIMITS } from "@ifarm/shared";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { IMaskInput } from "react-imask";
 import dynamic from "next/dynamic";
@@ -156,7 +156,6 @@ export default function PropertyForm({
     handleSubmit,
     control,
     reset,
-    watch,
     setValue,
     setError,
     formState: { isSubmitting },
@@ -182,8 +181,8 @@ export default function PropertyForm({
     },
   });
 
-  const latitude = watch("latitude");
-  const longitude = watch("longitude");
+  const latitude = useWatch({ control, name: "latitude" });
+  const longitude = useWatch({ control, name: "longitude" });
   const [isPickerOpen, setIsPickerOpen] = useState(false);
 
   useEffect(() => {
@@ -497,7 +496,7 @@ export default function PropertyForm({
                       disabled={isZipLoading}
                       placeholder="Ex: 78000-000"
                       onAccept={(value: string) => field.onChange(value)}
-                      onBlur={(e: any) => {
+                      onBlur={(e) => {
                         field.onBlur();
                         handleZipBlur(e.target.value);
                       }}

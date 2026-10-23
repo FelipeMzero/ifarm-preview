@@ -7,6 +7,14 @@ import { ConflictError } from "./errors";
 //   rfid: "Este RFID já está em uso.",
 // };
 
+// Com o driver adapter (@prisma/adapter-pg), os detalhes da constraint vêm aninhados no
+// erro original do driver, em `error.meta.driverAdapterError`.
+type DriverAdapterMeta = {
+  driverAdapterError?: {
+    cause?: { constraint?: { fields?: string[]; index?: string } };
+  };
+};
+
 export function uniqueConstraintErrors(
   error: unknown,
 ): Record<string, string> | null {
@@ -19,8 +27,8 @@ export function uniqueConstraintErrors(
 
   // Com o driver adapter (@prisma/adapter-pg), `error.meta.target` não é
   // preenchido; o nome do campo vem aninhado no erro original do driver.
-  const driverFields = (error.meta as any)?.driverAdapterError?.cause
-    ?.constraint?.fields as string[] | undefined;
+  const driverFields = (error.meta as DriverAdapterMeta | undefined)
+    ?.driverAdapterError?.cause?.constraint?.fields;
   const target =
     (error.meta?.target as string[] | undefined) ?? driverFields ?? [];
   const errors: Record<string, string> = {};
@@ -61,8 +69,8 @@ export function referencedElsewhereMessage(error: unknown): string | null {
     return null;
   }
 
-  const constraintName = (error.meta as any)?.driverAdapterError?.cause
-    ?.constraint?.index as string | undefined;
+  const constraintName = (error.meta as DriverAdapterMeta | undefined)
+    ?.driverAdapterError?.cause?.constraint?.index;
   const label = constraintName
     ? REFERENCING_CONSTRAINT_LABELS[constraintName]
     : undefined;

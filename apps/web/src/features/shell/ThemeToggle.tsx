@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 import { useTheme } from "next-themes";
 import { Laptop, Moon, Sun } from "lucide-react";
 
@@ -20,11 +20,12 @@ const THEME_OPTIONS = [
 
 export function ThemeToggle() {
   const { theme = "system", setTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  // false no servidor e na hidratação, true no navegador: o tema só é conhecido no cliente.
+  const mounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  );
 
   const ActiveIcon = mounted
     ? (THEME_OPTIONS.find((option) => option.value === theme)?.icon ?? Laptop)

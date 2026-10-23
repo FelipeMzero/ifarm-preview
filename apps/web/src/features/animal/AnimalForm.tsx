@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";
-import { Controller, useForm } from "react-hook-form";
+import { Controller, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import { animalClient } from "@/lib/clients";
@@ -77,7 +77,6 @@ export default function AnimalForm({
   const {
     handleSubmit,
     control,
-    watch,
     setValue,
     setError,
     formState: { isSubmitting },
@@ -105,14 +104,12 @@ export default function AnimalForm({
     },
   });
 
-  const origin = watch("origin");
-  const neutered = watch("neutered");
-  const [batchId, currentWeightKg, birthDate, sex] = watch([
-    "batchId",
-    "currentWeightKg",
-    "birthDate",
-    "sex",
-  ]);
+  const origin = useWatch({ control, name: "origin" });
+  const neutered = useWatch({ control, name: "neutered" });
+  const [batchId, currentWeightKg, birthDate, sex] = useWatch({
+    control,
+    name: ["batchId", "currentWeightKg", "birthDate", "sex"],
+  });
 
   const loadBatches = useCallback(
     async (q: string) => {
@@ -163,10 +160,14 @@ export default function AnimalForm({
   );
 
   useEffect(() => {
+    // Carga inicial: o setState do loadBatches só acontece depois do await.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadBatches("");
   }, [loadBatches]);
 
   useEffect(() => {
+    // Carga inicial: o setState do loadSellers só acontece depois do await.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadSellers("");
   }, [loadSellers]);
 
