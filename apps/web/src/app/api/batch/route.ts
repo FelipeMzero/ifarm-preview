@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
+import { batchQuerySchema } from "@ifarm/shared";
 import { batchCreateSchema } from "@ifarm/shared";
 import { requireSession } from "@/app/api/session";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
-import { batchQuerySchema, listBatches } from "@/server/batch/queries";
+import { listBatches } from "@/server/batch/queries";
 import { createBatch } from "@/server/batch/mutations";
 import { errorResponse, validationErrorResponse } from "../http";
 

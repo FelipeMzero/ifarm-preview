@@ -1,5 +1,5 @@
 import "server-only";
-import { z } from "zod";
+import type { BatchTransferQuery } from "@ifarm/shared";
 import {
   fromLocalDateTime,
   type BatchTransferDetail,
@@ -10,19 +10,6 @@ import { getOrAssignCurrentProperty } from "../current-property/queries";
 import { NotFoundError } from "../errors";
 import { TRANSFER_STATUS_WHERE, transferStatus } from "./rules";
 import { unavailableReason } from "@/server/animal/rules";
-
-export const batchTransferQuerySchema = z.object({
-  propertyId: z.uuid().optional(),
-  page: z.coerce.number().int().min(0).optional().default(0),
-  pageSize: z.coerce.number().int().min(1).optional().default(10),
-  search: z.string().trim().optional().default(""),
-  status: z.preprocess(
-    (v) => (v === "" ? undefined : v),
-    z.enum(["pending", "confirmed", "cancelled"]).optional(),
-  ),
-});
-
-export type BatchTransferQuery = z.infer<typeof batchTransferQuerySchema>;
 
 function buildWhere(query: BatchTransferQuery, propertyId: string) {
   const where: Record<string, unknown> = {

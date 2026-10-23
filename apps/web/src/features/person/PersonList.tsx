@@ -34,7 +34,12 @@ import {
 import { Input } from "@/components/ui/input";
 import { SelectField } from "@/components/our/SelectField";
 import { personClient } from "@/lib/clients";
-import { PersonType, formatTaxId, type PersonRow } from "@ifarm/shared";
+import {
+  PersonType,
+  formatTaxId,
+  type PersonRow,
+  type PersonListParams,
+} from "@ifarm/shared";
 import { PERSON_TYPE_ITEMS, PERSON_TYPE_LABELS } from "@ifarm/shared";
 import { ErrorPage } from "@/components/our/ErrorPage";
 
@@ -46,7 +51,9 @@ const STATUS_FILTER = {
   INACTIVE: "inativo",
 } as const;
 
-function filterToParams(filter: string): { type?: string; status?: string } {
+function filterToParams(
+  filter: string,
+): Pick<PersonListParams, "type" | "status"> {
   if (filter === STATUS_FILTER.ACTIVE) return { status: "active" };
   if (filter === STATUS_FILTER.INACTIVE) return { status: "inactive" };
   if (filter === PersonType.INDIVIDUAL || filter === PersonType.COMPANY)

@@ -20,7 +20,7 @@ import {
   formatDay,
 } from "./display";
 import { purchaseClient } from "@/lib/clients";
-import { type PurchaseRow } from "@ifarm/shared";
+import { type PurchaseRow, type PurchaseListParams } from "@ifarm/shared";
 
 const DEFAULT_PAGE_SIZE = 10;
 
@@ -30,6 +30,14 @@ const STATUS_FILTER = {
   CANCELLED: "cancelled",
   ALL: "all",
 } as const;
+
+// Filtro da tela → situação aceita pela API (o que não está aqui = sem filtro).
+const STATUS_PARAM: Record<string, PurchaseListParams["status"]> = {
+  [STATUS_FILTER.OPEN]: "open",
+  [STATUS_FILTER.CONFIRMED]: "confirmed",
+  [STATUS_FILTER.CANCELLED]: "cancelled",
+  [STATUS_FILTER.ALL]: "all",
+};
 
 function buildColumns(onOpen: (id: string) => void): ColumnDef<PurchaseRow>[] {
   return [
@@ -162,7 +170,7 @@ export default function PurchaseList() {
           page: pageIndex,
           pageSize,
           search: debouncedSearch,
-          status: filter,
+          status: STATUS_PARAM[filter],
         });
         if (cancelled) return;
         setPurchases(result.data);

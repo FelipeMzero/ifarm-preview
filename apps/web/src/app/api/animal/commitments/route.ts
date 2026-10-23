@@ -1,10 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
+import { commitmentsLookupSchema } from "@ifarm/shared";
 import { requireSession } from "@/app/api/session";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
-import {
-  commitmentsQuerySchema,
-  listCommitments,
-} from "@/server/animal/queries";
+import { listCommitments } from "@/server/animal/queries";
 import { errorResponse } from "../../http";
 
 // Compromissos em aberto de vários animais de uma vez (POST porque a lista não cabe
@@ -15,7 +13,7 @@ export async function POST(request: NextRequest) {
   if (response) return response;
 
   try {
-    const validation = commitmentsQuerySchema.safeParse(
+    const validation = commitmentsLookupSchema.safeParse(
       await request.json().catch(() => ({})),
     );
     if (!validation.success) {

@@ -5,7 +5,10 @@ import {
   type ApiRequest,
 } from "../client";
 import type { ManagementSessionStatus } from "../management-session/steps";
-import type { CreateReceptionPayload } from "./schema";
+import type {
+  CreateReceptionPayload,
+  ReceptionPurchaseListParams,
+} from "./schema";
 
 // Área de recepções: a compra vista por quem recebe os animais (sem valores).
 
@@ -59,14 +62,6 @@ export type ReceptionFilter = "pending" | "all";
 export type ReceptionDocuments = {
   gtaNumber?: string | null;
   invoiceNumber?: string | null;
-};
-
-export type ReceptionPurchaseListParams = {
-  page?: number;
-  pageSize?: number;
-  search?: string;
-  filter?: ReceptionFilter;
-  propertyId?: string;
 };
 
 const RECEPTION_PURCHASES = "/api/reception/purchases";

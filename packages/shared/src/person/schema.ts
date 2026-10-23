@@ -83,3 +83,22 @@ export const personSchema = z
   });
 
 export type PersonInput = z.infer<typeof personSchema>;
+
+// Filtros e paginação da listagem (parâmetros da URL: chegam como texto e são convertidos).
+export const personQuerySchema = z.object({
+  page: z.coerce.number().int().min(0).optional().default(0),
+  pageSize: z.coerce.number().int().min(1).optional().default(10),
+  search: z.string().trim().optional().default(""),
+  type: z.preprocess(
+    (v) => (v === "" ? undefined : v),
+    z.enum(PersonType).optional(),
+  ),
+  status: z.preprocess(
+    (v) => (v === "" ? undefined : v),
+    z.enum(["active", "inactive"]).optional(),
+  ),
+});
+
+export type PersonQuery = z.output<typeof personQuerySchema>;
+/** Parâmetros que o cliente passa para listar (todos opcionais). */
+export type PersonListParams = Partial<PersonQuery>;

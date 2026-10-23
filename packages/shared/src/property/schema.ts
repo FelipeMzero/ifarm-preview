@@ -69,3 +69,18 @@ export const propertySchema = z
   });
 
 export type PropertyInput = z.infer<typeof propertySchema>;
+
+// Filtros e paginação da listagem (parâmetros da URL: chegam como texto e são convertidos).
+export const propertyQuerySchema = z.object({
+  page: z.coerce.number().int().min(0).optional().default(0),
+  pageSize: z.coerce.number().int().min(1).optional().default(10),
+  search: z.string().trim().optional().default(""),
+  status: z.preprocess(
+    (v) => (v === "" ? undefined : v),
+    z.enum(["active", "inactive"]).optional(),
+  ),
+});
+
+export type PropertyQuery = z.output<typeof propertyQuerySchema>;
+/** Parâmetros que o cliente passa para listar (todos opcionais). */
+export type PropertyListParams = Partial<PropertyQuery>;

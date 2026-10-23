@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { z } from "zod";
+import { areaQuerySchema } from "@ifarm/shared";
 import { areaSchema } from "@ifarm/shared";
 import { requireSession } from "@/app/api/session";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
-import { areaQuerySchema, listAreas } from "@/server/area/queries";
+import { listAreas } from "@/server/area/queries";
 import { createArea } from "@/server/area/mutations";
 import { errorResponse, validationErrorResponse } from "../http";
 
@@ -16,15 +16,7 @@ export async function GET(request: NextRequest) {
     const validation = areaQuerySchema.safeParse(
       Object.fromEntries(searchParams),
     );
-    if (!validation.success) {
-      return NextResponse.json(
-        {
-          message: "Parâmetros inválidos.",
-          errors: z.flattenError(validation.error),
-        },
-        { status: 400 },
-      );
-    }
+    if (!validation.success) return validationErrorResponse(validation.error);
 
     const data = await listAreas(validation.data, session.user.id);
     return NextResponse.json({ data });

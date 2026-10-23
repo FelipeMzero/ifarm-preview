@@ -1,5 +1,4 @@
 import "server-only";
-import { z } from "zod";
 import { weighingPayloadSchema, weighingPlanSchema } from "@ifarm/shared";
 import { recomputeCurrentWeight } from "@/server/animal/weighings";
 import {

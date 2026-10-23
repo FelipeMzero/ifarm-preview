@@ -1,5 +1,5 @@
 import "server-only";
-import { z } from "zod";
+import type { BatchQuery } from "@ifarm/shared";
 import {
   fromLocalDateTime,
   type BatchDetail,
@@ -14,19 +14,6 @@ import { effectiveWeighing } from "../management-session/effective";
 import { stockingPreview } from "../stocking/queries";
 import { averageDailyGain, groupPurchases, weightSeries } from "./rules";
 import { fromDbDate } from "@/server/db-dates";
-
-export const batchQuerySchema = z.object({
-  propertyId: z.uuid().optional(),
-  page: z.coerce.number().int().min(0).optional().default(0),
-  pageSize: z.coerce.number().int().min(1).optional().default(10),
-  search: z.string().trim().optional().default(""),
-  status: z.preprocess(
-    (v) => (v === "" ? undefined : v),
-    z.enum(["active", "inactive"]).optional(),
-  ),
-});
-
-export type BatchQuery = z.infer<typeof batchQuerySchema>;
 
 function buildWhere(query: BatchQuery, propertyId: string) {
   const where: Record<string, unknown> = { propertyId };

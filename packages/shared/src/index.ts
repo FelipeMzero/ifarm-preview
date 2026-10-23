@@ -14,6 +14,7 @@ export * from "./neutering-technique/client";
 export * from "./stocking/schema";
 export * from "./stocking/client";
 export * from "./current-property/client";
+export * from "./current-property/schema";
 export * from "./address/schema";
 export * from "./zod-utils";
 export * from "./property/schema";

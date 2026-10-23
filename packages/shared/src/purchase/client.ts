@@ -6,7 +6,11 @@ import {
 } from "../client";
 import type { PurchaseCostSplit, PurchasePricingType, Sex } from "../enums";
 import type { ManagementSessionStatus } from "../management-session/steps";
-import type { PurchasePayload, PurchasePaymentPayload } from "./schema";
+import type {
+  PurchasePayload,
+  PurchasePaymentPayload,
+  PurchaseListParams,
+} from "./schema";
 
 export type PurchaseStatus = "open" | "confirmed" | "cancelled";
 
@@ -88,14 +92,6 @@ export type PurchaseDetail = {
 };
 
 /** Corpo enviado na criação e na edição (validado por purchaseSchema). */
-export type PurchaseListParams = {
-  page?: number;
-  pageSize?: number;
-  search?: string;
-  status?: string;
-  propertyId?: string;
-};
-
 const PURCHASES = "/api/purchase";
 const PURCHASE_BY_ID = (id: string) => `${PURCHASES}/${id}`;
 

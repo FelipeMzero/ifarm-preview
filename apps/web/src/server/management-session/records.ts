@@ -44,7 +44,7 @@ async function touchParticipant(
   });
 }
 
-/** Registra (ou corrige) uma etapa do manejo no animal. Lança ZodError se inválido. */
+/** Registra (ou corrige) uma etapa do manejo no animal. Lança Error se inválido. */
 export async function saveAnimalStep(
   tx: Tx,
   sessionId: string,

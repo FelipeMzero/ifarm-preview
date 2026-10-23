@@ -32,8 +32,9 @@ export const managementSessionFieldsSchema = z.object({
 
 // Criação/alteração de uma sessão: os campos, as etapas do planejamento e os animais.
 export const managementSessionSchema = managementSessionFieldsSchema.extend({
-  // Pode ficar vazio só numa recepção de compra (receber os animais já é o trabalho),
-  // que é criada pela área de recepções; nas demais sessões a rota exige um manejo.
+  // Pode ficar vazio só numa recepção de compra (receber os animais já é o trabalho).
+  // Nas demais sessões o servidor exige ao menos um manejo ao criar e ao alterar
+  // (server/management-session/mutations.ts), porque só ele sabe se a sessão é recepção.
   steps: z.array(planStepSchema),
   animalIds: z.array(z.uuid()).default([]),
   propertyId: z.uuid().optional(),
@@ -88,3 +89,24 @@ export const receiveAnimalSchema = z.object({
 
 export type ReceiveAnimalPayload = z.input<typeof receiveAnimalSchema>;
 export type ReceiveAnimalData = z.output<typeof receiveAnimalSchema>;
+
+// Filtros e paginação da listagem (parâmetros da URL: chegam como texto e são convertidos).
+export const managementSessionQuerySchema = z.object({
+  propertyId: z.uuid().optional(),
+  page: z.coerce.number().int().min(0).optional().default(0),
+  pageSize: z.coerce.number().int().min(1).optional().default(10),
+  search: z.string().trim().optional().default(""),
+  // "open" = planejadas e em andamento.
+  status: z.preprocess(
+    (v) => (v === "" ? undefined : v),
+    z
+      .enum(["open", "planned", "in_progress", "confirmed", "cancelled"])
+      .optional(),
+  ),
+});
+
+export type ManagementSessionQuery = z.output<
+  typeof managementSessionQuerySchema
+>;
+/** Parâmetros que o cliente passa para listar (todos opcionais). */
+export type ManagementSessionListParams = Partial<ManagementSessionQuery>;

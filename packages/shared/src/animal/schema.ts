@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { dateField, dateTimeField } from "../date";
-import { AnimalOrigin, Sex } from "../enums";
+import { AnimalOrigin, AnimalStatus, Sex } from "../enums";
 import { FIELD_LIMITS } from "../field-limits";
 import type { IdentifierKind } from "./client";
 
@@ -346,3 +346,81 @@ export type IdentifierChangePayload = z.input<typeof identifierChangeSchema>;
 export type IdentifierCorrectionPayload = z.input<
   typeof identifierCorrectionSchema
 >;
+
+// Filtros e paginação da listagem (parâmetros da URL: chegam como texto e são convertidos).
+export const animalQuerySchema = z.object({
+  propertyId: z.uuid().optional(),
+  page: z.coerce.number().int().min(0).optional().default(0),
+  pageSize: z.coerce.number().int().min(1).optional().default(10),
+  search: z.string().trim().optional().default(""),
+  status: z.preprocess(
+    (v) => (v === "" ? undefined : v),
+    z.enum(AnimalStatus).optional(),
+  ),
+  sex: z.preprocess((v) => (v === "" ? undefined : v), z.enum(Sex).optional()),
+  // "none" = animais sem lote.
+  batchId: z.preprocess(
+    (v) => (v === "" ? undefined : v),
+    z.union([z.uuid(), z.literal("none")]).optional(),
+  ),
+  neutered: z.preprocess(
+    (v) => (v === "" ? undefined : v),
+    z.enum(["true", "false"]).optional(),
+  ),
+  // Faixa etária pela data de nascimento; "unknown" = sem data de nascimento.
+  ageRange: z.preprocess(
+    (v) => (v === "" ? undefined : v),
+    z.enum(["upTo12", "12to24", "over24", "unknown"]).optional(),
+  ),
+  breedId: z.preprocess((v) => (v === "" ? undefined : v), z.uuid().optional()),
+  origin: z.preprocess(
+    (v) => (v === "" ? undefined : v),
+    z.enum(AnimalOrigin).optional(),
+  ),
+  excludeBatchId: z.preprocess(
+    (v) => (v === "" ? undefined : v),
+    z.uuid().optional(),
+  ),
+  minWeight: z.preprocess(
+    (v) => (v === "" ? undefined : v),
+    z.coerce.number().min(0).optional(),
+  ),
+  maxWeight: z.preprocess(
+    (v) => (v === "" ? undefined : v),
+    z.coerce.number().min(0).optional(),
+  ),
+});
+
+export type AnimalQuery = z.output<typeof animalQuerySchema>;
+/** Parâmetros que o cliente passa para listar (todos opcionais). */
+export type AnimalListParams = Partial<AnimalQuery>;
+
+/**
+ * Filtros da tela (texto dos campos: "" = sem filtro) → parâmetros da listagem, com as mesmas
+ * conversões da API. Um filtro inválido (ex.: peso que não é número) fica de fora.
+ */
+export function toAnimalListParams(
+  filters: Record<string, string | number | undefined>,
+): AnimalListParams {
+  const parsed = animalQuerySchema.safeParse(filters);
+  if (parsed.success) return parsed.data;
+  const invalid = new Set(parsed.error.issues.map((i) => i.path[0]));
+  return animalQuerySchema.parse(
+    Object.fromEntries(
+      Object.entries(filters).filter(([k]) => !invalid.has(k)),
+    ),
+  );
+}
+
+// Compromissos em aberto de vários animais (corpo do POST /api/animal/commitments), com a
+// operação a desconsiderar (a própria sessão ou transferência sendo editada).
+// Mesmo teto do "adicionar todos os filtrados" do seletor de animais.
+const MAX_ANIMALS = 2000;
+
+export const commitmentsLookupSchema = z.object({
+  animalIds: z.array(z.uuid()).max(MAX_ANIMALS),
+  sessionId: z.uuid().optional(),
+  transferId: z.uuid().optional(),
+});
+
+export type CommitmentsLookupPayload = z.input<typeof commitmentsLookupSchema>;

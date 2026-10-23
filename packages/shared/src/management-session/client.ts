@@ -4,7 +4,11 @@ import {
   toQueryString,
   type ApiRequest,
 } from "../client";
-import type { ManagementSessionPayload, ReceiveAnimalPayload } from "./schema";
+import type {
+  ManagementSessionPayload,
+  ReceiveAnimalPayload,
+  ManagementSessionListParams,
+} from "./schema";
 import type {
   ManagementSessionStatus,
   ParticipantStatus,
@@ -141,14 +145,6 @@ export type ManagementSessionListResult = {
   page?: number;
   pageSize?: number;
   pageCount: number;
-};
-
-export type ManagementSessionListParams = {
-  page?: number;
-  pageSize?: number;
-  search?: string;
-  status?: string;
-  propertyId?: string;
 };
 
 const SESSIONS = "/api/management-session";

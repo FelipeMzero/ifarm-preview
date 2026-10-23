@@ -1,5 +1,5 @@
 import "server-only";
-import { z } from "zod";
+import type { ReceptionPurchaseQuery } from "@ifarm/shared";
 import {
   fromLocalDay,
   isSessionOpen,
@@ -79,19 +79,6 @@ function toReceptionPurchase(e: ReceptionPurchaseRow): ReceptionPurchase {
     hasOpenReception: receptions.some((r) => isSessionOpen(r.status)),
   };
 }
-
-export const receptionPurchaseQuerySchema = z.object({
-  propertyId: z.uuid().optional(),
-  page: z.coerce.number().int().min(0).optional().default(0),
-  pageSize: z.coerce.number().int().min(1).optional().default(10),
-  search: z.string().trim().optional().default(""),
-  // "pending" = a receber (padrão); "all" = todas as não canceladas.
-  filter: z.enum(["pending", "all"]).optional().default("pending"),
-});
-
-export type ReceptionPurchaseQuery = z.infer<
-  typeof receptionPurchaseQuerySchema
->;
 
 // Compras da propriedade vistas pela área de recepções (sem valores).
 export async function listReceptionPurchases(

@@ -47,3 +47,28 @@ export const areaSchema = z.object({
 });
 
 export type AreaInput = z.infer<typeof areaSchema>;
+
+// Filtros e paginação da listagem (parâmetros da URL: chegam como texto e são convertidos).
+export const areaQuerySchema = z.object({
+  propertyId: z.preprocess(
+    (v) =>
+      typeof v === "string" &&
+      (v.trim() === "" || v === "undefined" || v === "null")
+        ? undefined
+        : v,
+    z.uuid().optional(),
+  ),
+  status: z.preprocess(
+    (v) => (v === "" ? undefined : v),
+    z.enum(["active", "inactive"]).optional().default("active"),
+  ),
+  search: z.string().trim().optional().default(""),
+  availableOnly: z.preprocess(
+    (v) => v === "true" || v === true,
+    z.boolean().optional(),
+  ),
+});
+
+export type AreaQuery = z.output<typeof areaQuerySchema>;
+/** Parâmetros que o cliente passa para listar (todos opcionais). */
+export type AreaListParams = Partial<AreaQuery>;

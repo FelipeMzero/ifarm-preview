@@ -15,6 +15,8 @@ import type {
   NeuteringCreatePayload,
   WeighingCorrectionPayload,
   WeighingCreatePayload,
+  AnimalListParams,
+  CommitmentsLookupPayload,
 } from "./schema";
 
 export type AnimalRow = {
@@ -176,23 +178,6 @@ export type AnimalIdentifierRecord = {
   fromSession: boolean;
   correctedAt: string | null;
   originalValue: string | null;
-};
-
-export type AnimalListParams = {
-  propertyId?: string;
-  page?: number;
-  pageSize?: number;
-  search?: string;
-  status?: string;
-  sex?: string;
-  batchId?: string;
-  excludeBatchId?: string;
-  minWeight?: string;
-  maxWeight?: string;
-  neutered?: string;
-  ageRange?: string;
-  breedId?: string;
-  origin?: string;
 };
 
 const ANIMALS = "/api/animal";
@@ -425,7 +410,10 @@ export function createAnimalClient(request: ApiRequest) {
       if (!animalIds.length) return {} as Record<string, Commitment[]>;
       const response = await request(
         `${ANIMALS}/commitments`,
-        jsonRequest("POST", { animalIds, ...exclude }),
+        jsonRequest("POST", {
+          animalIds,
+          ...exclude,
+        } satisfies CommitmentsLookupPayload),
       );
       if (!response.ok) {
         throw new ApiError(

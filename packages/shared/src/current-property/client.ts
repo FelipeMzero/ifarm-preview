@@ -1,4 +1,5 @@
 import { jsonRequest, readJson, type ApiRequest } from "../client";
+import type { CurrentPropertyPayload } from "./schema";
 
 /** Propriedade em que o usuário está trabalhando. */
 export type CurrentProperty = { id: string; name: string };
@@ -29,7 +30,7 @@ export function createCurrentPropertyClient(request: ApiRequest) {
     async setCurrentProperty(propertyId: string) {
       const response = await request(
         CURRENT_PROPERTY,
-        jsonRequest("PUT", { propertyId }),
+        jsonRequest("PUT", { propertyId } satisfies CurrentPropertyPayload),
       );
       const result = await readJson<{ data: CurrentProperty }>(
         response,

@@ -1,7 +1,6 @@
 import "server-only";
-import { z } from "zod";
+import type { PersonQuery } from "@ifarm/shared";
 import {
-  PersonType,
   type PersonInput,
   type PersonListResult,
   type PersonRow,
@@ -9,22 +8,6 @@ import {
 import { prisma } from "@/server/db";
 import { NotFoundError } from "../errors";
 import { fromDbDate } from "@/server/db-dates";
-
-export const personQuerySchema = z.object({
-  page: z.coerce.number().int().min(0).optional().default(0),
-  pageSize: z.coerce.number().int().min(1).optional().default(10),
-  search: z.string().trim().optional().default(""),
-  type: z.preprocess(
-    (v) => (v === "" ? undefined : v),
-    z.enum(PersonType).optional(),
-  ),
-  status: z.preprocess(
-    (v) => (v === "" ? undefined : v),
-    z.enum(["active", "inactive"]).optional(),
-  ),
-});
-
-export type PersonQuery = z.infer<typeof personQuerySchema>;
 
 export async function listPeople({
   page,

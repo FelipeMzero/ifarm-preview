@@ -4,7 +4,7 @@ import {
   toQueryString,
   type ApiRequest,
 } from "../client";
-import type { PropertyInput } from "./schema";
+import type { PropertyInput, PropertyListParams } from "./schema";
 
 export type PropertyRow = {
   id: string;
@@ -23,13 +23,6 @@ export type PropertyListResult = {
   pageCount: number;
 };
 
-export type PropertyListParams = {
-  page?: number;
-  pageSize?: number;
-  search?: string;
-  status?: string;
-};
-
 export type PropertyOption = { id: string; name: string };
 
 const PROPERTIES = "/api/property";
@@ -41,7 +34,7 @@ export function createPropertyClient(request: ApiRequest) {
       page = 0,
       pageSize = 10,
       search = "",
-      status = "",
+      status,
     }: PropertyListParams = {}) {
       const query = toQueryString({ page, pageSize, search, status });
       const response = await request(`${PROPERTIES}?${query}`);

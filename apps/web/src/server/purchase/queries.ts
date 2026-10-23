@@ -1,5 +1,5 @@
 import "server-only";
-import { z } from "zod";
+import type { PurchaseQuery } from "@ifarm/shared";
 import {
   fromLocalDay,
   type PurchaseDetail,
@@ -18,20 +18,6 @@ import {
 } from "./rules";
 import { sessionStatus } from "@/server/management-session/session-steps";
 import { fromDbDate } from "@/server/db-dates";
-
-export const purchaseQuerySchema = z.object({
-  propertyId: z.uuid().optional(),
-  page: z.coerce.number().int().min(0).optional().default(0),
-  pageSize: z.coerce.number().int().min(1).optional().default(10),
-  search: z.string().trim().optional().default(""),
-  status: z.preprocess(
-    (v) => (v === "" ? undefined : v),
-    // "all" = todas menos as canceladas.
-    z.enum(["open", "confirmed", "cancelled", "all"]).optional(),
-  ),
-});
-
-export type PurchaseQuery = z.infer<typeof purchaseQuerySchema>;
 
 const num = (d: { toNumber(): number } | null) => d?.toNumber() ?? null;
 const day = (d: Date | null) => (d ? fromLocalDay(d) : null);

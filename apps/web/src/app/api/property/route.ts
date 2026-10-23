@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
+import { propertyQuerySchema } from "@ifarm/shared";
 import { propertySchema } from "@ifarm/shared";
 import { requireSession } from "@/app/api/session";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
-import { listProperties, propertyQuerySchema } from "@/server/property/queries";
+import { listProperties } from "@/server/property/queries";
 import { createProperty } from "@/server/property/mutations";
 import { errorResponse, validationErrorResponse } from "../http";
 

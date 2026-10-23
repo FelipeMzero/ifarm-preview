@@ -24,7 +24,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useCurrentProperty } from "@/features/shell/CurrentPropertyProvider";
 import { batchTransferClient } from "@/lib/clients";
-import { type BatchTransferRow } from "@ifarm/shared";
+import {
+  type BatchTransferRow,
+  type BatchTransferListParams,
+} from "@ifarm/shared";
 import { TransferStatusBadge, formatTransferDate } from "./display";
 import { stockingClient } from "@/lib/clients";
 import { describeStocking } from "@/features/area/StockingNotice";
@@ -37,6 +40,13 @@ const STATUS_FILTER = {
   CONFIRMED: "confirmed",
   CANCELLED: "cancelled",
 } as const;
+
+// Filtro da tela → situação aceita pela API (o que não está aqui = sem filtro).
+const STATUS_PARAM: Record<string, BatchTransferListParams["status"]> = {
+  [STATUS_FILTER.PENDING]: "pending",
+  [STATUS_FILTER.CONFIRMED]: "confirmed",
+  [STATUS_FILTER.CANCELLED]: "cancelled",
+};
 
 type PendingAction = { type: "confirm" | "cancel"; row: BatchTransferRow };
 
@@ -171,7 +181,7 @@ export default function BatchTransferList() {
           page: pageIndex,
           pageSize,
           search: debouncedSearch,
-          status: filter === STATUS_FILTER.ALL ? undefined : filter,
+          status: STATUS_PARAM[filter],
         });
         if (!cancelled) {
           setTransfers(result.data);

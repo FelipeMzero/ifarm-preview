@@ -29,6 +29,7 @@ import {
   isSessionOpen,
   type ManagementSessionRow,
   nowDateTime,
+  type ManagementSessionListParams,
 } from "@ifarm/shared";
 
 const DEFAULT_PAGE_SIZE = 10;
@@ -39,6 +40,13 @@ const STATUS_FILTER = {
   CANCELLED: "cancelled",
   ALL: "todas",
 } as const;
+
+// Filtro da tela → situação aceita pela API (o que não está aqui = sem filtro).
+const STATUS_PARAM: Record<string, ManagementSessionListParams["status"]> = {
+  [STATUS_FILTER.OPEN]: "open",
+  [STATUS_FILTER.CONFIRMED]: "confirmed",
+  [STATUS_FILTER.CANCELLED]: "cancelled",
+};
 
 function buildColumns(handlers: {
   onRegister: (id: string) => void;
@@ -218,7 +226,7 @@ export default function ManagementSessionList() {
           page: pageIndex,
           pageSize,
           search: debouncedSearch,
-          status: filter === STATUS_FILTER.ALL ? undefined : filter,
+          status: STATUS_PARAM[filter],
         });
         if (!cancelled) {
           setSessions(result.data);

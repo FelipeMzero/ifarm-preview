@@ -4,7 +4,7 @@ import {
   toQueryString,
   type ApiRequest,
 } from "../client";
-import type { BatchTransferPayload } from "./schema";
+import type { BatchTransferPayload, BatchTransferListParams } from "./schema";
 
 export type BatchTransferStatus = "pending" | "confirmed" | "cancelled";
 
@@ -58,14 +58,6 @@ export type BatchTransferDetail = {
   cancelledAt: string | null;
   updatedAt: string;
   animals: TransferAnimal[];
-};
-
-export type BatchTransferListParams = {
-  page?: number;
-  pageSize?: number;
-  search?: string;
-  status?: string;
-  propertyId?: string;
 };
 
 const TRANSFERS = "/api/batch-transfer";

@@ -88,3 +88,19 @@ export const batchReopenSchema = z.object({
 
 export type BatchReopenPayload = z.input<typeof batchReopenSchema>;
 export type BatchReopenData = z.output<typeof batchReopenSchema>;
+
+// Filtros e paginação da listagem (parâmetros da URL: chegam como texto e são convertidos).
+export const batchQuerySchema = z.object({
+  propertyId: z.uuid().optional(),
+  page: z.coerce.number().int().min(0).optional().default(0),
+  pageSize: z.coerce.number().int().min(1).optional().default(10),
+  search: z.string().trim().optional().default(""),
+  status: z.preprocess(
+    (v) => (v === "" ? undefined : v),
+    z.enum(["active", "inactive"]).optional(),
+  ),
+});
+
+export type BatchQuery = z.output<typeof batchQuerySchema>;
+/** Parâmetros que o cliente passa para listar (todos opcionais). */
+export type BatchListParams = Partial<BatchQuery>;

@@ -130,3 +130,20 @@ export type PurchaseData = z.output<typeof purchaseSchema>;
 export type PurchasePaymentPayload = z.input<typeof purchasePaymentSchema>;
 export type PurchasePaymentData = z.output<typeof purchasePaymentSchema>;
 export type ReceptionDocumentsData = z.output<typeof receptionDocumentsSchema>;
+
+// Filtros e paginação da listagem (parâmetros da URL: chegam como texto e são convertidos).
+export const purchaseQuerySchema = z.object({
+  propertyId: z.uuid().optional(),
+  page: z.coerce.number().int().min(0).optional().default(0),
+  pageSize: z.coerce.number().int().min(1).optional().default(10),
+  search: z.string().trim().optional().default(""),
+  status: z.preprocess(
+    (v) => (v === "" ? undefined : v),
+    // "all" = todas menos as canceladas.
+    z.enum(["open", "confirmed", "cancelled", "all"]).optional(),
+  ),
+});
+
+export type PurchaseQuery = z.output<typeof purchaseQuerySchema>;
+/** Parâmetros que o cliente passa para listar (todos opcionais). */
+export type PurchaseListParams = Partial<PurchaseQuery>;

@@ -1,5 +1,4 @@
 import "server-only";
-import { z } from "zod";
 import { Prisma } from "@/server/db";
 import { type ReceiveAnimalData } from "@ifarm/shared";
 import { BusinessError } from "@/server/errors";
@@ -15,10 +14,8 @@ type Tx = Prisma.TransactionClient;
 
 export class ReceptionError extends BusinessError {}
 
-export const receptionInputSchema = z.object({
-  purchaseEventId: z.uuid(),
-  entryBatchId: z.uuid("Selecione o lote de entrada."),
-});
+// Compra e lote de entrada de uma recepção a abrir (já validados pelo createReceptionSchema).
+type ReceptionInput = { purchaseEventId: string; entryBatchId: string };
 
 export async function findReception(tx: Tx, sessionId: string) {
   return tx.purchaseReception.findUnique({
@@ -44,7 +41,7 @@ export type Reception = NonNullable<Awaited<ReturnType<typeof findReception>>>;
 export async function validateReceptionInput(
   tx: Tx,
   propertyId: string,
-  input: z.infer<typeof receptionInputSchema>,
+  input: ReceptionInput,
 ) {
   const event = await tx.purchaseEvent.findUnique({
     where: { id: input.purchaseEventId },

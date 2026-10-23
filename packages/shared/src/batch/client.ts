@@ -9,6 +9,7 @@ import type {
   BatchCreatePayload,
   BatchReopenPayload,
   BatchUpdatePayload,
+  BatchListParams,
 } from "./schema";
 
 export type BatchRow = {
@@ -139,14 +140,6 @@ export type BatchListResult = {
   page: number;
   pageSize: number;
   pageCount: number;
-};
-
-export type BatchListParams = {
-  page?: number;
-  pageSize?: number;
-  search?: string;
-  status?: string;
-  propertyId?: string;
 };
 
 // Recusa de encerramento: lote com animais ou destino de transferências pendentes.

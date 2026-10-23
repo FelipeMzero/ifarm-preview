@@ -86,7 +86,6 @@ export function Sidebar({
     saveClosedSections(next);
   }
 
-
   const visibleNav = NAV.map((group) => ({
     ...group,
     items: group.items.filter((item) => isHrefAllowed(item.href, role)),

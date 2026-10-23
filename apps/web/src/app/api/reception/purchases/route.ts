@@ -1,10 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
+import { receptionPurchaseQuerySchema } from "@ifarm/shared";
 import { requireSession } from "@/app/api/session";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
-import {
-  listReceptionPurchases,
-  receptionPurchaseQuerySchema,
-} from "@/server/reception/queries";
+import { listReceptionPurchases } from "@/server/reception/queries";
 import { errorResponse } from "../../http";
 
 // Compras da propriedade vistas pela área de recepções (sem valores).

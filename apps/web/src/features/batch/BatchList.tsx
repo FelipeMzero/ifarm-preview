@@ -30,7 +30,11 @@ import {
 import { Input } from "@/components/ui/input";
 import { SelectField } from "@/components/our/SelectField";
 import { batchClient } from "@/lib/clients";
-import { BatchCloseError, type BatchRow } from "@ifarm/shared";
+import {
+  BatchCloseError,
+  type BatchRow,
+  type BatchListParams,
+} from "@ifarm/shared";
 import { ConfirmDialog } from "@/components/our/ConfirmDialog";
 import { ErrorPage } from "@/components/our/ErrorPage";
 import { useCurrentProperty } from "@/features/shell/CurrentPropertyProvider";
@@ -56,7 +60,7 @@ const STATUS_FILTER = {
   INACTIVE: "encerrado",
 } as const;
 
-function filterToStatus(filter: string): string | undefined {
+function filterToStatus(filter: string): BatchListParams["status"] {
   if (filter === STATUS_FILTER.ACTIVE) return "active";
   if (filter === STATUS_FILTER.INACTIVE) return "inactive";
   return undefined;

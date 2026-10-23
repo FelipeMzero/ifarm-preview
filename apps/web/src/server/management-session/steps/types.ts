@@ -1,6 +1,5 @@
 import "server-only";
-import { z } from "zod";
-import { FIELD_LIMITS } from "@ifarm/shared";
+import type { ZodType } from "zod";
 import type { Prisma } from "@/server/db";
 import type { StepType } from "@ifarm/shared";
 import { BusinessError } from "@/server/errors";
@@ -47,7 +46,7 @@ export interface StepModule<
 > {
   type: StepType;
   /** Configuração da etapa enviada pelo planejamento. */
-  planSchema: z.ZodType<TPlan>;
+  planSchema: ZodType<TPlan>;
   /** Cria/atualiza o que a etapa precisa na sessão e devolve o item gravado em `steps`. */
   prepare(tx: Tx, session: SessionCtx, plan: TPlan): Promise<S>;
   /** Remove a etapa da sessão; falha se já houver registros. */
@@ -60,7 +59,7 @@ export interface StepModule<
     step: S,
     animalIds?: string[],
   ): Promise<Map<string, TRecord>>;
-  payloadSchema: z.ZodType<TPayload>;
+  payloadSchema: ZodType<TPayload>;
   /** Grava (ou substitui) o registro da etapa para o animal. */
   save(
     tx: Tx,

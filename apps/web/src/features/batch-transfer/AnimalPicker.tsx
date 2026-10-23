@@ -18,7 +18,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { animalClient } from "@/lib/clients";
-import { type AnimalRow } from "@ifarm/shared";
+import { type AnimalRow, toAnimalListParams } from "@ifarm/shared";
 import { batchClient } from "@/lib/clients";
 import { AnimalIdentification, SEX_ICON } from "@/features/animal/display";
 import {
@@ -155,14 +155,15 @@ export function useAnimalPicker({
   const originFilter = batchFilter === destinationBatchId ? "" : batchFilter;
 
   const query = useMemo(
-    () => ({
-      propertyId,
-      batchId: originFilter,
-      excludeBatchId: destinationBatchId,
-      status: "ACTIVE",
-      sex,
-      ...filters,
-    }),
+    () =>
+      toAnimalListParams({
+        propertyId,
+        batchId: originFilter,
+        excludeBatchId: destinationBatchId,
+        status: "ACTIVE",
+        sex,
+        ...filters,
+      }),
     [propertyId, originFilter, destinationBatchId, sex, filters],
   );
 

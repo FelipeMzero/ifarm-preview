@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
+import { animalQuerySchema } from "@ifarm/shared";
 import { animalCreateSchema } from "@ifarm/shared";
 import { requireSession } from "@/app/api/session";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
-import { animalQuerySchema, listAnimals } from "@/server/animal/queries";
+import { listAnimals } from "@/server/animal/queries";
 import { createAnimal } from "@/server/animal/mutations";
 import { errorResponse, validationErrorResponse } from "../http";
 

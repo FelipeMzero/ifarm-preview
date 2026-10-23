@@ -6,7 +6,7 @@ import {
   type ApiRequest,
 } from "../client";
 import type { AreaOccupancy } from "../stocking/client";
-import type { AreaInput } from "./schema";
+import type { AreaInput, AreaListParams } from "./schema";
 
 export type AreaRow = {
   id: string;
@@ -63,13 +63,6 @@ export type AreaOccupancyHistoryEntry = {
   enteredAt: string;
   exitedAt: string | null;
   notes: string | null;
-};
-
-export type AreaListParams = {
-  propertyId?: string;
-  status?: string;
-  search?: string;
-  availableOnly?: boolean;
 };
 
 // Recusa de desativação por haver um lote na área.

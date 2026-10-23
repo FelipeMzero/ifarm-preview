@@ -1,9 +1,6 @@
 import "server-only";
-import { z } from "zod";
+import type { AnimalQuery } from "@ifarm/shared";
 import {
-  AnimalOrigin,
-  AnimalStatus,
-  Sex,
   type AnimalDetail,
   type AnimalFullDetails,
   type AnimalListResult,
@@ -26,51 +23,6 @@ import { findCommitments } from "./commitments";
 import { neuteringInclude, toNeuteringDto } from "./neuterings";
 import { sortWeighings, toWeighingDto } from "./weighings";
 import { fromDbDate } from "@/server/db-dates";
-
-export const animalQuerySchema = z.object({
-  propertyId: z.uuid().optional(),
-  page: z.coerce.number().int().min(0).optional().default(0),
-  pageSize: z.coerce.number().int().min(1).optional().default(10),
-  search: z.string().trim().optional().default(""),
-  status: z.preprocess(
-    (v) => (v === "" ? undefined : v),
-    z.enum(AnimalStatus).optional(),
-  ),
-  sex: z.preprocess((v) => (v === "" ? undefined : v), z.enum(Sex).optional()),
-  // "none" = animais sem lote.
-  batchId: z.preprocess(
-    (v) => (v === "" ? undefined : v),
-    z.union([z.uuid(), z.literal("none")]).optional(),
-  ),
-  neutered: z.preprocess(
-    (v) => (v === "" ? undefined : v),
-    z.enum(["true", "false"]).optional(),
-  ),
-  // Faixa etária pela data de nascimento; "unknown" = sem data de nascimento.
-  ageRange: z.preprocess(
-    (v) => (v === "" ? undefined : v),
-    z.enum(["upTo12", "12to24", "over24", "unknown"]).optional(),
-  ),
-  breedId: z.preprocess((v) => (v === "" ? undefined : v), z.uuid().optional()),
-  origin: z.preprocess(
-    (v) => (v === "" ? undefined : v),
-    z.enum(AnimalOrigin).optional(),
-  ),
-  excludeBatchId: z.preprocess(
-    (v) => (v === "" ? undefined : v),
-    z.uuid().optional(),
-  ),
-  minWeight: z.preprocess(
-    (v) => (v === "" ? undefined : v),
-    z.coerce.number().min(0).optional(),
-  ),
-  maxWeight: z.preprocess(
-    (v) => (v === "" ? undefined : v),
-    z.coerce.number().min(0).optional(),
-  ),
-});
-
-export type AnimalQuery = z.infer<typeof animalQuerySchema>;
 
 // Limites de data de nascimento para cada faixa etária (idade em meses completos).
 function birthDateFilter(range: "upTo12" | "12to24" | "over24" | "unknown") {
@@ -453,15 +405,6 @@ export async function listNeuterings(
     .map(toNeuteringDto)
     .sort((a, b) => b.date.localeCompare(a.date) || b.id - a.id);
 }
-
-// Mesmo teto do "adicionar todos os filtrados" do seletor de animais.
-const MAX_ANIMALS = 2000;
-
-export const commitmentsQuerySchema = z.object({
-  animalIds: z.array(z.uuid()).max(MAX_ANIMALS),
-  sessionId: z.uuid().optional(),
-  transferId: z.uuid().optional(),
-});
 
 // Compromissos em aberto de vários animais; `exclude` é a operação sendo editada, que não
 // conta como conflito.

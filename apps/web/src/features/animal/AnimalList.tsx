@@ -39,7 +39,7 @@ import {
   useFilterOptions,
 } from "./AnimalFilters";
 import { animalClient } from "@/lib/clients";
-import { type AnimalRow } from "@ifarm/shared";
+import { type AnimalRow, toAnimalListParams } from "@ifarm/shared";
 import {
   AnimalIdentification,
   ORIGIN_VARIANT,
@@ -230,11 +230,13 @@ export default function AnimalList({
       setLoading(true);
       try {
         const result = await animalClient.getAnimals({
-          propertyId: currentProperty?.id,
+          ...toAnimalListParams({
+            propertyId: currentProperty?.id,
+            ...debouncedFilters,
+          }),
           page: pageIndex,
           pageSize,
           search: debouncedSearch,
-          ...debouncedFilters,
         });
         if (!cancelled) {
           setAnimals(result.data);

@@ -1,5 +1,5 @@
 import "server-only";
-import { z } from "zod";
+import type { ZodType } from "zod";
 import {
   identifierPayloadSchemaFor,
   rfidPlanSchema,
@@ -25,7 +25,7 @@ type IdentifierItem = {
 // @ifarm/shared), tabelas e campo do animal.
 type IdentifierAdapter = {
   type: "tag" | "rfid";
-  planSchema: z.ZodType<{ type: "tag" } | { type: "rfid" }>;
+  planSchema: ZodType<{ type: "tag" } | { type: "rfid" }>;
   label: string;
   /** "o brinco" / "o RFID", para as mensagens. */
   article: string;

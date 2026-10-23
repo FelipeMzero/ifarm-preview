@@ -34,7 +34,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { SelectField } from "@/components/our/SelectField";
 import { propertyClient } from "@/lib/clients";
-import { type PropertyRow } from "@ifarm/shared";
+import { type PropertyRow, type PropertyListParams } from "@ifarm/shared";
 import { ErrorPage } from "@/components/our/ErrorPage";
 import { useCurrentProperty } from "@/features/shell/CurrentPropertyProvider";
 
@@ -46,7 +46,7 @@ const STATUS_FILTER = {
   INACTIVE: "inativo",
 } as const;
 
-function filterToStatus(filter: string): string | undefined {
+function filterToStatus(filter: string): PropertyListParams["status"] {
   if (filter === STATUS_FILTER.ACTIVE) return "active";
   if (filter === STATUS_FILTER.INACTIVE) return "inactive";
   return undefined;

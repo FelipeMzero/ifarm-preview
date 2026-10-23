@@ -1,13 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { z } from "zod";
+import { currentPropertySchema } from "@ifarm/shared";
 import { requireSession } from "@/app/api/session";
 import { getOrAssignCurrentProperty } from "@/server/current-property/queries";
 import { setCurrentProperty } from "@/server/current-property/mutations";
-import { errorResponse } from "../../http";
-
-const bodySchema = z.object({
-  propertyId: z.string().min(1, "Este campo não pode ser vazio"),
-});
+import { errorResponse, validationErrorResponse } from "../../http";
 
 // Retorna a propriedade atualmente selecionada pelo usuário logado. Se ele ainda não
 // tiver escolhido nenhuma, assume automaticamente a mais antiga cadastrada (ou `null`
@@ -29,13 +25,8 @@ export async function PUT(request: NextRequest) {
   if (response) return response;
 
   try {
-    const validation = bodySchema.safeParse(await request.json());
-    if (!validation.success) {
-      return NextResponse.json(
-        { message: "Parâmetros inválidos." },
-        { status: 400 },
-      );
-    }
+    const validation = currentPropertySchema.safeParse(await request.json());
+    if (!validation.success) return validationErrorResponse(validation.error);
 
     const data = await setCurrentProperty(
       session.user.id,

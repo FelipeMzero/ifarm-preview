@@ -1,5 +1,5 @@
 import "server-only";
-import { z } from "zod";
+import type { ManagementSessionQuery } from "@ifarm/shared";
 import {
   fromLocalDateTime,
   isSessionOpen,
@@ -30,24 +30,6 @@ import {
   toSessionSteps,
 } from "@/server/management-session/session-steps";
 import { unavailableReason } from "@/server/animal/rules";
-
-export const managementSessionQuerySchema = z.object({
-  propertyId: z.uuid().optional(),
-  page: z.coerce.number().int().min(0).optional().default(0),
-  pageSize: z.coerce.number().int().min(1).optional().default(10),
-  search: z.string().trim().optional().default(""),
-  // "open" = planejadas e em andamento.
-  status: z.preprocess(
-    (v) => (v === "" ? undefined : v),
-    z
-      .enum(["open", "planned", "in_progress", "confirmed", "cancelled"])
-      .optional(),
-  ),
-});
-
-export type ManagementSessionQuery = z.infer<
-  typeof managementSessionQuerySchema
->;
 
 function buildWhere(query: ManagementSessionQuery, propertyId: string) {
   // Recepções de compra ficam na área de recepções, não na lista de manejos.

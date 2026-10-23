@@ -1,5 +1,5 @@
 import "server-only";
-import { z } from "zod";
+import type { AreaQuery } from "@ifarm/shared";
 import type {
   AreaInput,
   AreaOccupancyHistoryEntry,
@@ -59,28 +59,6 @@ export async function findOccupyingBatch(
   });
   return occupied?.batch ?? null;
 }
-
-export const areaQuerySchema = z.object({
-  propertyId: z.preprocess(
-    (v) =>
-      typeof v === "string" &&
-      (v.trim() === "" || v === "undefined" || v === "null")
-        ? undefined
-        : v,
-    z.uuid().optional(),
-  ),
-  status: z.preprocess(
-    (v) => (v === "" ? undefined : v),
-    z.enum(["active", "inactive"]).optional().default("active"),
-  ),
-  search: z.string().trim().optional().default(""),
-  availableOnly: z.preprocess(
-    (v) => v === "true" || v === true,
-    z.boolean().optional(),
-  ),
-});
-
-export type AreaQuery = z.infer<typeof areaQuerySchema>;
 
 // Áreas da propriedade informada ou, sem ela, da propriedade atual do usuário; cada uma com a
 // ocupação de hoje e a última saída de lote.

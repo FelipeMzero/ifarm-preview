@@ -5,7 +5,7 @@ import {
   type ApiRequest,
 } from "../client";
 import type { PersonType } from "../enums";
-import type { PersonInput } from "./schema";
+import type { PersonInput, PersonListParams } from "./schema";
 
 export type PersonRow = {
   id: string;
@@ -24,14 +24,6 @@ export type PersonListResult = {
   pageCount: number;
 };
 
-export type PersonListParams = {
-  page?: number;
-  pageSize?: number;
-  search?: string;
-  type?: string;
-  status?: string;
-};
-
 const PEOPLE = "/api/person";
 const PERSON_BY_ID = (id: string) => `${PEOPLE}/${id}`;
 
@@ -41,8 +33,8 @@ export function createPersonClient(request: ApiRequest) {
       page = 0,
       pageSize = 10,
       search = "",
-      type = "",
-      status = "",
+      type,
+      status,
     }: PersonListParams = {}) {
       const query = toQueryString({ page, pageSize, search, type, status });
       const response = await request(`${PEOPLE}?${query}`);

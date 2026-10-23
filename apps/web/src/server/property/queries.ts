@@ -1,5 +1,5 @@
 import "server-only";
-import { z } from "zod";
+import type { PropertyQuery } from "@ifarm/shared";
 import type {
   PropertyInput,
   PropertyListResult,
@@ -7,18 +7,6 @@ import type {
 } from "@ifarm/shared";
 import { prisma } from "@/server/db";
 import { NotFoundError } from "../errors";
-
-export const propertyQuerySchema = z.object({
-  page: z.coerce.number().int().min(0).optional().default(0),
-  pageSize: z.coerce.number().int().min(1).optional().default(10),
-  search: z.string().trim().optional().default(""),
-  status: z.preprocess(
-    (v) => (v === "" ? undefined : v),
-    z.enum(["active", "inactive"]).optional(),
-  ),
-});
-
-export type PropertyQuery = z.infer<typeof propertyQuerySchema>;
 
 export async function listProperties({
   page,
