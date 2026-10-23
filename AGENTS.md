@@ -160,5 +160,5 @@ Dependência usada por mais de um app/pacote: a versão fica no `catalog` do
 `pnpm-workspace.yaml`, e o `package.json` declara `"catalog:"`.
 
 Lint: cada app/pacote tem o próprio `eslint.config.mjs` (o web com as regras do Next; os pacotes
-com o typescript-eslint) e o script `lint`. As regras do projeto (ponto e vírgula e a das datas)
-se repetem em cada um: ao mudar uma, mude em todos. O mobile não tem lint.
+com o typescript-eslint) e o script `lint`. A regra do projeto (ponto e vírgula) se repete em
+cada um: ao mudá-la, mude em todos. O mobile não tem lint.

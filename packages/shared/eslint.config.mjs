@@ -10,22 +10,7 @@ export default defineConfig([
       "@typescript-eslint/no-unused-vars": "warn",
       "@typescript-eslint/no-unused-expressions": "warn",
       semi: ["error", "always"], // Obriga o uso de ponto e vírgula e marca como erro
-      // Datas sem hora passam pelas funções de packages/shared/src/date.ts.
-      "no-restricted-syntax": [
-        "error",
-        {
-          selector: "TemplateElement[value.raw=/T00:00:00$/]",
-          message:
-            "Use as funções de @ifarm/shared (toLocalDay/fromLocalDay para colunas timestamp que guardam um dia; toDbDate/fromDbDate para @db.Date; formatDate para exibir) em vez de montar a data com T00:00:00.",
-        },
-      ],
     },
-  },
-
-  // As próprias funções de data montam o T00:00:00.
-  {
-    files: ["src/date.ts"],
-    rules: { "no-restricted-syntax": "off" },
   },
 
   globalIgnores(["dist/**", "build/**"]),

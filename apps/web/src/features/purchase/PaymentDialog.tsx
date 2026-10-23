@@ -20,11 +20,10 @@ import { FormField } from "@/components/our/FormField";
 import { formatBRL } from "./display";
 import {
   purchasePaymentSchema,
+  today,
   type PurchasePaymentPayload as PaymentFormData,
 } from "@ifarm/shared";
 import { purchaseClient } from "@/lib/clients";
-
-const todayIso = () => new Date().toLocaleDateString("en-CA");
 
 export function PaymentDialog({
   purchaseId,
@@ -91,7 +90,7 @@ function PaymentForm({
     formState: { isSubmitting },
   } = useForm<PaymentFormData>({
     resolver: zodResolver(purchasePaymentSchema, undefined, { raw: true }),
-    defaultValues: { paymentDate: todayIso(), paymentReference: "" },
+    defaultValues: { paymentDate: today(), paymentReference: "" },
   });
 
   async function onSubmit(data: PaymentFormData) {
@@ -112,7 +111,7 @@ function PaymentForm({
         label="Data do pagamento"
         required
         render={({ field, id }) => (
-          <Input {...field} id={id} type="date" max={todayIso()} />
+          <Input {...field} id={id} type="date" max={today()} />
         )}
       />
       <FormField

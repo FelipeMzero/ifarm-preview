@@ -47,12 +47,12 @@ import {
 } from "./display";
 import {
   purchaseSchema,
+  today,
   type PurchasePayload as PurchaseFormData,
 } from "@ifarm/shared";
 import { purchaseClient } from "@/lib/clients";
 import { ApiError, isSessionOpen, type PurchaseDetail } from "@ifarm/shared";
 
-const todayIso = () => new Date().toLocaleDateString("en-CA");
 const str = (v: number | null | undefined) => (v == null ? "" : String(v));
 
 function toFormValues(detail: PurchaseDetail): PurchaseFormData {
@@ -108,7 +108,7 @@ export function PurchaseForm({ id }: { id?: string }) {
     defaultValues: {
       title: "",
       sellerId: "",
-      purchaseDate: todayIso(),
+      purchaseDate: today(),
       notes: "",
       categories: [
         {

@@ -5,13 +5,10 @@
 import { prisma } from "@ifarm/db";
 import { auth } from "../src/lib/auth";
 import type { Prisma } from "@ifarm/db/client";
-import type {
-  AnimalOrigin,
-  AnimalStatus,
-  Sex,
-} from "@ifarm/db/enums";
+import type { AnimalOrigin, AnimalStatus, Sex } from "@ifarm/db/enums";
 import { consolidateSession } from "@ifarm/domain/management-session/consolidate";
 import { findCommitments } from "@ifarm/domain/animal/commitments";
+import { toDbDate } from "@ifarm/domain/db-dates";
 import { saveAnimalStep } from "@ifarm/domain/management-session/records";
 import { applyPlanSteps } from "@ifarm/domain/management-session/shared";
 import { planStepSchema } from "@ifarm/shared";
@@ -104,7 +101,7 @@ const PEOPLE = {
     phone: "34999998888",
     email: "carlos.silva@example.com",
     rg: "1234567",
-    birthDate: new Date("1985-03-14T00:00:00"),
+    birthDate: toDbDate("1985-03-14"),
     maritalStatus: "MARRIED",
     address: {
       zipCode: "38400100",
@@ -122,7 +119,7 @@ const PEOPLE = {
     phone: "65988887777",
     email: "maria.souza@example.com",
     rg: "7654321",
-    birthDate: new Date("1990-07-22T00:00:00"),
+    birthDate: toDbDate("1990-07-22"),
     maritalStatus: "SINGLE",
   },
   vet: {
@@ -132,7 +129,7 @@ const PEOPLE = {
     phone: "34991112222",
     email: "paulo.vet@example.com",
     rg: "5551234",
-    birthDate: new Date("1978-11-05T00:00:00"),
+    birthDate: toDbDate("1978-11-05"),
     maritalStatus: "MARRIED",
   },
   boaVista: {

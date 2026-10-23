@@ -1,9 +1,7 @@
 import "server-only";
 import { fromLocalDateTime, isSessionOpen } from "@ifarm/shared";
-import {
-  effectiveNeutering,
-  effectiveWeighing,
-} from "./effective";
+import { fromDbDate } from "../db-dates";
+import { effectiveNeutering, effectiveWeighing } from "./effective";
 import { loadSession } from "./shared";
 import {
   countDone,
@@ -65,7 +63,7 @@ export async function loadAnimalContext(db: Tx, id: string, animalId: string) {
       name: animal.name,
       sex: animal.sex,
       status: animal.status,
-      birthDate: animal.birthDate?.toISOString().slice(0, 10) ?? null,
+      birthDate: animal.birthDate ? fromDbDate(animal.birthDate) : null,
       neutered: animal.neutered,
       lastNeuteredAt: lastNeutering?.neuteredAt.toISOString() ?? null,
       currentWeightKg: animal.currentWeight?.toNumber() ?? null,
