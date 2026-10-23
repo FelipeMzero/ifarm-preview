@@ -11,7 +11,7 @@ apps/
 packages/
   shared/   → contrato da API (schemas, tipos e clientes), usado pelo web e pelo mobile
   domain/   → regras de negócio e acesso ao banco do servidor (usado pela API)
-  db/       → banco de dados: schema do Prisma, cliente gerado e CLI do Prisma
+  db/       → banco de dados: schema e CLI do Prisma, container do PostgreSQL. Ver packages/db/README.md
 docs/       → requisitos, arquitetura e visão do produto
 ```
 
@@ -25,10 +25,11 @@ Na raiz do repositório, instale as dependências de todos os apps e pacotes com
 pnpm install
 ```
 
-Depois, configure **cada app separadamente**:
+Depois, configure nesta ordem:
 
-1. **[apps/web](apps/web/README.md)**
-2. **[apps/mobile](apps/mobile/README.md)**
+1. **[packages/db](packages/db/README.md)**: o banco de dados
+2. **[apps/web](apps/web/README.md)**: o site e a API
+3. **[apps/mobile](apps/mobile/README.md)**
 
 O `apps/mobile` **depende do `apps/web` estar rodando**, pois consome a API do web pela rede. Sempre suba o web antes de testar o mobile.
 
