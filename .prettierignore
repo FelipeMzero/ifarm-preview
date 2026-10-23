@@ -4,5 +4,5 @@ dist
 build
 out
 pnpm-lock.yaml
-apps/web/src/generated
+packages/db/src/generated
 apps/web/docs

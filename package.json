@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "pnpm --filter web dev",
     "build": "pnpm --filter web build",
-    "lint": "pnpm --filter web lint",
+    "lint": "pnpm -r --no-bail lint",
     "test": "pnpm -r test",
     "db:generate": "pnpm --filter @ifarm/db exec prisma generate",
     "db:push": "pnpm --filter @ifarm/db exec prisma db push",

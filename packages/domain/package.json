@@ -3,7 +3,8 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "test": "vitest run"
+    "test": "vitest run",
+    "lint": "eslint"
   },
   "exports": {
     "./management-session/steps": "./src/management-session/steps/index.ts",
@@ -16,6 +17,9 @@
     "zod": "catalog:"
   },
   "devDependencies": {
+    "eslint": "catalog:",
+    "typescript": "catalog:",
+    "typescript-eslint": "catalog:",
     "vitest": "catalog:"
   }
 }

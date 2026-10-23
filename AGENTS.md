@@ -134,14 +134,13 @@ servidor, mova-a nesse momento (funções puras: só os imports mudam).
 
 ## 6. Antes de concluir
 
-Na raiz, `pnpm test` (roda os testes de cada app/pacote). Em `apps/web`:
+Na raiz, `pnpm test` (roda os testes de cada app/pacote). Em cada app/pacote alterado
+(web, shared, domain, db), `pnpm exec eslint <arquivos alterados>`, olhando **erros e avisos**
+(imports sem uso aparecem como aviso). O lint do projeto tem problemas antigos: não introduza
+novos. Em `apps/web`:
 
 - `pnpm exec tsc --noEmit -p .`;
 - `pnpm build`;
-- `pnpm exec eslint <arquivos alterados>`, olhando **erros e avisos** (imports sem uso aparecem
-  como aviso). O lint do projeto tem problemas antigos: não introduza novos;
-- o ESLint do web não analisa os pacotes (`packages/*`): para eles, confira variáveis e imports
-  sem uso com `pnpm exec tsc --noEmit -p . --noUnusedLocals`, que cobre o que o web importa;
 - se mexeu no shared, também `pnpm exec tsc --noEmit` em `apps/mobile`.
 
 Teste o fluxo no app: não há testes com banco, então a ligação entre a mutation e a regra só é
@@ -155,3 +154,7 @@ raiz.
 
 Dependência usada por mais de um app/pacote: a versão fica no `catalog` do
 `pnpm-workspace.yaml`, e o `package.json` declara `"catalog:"`.
+
+Lint: cada app/pacote tem o próprio `eslint.config.mjs` (o web com as regras do Next; os pacotes
+com o typescript-eslint) e o script `lint`. As regras do projeto (ponto e vírgula e a das datas)
+se repetem em cada um: ao mudar uma, mude em todos. O mobile não tem lint.
