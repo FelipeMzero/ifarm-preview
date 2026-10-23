@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { receptionDocumentsSchema } from "@ifarm/shared";
 import { requireSession } from "@/app/api/session";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
-import { updateReceptionDocuments } from "@/server/management-session/mutations";
+import { updateReceptionDocuments } from "@ifarm/domain/management-session/mutations";
 import { errorResponse, validationErrorResponse } from "../../../http";
 
 // Documentos da carga (GTA e nota fiscal) de uma recepção em aberto.

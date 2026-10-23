@@ -6,13 +6,13 @@ import {
   type IdentifierCorrectionData,
   type IdentifierKind,
 } from "@ifarm/shared";
-import { prisma, Prisma } from "@/server/db";
+import { prisma, Prisma } from "@ifarm/db";
 import {
   effectiveRfidTagging,
   effectiveTagging,
-} from "@/server/management-session/effective";
-import { assertNoConflicts } from "@/server/animal/commitments";
-import { BusinessError } from "@/server/errors";
+} from "../management-session/effective";
+import { assertNoConflicts } from "./commitments";
+import { BusinessError } from "../errors";
 import { keepsOriginal, sessionDateLock } from "./rules";
 
 type Tx = Prisma.TransactionClient;

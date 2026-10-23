@@ -5,7 +5,7 @@ import {
   type PurchaseDetail,
   type PurchaseListResult,
 } from "@ifarm/shared";
-import { prisma, type Prisma } from "@/server/db";
+import { prisma, type Prisma } from "@ifarm/db";
 import { getOrAssignCurrentProperty } from "../current-property/queries";
 import { NotFoundError } from "../errors";
 import { arrivalWeightsByCategory } from "./costs";
@@ -16,8 +16,8 @@ import {
   purchaseStatus,
   sumIfAllKnown,
 } from "./rules";
-import { sessionStatus } from "@/server/management-session/session-steps";
-import { fromDbDate } from "@/server/db-dates";
+import { sessionStatus } from "../management-session/session-steps";
+import { fromDbDate } from "../db-dates";
 
 const num = (d: { toNumber(): number } | null) => d?.toNumber() ?? null;
 const day = (d: Date | null) => (d ? fromLocalDay(d) : null);

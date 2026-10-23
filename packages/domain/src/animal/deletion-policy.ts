@@ -1,6 +1,6 @@
 import "server-only";
-import type { Prisma } from "@/server/db";
-import type { DeletionPolicy } from "@/server/deletion";
+import type { Prisma } from "@ifarm/db";
+import type { DeletionPolicy } from "../deletion";
 import {
   animalDeletionBlocker,
   isStandalonePurchase,

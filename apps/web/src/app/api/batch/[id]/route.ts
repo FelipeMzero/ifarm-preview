@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { batchUpdateSchema } from "@ifarm/shared";
 import { requireSession } from "@/app/api/session";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
-import { getBatch } from "@/server/batch/queries";
-import { deleteBatch, updateBatch } from "@/server/batch/mutations";
+import { getBatch } from "@ifarm/domain/batch/queries";
+import { deleteBatch, updateBatch } from "@ifarm/domain/batch/mutations";
 import { errorResponse, validationErrorResponse } from "../../http";
 
 type Params = { params: Promise<{ id: string }> };

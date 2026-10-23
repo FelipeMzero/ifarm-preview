@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { neuteringTechniqueSchema } from "@ifarm/shared";
 import { requireSession } from "@/app/api/session";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
-import { listNeuteringTechniques } from "@/server/neutering-technique/queries";
-import { createNeuteringTechnique } from "@/server/neutering-technique/mutations";
+import { listNeuteringTechniques } from "@ifarm/domain/neutering-technique/queries";
+import { createNeuteringTechnique } from "@ifarm/domain/neutering-technique/mutations";
 import { errorResponse, validationErrorResponse } from "../http";
 
 export async function GET() {

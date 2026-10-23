@@ -2,25 +2,25 @@
 // logo depois de rodar os indicadores (GMD, metas, lotação, rodízio de áreas, carências)
 // estão "atuais". Só popula um banco vazio: para recriar, rode
 //   pnpm exec prisma db push --force-reset && pnpm exec prisma db seed
-import { prisma } from "../src/server/db";
-import { auth } from "../src/server/auth";
-import type { Prisma } from "../src/generated/prisma/client";
+import { prisma } from "@ifarm/db";
+import { auth } from "../src/lib/auth";
+import type { Prisma } from "@ifarm/db/client";
 import type {
   AnimalOrigin,
   AnimalStatus,
   Sex,
-} from "../src/generated/prisma/enums";
-import { consolidateSession } from "../src/server/management-session/consolidate";
-import { findCommitments } from "../src/server/animal/commitments";
-import { saveAnimalStep } from "../src/server/management-session/records";
-import { applyPlanSteps } from "../src/server/management-session/shared";
+} from "@ifarm/db/enums";
+import { consolidateSession } from "@ifarm/domain/management-session/consolidate";
+import { findCommitments } from "@ifarm/domain/animal/commitments";
+import { saveAnimalStep } from "@ifarm/domain/management-session/records";
+import { applyPlanSteps } from "@ifarm/domain/management-session/shared";
 import { planStepSchema } from "@ifarm/shared";
-import { findReception, receiveAnimal } from "../src/server/purchase/reception";
+import { findReception, receiveAnimal } from "@ifarm/domain/purchase/reception";
 import {
   type SessionStep,
   stepKey,
   toStepRows,
-} from "../src/server/management-session/session-steps";
+} from "@ifarm/domain/management-session/session-steps";
 
 // ---------------------------------------------------------------------------
 // Datas relativas ao dia do seed

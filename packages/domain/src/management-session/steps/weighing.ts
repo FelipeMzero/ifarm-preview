@@ -1,11 +1,11 @@
 import "server-only";
 import { weighingPayloadSchema, weighingPlanSchema } from "@ifarm/shared";
-import { recomputeCurrentWeight } from "@/server/animal/weighings";
+import { recomputeCurrentWeight } from "../../animal/weighings";
 import {
   defineStep,
   StepError,
   type Tx,
-} from "@/server/management-session/steps/types";
+} from "./types";
 
 async function container(tx: Tx, sessionId: string) {
   return tx.weighingManagement.findUnique({

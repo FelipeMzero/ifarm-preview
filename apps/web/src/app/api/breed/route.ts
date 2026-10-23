@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { breedSchema } from "@ifarm/shared";
 import { requireSession } from "@/app/api/session";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
-import { listBreeds } from "@/server/breed/queries";
-import { createBreed } from "@/server/breed/mutations";
+import { listBreeds } from "@ifarm/domain/breed/queries";
+import { createBreed } from "@ifarm/domain/breed/mutations";
 import { errorResponse, validationErrorResponse } from "../http";
 
 export async function GET() {

@@ -1,6 +1,6 @@
 import "server-only";
 import type { HealthManagementType } from "@ifarm/shared";
-import { prisma } from "@/server/db";
+import { prisma } from "@ifarm/db";
 
 export function toHealthManagementType(b: {
   id: string;

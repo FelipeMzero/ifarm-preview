@@ -4,7 +4,7 @@ import { IDENTIFIER_MAX_LENGTH } from "../animal/schema";
 import { FIELD_LIMITS } from "../field-limits";
 
 // Registro de cada etapa num animal da sessão: o que a tela de registro envia. Os módulos
-// de etapa do servidor (server/management-session/steps) validam com estes schemas e as
+// de etapa do servidor (packages/domain/src/management-session/steps) validam com estes schemas e as
 // telas também (zodResolver em modo raw). As regras que dependem do banco (ex.: "este já
 // é o brinco atual", dose obrigatória conforme o procedimento) ficam no `save` de cada
 // módulo.

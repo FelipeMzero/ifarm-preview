@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireSession } from "@/app/api/session";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
 import { createReceptionSchema } from "@ifarm/shared";
-import { createReception } from "@/server/reception/mutations";
+import { createReception } from "@ifarm/domain/reception/mutations";
 import { errorResponse, validationErrorResponse } from "../../../../http";
 
 // "Receber animais": abre uma recepção (viagem) da compra.

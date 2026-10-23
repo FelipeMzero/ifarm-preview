@@ -34,7 +34,7 @@ export const managementSessionFieldsSchema = z.object({
 export const managementSessionSchema = managementSessionFieldsSchema.extend({
   // Pode ficar vazio só numa recepção de compra (receber os animais já é o trabalho).
   // Nas demais sessões o servidor exige ao menos um manejo ao criar e ao alterar
-  // (server/management-session/mutations.ts), porque só ele sabe se a sessão é recepção.
+  // (packages/domain/src/management-session/mutations.ts), porque só ele sabe se a sessão é recepção.
   steps: z.array(planStepSchema),
   animalIds: z.array(z.uuid()).default([]),
   propertyId: z.uuid().optional(),

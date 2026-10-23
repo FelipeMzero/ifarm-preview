@@ -6,7 +6,7 @@ import {
   deleteNeuteringTechnique,
   toggleNeuteringTechniqueStatus,
   updateNeuteringTechnique,
-} from "@/server/neutering-technique/mutations";
+} from "@ifarm/domain/neutering-technique/mutations";
 import { errorResponse, validationErrorResponse } from "../../http";
 
 type Params = { params: Promise<{ id: string }> };

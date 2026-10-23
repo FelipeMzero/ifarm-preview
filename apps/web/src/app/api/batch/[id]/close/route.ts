@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireSession } from "@/app/api/session";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
-import { closeBatch } from "@/server/batch/mutations";
+import { closeBatch } from "@ifarm/domain/batch/mutations";
 import { errorResponse } from "../../../http";
 
 // Encerra um lote vazio e libera a área que ele ocupava.

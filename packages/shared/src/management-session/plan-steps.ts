@@ -4,7 +4,7 @@ import { FIELD_LIMITS } from "../field-limits";
 
 // Etapas do planejamento de uma sessão: o que a API recebe em `steps` ao criar/alterar uma
 // sessão ou abrir uma recepção. Cada tipo tem o seu schema; os módulos de etapa do servidor
-// (server/management-session/steps) usam estes mesmos schemas e fazem o que depende do
+// (packages/domain/src/management-session/steps) usam estes mesmos schemas e fazem o que depende do
 // banco no `prepare` (ex.: gravar as datas do sanitário). O formulário de planejamento tem
 // estado próprio (um objeto com os campos de todos os tipos) e converte para este formato
 // no envio.

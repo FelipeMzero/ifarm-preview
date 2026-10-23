@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { weighingCorrectionSchema } from "@ifarm/shared";
 import { requireSession } from "@/app/api/session";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
-import { cancelWeighing, correctWeighing } from "@/server/animal/mutations";
+import { cancelWeighing, correctWeighing } from "@ifarm/domain/animal/mutations";
 import { errorResponse, validationErrorResponse } from "../../../../http";
 
 type Params = { params: Promise<{ id: string; weighingId: string }> };

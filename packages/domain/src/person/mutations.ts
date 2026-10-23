@@ -1,12 +1,12 @@
 import "server-only";
 import { type PersonInput } from "@ifarm/shared";
-import { prisma } from "@/server/db";
+import { prisma } from "@ifarm/db";
 import { buildAddressWrite, toAddressData } from "../address";
 import { write } from "../db-errors";
 import { NotFoundError } from "../errors";
 import { toggledDeactivatedAt } from "../status";
 import { withoutImmutableFields } from "./rules";
-import { toDbDate } from "@/server/db-dates";
+import { toDbDate } from "../db-dates";
 
 // Converte o que veio do formulário (textos, "" para vazio) para o formato do banco.
 function toPersonData(input: PersonInput) {

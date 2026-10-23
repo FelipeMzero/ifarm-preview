@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireSession } from "@/app/api/session";
-import { getCurrentPropertyDetails } from "@/server/current-property/queries";
+import { getCurrentPropertyDetails } from "@ifarm/domain/current-property/queries";
 import { errorResponse } from "../../../http";
 
 // Detalhes da propriedade atualmente selecionada, para exibição no painel. Sem

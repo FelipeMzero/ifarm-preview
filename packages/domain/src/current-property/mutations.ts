@@ -1,6 +1,6 @@
 import "server-only";
 import type { CurrentProperty } from "@ifarm/shared";
-import { prisma } from "@/server/db";
+import { prisma } from "@ifarm/db";
 import { NotFoundError } from "../errors";
 
 // Troca a propriedade em que o usuário está trabalhando.

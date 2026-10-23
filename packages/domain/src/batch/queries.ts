@@ -6,14 +6,14 @@ import {
   type BatchFullDetails,
   type BatchListResult,
 } from "@ifarm/shared";
-import { prisma } from "@/server/db";
+import { prisma } from "@ifarm/db";
 import { sortWeighings, toWeighingDto } from "../animal/weighings";
 import { getOrAssignCurrentProperty } from "../current-property/queries";
 import { NotFoundError } from "../errors";
 import { effectiveWeighing } from "../management-session/effective";
 import { stockingPreview } from "../stocking/queries";
 import { averageDailyGain, groupPurchases, weightSeries } from "./rules";
-import { fromDbDate } from "@/server/db-dates";
+import { fromDbDate } from "../db-dates";
 
 function buildWhere(query: BatchQuery, propertyId: string) {
   const where: Record<string, unknown> = { propertyId };

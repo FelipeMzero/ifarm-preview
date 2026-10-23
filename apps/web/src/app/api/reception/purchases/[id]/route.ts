@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireSession } from "@/app/api/session";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
-import { getReceptionPurchase } from "@/server/reception/queries";
+import { getReceptionPurchase } from "@ifarm/domain/reception/queries";
 import { errorResponse } from "../../../http";
 
 // Uma compra vista pela área de recepções (sem valores).

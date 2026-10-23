@@ -3,7 +3,7 @@
 // docs/data-dictionary.md, seção 2.9; ao mudar esta tabela, atualize a documentação
 // e os casos de commitments.test.ts.
 //
-// Módulo puro (sem banco): a API busca os compromissos (server/animal/commitments.ts)
+// Módulo puro (sem banco): a API busca os compromissos (packages/domain/src/animal/commitments.ts)
 // e as telas usam as mesmas regras para avisar antes de salvar.
 
 import { STEP_TYPE_LABELS, type StepType } from "../management-session/steps";
@@ -13,7 +13,7 @@ export type Commitment =
   | { kind: "reception"; id: string; title: string }
   // Sessão de manejo aberta (planejada ou em andamento), com as chaves das etapas
   // (o sanitário se distingue pelo procedimento: "health:<id>"; ver stepKey no
-  // servidor, em server/management-session/session-steps.ts).
+  // servidor, em packages/domain/src/management-session/session-steps.ts).
   | { kind: "session"; id: string; title: string; stepKeys: readonly string[] }
   // Transferência de lote pendente e isolada (a da apartação pertence à sessão).
   | { kind: "transfer"; id: string; destinationBatchName: string };

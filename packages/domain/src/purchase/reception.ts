@@ -1,9 +1,9 @@
 import "server-only";
-import { Prisma } from "@/server/db";
+import { Prisma } from "@ifarm/db";
 import { type ReceiveAnimalData } from "@ifarm/shared";
-import { BusinessError } from "@/server/errors";
+import { BusinessError } from "../errors";
 import { estimatedBirthDay } from "./rules";
-import { toDbDate } from "@/server/db-dates";
+import { toDbDate } from "../db-dates";
 
 type Tx = Prisma.TransactionClient;
 

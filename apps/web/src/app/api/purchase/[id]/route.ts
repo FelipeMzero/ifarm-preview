@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { purchaseSchema } from "@ifarm/shared";
 import { requireSession } from "@/app/api/session";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
-import { getPurchase } from "@/server/purchase/queries";
-import { updatePurchase } from "@/server/purchase/mutations";
+import { getPurchase } from "@ifarm/domain/purchase/queries";
+import { updatePurchase } from "@ifarm/domain/purchase/mutations";
 import { errorResponse, validationErrorResponse } from "../../http";
 
 type Params = { params: Promise<{ id: string }> };

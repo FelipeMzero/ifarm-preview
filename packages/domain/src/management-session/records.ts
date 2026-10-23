@@ -5,13 +5,13 @@ import {
   requireSessionIn,
   StepError,
   type LoadedSession,
-} from "@/server/management-session/shared";
+} from "./shared";
 import {
   countDone,
   loadStepRecords,
   stepModule,
-} from "@/server/management-session/steps";
-import type { Tx } from "@/server/management-session/steps/types";
+} from "./steps";
+import type { Tx } from "./steps/types";
 
 // Registro de uma etapa num animal da sessão (usado pela rota do registro e pelo seed).
 

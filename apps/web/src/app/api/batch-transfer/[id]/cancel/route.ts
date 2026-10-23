@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireSession } from "@/app/api/session";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
-import { cancelBatchTransfer } from "@/server/batch-transfer/mutations";
+import { cancelBatchTransfer } from "@ifarm/domain/batch-transfer/mutations";
 import { errorResponse } from "../../../http";
 
 // Cancela um plano pendente (o registro é mantido para auditoria).

@@ -1,6 +1,6 @@
 import "server-only";
 import type { AreaInput } from "@ifarm/shared";
-import { prisma } from "@/server/db";
+import { prisma } from "@ifarm/db";
 import { write } from "../db-errors";
 import { ConflictError, NotFoundError, ValidationError } from "../errors";
 import { toggledDeactivatedAt } from "../status";

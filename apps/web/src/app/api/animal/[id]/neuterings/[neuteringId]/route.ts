@@ -5,7 +5,7 @@ import {
 } from "@ifarm/shared";
 import { requireSession } from "@/app/api/session";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
-import { cancelNeutering, correctNeutering } from "@/server/animal/mutations";
+import { cancelNeutering, correctNeutering } from "@ifarm/domain/animal/mutations";
 import { errorResponse, validationErrorResponse } from "../../../../http";
 
 type Params = { params: Promise<{ id: string; neuteringId: string }> };

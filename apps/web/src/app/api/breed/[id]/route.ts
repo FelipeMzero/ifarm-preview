@@ -6,7 +6,7 @@ import {
   deleteBreed,
   toggleBreedStatus,
   updateBreed,
-} from "@/server/breed/mutations";
+} from "@ifarm/domain/breed/mutations";
 import { errorResponse, validationErrorResponse } from "../../http";
 
 type Params = { params: Promise<{ id: string }> };

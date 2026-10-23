@@ -3,12 +3,12 @@ import {
   defineStep,
   StepError,
   type Tx,
-} from "@/server/management-session/steps/types";
+} from "./types";
 import { neuteringPayloadSchema, neuteringPlanSchema } from "@ifarm/shared";
 import {
   INVALID_TECHNIQUE_MESSAGE,
   isValidNeuteringTechnique,
-} from "@/server/animal/neuterings";
+} from "../../animal/neuterings";
 
 async function container(tx: Tx, sessionId: string) {
   return tx.neuteringManagement.findUnique({

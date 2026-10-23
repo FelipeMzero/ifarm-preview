@@ -5,7 +5,7 @@ import type {
   PropertyListResult,
   PropertyOption,
 } from "@ifarm/shared";
-import { prisma } from "@/server/db";
+import { prisma } from "@ifarm/db";
 import { NotFoundError } from "../errors";
 
 export async function listProperties({

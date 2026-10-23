@@ -1,5 +1,5 @@
 import "server-only";
-import { Prisma } from "@/server/db";
+import { Prisma } from "@ifarm/db";
 import { ConflictError } from "./errors";
 
 // const UNIQUE_FIELD_MESSAGES: Record<string, string> = {

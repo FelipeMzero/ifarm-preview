@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireSession } from "@/app/api/session";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
-import { getAreaOccupancyHistory } from "@/server/area/queries";
+import { getAreaOccupancyHistory } from "@ifarm/domain/area/queries";
 import { errorResponse } from "../../../http";
 
 // Lotes que ocuparam a área, do mais recente para o mais antigo.

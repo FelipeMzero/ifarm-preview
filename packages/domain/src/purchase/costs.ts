@@ -1,11 +1,11 @@
 import "server-only";
-import type { Prisma } from "@/server/db";
+import type { Prisma } from "@ifarm/db";
 import {
   categoryValue,
   costShares,
   PurchaseError,
   splitValue,
-} from "@/server/purchase/rules";
+} from "./rules";
 
 type Tx = Prisma.TransactionClient;
 

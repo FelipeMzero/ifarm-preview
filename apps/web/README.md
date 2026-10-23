@@ -90,7 +90,7 @@ O projeto estará disponível em: http://localhost:3000
 
 ## 📂 Estrutura do Banco de Dados
 
-O projeto utiliza o PostgreSQL. O esquema de dados é definido no arquivo prisma/schema.prisma. Sempre que realizar alterações neste arquivo, lembre-se de rodar o comando abaixo para sincronizar o banco.
+O projeto utiliza o PostgreSQL. O esquema de dados é definido no arquivo packages/db/prisma/schema.prisma (na raiz do monorepo). Sempre que realizar alterações neste arquivo, lembre-se de rodar o comando abaixo para sincronizar o banco.
 
 ```bash
 pnpm prisma db push

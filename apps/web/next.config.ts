@@ -1,8 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Pacote do monorepo publicado como TypeScript puro.
-  transpilePackages: ["@ifarm/shared"],
+  // Pacotes do monorepo publicados como TypeScript puro.
+  transpilePackages: ["@ifarm/shared", "@ifarm/domain", "@ifarm/db"],
   /***** Apagar este bloco para usar cache ******/
   // experimental: {
   //   turbopackFileSystemCacheForDev: false,

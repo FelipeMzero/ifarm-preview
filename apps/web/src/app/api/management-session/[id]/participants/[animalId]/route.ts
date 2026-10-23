@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireSession } from "@/app/api/session";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
-import { removeParticipant } from "@/server/management-session/mutations";
+import { removeParticipant } from "@ifarm/domain/management-session/mutations";
 import { errorResponse } from "../../../../http";
 
 // Tira o animal da sessão, desfazendo os registros que ele já tinha.

@@ -1,6 +1,6 @@
 import "server-only";
 import type { CreateReceptionData } from "@ifarm/shared";
-import { prisma } from "@/server/db";
+import { prisma } from "@ifarm/db";
 import { applyPlanSteps } from "../management-session/shared";
 import { StepError } from "../management-session/steps/types";
 import { validateReceptionInput } from "../purchase/reception";

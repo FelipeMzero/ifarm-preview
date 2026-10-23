@@ -5,7 +5,7 @@ import {
   type PurchaseData,
   type PurchasePaymentData,
 } from "@ifarm/shared";
-import { prisma } from "@/server/db";
+import { prisma } from "@ifarm/db";
 import { getOrAssignCurrentProperty } from "../current-property/queries";
 import { allocatePurchaseCosts } from "./costs";
 import { categoryLabel } from "./reception";
@@ -18,8 +18,8 @@ import {
   PurchaseError,
   purchaseStatus,
 } from "./rules";
-import { sessionStatus } from "@/server/management-session/session-steps";
-import { toDbDate } from "@/server/db-dates";
+import { sessionStatus } from "../management-session/session-steps";
+import { toDbDate } from "../db-dates";
 
 // Registra a negociação: título, vendedor e as categorias negociadas (com preços). Nenhum animal
 // existe ainda; eles são criados nas recepções.

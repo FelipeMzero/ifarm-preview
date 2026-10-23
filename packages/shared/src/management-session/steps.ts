@@ -1,9 +1,9 @@
 // Vocabulário das sessões de manejo usado pelas telas: tipos de etapa e situações.
 // O modelo das etapas no servidor (chaves, ordem, gravação) está em
-// server/management-session/session-steps.ts.
+// packages/domain/src/management-session/session-steps.ts.
 //
 // Cada tipo é implementado como um módulo próprio (servidor em
-// server/management-session/steps, tela em features/management-session/steps);
+// packages/domain/src/management-session/steps, tela em features/management-session/steps);
 // para incluir um tipo novo, acrescente-o aqui e registre os dois módulos.
 
 export const STEP_TYPES = [

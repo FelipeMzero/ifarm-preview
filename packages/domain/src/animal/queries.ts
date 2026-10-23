@@ -9,7 +9,7 @@ import {
   type Commitment,
   type CommitmentExclusion,
 } from "@ifarm/shared";
-import { prisma } from "@/server/db";
+import { prisma } from "@ifarm/db";
 import { getOrAssignCurrentProperty } from "../current-property/queries";
 import { NotFoundError } from "../errors";
 import {
@@ -22,7 +22,7 @@ import {
 import { findCommitments } from "./commitments";
 import { neuteringInclude, toNeuteringDto } from "./neuterings";
 import { sortWeighings, toWeighingDto } from "./weighings";
-import { fromDbDate } from "@/server/db-dates";
+import { fromDbDate } from "../db-dates";
 
 // Limites de data de nascimento para cada faixa etária (idade em meses completos).
 function birthDateFilter(range: "upTo12" | "12to24" | "over24" | "unknown") {

@@ -5,9 +5,9 @@ import {
   type PersonListResult,
   type PersonRow,
 } from "@ifarm/shared";
-import { prisma } from "@/server/db";
+import { prisma } from "@ifarm/db";
 import { NotFoundError } from "../errors";
-import { fromDbDate } from "@/server/db-dates";
+import { fromDbDate } from "../db-dates";
 
 export async function listPeople({
   page,

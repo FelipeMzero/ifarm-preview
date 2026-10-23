@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireSession } from "@/app/api/session";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
-import { cancelPurchase } from "@/server/purchase/mutations";
+import { cancelPurchase } from "@ifarm/domain/purchase/mutations";
 import { errorResponse } from "../../../http";
 
 // Cancela (desconsidera) uma compra em andamento, sem animais recebidos e não paga.

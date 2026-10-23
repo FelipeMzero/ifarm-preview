@@ -5,7 +5,7 @@ import {
   ConflictError,
   NotFoundError,
   ValidationError,
-} from "@/server/errors";
+} from "@ifarm/domain/errors";
 
 // Erros de validação no formato que os formulários esperam: a primeira mensagem de cada campo
 // (campos aninhados como "steps.0.value").

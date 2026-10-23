@@ -5,11 +5,11 @@ import {
   type BatchTransferDetail,
   type BatchTransferListResult,
 } from "@ifarm/shared";
-import { prisma } from "@/server/db";
+import { prisma } from "@ifarm/db";
 import { getOrAssignCurrentProperty } from "../current-property/queries";
 import { NotFoundError } from "../errors";
 import { TRANSFER_STATUS_WHERE, transferStatus } from "./rules";
-import { unavailableReason } from "@/server/animal/rules";
+import { unavailableReason } from "../animal/rules";
 
 function buildWhere(query: BatchTransferQuery, propertyId: string) {
   const where: Record<string, unknown> = {

@@ -2,12 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { areaSchema } from "@ifarm/shared";
 import { requireSession } from "@/app/api/session";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
-import { getArea } from "@/server/area/queries";
+import { getArea } from "@ifarm/domain/area/queries";
 import {
   deleteArea,
   toggleAreaStatus,
   updateArea,
-} from "@/server/area/mutations";
+} from "@ifarm/domain/area/mutations";
 import { errorResponse, validationErrorResponse } from "../../http";
 
 type Params = { params: Promise<{ id: string }> };

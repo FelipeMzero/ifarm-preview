@@ -4,12 +4,12 @@ import {
   type BatchReopenData,
   type BatchUpdateData,
 } from "@ifarm/shared";
-import { prisma } from "@/server/db";
+import { prisma } from "@ifarm/db";
 import { assertAreaAvailable } from "../area/queries";
 import { getOrAssignCurrentProperty } from "../current-property/queries";
 import { write } from "../db-errors";
 import { BusinessError, NotFoundError } from "../errors";
-import { toDbDate } from "@/server/db-dates";
+import { toDbDate } from "../db-dates";
 
 const toTargetDate = (v?: string) => (v ? toDbDate(v) : null);
 

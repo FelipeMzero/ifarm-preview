@@ -3,7 +3,7 @@ import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { admin } from "better-auth/plugins/admin";
 import { expo } from "@better-auth/expo";
-import { prisma } from "./db";
+import { prisma } from "@ifarm/db";
 import { roles } from "@/lib/permissions";
 
 export const auth = betterAuth({

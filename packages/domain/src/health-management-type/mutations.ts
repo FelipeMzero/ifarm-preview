@@ -1,6 +1,6 @@
 import "server-only";
 import type { HealthManagementTypeInput } from "@ifarm/shared";
-import { prisma } from "@/server/db";
+import { prisma } from "@ifarm/db";
 import { write } from "../db-errors";
 import { NotFoundError } from "../errors";
 import { toggledDeactivatedAt } from "../status";

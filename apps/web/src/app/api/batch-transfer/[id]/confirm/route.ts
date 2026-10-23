@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireSession } from "@/app/api/session";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
-import { confirmBatchTransfer } from "@/server/batch-transfer/mutations";
+import { confirmBatchTransfer } from "@ifarm/domain/batch-transfer/mutations";
 import { errorResponse } from "../../../http";
 
 // Efetiva o plano: os animais passam para o lote de destino.

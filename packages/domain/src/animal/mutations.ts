@@ -11,7 +11,7 @@ import {
   fromLocalDay,
   REQUIRED_TECHNIQUE_MESSAGE,
 } from "@ifarm/shared";
-import { prisma, Prisma } from "@/server/db";
+import { prisma, Prisma } from "@ifarm/db";
 import { getOrAssignCurrentProperty } from "../current-property/queries";
 import { write } from "../db-errors";
 import { deleteRecord } from "../deletion";
@@ -42,7 +42,7 @@ import {
   updateCommitmentIntents,
 } from "./rules";
 import { recomputeCurrentWeight } from "./weighings";
-import { toDbDate } from "@/server/db-dates";
+import { toDbDate } from "../db-dates";
 
 const fieldError = (field: string, message: string) =>
   new ValidationError(message, { [field]: message });

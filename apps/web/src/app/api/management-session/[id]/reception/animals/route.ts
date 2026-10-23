@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireSession } from "@/app/api/session";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
-import { receiveSessionAnimal } from "@/server/management-session/mutations";
+import { receiveSessionAnimal } from "@ifarm/domain/management-session/mutations";
 import { receiveAnimalSchema } from "@ifarm/shared";
 import { errorResponse, validationErrorResponse } from "../../../../http";
 

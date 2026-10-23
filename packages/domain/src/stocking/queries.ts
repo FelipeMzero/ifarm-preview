@@ -1,6 +1,6 @@
 import "server-only";
 import type { AreaOccupancy, Sex, StockingPreview } from "@ifarm/shared";
-import { prisma } from "@/server/db";
+import { prisma } from "@ifarm/db";
 import { NotFoundError } from "../errors";
 import { capacityCheck, sumUnits, type UaAnimal } from "./rules";
 

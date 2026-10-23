@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireSession } from "@/app/api/session";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
-import { getBatchDetails } from "@/server/batch/queries";
+import { getBatchDetails } from "@ifarm/domain/batch/queries";
 import { errorResponse } from "../../../http";
 
 // Painel do lote (animais, indicadores, movimentações, transferências e compras).

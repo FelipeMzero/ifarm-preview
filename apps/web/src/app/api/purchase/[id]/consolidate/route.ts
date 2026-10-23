@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireSession } from "@/app/api/session";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
-import { consolidatePurchase } from "@/server/purchase/mutations";
+import { consolidatePurchase } from "@ifarm/domain/purchase/mutations";
 import { errorResponse } from "../../../http";
 
 // Consolida a compra: rateia o custo de cada animal e encerra o processo.

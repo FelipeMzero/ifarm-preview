@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { weighingCreateSchema } from "@ifarm/shared";
 import { requireSession } from "@/app/api/session";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
-import { listWeighings } from "@/server/animal/queries";
-import { addWeighing } from "@/server/animal/mutations";
+import { listWeighings } from "@ifarm/domain/animal/queries";
+import { addWeighing } from "@ifarm/domain/animal/mutations";
 import { errorResponse, validationErrorResponse } from "../../../http";
 
 type Params = { params: Promise<{ id: string }> };

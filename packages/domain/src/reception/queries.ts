@@ -6,15 +6,15 @@ import {
   type ReceptionPurchase,
   type ReceptionPurchaseListResult,
 } from "@ifarm/shared";
-import type { Prisma } from "@/server/db";
-import { prisma } from "@/server/db";
+import type { Prisma } from "@ifarm/db";
+import { prisma } from "@ifarm/db";
 import { getOrAssignCurrentProperty } from "../current-property/queries";
 import { NotFoundError } from "../errors";
 import { categoryLabel } from "../purchase/reception";
 import { purchaseStatus } from "../purchase/rules";
 import { isPending } from "./rules";
-import { sessionStatus } from "@/server/management-session/session-steps";
-import { fromDbDate } from "@/server/db-dates";
+import { sessionStatus } from "../management-session/session-steps";
+import { fromDbDate } from "../db-dates";
 
 // Área de recepções: dados físicos da compra (quem vende, o que foi negociado em
 // quantidade, o que já chegou). Nada de preços, custos ou situação financeira.

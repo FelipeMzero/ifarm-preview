@@ -3,8 +3,8 @@ import {
   type PurchaseCategoryData,
   type PurchaseStatus,
 } from "@ifarm/shared";
-import type { Prisma } from "@/server/db";
-import { BusinessError } from "@/server/errors";
+import type { Prisma } from "@ifarm/db";
+import { BusinessError } from "../errors";
 
 // Em andamento → consolidada (fim: custos rateados) ou cancelada (desconsiderada). O
 // pagamento é um fato do andamento, não uma situação.

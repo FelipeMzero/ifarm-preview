@@ -1,5 +1,5 @@
 // Espelho dos enums do schema.prisma, para uso fora do apps/web (o Prisma os gera dentro dele, onde
-// o mobile não alcança). O teste apps/web/src/server/enums.test.ts falha se as duas definições
+// o mobile não alcança). O teste packages/domain/src/enums.test.ts falha se as duas definições
 // divergirem: ao mudar um enum no schema.prisma, atualize este arquivo.
 
 export const HealthManagementDoseType = {

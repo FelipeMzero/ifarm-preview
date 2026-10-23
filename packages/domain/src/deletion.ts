@@ -1,6 +1,6 @@
 import "server-only";
-import { prisma, Prisma } from "@/server/db";
-import { BusinessError } from "@/server/errors";
+import { prisma, Prisma } from "@ifarm/db";
+import { BusinessError } from "./errors";
 
 type Tx = Prisma.TransactionClient;
 

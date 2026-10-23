@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireSession } from "@/app/api/session";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
-import { getSessionAnimal } from "@/server/management-session/queries";
+import { getSessionAnimal } from "@ifarm/domain/management-session/queries";
 import { errorResponse } from "../../../../http";
 
 // Tudo o que as telas de etapa precisam de um animal da sessão.

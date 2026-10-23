@@ -1,6 +1,6 @@
 import "server-only";
-import { BusinessError } from "@/server/errors";
-import { Prisma } from "@/server/db";
+import { BusinessError } from "../errors";
+import { Prisma } from "@ifarm/db";
 import {
   describeCommitment,
   type Commitment,
@@ -12,7 +12,7 @@ import {
   sessionStepsSelect,
   stepKey,
   toSessionSteps,
-} from "@/server/management-session/session-steps";
+} from "../management-session/session-steps";
 
 // Compromissos pendentes dos animais (regras em packages/shared/src/animal/commitments.ts e em
 // docs/data-dictionary.md, seção 2.9).

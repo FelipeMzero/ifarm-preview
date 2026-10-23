@@ -5,14 +5,14 @@ import {
   rfidPlanSchema,
   tagPlanSchema,
 } from "@ifarm/shared";
-import { takenInSession } from "@/server/management-session/rules";
+import { takenInSession } from "../rules";
 import {
   defineStep,
   StepError,
   type StepAnimal,
   type Tx,
-} from "@/server/management-session/steps/types";
-import { animalLabel, summarize } from "@/server/animal/rules";
+} from "./types";
+import { animalLabel, summarize } from "../../animal/rules";
 
 type IdentifierItem = {
   id: number;

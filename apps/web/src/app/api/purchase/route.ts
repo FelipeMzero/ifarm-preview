@@ -3,8 +3,8 @@ import { purchaseQuerySchema } from "@ifarm/shared";
 import { purchaseSchema } from "@ifarm/shared";
 import { requireSession } from "@/app/api/session";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
-import { listPurchases } from "@/server/purchase/queries";
-import { createPurchase } from "@/server/purchase/mutations";
+import { listPurchases } from "@ifarm/domain/purchase/queries";
+import { createPurchase } from "@ifarm/domain/purchase/mutations";
 import { errorResponse, validationErrorResponse } from "../http";
 
 export async function GET(request: NextRequest) {

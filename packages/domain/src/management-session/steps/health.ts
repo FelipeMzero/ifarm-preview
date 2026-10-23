@@ -8,9 +8,9 @@ import {
   doseChangeBlocker,
   plannedDose,
   requiresDose,
-} from "@/server/management-session/rules";
-import { defineStep, StepError } from "@/server/management-session/steps/types";
-import { fromDbDate, toDbDate } from "@/server/db-dates";
+} from "../rules";
+import { defineStep, StepError } from "./types";
+import { fromDbDate, toDbDate } from "../../db-dates";
 
 // Datas do procedimento chegam como "AAAA-MM-DD" (ou null); no banco são @db.Date.
 const toDbDay = (v: string | null) => (v ? toDbDate(v) : null);

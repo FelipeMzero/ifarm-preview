@@ -3,8 +3,8 @@ import { propertyQuerySchema } from "@ifarm/shared";
 import { propertySchema } from "@ifarm/shared";
 import { requireSession } from "@/app/api/session";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
-import { listProperties } from "@/server/property/queries";
-import { createProperty } from "@/server/property/mutations";
+import { listProperties } from "@ifarm/domain/property/queries";
+import { createProperty } from "@ifarm/domain/property/mutations";
 import { errorResponse, validationErrorResponse } from "../http";
 
 export async function GET(request: NextRequest) {

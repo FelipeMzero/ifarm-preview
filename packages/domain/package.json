@@ -1,0 +1,15 @@
+{
+  "name": "@ifarm/domain",
+  "version": "0.0.0",
+  "private": true,
+  "exports": {
+    "./management-session/steps": "./src/management-session/steps/index.ts",
+    "./*": "./src/*.ts"
+  },
+  "dependencies": {
+    "@ifarm/db": "workspace:*",
+    "@ifarm/shared": "workspace:*",
+    "server-only": "^0.0.1",
+    "zod": "^4.4.3"
+  }
+}

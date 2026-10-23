@@ -2,12 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { identifierChangeSchemaFor } from "@ifarm/shared";
 import { requireSession } from "@/app/api/session";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
-import { CommitmentError } from "@/server/animal/commitments";
+import { CommitmentError } from "@ifarm/domain/animal/commitments";
 import {
   addIdentifier,
   isIdentifierKind,
   listIdentifiers,
-} from "@/server/animal/identifiers";
+} from "@ifarm/domain/animal/identifiers";
 import { errorResponse, validationErrorResponse } from "../../../../http";
 
 type Params = { params: Promise<{ id: string; kind: string }> };

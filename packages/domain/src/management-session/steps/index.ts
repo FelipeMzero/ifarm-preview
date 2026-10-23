@@ -1,22 +1,22 @@
 import "server-only";
 import { type StepType } from "@ifarm/shared";
-import { batchStep } from "@/server/management-session/steps/batch";
-import { healthStep } from "@/server/management-session/steps/health";
+import { batchStep } from "./batch";
+import { healthStep } from "./health";
 import {
   rfidStep,
   tagStep,
-} from "@/server/management-session/steps/identifier";
-import { neuteringStep } from "@/server/management-session/steps/neutering";
+} from "./identifier";
+import { neuteringStep } from "./neutering";
 import type {
   SessionCtx,
   StepModule,
   Tx,
-} from "@/server/management-session/steps/types";
-import { weighingStep } from "@/server/management-session/steps/weighing";
+} from "./types";
+import { weighingStep } from "./weighing";
 import {
   type SessionStep,
   stepKey,
-} from "@/server/management-session/session-steps";
+} from "../session-steps";
 
 // Registro dos tipos de etapa. Um tipo novo entra aqui e em packages/shared/src/management-session
 // (steps.ts, plan-steps.ts e step-payloads.ts).

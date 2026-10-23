@@ -6,7 +6,7 @@ import {
   cancelIdentifier,
   correctIdentifier,
   isIdentifierKind,
-} from "@/server/animal/identifiers";
+} from "@ifarm/domain/animal/identifiers";
 import { errorResponse, validationErrorResponse } from "../../../../../http";
 
 type Params = {

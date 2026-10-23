@@ -6,7 +6,7 @@ import {
   type ReceiveAnimalData,
   type ReceptionDocumentsData,
 } from "@ifarm/shared";
-import { prisma } from "@/server/db";
+import { prisma } from "@ifarm/db";
 import { assertNoConflicts } from "../animal/commitments";
 import { getOrAssignCurrentProperty } from "../current-property/queries";
 import { diffIds } from "../diff";
@@ -30,8 +30,8 @@ import {
 } from "./shared";
 import { countDone, loadStepRecords, stepModule } from "./steps";
 import type { Tx } from "./steps/types";
-import { stepKey } from "@/server/management-session/session-steps";
-import { animalLabel, summarize } from "@/server/animal/rules";
+import { stepKey } from "./session-steps";
+import { animalLabel, summarize } from "../animal/rules";
 
 // Planeja uma sessão: data prevista, etapas e animais participantes.
 export async function createManagementSession(

@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { batchTransferSchema } from "@ifarm/shared";
 import { requireSession } from "@/app/api/session";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
-import { getBatchTransfer } from "@/server/batch-transfer/queries";
-import { updateBatchTransfer } from "@/server/batch-transfer/mutations";
+import { getBatchTransfer } from "@ifarm/domain/batch-transfer/queries";
+import { updateBatchTransfer } from "@ifarm/domain/batch-transfer/mutations";
 import { errorResponse, validationErrorResponse } from "../../http";
 
 type Params = { params: Promise<{ id: string }> };

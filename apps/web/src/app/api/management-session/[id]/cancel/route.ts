@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireSession } from "@/app/api/session";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
-import { cancelManagementSession } from "@/server/management-session/mutations";
+import { cancelManagementSession } from "@ifarm/domain/management-session/mutations";
 import { errorResponse } from "../../../http";
 
 // Cancela a sessão (os registros ficam gravados, mas não passam a valer).

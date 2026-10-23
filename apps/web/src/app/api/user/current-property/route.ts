@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { currentPropertySchema } from "@ifarm/shared";
 import { requireSession } from "@/app/api/session";
-import { getOrAssignCurrentProperty } from "@/server/current-property/queries";
-import { setCurrentProperty } from "@/server/current-property/mutations";
+import { getOrAssignCurrentProperty } from "@ifarm/domain/current-property/queries";
+import { setCurrentProperty } from "@ifarm/domain/current-property/mutations";
 import { errorResponse, validationErrorResponse } from "../../http";
 
 // Retorna a propriedade atualmente selecionada pelo usuário logado. Se ele ainda não

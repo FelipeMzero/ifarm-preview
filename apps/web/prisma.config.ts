@@ -4,11 +4,12 @@ import "dotenv/config";
 import { defineConfig } from "prisma/config";
 
 export default defineConfig({
-  schema: "prisma/schema.prisma",
+  // O schema e o cliente gerado ficam em packages/db; o CLI e o seed rodam a partir do web.
+  schema: "../../packages/db/prisma/schema.prisma",
   migrations: {
-    path: "prisma/migrations",
-    // react-server: o seed usa módulos de src/server, marcados com "server-only".
-    seed: "tsx --conditions=react-server prisma/seed.ts",
+    path: "../../packages/db/prisma/migrations",
+    // react-server: o seed usa módulos de @ifarm/domain, marcados com "server-only".
+    seed: "tsx --conditions=react-server scripts/seed.ts",
   },
   datasource: {
     url: process.env["DATABASE_URL"],

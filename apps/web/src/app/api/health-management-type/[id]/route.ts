@@ -6,7 +6,7 @@ import {
   deleteHealthManagementType,
   toggleHealthManagementTypeStatus,
   updateHealthManagementType,
-} from "@/server/health-management-type/mutations";
+} from "@ifarm/domain/health-management-type/mutations";
 import { errorResponse, validationErrorResponse } from "../../http";
 
 type Params = { params: Promise<{ id: string }> };

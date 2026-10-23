@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { managementSessionQuerySchema } from "@ifarm/shared";
 import { requireSession } from "@/app/api/session";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
-import { listManagementSessions } from "@/server/management-session/queries";
-import { createManagementSession } from "@/server/management-session/mutations";
+import { listManagementSessions } from "@ifarm/domain/management-session/queries";
+import { createManagementSession } from "@ifarm/domain/management-session/mutations";
 import { managementSessionSchema } from "@ifarm/shared";
 import { errorResponse, validationErrorResponse } from "../http";
 

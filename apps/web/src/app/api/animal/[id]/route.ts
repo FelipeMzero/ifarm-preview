@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { animalUpdateSchema } from "@ifarm/shared";
 import { requireSession } from "@/app/api/session";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
-import { getAnimal } from "@/server/animal/queries";
-import { deleteAnimal, updateAnimal } from "@/server/animal/mutations";
+import { getAnimal } from "@ifarm/domain/animal/queries";
+import { deleteAnimal, updateAnimal } from "@ifarm/domain/animal/mutations";
 import { errorResponse, validationErrorResponse } from "../../http";
 
 type Params = { params: Promise<{ id: string }> };

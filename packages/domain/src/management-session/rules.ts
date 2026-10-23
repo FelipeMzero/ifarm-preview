@@ -4,7 +4,7 @@ import {
   type ManagementSessionStatus,
   type StepType,
 } from "@ifarm/shared";
-import type { Prisma } from "@/server/db";
+import type { Prisma } from "@ifarm/db";
 
 // Regras da sessão de manejo e das etapas, sem banco.
 

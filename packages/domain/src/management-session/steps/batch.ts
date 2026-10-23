@@ -1,12 +1,12 @@
 import "server-only";
 import { batchPayloadSchema, batchPlanSchema } from "@ifarm/shared";
-import { confirmTransferInTx } from "@/server/batch-transfer/confirmTransfer";
+import { confirmTransferInTx } from "../../batch-transfer/confirmTransfer";
 import {
   defineStep,
   StepError,
   type SessionCtx,
   type Tx,
-} from "@/server/management-session/steps/types";
+} from "./types";
 
 // Transferências da sessão ainda abertas (uma por lote de destino).
 const openTransfers = (sessionId: string) => ({

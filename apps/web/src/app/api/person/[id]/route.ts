@@ -2,12 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { personSchema } from "@ifarm/shared";
 import { requireSession } from "@/app/api/session";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
-import { getPerson } from "@/server/person/queries";
+import { getPerson } from "@ifarm/domain/person/queries";
 import {
   deletePerson,
   togglePersonStatus,
   updatePerson,
-} from "@/server/person/mutations";
+} from "@ifarm/domain/person/mutations";
 import { errorResponse, validationErrorResponse } from "../../http";
 
 type Params = { params: Promise<{ id: string }> };

@@ -1,13 +1,13 @@
 import "server-only";
 import { type ManagementSessionStatus, type StepType } from "@ifarm/shared";
 import type { CommitmentIntent } from "@ifarm/shared";
-import { repeatedStepMessage } from "@/server/management-session/rules";
-import { stepModule } from "@/server/management-session/steps";
+import { repeatedStepMessage } from "./rules";
+import { stepModule } from "./steps";
 import {
   StepError,
   type SessionCtx,
   type Tx,
-} from "@/server/management-session/steps/types";
+} from "./steps/types";
 import {
   normalizeStepOrder,
   sessionStatus,
@@ -16,12 +16,12 @@ import {
   stepKey,
   toSessionSteps,
   toStepRows,
-} from "@/server/management-session/session-steps";
+} from "./session-steps";
 import {
   animalLabel,
   summarize,
   unavailableReason,
-} from "@/server/animal/rules";
+} from "../animal/rules";
 
 export { StepError };
 

@@ -1,6 +1,6 @@
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
-import { auth } from "@/server/auth";
+import { auth } from "@/lib/auth";
 
 type RequireSessionOptions = {
   forbiddenRoles?: readonly string[];

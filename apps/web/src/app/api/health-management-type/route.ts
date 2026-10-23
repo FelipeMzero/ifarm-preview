@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { healthManagementTypeSchema } from "@ifarm/shared";
 import { requireSession } from "@/app/api/session";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
-import { listHealthManagementTypes } from "@/server/health-management-type/queries";
-import { createHealthManagementType } from "@/server/health-management-type/mutations";
+import { listHealthManagementTypes } from "@ifarm/domain/health-management-type/queries";
+import { createHealthManagementType } from "@ifarm/domain/health-management-type/mutations";
 import { errorResponse, validationErrorResponse } from "../http";
 
 export async function GET() {

@@ -9,7 +9,7 @@ import {
   type ManagementSessionListResult,
   type SessionAnimalContext,
 } from "@ifarm/shared";
-import { prisma, type Prisma } from "@/server/db";
+import { prisma, type Prisma } from "@ifarm/db";
 import { getOrAssignCurrentProperty } from "../current-property/queries";
 import { NotFoundError } from "../errors";
 import { describeReception } from "../purchase/reception";
@@ -28,8 +28,8 @@ import {
   sessionStatus,
   sessionStepsSelect,
   toSessionSteps,
-} from "@/server/management-session/session-steps";
-import { unavailableReason } from "@/server/animal/rules";
+} from "./session-steps";
+import { unavailableReason } from "../animal/rules";
 
 function buildWhere(query: ManagementSessionQuery, propertyId: string) {
   // Recepções de compra ficam na área de recepções, não na lista de manejos.

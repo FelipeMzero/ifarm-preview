@@ -1,6 +1,6 @@
 import { type AnimalStatus, type BatchTransferStatus } from "@ifarm/shared";
-import type { Prisma } from "@/server/db";
-import { unavailableReason } from "@/server/animal/rules";
+import type { Prisma } from "@ifarm/db";
+import { unavailableReason } from "../animal/rules";
 
 export function transferStatus(t: {
   confirmedAt: Date | null;

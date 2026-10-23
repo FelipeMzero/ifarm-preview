@@ -3,8 +3,8 @@ import { batchTransferQuerySchema } from "@ifarm/shared";
 import { batchTransferSchema } from "@ifarm/shared";
 import { requireSession } from "@/app/api/session";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
-import { listBatchTransfers } from "@/server/batch-transfer/queries";
-import { createBatchTransfer } from "@/server/batch-transfer/mutations";
+import { listBatchTransfers } from "@ifarm/domain/batch-transfer/queries";
+import { createBatchTransfer } from "@ifarm/domain/batch-transfer/mutations";
 import { errorResponse, validationErrorResponse } from "../http";
 
 export async function GET(request: NextRequest) {

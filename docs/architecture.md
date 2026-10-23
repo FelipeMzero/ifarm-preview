@@ -20,13 +20,13 @@ flowchart TB
     Api["sessão, permissão, validação da entrada<br/>e tradução de erros para HTTP"]
   end
 
-  subgraph L3["3 · Domínio · apps/web/src/server"]
+  subgraph L3["3 · Domínio · packages/domain"]
     Domain["consultas, escritas e regras de negócio<br/>(não conhece HTTP)"]
   end
 
   subgraph L4["4 · Persistência"]
     direction LR
-    Prisma["Prisma ORM<br/>modelo em apps/web/prisma"]
+    Prisma["Prisma ORM<br/>modelo em packages/db"]
     DB[("PostgreSQL")]
   end
 
@@ -57,7 +57,7 @@ Esta camada não contém regras de negócio nem acessa o banco de dados.
 
 ## 3 - Camada de Domínio (Regras de Negócio)
 
-Centraliza as regras de negócio do sistema (`apps/web/src/server`). Cada domínio (pessoas, lotes, compras, manejos...) é organizado em consultas (`queries`), operações de escrita (`mutations`) e regras puras (`rules`), estas últimas cobertas por testes automatizados.
+Centraliza as regras de negócio do sistema (`packages/domain`). Cada domínio (pessoas, lotes, compras, manejos...) é organizado em consultas (`queries`), operações de escrita (`mutations`) e regras puras (`rules`), estas últimas cobertas por testes automatizados.
 
 O código desta camada é executado exclusivamente no servidor e não conhece HTTP: comunica falhas por meio de erros do próprio domínio (registro não encontrado, validação, conflito, regra de negócio violada), que a camada de API traduz em respostas. Por isso, as mesmas regras podem ser reutilizadas fora das rotas, como na carga inicial de dados e em scripts de manutenção.
 
@@ -65,7 +65,7 @@ O código desta camada é executado exclusivamente no servidor e não conhece HT
 
 Banco de dados relacional (PostgreSQL) encarregado do armazenamento seguro e persistente de todas as entidades do sistema.
 
-O Prisma ORM atua como intermediário entre a camada de domínio e o banco de dados, abstraindo as operações SQL por meio de uma interface tipada e segura. O modelo de dados é definido em `apps/web/prisma/schema.prisma`, e apenas a camada de domínio acessa o banco. Detalhes de armazenamento, como o formato das datas gravadas, também ficam restritos a essa camada.
+O Prisma ORM atua como intermediário entre a camada de domínio e o banco de dados, abstraindo as operações SQL por meio de uma interface tipada e segura. O modelo de dados é definido em `packages/db/prisma/schema.prisma`, e apenas a camada de domínio acessa o banco. Detalhes de armazenamento, como o formato das datas gravadas, também ficam restritos a essa camada.
 
 ## Contrato da API
 

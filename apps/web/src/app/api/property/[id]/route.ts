@@ -2,12 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { propertySchema } from "@ifarm/shared";
 import { requireSession } from "@/app/api/session";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
-import { getProperty } from "@/server/property/queries";
+import { getProperty } from "@ifarm/domain/property/queries";
 import {
   deleteProperty,
   togglePropertyStatus,
   updateProperty,
-} from "@/server/property/mutations";
+} from "@ifarm/domain/property/mutations";
 import { errorResponse, validationErrorResponse } from "../../http";
 
 type Params = { params: Promise<{ id: string }> };

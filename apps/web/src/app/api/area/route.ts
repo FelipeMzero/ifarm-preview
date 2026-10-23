@@ -3,8 +3,8 @@ import { areaQuerySchema } from "@ifarm/shared";
 import { areaSchema } from "@ifarm/shared";
 import { requireSession } from "@/app/api/session";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
-import { listAreas } from "@/server/area/queries";
-import { createArea } from "@/server/area/mutations";
+import { listAreas } from "@ifarm/domain/area/queries";
+import { createArea } from "@ifarm/domain/area/mutations";
 import { errorResponse, validationErrorResponse } from "../http";
 
 export async function GET(request: NextRequest) {

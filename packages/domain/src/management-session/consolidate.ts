@@ -1,25 +1,25 @@
 import "server-only";
-import { assertNoConflicts } from "@/server/animal/commitments";
-import { findReception } from "@/server/purchase/reception";
-import { splitHandled } from "@/server/management-session/rules";
+import { assertNoConflicts } from "../animal/commitments";
+import { findReception } from "../purchase/reception";
+import { splitHandled } from "./rules";
 import {
   requireManagementDate,
   requireSessionIn,
   sessionIntent,
   StepError,
-} from "@/server/management-session/shared";
+} from "./shared";
 import {
   countDone,
   loadStepRecords,
   stepModule,
-} from "@/server/management-session/steps";
-import type { Tx } from "@/server/management-session/steps/types";
+} from "./steps";
+import type { Tx } from "./steps/types";
 import {
   animalLabel,
   summarize,
   unavailableAnimalsMessage,
   unavailableReason,
-} from "@/server/animal/rules";
+} from "../animal/rules";
 
 /**
  * Consolida a sessão: os animais sem nenhum registro saem da sessão e os registros

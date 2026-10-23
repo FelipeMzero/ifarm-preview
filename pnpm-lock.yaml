@@ -72,6 +72,12 @@ importers:
       '@hookform/resolvers':
         specifier: ^5.4.0
         version: 5.4.0(react-hook-form@7.80.0(react@19.2.4))
+      '@ifarm/db':
+        specifier: workspace:*
+        version: link:../../packages/db
+      '@ifarm/domain':
+        specifier: workspace:*
+        version: link:../../packages/domain
       '@ifarm/shared':
         specifier: workspace:*
         version: link:../../packages/shared
@@ -199,6 +205,47 @@ importers:
       typescript:
         specifier: ^5
         version: 5.9.3
+      vitest:
+        specifier: ^5.0.2
+        version: 5.0.2(@types/node@20.19.39)(vite@8.3.1(@types/node@20.19.39)(esbuild@0.27.7)(jiti@2.6.1)(terser@5.49.0)(tsx@4.21.0)(yaml@2.9.0))
+
+  packages/db:
+    dependencies:
+      '@prisma/adapter-pg':
+        specifier: 7.7.0
+        version: 7.7.0
+      '@prisma/client':
+        specifier: 7.7.0
+        version: 7.7.0(prisma@7.7.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(typescript@5.9.3))(typescript@5.9.3)
+      dotenv:
+        specifier: ^17.4.2
+        version: 17.4.2
+      pg:
+        specifier: ^8.20.0
+        version: 8.20.0
+      server-only:
+        specifier: ^0.0.1
+        version: 0.0.1
+    devDependencies:
+      '@types/pg':
+        specifier: ^8.20.0
+        version: 8.20.0
+
+  packages/domain:
+    dependencies:
+      '@ifarm/db':
+        specifier: workspace:*
+        version: link:../db
+      '@ifarm/shared':
+        specifier: workspace:*
+        version: link:../shared
+      server-only:
+        specifier: ^0.0.1
+        version: 0.0.1
+      zod:
+        specifier: ^4.4.3
+        version: 4.4.3
+    devDependencies:
       vitest:
         specifier: ^5.0.2
         version: 5.0.2(@types/node@20.19.39)(vite@8.3.1(@types/node@20.19.39)(esbuild@0.27.7)(jiti@2.6.1)(terser@5.49.0)(tsx@4.21.0)(yaml@2.9.0))

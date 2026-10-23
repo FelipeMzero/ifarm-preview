@@ -4,7 +4,7 @@ import { RESOURCE_ACCESS } from "@/lib/permissions";
 import {
   clearSessionAnimalStep,
   saveSessionAnimalStep,
-} from "@/server/management-session/mutations";
+} from "@ifarm/domain/management-session/mutations";
 import { errorResponse } from "../../../../../../http";
 
 type Params = {

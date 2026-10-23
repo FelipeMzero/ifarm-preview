@@ -4,9 +4,9 @@ import { requireSession } from "@/app/api/session";
 import {
   stockingPreview,
   transferStockingPreview,
-} from "@/server/stocking/queries";
+} from "@ifarm/domain/stocking/queries";
 import { errorResponse } from "../http";
-import { toDbDate } from "@/server/db-dates";
+import { toDbDate } from "@ifarm/domain/db-dates";
 
 // Prévia da lotação (UA) da área que vai receber animais. Só informa: nenhuma
 // operação é bloqueada por excesso de lotação.

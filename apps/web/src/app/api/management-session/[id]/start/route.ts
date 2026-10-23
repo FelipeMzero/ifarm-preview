@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireSession } from "@/app/api/session";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
-import { startManagementSession } from "@/server/management-session/mutations";
+import { startManagementSession } from "@ifarm/domain/management-session/mutations";
 import { managementSessionStartSchema } from "@ifarm/shared";
 import { errorResponse, validationErrorResponse } from "../../../http";
 

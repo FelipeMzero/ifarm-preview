@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireSession } from "@/app/api/session";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
-import { confirmManagementSession } from "@/server/management-session/mutations";
+import { confirmManagementSession } from "@ifarm/domain/management-session/mutations";
 import { errorResponse } from "../../../http";
 
 // Consolida a sessão: os registros passam a valer.

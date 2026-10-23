@@ -1,6 +1,6 @@
 import "server-only";
 import type { NeuteringTechnique } from "@ifarm/shared";
-import { prisma } from "@/server/db";
+import { prisma } from "@ifarm/db";
 
 export function toNeuteringTechnique(b: {
   id: string;

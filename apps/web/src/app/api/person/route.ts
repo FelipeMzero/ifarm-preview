@@ -3,8 +3,8 @@ import { personQuerySchema } from "@ifarm/shared";
 import { personSchema } from "@ifarm/shared";
 import { requireSession } from "@/app/api/session";
 import { RESOURCE_ACCESS } from "@/lib/permissions";
-import { listPeople } from "@/server/person/queries";
-import { createPerson } from "@/server/person/mutations";
+import { listPeople } from "@ifarm/domain/person/queries";
+import { createPerson } from "@ifarm/domain/person/mutations";
 import { errorResponse, validationErrorResponse } from "../http";
 
 export async function GET(request: NextRequest) {
