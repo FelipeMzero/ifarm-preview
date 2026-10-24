@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useForm, useWatch, type Path } from "react-hook-form";
+import { useQueryClient } from "@tanstack/react-query";
 import { zodResolver } from "@hookform/resolvers/zod";
 import L from "leaflet";
 import {
@@ -60,6 +61,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useCurrentProperty } from "@/features/shell/CurrentPropertyProvider";
+import { geocodeQuery } from "@/features/address/queries";
 import { propertyClient } from "@/lib/clients";
 import { areaSchema, type AreaInput } from "@ifarm/shared";
 import { areaClient } from "@/lib/clients";
@@ -577,50 +579,9 @@ function EditablePolygon({
   );
 }
 
-async function geocodeAddress(
-  zipCode?: string,
-  city?: string,
-  state?: string,
-): Promise<[number, number] | null> {
-  const cleanZip = zipCode?.replace(/\D/g, "");
-
-  if (cleanZip) {
-    try {
-      const res = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&postalcode=${cleanZip}&country=Brazil`,
-        { headers: { "User-Agent": "iFarm-App/1.0" } },
-      );
-      const data = await res.json();
-      if (data && data.length > 0) {
-        return [parseFloat(data[0].lat), parseFloat(data[0].lon)];
-      }
-    } catch (e) {
-      console.warn("Geocodificação por CEP falhou:", e);
-    }
-  }
-
-  if (city && state) {
-    try {
-      const encodedCity = encodeURIComponent(city);
-      const encodedState = encodeURIComponent(state);
-      const res = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&city=${encodedCity}&state=${encodedState}&country=Brazil`,
-        { headers: { "User-Agent": "iFarm-App/1.0" } },
-      );
-      const data = await res.json();
-      if (data && data.length > 0) {
-        return [parseFloat(data[0].lat), parseFloat(data[0].lon)];
-      }
-    } catch (e) {
-      console.warn("Geocodificação por Cidade/Estado falhou:", e);
-    }
-  }
-
-  return null;
-}
-
 export default function AreaMap() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { property: currentProperty } = useCurrentProperty();
 
   const [areas, setAreas] = useState<AreaRow[]>([]);
@@ -665,13 +626,17 @@ export default function AreaMap() {
             ]);
           return;
         }
-        const coords = await geocodeAddress(
-          details.zipCode,
-          details.city,
-          details.state,
-        );
+        const coords = await queryClient
+          .fetchQuery(
+            geocodeQuery({
+              zipCode: details.zipCode,
+              city: details.city,
+              state: details.state,
+            }),
+          )
+          .catch(() => null);
         if (coords) {
-          if (active) setPropertyCoords(coords);
+          if (active) setPropertyCoords([coords.latitude, coords.longitude]);
           return;
         }
       } catch {
@@ -699,7 +664,7 @@ export default function AreaMap() {
     return () => {
       active = false;
     };
-  }, [currentPropertyId]);
+  }, [currentPropertyId, queryClient]);
 
   const [mapInstance, setMapInstance] = useState<L.Map | null>(null);
   const [mapAreaEl, setMapAreaEl] = useState<HTMLDivElement | null>(null);

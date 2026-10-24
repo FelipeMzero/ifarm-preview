@@ -1,4 +1,5 @@
 import {
+  createAddressClient,
   createAnimalClient,
   createAreaClient,
   createBatchClient,
@@ -20,6 +21,7 @@ import {
 // o cookie de sessão sozinho; o mobile configura os mesmos clientes com a URL e o cookie dele.
 const request: ApiRequest = (path, init) => fetch(path, init);
 
+export const addressClient = createAddressClient(request);
 export const personClient = createPersonClient(request);
 export const breedClient = createBreedClient(request);
 export const healthManagementTypeClient =

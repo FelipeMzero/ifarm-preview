@@ -16,6 +16,7 @@ export * from "./stocking/client";
 export * from "./current-property/client";
 export * from "./current-property/schema";
 export * from "./address/schema";
+export * from "./address/client";
 export * from "./zod-utils";
 export * from "./property/schema";
 export * from "./property/client";

@@ -39,6 +39,7 @@ import { LocationPickerDialog } from "./LocationPickerDialog";
 import { useCurrentProperty } from "@/features/shell/CurrentPropertyProvider";
 import { personKeys } from "../person/queries";
 import { propertyDetailQuery, propertyKeys } from "./queries";
+import { geocodeQuery, zipCodeQuery } from "../address/queries";
 
 // Importações do Modal e do Componente de Pessoa
 import {
@@ -239,62 +240,41 @@ export default function PropertyForm({
   const longitude = useWatch({ control, name: "longitude" });
   const [isPickerOpen, setIsPickerOpen] = useState(false);
 
-  async function geocodeAddress(
-    street: string,
-    city: string,
-    state: string,
-    postalcode: string,
-  ) {
-    try {
-      const params = new URLSearchParams({
-        format: "json",
-        street,
-        city,
-        state,
-        postalcode,
-        country: "Brasil",
-        limit: "1",
-      });
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?${params}`,
-      );
-      const results = await response.json();
-      return results?.[0]
-        ? { lat: results[0].lat as string, lon: results[0].lon as string }
-        : null;
-    } catch {
-      return null;
-    }
-  }
-
   async function handleZipBlur(zipCode: string) {
     const digits = zipCode.replace(/\D/g, "");
     if (digits.length !== 8) return;
 
     setIsZipLoading(true);
     try {
-      const response = await fetch(`https://viacep.com.br/ws/${digits}/json/`);
-      const data = await response.json();
-
-      if (data.erro) {
+      const address = await queryClient.fetchQuery(zipCodeQuery(digits));
+      if (!address) {
         toast.error("CEP não encontrado.");
         return;
       }
 
-      setValue("street", data.logradouro || "", { shouldValidate: true });
-      setValue("neighborhood", data.bairro || "", { shouldValidate: true });
-      setValue("city", data.localidade || "", { shouldValidate: true });
-      setValue("state", data.uf || "", { shouldValidate: true });
+      setValue("street", address.street, { shouldValidate: true });
+      setValue("neighborhood", address.neighborhood, { shouldValidate: true });
+      setValue("city", address.city, { shouldValidate: true });
+      setValue("state", address.state, { shouldValidate: true });
 
-      const coordinates = await geocodeAddress(
-        data.logradouro || "",
-        data.localidade || "",
-        data.uf || "",
-        digits,
-      );
+      // Sem coordenadas não é erro: o usuário pode marcá-las no mapa.
+      const coordinates = await queryClient
+        .fetchQuery(
+          geocodeQuery({
+            street: address.street,
+            city: address.city,
+            state: address.state,
+            zipCode: digits,
+          }),
+        )
+        .catch(() => null);
       if (coordinates) {
-        setValue("latitude", coordinates.lat, { shouldValidate: true });
-        setValue("longitude", coordinates.lon, { shouldValidate: true });
+        setValue("latitude", String(coordinates.latitude), {
+          shouldValidate: true,
+        });
+        setValue("longitude", String(coordinates.longitude), {
+          shouldValidate: true,
+        });
       }
     } catch {
       toast.error("Não foi possível buscar o endereço pelo CEP.");

@@ -78,3 +78,15 @@ export function checkAddress(
     }
   }
 }
+
+// Busca de coordenadas por endereço (parâmetros da URL de /api/address/geocode). Todos opcionais:
+// a API tenta o endereço completo, depois só o CEP e, por fim, a cidade com o estado.
+export const geocodeQuerySchema = z.object({
+  street: z.string().trim().optional(),
+  city: z.string().trim().optional(),
+  state: z.string().trim().optional(),
+  zipCode: z.string().trim().optional(),
+});
+
+export type GeocodeParams = z.input<typeof geocodeQuerySchema>;
+export type GeocodeQuery = z.output<typeof geocodeQuerySchema>;

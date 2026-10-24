@@ -3,6 +3,7 @@ import { Hono } from "hono";
 import { contextStorage } from "hono/context-storage";
 import { cors } from "hono/cors";
 import { auth } from "./auth";
+import { addressRoutes } from "./routes/address";
 import { animalRoutes } from "./routes/animal";
 import { areaRoutes } from "./routes/area";
 import { batchRoutes } from "./routes/batch";
@@ -71,6 +72,7 @@ if (process.env.NODE_ENV !== "production" && apiDelayMs > 0) {
 // Login, sessão e gestão de usuários (better-auth).
 app.on(["GET", "POST"], "/api/auth/*", (c) => auth.handler(c.req.raw));
 
+app.route("/api/address", addressRoutes);
 app.route("/api/animal", animalRoutes);
 app.route("/api/area", areaRoutes);
 app.route("/api/batch", batchRoutes);

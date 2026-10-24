@@ -6,6 +6,7 @@ import {
   ApiError,
 } from "@ifarm/shared";
 import { useEffect, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { IMaskInput } from "react-imask";
@@ -27,6 +28,7 @@ import { BR_STATE_ITEMS } from "@ifarm/shared";
 import { PERSON_TYPE_ITEMS, MARITAL_STATUS_ITEMS } from "@ifarm/shared";
 import { FormActionBar } from "@/components/our/FormActionBar";
 import { cn } from "@/lib/utils";
+import { zipCodeQuery } from "../address/queries";
 
 const MASKED_INPUT_CLASSNAME =
   "h-10 w-full min-w-0 rounded-lg border border-input bg-input/40 px-2.5 py-1 text-base transition-colors outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 aria-invalid:border-destructive aria-invalid:focus:ring-3 aria-invalid:ring-destructive/20 md:text-sm dark:bg-input/30 dark:disabled:bg-input/80 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40";
@@ -48,6 +50,7 @@ export default function PersonForm({
 }: PersonFormProps) {
   const [isDataLoading, setIsDataLoading] = useState(!!id);
   const [loadFailed, setLoadFailed] = useState(false);
+  const queryClient = useQueryClient();
   const [isZipLoading, setIsZipLoading] = useState(false);
 
   const {
@@ -106,18 +109,16 @@ export default function PersonForm({
 
     setIsZipLoading(true);
     try {
-      const response = await fetch(`https://viacep.com.br/ws/${digits}/json/`);
-      const data = await response.json();
-
-      if (data.erro) {
+      const address = await queryClient.fetchQuery(zipCodeQuery(digits));
+      if (!address) {
         toast.error("CEP não encontrado.");
         return;
       }
 
-      setValue("street", data.logradouro || "", { shouldValidate: true });
-      setValue("neighborhood", data.bairro || "", { shouldValidate: true });
-      setValue("city", data.localidade || "", { shouldValidate: true });
-      setValue("state", data.uf || "", { shouldValidate: true });
+      setValue("street", address.street, { shouldValidate: true });
+      setValue("neighborhood", address.neighborhood, { shouldValidate: true });
+      setValue("city", address.city, { shouldValidate: true });
+      setValue("state", address.state, { shouldValidate: true });
     } catch {
       toast.error("Não foi possível buscar o endereço pelo CEP.");
     } finally {
