@@ -1,15 +1,4 @@
-import { lazyComponent } from "@/lib/lazy";
-
-const ReceptionPurchaseList = lazyComponent(
-  () => import("@/features/reception/ReceptionPurchaseList"),
-  {
-    loading: () => (
-      <div className="flex min-h-100 items-center justify-center">
-        <div className="size-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-      </div>
-    ),
-  },
-);
+import ReceptionPurchaseList from "@/features/reception/ReceptionPurchaseList";
 
 export default function Page() {
   return (

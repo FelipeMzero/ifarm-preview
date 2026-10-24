@@ -19,7 +19,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -29,6 +28,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { ConfirmDialog } from "@/components/our/ConfirmDialog";
+import { DetailsSkeleton } from "@/components/our/DetailParts";
 import { ErrorPage } from "@/components/our/ErrorPage";
 import { personClient } from "@/lib/clients";
 import {
@@ -94,17 +94,6 @@ const FICTITIOUS_SUPPLIED_PRODUCTS = [
   },
 ];
 
-function DetailsSkeleton() {
-  return (
-    <div className="w-full max-w-4xl space-y-4">
-      <Skeleton className="h-9 w-24" />
-      <Skeleton className="h-32 w-full rounded-xl" />
-      <Skeleton className="h-48 w-full rounded-xl" />
-      <Skeleton className="h-48 w-full rounded-xl" />
-    </div>
-  );
-}
-
 export default function PersonDetails({
   id,
   onClose,
@@ -164,7 +153,7 @@ export default function PersonDetails({
   }
 
   if (loading || !person) {
-    return <DetailsSkeleton />;
+    return <DetailsSkeleton variant="cards" />;
   }
 
   const isIndividual = person.type === PersonType.INDIVIDUAL;

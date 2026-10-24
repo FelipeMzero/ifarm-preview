@@ -1,13 +1,23 @@
-import { FIELD_LIMITS } from "@ifarm/shared";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { IMaskInput } from "react-imask";
 import { lazyComponent } from "@/lib/lazy";
 
-import { propertyClient } from "@/lib/clients";
-import { ApiError } from "@ifarm/shared";
-import { personClient } from "@/lib/clients";
+import {
+  ApiError,
+  BR_STATE_ITEMS,
+  FIELD_LIMITS,
+  propertySchema,
+  type PropertyInput,
+} from "@ifarm/shared";
+import { personClient, propertyClient } from "@/lib/clients";
 import { ErrorPage } from "@/components/our/ErrorPage";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -23,12 +33,12 @@ import {
 } from "@/components/our/SearchCombobox";
 import { ArrowLeft, Loader2, MapPin, MapPinOff } from "lucide-react";
 import FormSkeleton from "@/components/our/FormSkeleton";
-import { propertySchema, type PropertyInput } from "@ifarm/shared";
 import { Separator } from "@/components/ui/separator";
-import { BR_STATE_ITEMS } from "@ifarm/shared";
 import { cn } from "@/lib/utils";
 import { LocationPickerDialog } from "./LocationPickerDialog";
 import { useCurrentProperty } from "@/features/shell/CurrentPropertyProvider";
+import { personKeys } from "../person/queries";
+import { propertyDetailQuery, propertyKeys } from "./queries";
 
 // Importações do Modal e do Componente de Pessoa
 import {
@@ -126,28 +136,71 @@ export default function PropertyForm({
   onCancel,
   onSuccess,
 }: PropertyFormProps) {
+  const queryClient = useQueryClient();
   const { refresh: refreshCurrentProperty } = useCurrentProperty();
-  const [isDataLoading, setIsDataLoading] = useState(!!id);
-  const [loadFailed, setLoadFailed] = useState(false);
   const [isZipLoading, setIsZipLoading] = useState(false);
 
   // Estado para controle do modal de Nova Pessoa
   const [isPersonModalOpen, setIsPersonModalOpen] = useState(false);
 
-  const [ownerItems, setOwnerItems] = useState<SearchComboboxItem[]>([]);
-  const ownerDebounce = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Propriedade em edição (só com id).
+  const {
+    data: property,
+    isPending,
+    isError,
+    refetch,
+  } = useQuery({
+    ...propertyDetailQuery(id ?? ""),
+    enabled: !!id,
+  });
 
+  // Opções de titular: as 5 primeiras pessoas ativas, ou a busca digitada (com espera).
+  const [ownerSearch, setOwnerSearch] = useState("");
+  const ownerDebounce = useRef<ReturnType<typeof setTimeout> | null>(null);
   const searchOwners = useCallback((query: string) => {
     if (ownerDebounce.current) clearTimeout(ownerDebounce.current);
-    ownerDebounce.current = setTimeout(async () => {
-      const result = await personClient.getPeople({
-        search: query,
-        pageSize: query ? 20 : 5,
-        status: "active",
-      });
-      setOwnerItems(result.data.map((p) => ({ value: p.id, label: p.name })));
-    }, 300);
+    ownerDebounce.current = setTimeout(() => setOwnerSearch(query), 300);
   }, []);
+  const ownerParams = {
+    search: ownerSearch,
+    pageSize: ownerSearch ? 20 : 5,
+    status: "active" as const,
+  };
+  const { data: owners } = useQuery({
+    queryKey: personKeys.list(ownerParams),
+    queryFn: () => personClient.getPeople(ownerParams),
+    placeholderData: keepPreviousData,
+  });
+  // Titular cadastrado agora pelo modal, que pode não estar entre as opções da lista.
+  const [createdOwner, setCreatedOwner] = useState<SearchComboboxItem | null>(
+    null,
+  );
+  const listedOwners: SearchComboboxItem[] =
+    owners?.data.map((p) => ({ value: p.id, label: p.name })) ?? [];
+  // Sem busca, o titular atual (e o recém-criado) entram no topo, se não vierem na lista.
+  const pinnedOwners: SearchComboboxItem[] = ownerSearch
+    ? []
+    : [
+        createdOwner,
+        property?.ownerId && property.ownerName
+          ? { value: property.ownerId, label: property.ownerName }
+          : null,
+      ].filter(
+        (o): o is SearchComboboxItem =>
+          !!o && !listedOwners.some((l) => l.value === o.value),
+      );
+  const ownerItems = [...pinnedOwners, ...listedOwners];
+
+  const save = useMutation({
+    mutationFn: (data: PropertyInput) =>
+      id
+        ? propertyClient.updateProperty(id, data)
+        : propertyClient.createProperty(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: propertyKeys.all });
+      refreshCurrentProperty();
+    },
+  });
 
   const {
     handleSubmit,
@@ -158,6 +211,10 @@ export default function PropertyForm({
     formState: { isSubmitting },
   } = useForm<PropertyInput>({
     resolver: zodResolver(propertySchema),
+    // Dados da propriedade em edição. Se forem buscados de novo em segundo plano, só os campos
+    // que o usuário não alterou são atualizados (keepDirtyValues).
+    values: property,
+    resetOptions: { keepDirtyValues: true },
     defaultValues: {
       name: "",
       ownerId: "",
@@ -181,44 +238,6 @@ export default function PropertyForm({
   const latitude = useWatch({ control, name: "latitude" });
   const longitude = useWatch({ control, name: "longitude" });
   const [isPickerOpen, setIsPickerOpen] = useState(false);
-
-  useEffect(() => {
-    async function loadData() {
-      try {
-        const initialOwners = await personClient.getPeople({
-          pageSize: 5,
-          status: "active",
-        });
-        let seededOwners = initialOwners.data.map((p) => ({
-          value: p.id,
-          label: p.name,
-        }));
-
-        if (id) {
-          const data = await propertyClient.getProperty(id);
-          if (
-            data.ownerId &&
-            data.ownerName &&
-            !seededOwners.some((o) => o.value === data.ownerId)
-          ) {
-            seededOwners = [
-              { value: data.ownerId, label: data.ownerName },
-              ...seededOwners,
-            ];
-          }
-          reset(data);
-        }
-
-        setOwnerItems(seededOwners);
-      } catch {
-        setLoadFailed(true);
-      } finally {
-        setIsDataLoading(false);
-      }
-    }
-
-    loadData();
-  }, [id, reset]);
 
   async function geocodeAddress(
     street: string,
@@ -287,16 +306,15 @@ export default function PropertyForm({
   async function onSubmit(data: PropertyInput) {
     try {
       if (id) {
-        await propertyClient.updateProperty(id, data);
-        const fresh = await propertyClient.getProperty(id);
+        await save.mutateAsync(data);
+        // Volta o formulário ao estado "sem alterações", com os dados salvos (e o cache junto).
+        const fresh = await queryClient.fetchQuery(propertyDetailQuery(id));
         reset(fresh);
         toast.success("Registro atualizado com sucesso!");
-        refreshCurrentProperty();
         onSuccess?.();
       } else {
-        const response = await propertyClient.createProperty(data);
+        const response = await save.mutateAsync(data);
         toast.success("Registro salvo com sucesso!");
-        refreshCurrentProperty();
         onSuccess?.(response.data.id);
       }
     } catch (error) {
@@ -314,16 +332,16 @@ export default function PropertyForm({
     }
   }
 
-  if (loadFailed) {
+  if (id && isError) {
     return (
       <ErrorPage
         message={"Não foi possível obter os dados do servidor."}
-        onRetry={() => window.location.reload()}
+        onRetry={() => refetch()}
       />
     );
   }
 
-  if (isDataLoading) {
+  if (id && isPending) {
     return <FormSkeleton />;
   }
 
@@ -680,15 +698,13 @@ export default function PropertyForm({
             onSuccess={async (newId) => {
               setIsPersonModalOpen(false);
               if (newId) {
-                // Atualiza a listagem de titulares no client e auto-seleciona a nova pessoa
-                const result = await personClient.getPeople({
-                  search: "",
-                  pageSize: 20,
-                  status: "active",
+                // Recarrega as opções de titular e já seleciona a pessoa cadastrada.
+                queryClient.invalidateQueries({ queryKey: personKeys.all });
+                const person = await queryClient.fetchQuery({
+                  queryKey: personKeys.detail(newId),
+                  queryFn: () => personClient.getPerson(newId),
                 });
-                setOwnerItems(
-                  result.data.map((p) => ({ value: p.id, label: p.name })),
-                );
+                setCreatedOwner({ value: newId, label: person.name });
                 setValue("ownerId", newId, { shouldValidate: true });
                 toast.success("Titular vinculado à propriedade com sucesso.");
               }

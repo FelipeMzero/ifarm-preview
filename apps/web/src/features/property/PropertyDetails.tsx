@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router";
 import { toast } from "sonner";
 import {
@@ -17,23 +18,12 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Skeleton } from "@/components/ui/skeleton";
 import { ConfirmDialog } from "@/components/our/ConfirmDialog";
+import { DetailsSkeleton } from "@/components/our/DetailParts";
 import { ErrorPage } from "@/components/our/ErrorPage";
 import { propertyClient } from "@/lib/clients";
-import type { PropertyInput } from "@ifarm/shared";
 import { useCurrentProperty } from "@/features/shell/CurrentPropertyProvider";
-
-function DetailsSkeleton() {
-  return (
-    <div className="w-full max-w-4xl space-y-4">
-      <Skeleton className="h-9 w-24" />
-      <Skeleton className="h-32 w-full rounded-xl" />
-      <Skeleton className="h-48 w-full rounded-xl" />
-      <Skeleton className="h-48 w-full rounded-xl" />
-    </div>
-  );
-}
+import { propertyDetailQuery, propertyKeys } from "./queries";
 
 export default function PropertyDetails({
   id,
@@ -43,60 +33,50 @@ export default function PropertyDetails({
   onClose?: () => void;
 }) {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { refresh: refreshCurrentProperty } = useCurrentProperty();
-  const [property, setProperty] = useState<PropertyInput | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
 
-  useEffect(() => {
-    let cancelled = false;
+  const {
+    data: property,
+    isPending,
+    isError,
+    refetch,
+  } = useQuery({
+    ...propertyDetailQuery(id),
+  });
 
-    async function load() {
-      setLoading(true);
-      try {
-        const data = await propertyClient.getProperty(id);
-        if (!cancelled) setProperty(data);
-      } catch (e) {
-        if (!cancelled) setError((e as Error).message);
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    }
-
-    load();
-    return () => {
-      cancelled = true;
-    };
-  }, [id]);
-
-  async function handleDelete() {
-    try {
-      await propertyClient.deleteProperty(id);
+  const deleteProperty = useMutation({
+    mutationFn: () => propertyClient.deleteProperty(id),
+    onSuccess: () => {
       toast.success("Registro excluído com sucesso!");
+      queryClient.removeQueries({ queryKey: propertyKeys.detail(id) });
+      queryClient.invalidateQueries({ queryKey: propertyKeys.all });
       refreshCurrentProperty();
       if (onClose) onClose();
       else navigate("/propriedades");
-    } catch (e) {
-      toast.error(
-        (e as Error).message || "Não foi possível excluir o registro.",
-      );
-    } finally {
-      setConfirmingDelete(false);
-    }
+    },
+    onError: (e) => {
+      toast.error(e.message || "Não foi possível excluir o registro.");
+    },
+    onSettled: () => setConfirmingDelete(false),
+  });
+
+  function handleDelete() {
+    deleteProperty.mutate();
   }
 
-  if (error) {
+  if (isError) {
     return (
       <ErrorPage
         message="Não foi possível obter os dados da propriedade."
-        onRetry={() => window.location.reload()}
+        onRetry={() => refetch()}
       />
     );
   }
 
-  if (loading || !property) {
-    return <DetailsSkeleton />;
+  if (isPending) {
+    return <DetailsSkeleton variant="cards" />;
   }
 
   const address = [

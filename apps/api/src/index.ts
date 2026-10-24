@@ -53,6 +53,21 @@ if (process.env.NODE_ENV !== "production") {
   );
 }
 
+// Só em desenvolvimento: atrasa as respostas da API (menos a autenticação) para ver os estados
+// de carregamento das telas. Ex.: API_DELAY_MS=2000 pnpm dev
+const apiDelayMs = Number(process.env.API_DELAY_MS ?? 0);
+if (process.env.NODE_ENV !== "production" && apiDelayMs > 0) {
+  app.use("/api/*", async (c, next) => {
+    if (!c.req.path.startsWith("/api/auth/")) {
+      await new Promise((resolve) => setTimeout(resolve, apiDelayMs));
+    }
+    await next();
+  });
+  console.log(
+    `Atraso de ${apiDelayMs} ms nas respostas da API (API_DELAY_MS).`,
+  );
+}
+
 // Login, sessão e gestão de usuários (better-auth).
 app.on(["GET", "POST"], "/api/auth/*", (c) => auth.handler(c.req.raw));
 

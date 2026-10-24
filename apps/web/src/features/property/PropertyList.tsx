@@ -11,6 +11,13 @@ import {
   User,
 } from "lucide-react";
 import { useNavigate } from "react-router";
+import { toast } from "sonner";
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 
 import { useEffect, useState } from "react";
 
@@ -35,8 +42,13 @@ import { propertyClient } from "@/lib/clients";
 import { type PropertyRow, type PropertyListParams } from "@ifarm/shared";
 import { ErrorPage } from "@/components/our/ErrorPage";
 import { useCurrentProperty } from "@/features/shell/CurrentPropertyProvider";
+import {
+  INITIAL_PROPERTY_LIST_PARAMS,
+  propertyKeys,
+  propertyListQuery,
+} from "./queries";
 
-const DEFAULT_PAGE_SIZE = 10;
+const DEFAULT_PAGE_SIZE = INITIAL_PROPERTY_LIST_PARAMS.pageSize;
 
 const STATUS_FILTER = {
   ALL: "todos",
@@ -167,25 +179,18 @@ function buildColumns(
 
 export default function PropertyList() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { refresh: refreshCurrentProperty } = useCurrentProperty();
-  const [properties, setProperties] = useState<PropertyRow[]>([]);
   const [pageIndex, setPageIndex] = useState(0);
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
-  const [pageCount, setPageCount] = useState(0);
-  const [total, setTotal] = useState(0);
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [filter, setFilter] = useState<string>(STATUS_FILTER.ACTIVE);
-  const [loading, setLoading] = useState(true);
-  const [isFirstLoad, setIsFirstLoad] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({
     totalArea: false,
   });
-  const [refreshKey, setRefreshKey] = useState(0);
   const [viewingDetailsId, setViewingDetailsId] = useState<string | null>(null);
   const [togglingId, setTogglingId] = useState<string | null>(null);
-  const [isToggling, setIsToggling] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -195,53 +200,40 @@ export default function PropertyList() {
     return () => clearTimeout(timer);
   }, [search]);
 
-  useEffect(() => {
-    let cancelled = false;
+  const params: PropertyListParams = {
+    page: pageIndex,
+    pageSize,
+    search: debouncedSearch,
+    status: filterToStatus(filter),
+  };
+  // Ao trocar de página ou de filtro, a lista anterior fica na tela (esmaecida) até chegar a
+  // nova (keepPreviousData).
+  const { data, isPending, isFetching, isError, refetch } = useQuery({
+    ...propertyListQuery(params),
+    placeholderData: keepPreviousData,
+  });
+  const properties: PropertyRow[] = data?.data ?? [];
 
-    async function load() {
-      setLoading(true);
-      try {
-        const result = await propertyClient.getProperties({
-          page: pageIndex,
-          pageSize,
-          search: debouncedSearch,
-          status: filterToStatus(filter),
-        });
-        if (!cancelled) {
-          setProperties(result.data);
-          setPageCount(result.pageCount);
-          setTotal(result.total);
-        }
-      } catch (e) {
-        if (!cancelled) setError((e as Error).message);
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-          setIsFirstLoad(false);
-        }
-      }
-    }
+  const reloadProperties = () =>
+    queryClient.invalidateQueries({ queryKey: propertyKeys.all });
 
-    load();
-    return () => {
-      cancelled = true;
-    };
-  }, [pageIndex, pageSize, debouncedSearch, filter, refreshKey]);
-
-  async function confirmToggleStatus() {
-    if (!togglingId) return;
-
-    setIsToggling(true);
-    try {
-      await propertyClient.togglePropertyStatus(togglingId);
-      setRefreshKey((k) => k + 1);
+  const toggleStatus = useMutation({
+    mutationFn: (id: string) => propertyClient.togglePropertyStatus(id),
+    onSuccess: () => {
+      reloadProperties();
       setTogglingId(null);
       refreshCurrentProperty();
-    } catch {
-      // erro silencioso
-    } finally {
-      setIsToggling(false);
-    }
+    },
+    // O diálogo já fechou no clique (AlertDialogAction); o aviso explica a falha.
+    onError: (e) => {
+      toast.error(
+        e.message || "Não foi possível alterar a situação da propriedade.",
+      );
+    },
+  });
+
+  function confirmToggleStatus() {
+    if (togglingId) toggleStatus.mutate(togglingId);
   }
 
   const togglingProperty = properties.find((p) => p.id === togglingId);
@@ -252,16 +244,16 @@ export default function PropertyList() {
     setViewingDetailsId,
   );
 
-  if (error) {
+  if (isError) {
     return (
       <ErrorPage
         message={"Não foi possível obter os dados do servidor."}
-        onRetry={() => window.location.reload()}
+        onRetry={() => refetch()}
       />
     );
   }
 
-  if (isFirstLoad) {
+  if (isPending) {
     return <ListSkeleton columns={5} />;
   }
 
@@ -327,7 +319,7 @@ export default function PropertyList() {
 
       <div
         className={
-          loading ? "opacity-60 transition-opacity" : "transition-opacity"
+          isFetching ? "opacity-60 transition-opacity" : "transition-opacity"
         }
       >
         {properties.length === 0 ? (
@@ -339,10 +331,10 @@ export default function PropertyList() {
           <DataTable
             columns={columns}
             data={properties}
-            pageCount={pageCount}
+            pageCount={data.pageCount}
             pageIndex={pageIndex}
             pageSize={pageSize}
-            total={total}
+            total={data.total}
             initialSorting={[{ id: "updatedAt", desc: true }]}
             onPageChange={setPageIndex}
             onPageSizeChange={(size) => {
@@ -367,7 +359,7 @@ export default function PropertyList() {
               id={viewingDetailsId}
               onClose={() => {
                 setViewingDetailsId(null);
-                setRefreshKey((k) => k + 1);
+                reloadProperties();
               }}
             />
           )}
@@ -376,7 +368,9 @@ export default function PropertyList() {
 
       <ConfirmDialog
         open={togglingId !== null}
-        onOpenChange={(open) => !open && !isToggling && setTogglingId(null)}
+        onOpenChange={(open) =>
+          !open && !toggleStatus.isPending && setTogglingId(null)
+        }
         onConfirm={confirmToggleStatus}
         title={
           togglingProperty?.deactivatedAt

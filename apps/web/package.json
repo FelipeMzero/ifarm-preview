@@ -17,6 +17,7 @@
     "@geoman-io/leaflet-geoman-free": "^2.20.0",
     "@hookform/resolvers": "^5.4.0",
     "@ifarm/shared": "workspace:*",
+    "@tanstack/react-query": "5.104.1",
     "@tanstack/react-table": "^8.21.3",
     "@turf/area": "^7.3.5",
     "@turf/helpers": "^7.3.5",

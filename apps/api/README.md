@@ -57,6 +57,12 @@ pnpm dev
 
 A API fica em http://localhost:3001 (porta definida em `PORT`).
 
+Para ver os estados de carregamento das telas (os _skeletons_), atrase as respostas da API, menos as de login e sessão. O atraso só funciona fora de produção:
+
+```bash
+API_DELAY_MS=2000 pnpm dev
+```
+
 ---
 
 ## 🔍 Comandos Úteis

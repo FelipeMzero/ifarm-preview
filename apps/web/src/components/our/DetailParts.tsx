@@ -2,9 +2,28 @@ import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 
-// Blocos compartilhados pelas telas de detalhes (animal, lote).
+// Blocos compartilhados pelas telas de detalhes.
 
-export function DetailsSkeleton() {
+/**
+ * Skeleton das telas de detalhes, em dois desenhos: "stats" (animal, lote: cabeçalho,
+ * indicadores e abas) e "cards" (pessoa, propriedade: cabeçalho e cartões de informação).
+ */
+export function DetailsSkeleton({
+  variant = "stats",
+}: {
+  variant?: "stats" | "cards";
+}) {
+  if (variant === "cards") {
+    return (
+      <div className="w-full max-w-4xl space-y-4">
+        <Skeleton className="h-9 w-24" />
+        <Skeleton className="h-32 w-full rounded-xl" />
+        <Skeleton className="h-48 w-full rounded-xl" />
+        <Skeleton className="h-48 w-full rounded-xl" />
+      </div>
+    );
+  }
+
   return (
     <div className="w-full max-w-5xl space-y-4">
       <Skeleton className="h-9 w-24" />
