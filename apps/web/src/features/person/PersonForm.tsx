@@ -9,7 +9,7 @@ import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { IMaskInput } from "react-imask";
+import { MaskedInput } from "@/components/our/MaskedInput";
 
 import { personClient } from "@/lib/clients";
 import { ErrorPage } from "@/components/our/ErrorPage";
@@ -29,9 +29,6 @@ import { PERSON_TYPE_ITEMS, MARITAL_STATUS_ITEMS } from "@ifarm/shared";
 import { FormActionBar } from "@/components/our/FormActionBar";
 import { cn } from "@/lib/utils";
 import { zipCodeQuery } from "../address/queries";
-
-const MASKED_INPUT_CLASSNAME =
-  "h-10 w-full min-w-0 rounded-lg border border-input bg-input/40 px-2.5 py-1 text-base transition-colors outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 aria-invalid:border-destructive aria-invalid:focus:ring-3 aria-invalid:ring-destructive/20 md:text-sm dark:bg-input/30 dark:disabled:bg-input/80 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40";
 
 const PHONE_MASK = [{ mask: "(00) 0000-0000" }, { mask: "(00) 00000-0000" }];
 
@@ -219,20 +216,15 @@ export default function PersonForm({
             required
             control={control}
             render={({ field, id: fieldId }) => (
-              <IMaskInput
+              <MaskedInput
+                field={field}
                 mask={isCompany ? "00.000.000/0000-00" : "000.000.000-00"}
                 unmask
                 id={fieldId}
-                name={field.name}
-                value={field.value}
                 disabled={!!id}
                 placeholder={
                   isCompany ? "Ex: 12.345.678/0001-90" : "Ex: 123.456.789-00"
                 }
-                onAccept={(value: string) => field.onChange(value)}
-                onBlur={field.onBlur}
-                inputRef={field.ref}
-                className={MASKED_INPUT_CLASSNAME}
               />
             )}
           />
@@ -338,17 +330,12 @@ export default function PersonForm({
             label="Telefone"
             control={control}
             render={({ field, id: fieldId }) => (
-              <IMaskInput
+              <MaskedInput
+                field={field}
                 mask={PHONE_MASK}
                 unmask
                 id={fieldId}
-                name={field.name}
-                value={field.value}
                 placeholder="Ex: (11) 91234-5678"
-                onAccept={(value: string) => field.onChange(value)}
-                onBlur={field.onBlur}
-                inputRef={field.ref}
-                className={MASKED_INPUT_CLASSNAME}
               />
             )}
           />
@@ -379,21 +366,15 @@ export default function PersonForm({
             control={control}
             render={({ field, id: fieldId }) => (
               <div className="relative">
-                <IMaskInput
+                <MaskedInput
+                  field={field}
                   mask="00000-000"
                   unmask
                   id={fieldId}
-                  name={field.name}
-                  value={field.value}
                   disabled={isZipLoading}
                   placeholder="Ex: 78000-000"
-                  onAccept={(value: string) => field.onChange(value)}
-                  onBlur={(e) => {
-                    field.onBlur();
-                    handleZipBlur(e.target.value);
-                  }}
-                  inputRef={field.ref}
-                  className={cn(MASKED_INPUT_CLASSNAME, isZipLoading && "pr-8")}
+                  onBlur={(e) => handleZipBlur(e.target.value)}
+                  className={cn(isZipLoading && "pr-8")}
                 />
                 {isZipLoading && (
                   <Loader2 className="absolute top-1/2 right-2.5 size-4 -translate-y-1/2 animate-spin text-muted-foreground" />

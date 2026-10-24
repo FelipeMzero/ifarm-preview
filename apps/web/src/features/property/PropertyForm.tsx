@@ -7,7 +7,7 @@ import {
 } from "@tanstack/react-query";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { IMaskInput } from "react-imask";
+import { MaskedInput } from "@/components/our/MaskedInput";
 import { lazyComponent } from "@/lib/lazy";
 
 import {
@@ -50,9 +50,6 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import PersonForm from "../person/PersonForm";
-
-const MASKED_INPUT_CLASSNAME =
-  "h-10 w-full min-w-0 rounded-lg border border-input bg-input/40 px-2.5 py-1 text-base transition-colors outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 aria-invalid:border-destructive aria-invalid:focus:ring-3 aria-invalid:ring-destructive/20 md:text-sm dark:bg-input/30 dark:disabled:bg-input/80 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40";
 
 const LocationPickerMap = lazyComponent(() => import("./LocationPickerMap"), {
   loading: () => (
@@ -421,18 +418,13 @@ export default function PropertyForm({
               label="CAR"
               control={control}
               render={({ field, id: fieldId }) => (
-                <IMaskInput
+                <MaskedInput
+                  field={field}
                   mask="aa-0000000-HHHH.HHHH.HHHH.HHHH.HHHH.HHHH.HHHH.HHHH"
                   definitions={{ H: /[0-9A-Fa-f]/ }}
                   prepareChar={(char: string) => char.toUpperCase()}
                   id={fieldId}
-                  name={field.name}
-                  value={field.value}
                   placeholder="Ex: MT-5107909-E8C2.A75A.C69A.4A7C.8C26.99F5.CC59.9B9A"
-                  onAccept={(value: string) => field.onChange(value)}
-                  onBlur={field.onBlur}
-                  inputRef={field.ref}
-                  className={MASKED_INPUT_CLASSNAME}
                 />
               )}
             />
@@ -454,17 +446,12 @@ export default function PropertyForm({
               label="CCIR"
               control={control}
               render={({ field, id: fieldId }) => (
-                <IMaskInput
+                <MaskedInput
+                  field={field}
                   mask="000.000.000.000-0"
                   unmask
                   id={fieldId}
-                  name={field.name}
-                  value={field.value}
                   placeholder="Ex: 999.999.999.999-9"
-                  onAccept={(value: string) => field.onChange(value)}
-                  onBlur={field.onBlur}
-                  inputRef={field.ref}
-                  className={MASKED_INPUT_CLASSNAME}
                 />
               )}
             />
@@ -482,24 +469,15 @@ export default function PropertyForm({
                 control={control}
                 render={({ field, id: fieldId }) => (
                   <div className="relative">
-                    <IMaskInput
+                    <MaskedInput
+                      field={field}
                       mask="00000-000"
                       unmask
                       id={fieldId}
-                      name={field.name}
-                      value={field.value}
                       disabled={isZipLoading}
                       placeholder="Ex: 78000-000"
-                      onAccept={(value: string) => field.onChange(value)}
-                      onBlur={(e) => {
-                        field.onBlur();
-                        handleZipBlur(e.target.value);
-                      }}
-                      inputRef={field.ref}
-                      className={cn(
-                        MASKED_INPUT_CLASSNAME,
-                        isZipLoading && "pr-8",
-                      )}
+                      onBlur={(e) => handleZipBlur(e.target.value)}
+                      className={cn(isZipLoading && "pr-8")}
                     />
                     {isZipLoading && (
                       <Loader2 className="absolute top-1/2 right-2.5 size-4 -translate-y-1/2 animate-spin text-muted-foreground" />
