@@ -32,7 +32,7 @@ import { LocationPreview } from "@/components/our/location/LocationPreview";
 import { useCurrentProperty } from "@/features/shell/CurrentPropertyProvider";
 import { usePersonOptions } from "../person/usePersonOptions";
 import { propertyDetailQuery, propertyKeys } from "./queries";
-import { geocodeQuery, zipCodeQuery } from "../address/queries";
+import { useZipCodeLookup } from "../address/useZipCodeLookup";
 
 // Importações do Modal e do Componente de Pessoa
 import {
@@ -61,7 +61,6 @@ export default function PropertyForm({
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const { refresh: refreshCurrentProperty } = useCurrentProperty();
-  const [isZipLoading, setIsZipLoading] = useState(false);
 
   // Estado para controle do modal de Nova Pessoa
   const [isPersonModalOpen, setIsPersonModalOpen] = useState(false);
@@ -130,48 +129,15 @@ export default function PropertyForm({
   const longitude = useWatch({ control, name: "longitude" });
   const [isPickerOpen, setIsPickerOpen] = useState(false);
 
-  async function handleZipBlur(zipCode: string) {
-    const digits = zipCode.replace(/\D/g, "");
-    if (digits.length !== 8) return;
-
-    setIsZipLoading(true);
-    try {
-      const address = await queryClient.fetchQuery(zipCodeQuery(digits));
-      if (!address) {
-        toast.error("CEP não encontrado.");
-        return;
-      }
-
-      setValue("street", address.street, { shouldValidate: true });
-      setValue("neighborhood", address.neighborhood, { shouldValidate: true });
-      setValue("city", address.city, { shouldValidate: true });
-      setValue("state", address.state, { shouldValidate: true });
-
-      // Sem coordenadas não é erro: o usuário pode marcá-las no mapa.
-      const coordinates = await queryClient
-        .fetchQuery(
-          geocodeQuery({
-            street: address.street,
-            city: address.city,
-            state: address.state,
-            zipCode: digits,
-          }),
-        )
-        .catch(() => null);
-      if (coordinates) {
-        setValue("latitude", String(coordinates.latitude), {
-          shouldValidate: true,
-        });
-        setValue("longitude", String(coordinates.longitude), {
-          shouldValidate: true,
-        });
-      }
-    } catch {
-      toast.error("Não foi possível buscar o endereço pelo CEP.");
-    } finally {
-      setIsZipLoading(false);
-    }
-  }
+  // Ao sair do campo de CEP: preenche o endereço e as coordenadas.
+  const zipLookup = useZipCodeLookup({
+    setAddressField: (field, value) =>
+      setValue(field, value, { shouldValidate: true }),
+    setCoordinates: (lat, lon) => {
+      setValue("latitude", lat, { shouldValidate: true });
+      setValue("longitude", lon, { shouldValidate: true });
+    },
+  });
 
   async function onSubmit(data: PropertyInput) {
     try {
@@ -368,12 +334,12 @@ export default function PropertyForm({
                       mask="00000-000"
                       unmask
                       id={fieldId}
-                      disabled={isZipLoading}
+                      disabled={zipLookup.isLoading}
                       placeholder="Ex: 78000-000"
-                      onBlur={(e) => handleZipBlur(e.target.value)}
-                      className={cn(isZipLoading && "pr-8")}
+                      onBlur={(e) => zipLookup.lookup(e.target.value)}
+                      className={cn(zipLookup.isLoading && "pr-8")}
                     />
-                    {isZipLoading && (
+                    {zipLookup.isLoading && (
                       <Loader2 className="absolute top-1/2 right-2.5 size-4 -translate-y-1/2 animate-spin text-muted-foreground" />
                     )}
                   </div>

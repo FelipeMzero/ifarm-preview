@@ -6,7 +6,6 @@ import {
   ApiError,
 } from "@ifarm/shared";
 import { useEffect, useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { MaskedInput } from "@/components/our/MaskedInput";
@@ -27,7 +26,7 @@ import { BR_STATE_ITEMS } from "@ifarm/shared";
 import { PERSON_TYPE_ITEMS, MARITAL_STATUS_ITEMS } from "@ifarm/shared";
 import { FormActionBar } from "@/components/our/FormActionBar";
 import { cn } from "@/lib/utils";
-import { zipCodeQuery } from "../address/queries";
+import { useZipCodeLookup } from "../address/useZipCodeLookup";
 import { FormSkeleton } from "@/components/our/PageSkeletons";
 
 const PHONE_MASK = [{ mask: "(00) 0000-0000" }, { mask: "(00) 00000-0000" }];
@@ -47,8 +46,6 @@ export default function PersonForm({
 }: PersonFormProps) {
   const [isDataLoading, setIsDataLoading] = useState(!!id);
   const [loadFailed, setLoadFailed] = useState(false);
-  const queryClient = useQueryClient();
-  const [isZipLoading, setIsZipLoading] = useState(false);
 
   const {
     handleSubmit,
@@ -100,28 +97,11 @@ export default function PersonForm({
     loadData();
   }, [id, reset]);
 
-  async function handleZipBlur(zipCode: string) {
-    const digits = zipCode.replace(/\D/g, "");
-    if (digits.length !== 8) return;
-
-    setIsZipLoading(true);
-    try {
-      const address = await queryClient.fetchQuery(zipCodeQuery(digits));
-      if (!address) {
-        toast.error("CEP não encontrado.");
-        return;
-      }
-
-      setValue("street", address.street, { shouldValidate: true });
-      setValue("neighborhood", address.neighborhood, { shouldValidate: true });
-      setValue("city", address.city, { shouldValidate: true });
-      setValue("state", address.state, { shouldValidate: true });
-    } catch {
-      toast.error("Não foi possível buscar o endereço pelo CEP.");
-    } finally {
-      setIsZipLoading(false);
-    }
-  }
+  // Ao sair do campo de CEP: preenche o endereço.
+  const zipLookup = useZipCodeLookup({
+    setAddressField: (field, value) =>
+      setValue(field, value, { shouldValidate: true }),
+  });
 
   async function onSubmit(data: PersonInput) {
     try {
@@ -371,12 +351,12 @@ export default function PersonForm({
                   mask="00000-000"
                   unmask
                   id={fieldId}
-                  disabled={isZipLoading}
+                  disabled={zipLookup.isLoading}
                   placeholder="Ex: 78000-000"
-                  onBlur={(e) => handleZipBlur(e.target.value)}
-                  className={cn(isZipLoading && "pr-8")}
+                  onBlur={(e) => zipLookup.lookup(e.target.value)}
+                  className={cn(zipLookup.isLoading && "pr-8")}
                 />
-                {isZipLoading && (
+                {zipLookup.isLoading && (
                   <Loader2 className="absolute top-1/2 right-2.5 size-4 -translate-y-1/2 animate-spin text-muted-foreground" />
                 )}
               </div>
