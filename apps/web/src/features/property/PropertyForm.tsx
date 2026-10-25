@@ -144,7 +144,7 @@ export function PropertyForm({
       if (id) {
         await save.mutateAsync(data);
         // Volta o formulário ao estado "sem alterações", com os dados salvos (e o cache junto).
-        const fresh = await queryClient.fetchQuery(propertyDetailQuery(id));
+        const fresh = await queryClient.query(propertyDetailQuery(id));
         reset(fresh);
         toast.success("Registro atualizado com sucesso!");
         onSuccess?.();

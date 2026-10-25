@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
   ArrowRightLeft,
@@ -33,8 +34,10 @@ import { animalClient } from "@/lib/clients";
 import {
   ApiError,
   type AnimalIdentifierRecord,
+  type IdentifierChangePayload,
   type IdentifierKind,
 } from "@ifarm/shared";
+import { animalIdentifiersQuery, useReloadAnimals } from "./queries";
 import { IDENTIFIER_MAX_LENGTH } from "@ifarm/shared";
 import {
   AnimalIdentifierCorrectionForm,
@@ -56,8 +59,6 @@ interface AnimalIdentifierHistoryDialogProps {
   kind: IdentifierKind;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  // Chamado após trocar, corrigir ou excluir, para quem abriu atualizar o identificador atual.
-  onChanged: () => void;
 }
 
 const displayValue = (value: string | null) => value ?? "Removido";
@@ -68,29 +69,30 @@ function IdentifierChangePanel({
   commitments,
   kind,
   current,
-  onChanged,
 }: {
   animalId: string;
   commitments: Commitment[];
   kind: IdentifierKind;
   current: string | null;
-  onChanged: () => void;
 }) {
+  const reloadAnimal = useReloadAnimals();
   const label = IDENTIFIER_LABELS[kind];
   const [value, setValue] = useState("");
   const [notes, setNotes] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [saving, setSaving] = useState(false);
   const [confirmRemove, setConfirmRemove] = useState(false);
 
+  const change = useMutation({
+    mutationFn: (data: IdentifierChangePayload) =>
+      animalClient.changeIdentifier(animalId, kind, data),
+    onSuccess: reloadAnimal,
+  });
+  const saving = change.isPending;
+
   async function save(newValue: string) {
-    setSaving(true);
     setError(null);
     try {
-      await animalClient.changeIdentifier(animalId, kind, {
-        value: newValue,
-        notes,
-      });
+      await change.mutateAsync({ value: newValue, notes });
       toast.success(
         newValue
           ? `${label} trocado para ${newValue}.`
@@ -98,12 +100,9 @@ function IdentifierChangePanel({
       );
       setValue("");
       setNotes("");
-      onChanged();
     } catch (e) {
       if (e instanceof ApiError && e.errors?.value) setError(e.errors.value);
       else toast.error((e as Error).message);
-    } finally {
-      setSaving(false);
     }
   }
 
@@ -201,65 +200,45 @@ export function AnimalIdentifierHistoryDialog({
   kind,
   open,
   onOpenChange,
-  onChanged,
 }: AnimalIdentifierHistoryDialogProps) {
+  const reloadAnimal = useReloadAnimals();
   const label = IDENTIFIER_LABELS[kind];
   const Icon = kind === "tag" ? Tag : Nfc;
 
-  const [records, setRecords] = useState<AnimalIdentifierRecord[] | null>(null);
-  const [loadFailed, setLoadFailed] = useState(false);
-  const [reloadKey, setReloadKey] = useState(0);
   const [editing, setEditing] = useState<AnimalIdentifierRecord | null>(null);
   const [cancelling, setCancelling] = useState<AnimalIdentifierRecord | null>(
     null,
   );
 
-  useEffect(() => {
-    if (!open) return;
-    let cancelled = false;
-
-    animalClient
-      .getIdentifiers(animalId, kind)
-      .then((data) => {
-        if (cancelled) return;
-        setRecords(data);
-        setLoadFailed(false);
-      })
-      .catch(() => {
-        if (!cancelled) setLoadFailed(true);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [open, animalId, kind, reloadKey]);
+  // Histórico só com a janela aberta.
+  const { data, isPending, isError } = useQuery({
+    ...animalIdentifiersQuery(animalId, kind),
+    enabled: open,
+  });
+  const records = isPending ? null : (data ?? []);
+  // Nada carregado: a falha de uma atualização com o histórico na tela é avisada à parte
+  // (aviso global), sem trocar a tabela por esta mensagem.
+  const loadFailed = isError && !data;
 
   function handleOpenChange(next: boolean) {
-    if (!next) {
-      setEditing(null);
-      setRecords(null);
-      setLoadFailed(false);
-    }
+    if (!next) setEditing(null);
     onOpenChange(next);
   }
 
-  function afterChange() {
-    setEditing(null);
-    setReloadKey((k) => k + 1);
-    onChanged();
-  }
-
-  async function handleCancel() {
-    if (!cancelling) return;
-    try {
-      await animalClient.cancelIdentifier(animalId, kind, cancelling.id);
+  const cancel = useMutation({
+    mutationFn: (recordId: number) =>
+      animalClient.cancelIdentifier(animalId, kind, recordId),
+    onSuccess: () => {
       toast.success(`Registro de ${label} excluído.`);
-      afterChange();
-    } catch (e) {
-      toast.error((e as Error).message);
-    } finally {
-      setCancelling(null);
-    }
+      setEditing(null);
+      return reloadAnimal();
+    },
+    onError: (e) => toast.error(e.message),
+    onSettled: () => setCancelling(null),
+  });
+
+  function handleCancel() {
+    if (cancelling) cancel.mutate(cancelling.id);
   }
 
   return (
@@ -281,7 +260,6 @@ export function AnimalIdentifierHistoryDialog({
               commitments={commitments}
               kind={kind}
               current={current}
-              onChanged={afterChange}
             />
           )}
           {!editing && (
@@ -297,7 +275,7 @@ export function AnimalIdentifierHistoryDialog({
               kind={kind}
               record={editing}
               onCancel={() => setEditing(null)}
-              onSaved={afterChange}
+              onSaved={() => setEditing(null)}
             />
           ) : loadFailed ? (
             <p className="py-8 text-center text-sm text-destructive">

@@ -1,19 +1,17 @@
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import { animalClient } from "@/lib/clients";
-import { ApiError } from "@ifarm/shared";
-import { breedClient } from "@/lib/clients";
-import { type Breed } from "@ifarm/shared";
-import { neuteringTechniqueClient } from "@/lib/clients";
-import { type NeuteringTechnique } from "@ifarm/shared";
+import { applyServerErrors } from "@/lib/form-errors";
+import { breedListQuery } from "@/features/breed/queries";
+import { neuteringTechniqueListQuery } from "@/features/neutering-technique/queries";
 import { techniqueItems } from "@/features/neutering-technique/items";
-import { batchClient } from "@/lib/clients";
-import { type BatchRow } from "@ifarm/shared";
+import { useBatchOptions } from "@/features/batch/useBatchOptions";
 import { BatchForm } from "@/features/batch/BatchForm";
 import { StockingNotice } from "@/features/area/StockingNotice";
-import { personClient } from "@/lib/clients";
+import { usePersonOptions } from "@/features/person/usePersonOptions";
 import { PersonForm } from "@/features/person/PersonForm";
 import { useCurrentProperty } from "@/features/shell/CurrentPropertyProvider";
 import { toast } from "sonner";
@@ -34,10 +32,7 @@ import { FormField } from "@/components/our/FormField";
 import { FieldRow } from "@/components/our/FieldRow";
 import { SelectField } from "@/components/our/SelectField";
 
-import {
-  SearchCombobox,
-  SearchComboboxItem,
-} from "@/components/our/SearchCombobox";
+import { SearchCombobox } from "@/components/our/SearchCombobox";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import {
   animalCreateSchema,
@@ -47,6 +42,7 @@ import { AnimalOrigin, Sex } from "@ifarm/shared";
 import { Separator } from "@/components/ui/separator";
 import { FormActionBar } from "@/components/our/FormActionBar";
 import { ANIMAL_ORIGIN_ITEMS, SEX_ITEMS } from "@ifarm/shared";
+import { animalKeys } from "./queries";
 
 type AnimalFormProps = {
   title?: string;
@@ -55,18 +51,19 @@ type AnimalFormProps = {
 };
 
 export function AnimalForm({ title, onCancel, onSuccess }: AnimalFormProps) {
+  const queryClient = useQueryClient();
   const { property: currentProperty } = useCurrentProperty();
   const propertyId = currentProperty?.id;
 
-  const [breeds, setBreeds] = useState<Breed[]>([]);
-  const [techniques, setTechniques] = useState<NeuteringTechnique[]>([]);
-  const [batchItems, setBatchItems] = useState<SearchComboboxItem[]>([]);
-  const [sellerItems, setSellerItems] = useState<SearchComboboxItem[]>([]);
+  // Opções dos campos: raças e técnicas ativas, lotes vigentes da propriedade e vendedores.
+  const { data: breedList } = useQuery(breedListQuery());
+  const breeds = breedList?.filter((b) => !b.deactivatedAt) ?? [];
+  const { data: techniqueList } = useQuery(neuteringTechniqueListQuery());
+  const techniques = techniqueList?.filter((t) => !t.deactivatedAt) ?? [];
+  const batches = useBatchOptions();
+  const sellers = usePersonOptions();
   const [isSellerModalOpen, setIsSellerModalOpen] = useState(false);
   const [isBatchModalOpen, setIsBatchModalOpen] = useState(false);
-
-  const batchDebounce = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const sellerDebounce = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const {
     handleSubmit,
@@ -105,106 +102,21 @@ export function AnimalForm({ title, onCancel, onSuccess }: AnimalFormProps) {
     name: ["batchId", "currentWeightKg", "birthDate", "sex"],
   });
 
-  const loadBatches = useCallback(
-    async (q: string) => {
-      try {
-        const result = await batchClient.getBatches({
-          propertyId,
-          status: "active",
-          search: q,
-          pageSize: q ? 20 : 10,
-        });
-        setBatchItems(
-          result.data.map((b: BatchRow) => ({ value: b.id, label: b.name })),
-        );
-      } catch {
-        setBatchItems([]);
-      }
+  const create = useMutation({
+    mutationFn: (data: AnimalFormData) =>
+      animalClient.createAnimal({ ...data, propertyId }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: animalKeys.all });
     },
-    [propertyId],
-  );
-
-  const searchBatches = useCallback(
-    (query: string) => {
-      if (batchDebounce.current) clearTimeout(batchDebounce.current);
-      batchDebounce.current = setTimeout(() => loadBatches(query), 300);
-    },
-    [loadBatches],
-  );
-
-  const loadSellers = useCallback(async (q: string) => {
-    try {
-      const result = await personClient.getPeople({
-        search: q,
-        pageSize: q ? 20 : 5,
-        status: "active",
-      });
-      setSellerItems(result.data.map((p) => ({ value: p.id, label: p.name })));
-    } catch {
-      setSellerItems([]);
-    }
-  }, []);
-
-  const searchSellers = useCallback(
-    (query: string) => {
-      if (sellerDebounce.current) clearTimeout(sellerDebounce.current);
-      sellerDebounce.current = setTimeout(() => loadSellers(query), 300);
-    },
-    [loadSellers],
-  );
-
-  useEffect(() => {
-    // Carga inicial: o setState do loadBatches só acontece depois do await.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    loadBatches("");
-  }, [loadBatches]);
-
-  useEffect(() => {
-    // Carga inicial: o setState do loadSellers só acontece depois do await.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    loadSellers("");
-  }, [loadSellers]);
-
-  useEffect(() => {
-    async function loadStaticOptions() {
-      try {
-        const breedList = await breedClient.getBreeds();
-        setBreeds(breedList.filter((b) => !b.deactivatedAt));
-      } catch {
-        setBreeds([]);
-      }
-      try {
-        const techniqueList =
-          await neuteringTechniqueClient.getNeuteringTechniques();
-        setTechniques(techniqueList.filter((t) => !t.deactivatedAt));
-      } catch {
-        setTechniques([]);
-      }
-    }
-    loadStaticOptions();
-  }, []);
-
-  useEffect(() => {
-    return () => {
-      if (batchDebounce.current) clearTimeout(batchDebounce.current);
-      if (sellerDebounce.current) clearTimeout(sellerDebounce.current);
-    };
-  }, []);
+  });
 
   async function onSubmit(data: AnimalFormData) {
     try {
-      const response = await animalClient.createAnimal({ ...data, propertyId });
-      toast.success("Salvo com sucesso!");
+      const response = await create.mutateAsync(data);
+      toast.success("Registro salvo com sucesso!");
       onSuccess?.(response.data.id);
     } catch (error) {
-      if (error instanceof ApiError && error.errors) {
-        Object.entries(error.errors).forEach(([field, message]) => {
-          setError(field as keyof AnimalFormData, { type: "server", message });
-        });
-        toast.error("Verifique os campos destacados.");
-      } else {
-        toast.error("A requisição falhou! Tente novamente.");
-      }
+      applyServerErrors(setError, error);
     }
   }
 
@@ -354,8 +266,8 @@ export function AnimalForm({ title, onCancel, onSuccess }: AnimalFormProps) {
                   id={id}
                   field={field}
                   fieldState={fieldState}
-                  items={batchItems}
-                  onInputValueChange={searchBatches}
+                  items={batches.items}
+                  onInputValueChange={batches.search}
                   onCreateClick={() => setIsBatchModalOpen(true)}
                 />
               )}
@@ -462,8 +374,8 @@ export function AnimalForm({ title, onCancel, onSuccess }: AnimalFormProps) {
                       id={id}
                       field={field}
                       fieldState={fieldState}
-                      items={sellerItems}
-                      onInputValueChange={searchSellers}
+                      items={sellers.items}
+                      onInputValueChange={sellers.search}
                       onCreateClick={() => setIsSellerModalOpen(true)}
                     />
                   )}
@@ -535,7 +447,8 @@ export function AnimalForm({ title, onCancel, onSuccess }: AnimalFormProps) {
             onSuccess={async (newId) => {
               setIsSellerModalOpen(false);
               if (newId) {
-                await loadSellers("");
+                // O vendedor cadastrado entra nas opções e já fica selecionado.
+                await sellers.addCreated(newId);
                 setValue("sellerId", newId, { shouldValidate: true });
                 toast.success("Vendedor vinculado ao animal com sucesso.");
               }
@@ -558,7 +471,8 @@ export function AnimalForm({ title, onCancel, onSuccess }: AnimalFormProps) {
             onSuccess={async (newId) => {
               setIsBatchModalOpen(false);
               if (newId) {
-                await loadBatches("");
+                // O lote cadastrado entra nas opções e já fica selecionado.
+                await batches.addCreated(newId);
                 setValue("batchId", newId, { shouldValidate: true });
                 toast.success("Lote vinculado ao animal com sucesso.");
               }

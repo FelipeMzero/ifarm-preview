@@ -9,9 +9,16 @@ import {
   Trash2,
 } from "lucide-react";
 import { CowHead } from "@/components/icons/cow-head";
-import { useNavigate } from "react-router";
+import { useNavigate, useSearchParams } from "react-router";
+import { toast } from "sonner";
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 import { ConfirmDialog } from "@/components/our/ConfirmDialog";
 import { DataTable } from "@/components/our/DataTable";
@@ -36,7 +43,11 @@ import {
   useFilterOptions,
 } from "./AnimalFilters";
 import { animalClient } from "@/lib/clients";
-import { type AnimalRow, toAnimalListParams } from "@ifarm/shared";
+import {
+  type AnimalListParams,
+  type AnimalRow,
+  toAnimalListParams,
+} from "@ifarm/shared";
 import {
   AnimalIdentification,
   ORIGIN_VARIANT,
@@ -49,6 +60,8 @@ import { ANIMAL_ORIGIN_LABELS, ANIMAL_STATUS_LABELS } from "@ifarm/shared";
 import { ErrorPage } from "@/components/our/ErrorPage";
 import { useCurrentProperty } from "@/features/shell/CurrentPropertyProvider";
 import { ListSkeleton } from "@/components/our/PageSkeletons";
+import { useLocalStorageState } from "@/hooks/use-local-storage-state";
+import { animalKeys, animalListQuery } from "./queries";
 
 const DEFAULT_PAGE_SIZE = 10;
 
@@ -158,125 +171,120 @@ function buildColumns(
   ];
 }
 
-type QueryParams = Record<string, string | string[] | undefined>;
+// Página e itens por página na URL (busca e filtros: filtersFromQuery / filtersToQuery).
+const PAGE_DEFAULTS = { pagina: "1", itens: String(DEFAULT_PAGE_SIZE) };
+type PageParam = keyof typeof PAGE_DEFAULTS;
 
-const firstParam = (v: string | string[] | undefined) =>
-  (Array.isArray(v) ? v[0] : v) ?? "";
+function readPage(searchParams: URLSearchParams) {
+  const positive = (key: PageParam) => {
+    const n = Number(searchParams.get(key) ?? PAGE_DEFAULTS[key]);
+    return Number.isInteger(n) && n > 0 ? n : Number(PAGE_DEFAULTS[key]);
+  };
+  return {
+    pageIndex: positive("pagina") - 1,
+    pageSize: Math.min(positive("itens"), 100),
+  };
+}
 
-export function AnimalList({
-  initialQuery = {},
-}: {
-  /** Parâmetros da URL: busca e filtros sobrevivem ao recarregar/compartilhar. */
-  initialQuery?: QueryParams;
-}) {
+export function AnimalList() {
   const navigate = useNavigate();
-  const { property: currentProperty } = useCurrentProperty();
-  const [animals, setAnimals] = useState<AnimalRow[]>([]);
-  const [pageIndex, setPageIndex] = useState(0);
-  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
-  const [pageCount, setPageCount] = useState(0);
-  const [total, setTotal] = useState(0);
-  const [search, setSearch] = useState(() => firstParam(initialQuery.busca));
-  const [debouncedSearch, setDebouncedSearch] = useState(search);
-  const [filters, setFilters] = useState<AnimalListFilters>(() =>
-    filtersFromQuery(initialQuery),
-  );
-  const [debouncedFilters, setDebouncedFilters] = useState(filters);
+  const queryClient = useQueryClient();
+  const { property: currentProperty, isLoading: isPropertyLoading } =
+    useCurrentProperty();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const { pageIndex, pageSize } = readPage(searchParams);
+  const urlSearch = searchParams.get("busca") ?? "";
+  const urlFilters = filtersFromQuery(searchParams);
+
+  // Atualiza a URL (sem criar entrada no histórico a cada mudança de filtro).
+  function updateUrl(update: (next: URLSearchParams) => void) {
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        update(next);
+        return next;
+      },
+      { replace: true, preventScrollReset: true },
+    );
+  }
+  function setPageParam(key: PageParam, value: number) {
+    updateUrl((next) => {
+      if (key === "itens") next.delete("pagina");
+      if (String(value) === PAGE_DEFAULTS[key]) next.delete(key);
+      else next.set(key, String(value));
+    });
+  }
+
+  // A busca e os filtros digitados ficam aqui e vão para a URL depois de uma pausa (os campos
+  // de peso também são digitados), voltando à primeira página. Se a URL mudar por fora
+  // (voltar/avançar do navegador), os campos acompanham.
+  const urlKey = JSON.stringify([urlSearch, urlFilters]);
+  const [search, setSearch] = useState(urlSearch);
+  const [filters, setFilters] = useState<AnimalListFilters>(urlFilters);
+  const [syncedUrlKey, setSyncedUrlKey] = useState(urlKey);
+  if (syncedUrlKey !== urlKey) {
+    setSyncedUrlKey(urlKey);
+    setSearch(urlSearch);
+    setFilters(urlFilters);
+  }
+  // Colunas visíveis: preferência lembrada neste navegador.
+  const [columnVisibility, setColumnVisibility] =
+    useLocalStorageState<VisibilityState>("animais:colunas", {
+      origin: false,
+    });
   const filterOptions = useFilterOptions(currentProperty?.id);
-  const [loading, setLoading] = useState(true);
-  const [isFirstLoad, setIsFirstLoad] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({
-    origin: false,
-  });
-  const [refreshKey, setRefreshKey] = useState(0);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const [viewingDetailsId, setViewingDetailsId] = useState<string | null>(null);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearch(search);
-      setPageIndex(0);
-    }, 300);
+    if (JSON.stringify([search, filters]) === urlKey) return;
+    const timer = setTimeout(
+      () =>
+        updateUrl((next) => {
+          for (const key of [...next.keys()]) {
+            if (key !== "itens") next.delete(key);
+          }
+          if (search) next.set("busca", search);
+          filtersToQuery(filters, next);
+        }),
+      300,
+    );
     return () => clearTimeout(timer);
-  }, [search]);
+  });
 
-  // Os campos de peso são digitados: espera uma pausa antes de buscar.
-  useEffect(() => {
-    const timer = setTimeout(() => setDebouncedFilters(filters), 300);
-    return () => clearTimeout(timer);
-  }, [filters]);
-
-  // Mantém busca e filtros na URL.
-  useEffect(() => {
-    const query = new URLSearchParams();
-    if (debouncedSearch) query.set("busca", debouncedSearch);
-    filtersToQuery(debouncedFilters, query);
-    const qs = query.toString();
-    navigate(`/animais${qs ? `?${qs}` : ""}`, {
-      replace: true,
-      preventScrollReset: true,
-    });
-  }, [debouncedSearch, debouncedFilters, navigate]);
-
-  function handleFiltersChange(next: AnimalListFilters) {
-    setFilters(next);
-    setPageIndex(0);
-  }
-
-  useEffect(() => {
-    let cancelled = false;
-
-    async function load() {
-      setLoading(true);
-      try {
-        const result = await animalClient.getAnimals({
-          ...toAnimalListParams({
-            propertyId: currentProperty?.id,
-            ...debouncedFilters,
-          }),
-          page: pageIndex,
-          pageSize,
-          search: debouncedSearch,
-        });
-        if (!cancelled) {
-          setAnimals(result.data);
-          setPageCount(result.pageCount);
-          setTotal(result.total);
-        }
-      } catch (e) {
-        if (!cancelled) setError((e as Error).message);
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-          setIsFirstLoad(false);
-        }
-      }
-    }
-
-    load();
-    return () => {
-      cancelled = true;
-    };
-  }, [
-    pageIndex,
+  const params: AnimalListParams = {
+    ...toAnimalListParams({ propertyId: currentProperty?.id, ...urlFilters }),
+    page: pageIndex,
     pageSize,
-    debouncedSearch,
-    debouncedFilters,
-    refreshKey,
-    currentProperty?.id,
-  ]);
+    search: urlSearch,
+  };
+  // Ao trocar de página ou de filtro, a lista anterior fica na tela (esmaecida) até chegar a
+  // nova (keepPreviousData). Sem a propriedade atual, a busca traria animais de todas.
+  const { data, isPending, isPlaceholderData, refetch } = useQuery({
+    ...animalListQuery(params),
+    enabled: !isPropertyLoading,
+    placeholderData: keepPreviousData,
+  });
+  const animals: AnimalRow[] = data?.data ?? [];
 
-  async function confirmDelete() {
-    if (pendingDeleteId === null) return;
-    try {
-      await animalClient.deleteAnimal(pendingDeleteId);
-      setRefreshKey((k) => k + 1);
-    } catch {
-      // erro silencioso
-    } finally {
-      setPendingDeleteId(null);
-    }
+  const reloadAnimals = () =>
+    queryClient.invalidateQueries({ queryKey: animalKeys.all });
+
+  const deleteAnimal = useMutation({
+    mutationFn: (id: string) => animalClient.deleteAnimal(id),
+    onSuccess: () => {
+      toast.success("Registro excluído com sucesso!");
+      reloadAnimals();
+    },
+    // O diálogo já fechou no clique (AlertDialogAction); o aviso explica a falha.
+    onError: (e) => {
+      toast.error(e.message || "Não foi possível excluir o animal.");
+    },
+    onSettled: () => setPendingDeleteId(null),
+  });
+
+  function confirmDelete() {
+    if (pendingDeleteId) deleteAnimal.mutate(pendingDeleteId);
   }
 
   const activeFilterCount = countActiveFilters(filters);
@@ -287,17 +295,17 @@ export function AnimalList({
     setPendingDeleteId,
   );
 
-  if (error) {
+  if (isPending) {
+    return <ListSkeleton columns={6} />;
+  }
+
+  if (!data) {
     return (
       <ErrorPage
         message={"Não foi possível obter os dados do servidor."}
-        onRetry={() => window.location.reload()}
+        onRetry={() => refetch()}
       />
     );
-  }
-
-  if (isFirstLoad) {
-    return <ListSkeleton columns={6} />;
   }
 
   return (
@@ -325,7 +333,7 @@ export function AnimalList({
         <AnimalFiltersPopover
           filters={filters}
           options={filterOptions}
-          onChange={handleFiltersChange}
+          onChange={setFilters}
         >
           <Button variant="outline">
             <SlidersHorizontal className="size-4" />
@@ -366,12 +374,18 @@ export function AnimalList({
       <ActiveFilterChips
         filters={filters}
         options={filterOptions}
-        onChange={handleFiltersChange}
+        onChange={setFilters}
       />
 
+      {/* Enquanto mostra a lista anterior (troca de filtro ou de página), fica esmaecida e sem
+          cliques, para ninguém agir sobre linhas que vão sair; a atualização em segundo plano,
+          ao voltar para a lista, não esmaece. */}
       <div
+        aria-busy={isPlaceholderData}
         className={
-          loading ? "opacity-60 transition-opacity" : "transition-opacity"
+          isPlaceholderData
+            ? "pointer-events-none opacity-60 transition-opacity"
+            : "transition-opacity"
         }
       >
         {animals.length === 0 ? (
@@ -383,16 +397,13 @@ export function AnimalList({
           <DataTable
             columns={columns}
             data={animals}
-            pageCount={pageCount}
+            pageCount={data.pageCount}
             pageIndex={pageIndex}
             pageSize={pageSize}
-            total={total}
+            total={data.total}
             initialSorting={[{ id: "updatedAt", desc: true }]}
-            onPageChange={setPageIndex}
-            onPageSizeChange={(size) => {
-              setPageSize(size);
-              setPageIndex(0);
-            }}
+            onPageChange={(index) => setPageParam("pagina", index + 1)}
+            onPageSizeChange={(size) => setPageParam("itens", size)}
             columnVisibility={columnVisibility}
             onColumnVisibilityChange={setColumnVisibility}
           />
@@ -411,7 +422,7 @@ export function AnimalList({
               id={viewingDetailsId}
               onClose={() => {
                 setViewingDetailsId(null);
-                setRefreshKey((k) => k + 1);
+                reloadAnimals();
               }}
             />
           )}
@@ -420,9 +431,9 @@ export function AnimalList({
 
       <ConfirmDialog
         open={pendingDeleteId !== null}
-        onOpenChange={(open) => {
-          if (!open) setPendingDeleteId(null);
-        }}
+        onOpenChange={(open) =>
+          !open && !deleteAnimal.isPending && setPendingDeleteId(null)
+        }
         onConfirm={confirmDelete}
         description="Esta ação não pode ser desfeita. O registro será removido permanentemente."
       />

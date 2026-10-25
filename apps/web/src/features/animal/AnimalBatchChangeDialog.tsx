@@ -1,4 +1,3 @@
-import { useState, useCallback, useEffect, useRef } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
@@ -13,13 +12,10 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { FormField } from "@/components/our/FormField";
-import {
-  SearchCombobox,
-  SearchComboboxItem,
-} from "@/components/our/SearchCombobox";
+import { SearchCombobox } from "@/components/our/SearchCombobox";
 import { z } from "zod";
 
-import { batchClient } from "@/lib/clients";
+import { useBatchOptions } from "@/features/batch/useBatchOptions";
 import { StockingNotice } from "@/features/area/StockingNotice";
 
 // Estado do diálogo: o lote de destino é escolhido antes de salvar a edição (vira
@@ -52,8 +48,12 @@ export function AnimalBatchChangeDialog({
   propertyId,
   onConfirm,
 }: AnimalBatchChangeDialogProps) {
-  const [batchItems, setBatchItems] = useState<SearchComboboxItem[]>([]);
-  const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Lotes vigentes da propriedade do animal, menos o atual (só com o diálogo aberto).
+  const batches = useBatchOptions({
+    propertyId,
+    exclude: currentBatchId,
+    enabled: open,
+  });
 
   const form = useForm<AnimalBatchChangeData>({
     resolver: zodResolver(animalBatchChangeSchema),
@@ -61,64 +61,25 @@ export function AnimalBatchChangeDialog({
   });
   const newBatchId = useWatch({ control: form.control, name: "newBatchId" });
 
-  const loadBatches = useCallback(
-    async (q: string) => {
-      try {
-        const result = await batchClient.getBatches({
-          propertyId,
-          status: "active",
-          search: q,
-          pageSize: q ? 20 : 10,
-        });
-        setBatchItems(
-          result.data
-            .filter((b) => b.id !== currentBatchId)
-            .map((b) => ({ value: b.id, label: b.name })),
-        );
-      } catch (err) {
-        console.error("Erro ao carregar lotes para troca:", err);
-        setBatchItems([]);
-      }
-    },
-    [currentBatchId, propertyId],
-  );
-
-  const handleSearchBatches = useCallback(
-    (query: string) => {
-      if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
-      searchDebounceRef.current = setTimeout(() => {
-        loadBatches(query);
-      }, 300);
-    },
-    [loadBatches],
-  );
-
-  useEffect(() => {
-    if (open) {
-      if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+  // Ao fechar, o diálogo volta ao estado inicial (abre limpo na próxima vez).
+  function handleOpenChange(next: boolean) {
+    if (!next) {
       form.reset({ newBatchId: "", notes: "" });
-      // Carga ao abrir o diálogo: o setState do loadBatches só acontece depois do await.
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      loadBatches("");
+      batches.clearSearch();
     }
-  }, [open, loadBatches, form]);
-
-  useEffect(() => {
-    return () => {
-      if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
-    };
-  }, []);
+    onOpenChange(next);
+  }
 
   function handleSubmit(data: AnimalBatchChangeData) {
-    const selectedItem = batchItems.find(
+    const selectedItem = batches.items.find(
       (item) => item.value === data.newBatchId,
     );
     onConfirm(data.newBatchId, selectedItem?.label, data.notes);
-    onOpenChange(false);
+    handleOpenChange(false);
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Trocar Lote do Animal</DialogTitle>
@@ -138,8 +99,8 @@ export function AnimalBatchChangeDialog({
                 id={id}
                 field={field}
                 fieldState={fieldState}
-                items={batchItems}
-                onInputValueChange={handleSearchBatches}
+                items={batches.items}
+                onInputValueChange={batches.search}
                 placeholder="Buscar lote..."
                 emptyMessage="Nenhum lote disponível"
               />
@@ -172,7 +133,7 @@ export function AnimalBatchChangeDialog({
             <Button
               type="button"
               variant="secondary"
-              onClick={() => onOpenChange(false)}
+              onClick={() => handleOpenChange(false)}
             >
               Cancelar
             </Button>

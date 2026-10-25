@@ -1,4 +1,5 @@
 import { toInputDateTime } from "./format";
+import { useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
@@ -13,7 +14,9 @@ import { SelectField } from "@/components/our/SelectField";
 import { type NeuteringTechnique, nowDateTime } from "@ifarm/shared";
 import { techniqueItems } from "@/features/neutering-technique/items";
 import { animalClient } from "@/lib/clients";
-import { ApiError, type AnimalNeuteringRecord } from "@ifarm/shared";
+import { applyServerErrors } from "@/lib/form-errors";
+import { useReloadAnimals } from "./queries";
+import { type AnimalNeuteringRecord } from "@ifarm/shared";
 import {
   neuteringCorrectionSchema,
   type NeuteringCorrectionPayload as NeuteringCorrectionFormData,
@@ -48,6 +51,13 @@ export function AnimalNeuteringCorrectionForm({
     },
   });
 
+  const reloadAnimal = useReloadAnimals();
+  const correct = useMutation({
+    mutationFn: (payload: NeuteringCorrectionFormData) =>
+      animalClient.correctNeutering(animalId, neutering.id, payload),
+    onSuccess: reloadAnimal,
+  });
+
   async function handleSubmit(data: NeuteringCorrectionFormData) {
     const dateChanged =
       !neutering.fromSession &&
@@ -55,7 +65,7 @@ export function AnimalNeuteringCorrectionForm({
       data.date !== toInputDateTime(neutering.date);
 
     try {
-      await animalClient.correctNeutering(animalId, neutering.id, {
+      await correct.mutateAsync({
         techniqueId: data.techniqueId,
         notes: data.notes,
         date: dateChanged ? data.date : undefined,
@@ -63,16 +73,7 @@ export function AnimalNeuteringCorrectionForm({
       toast.success("Castração corrigida com sucesso!");
       onSaved();
     } catch (error) {
-      if (error instanceof ApiError && error.errors) {
-        Object.entries(error.errors).forEach(([field, message]) => {
-          form.setError(field as keyof NeuteringCorrectionFormData, {
-            type: "server",
-            message,
-          });
-        });
-      } else {
-        toast.error("A requisição falhou! Tente novamente.");
-      }
+      applyServerErrors(form.setError, error);
     }
   }
 

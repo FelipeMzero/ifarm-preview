@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router";
 import { toast } from "sonner";
 import {
@@ -50,7 +51,8 @@ import {
 } from "@ifarm/shared";
 import { cn } from "@/lib/utils";
 import { animalClient } from "@/lib/clients";
-import { type AnimalFullDetails } from "@ifarm/shared";
+import { type AnimalFullDetails, isNotFoundError } from "@ifarm/shared";
+import { animalFullDetailsQuery, animalKeys } from "./queries";
 import { ORIGIN_VARIANT, SEX_ICON, STATUS_VARIANT } from "./display";
 import { AnimalWeightChart } from "./AnimalWeightChart";
 import {
@@ -158,54 +160,58 @@ export function AnimalDetails({
   onClose?: () => void;
 }) {
   const navigate = useNavigate();
-  const [animal, setAnimal] = useState<AnimalFullDetails | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
   const [confirmingDelete, setConfirmingDelete] = useState(false);
 
-  useEffect(() => {
-    let cancelled = false;
+  const {
+    data: animal,
+    error,
+    isPending,
+    refetch,
+  } = useQuery(animalFullDetailsQuery(id));
 
-    async function load() {
-      try {
-        const data = await animalClient.getAnimalDetails(id);
-        if (!cancelled) setAnimal(data);
-      } catch (e) {
-        if (!cancelled) setError((e as Error).message);
-      }
-    }
-
-    load();
-    return () => {
-      cancelled = true;
-    };
-  }, [id]);
-
-  async function handleDelete() {
-    try {
-      await animalClient.deleteAnimal(id);
+  const deleteAnimal = useMutation({
+    mutationFn: () => animalClient.deleteAnimal(id),
+    onSuccess: () => {
       toast.success("Registro excluído com sucesso!");
+      queryClient.removeQueries({ queryKey: animalKeys.fullDetails(id) });
+      queryClient.removeQueries({ queryKey: animalKeys.detail(id) });
+      queryClient.invalidateQueries({ queryKey: animalKeys.all });
       if (onClose) onClose();
       else navigate("/animais");
-    } catch (e) {
-      toast.error(
-        (e as Error).message || "Não foi possível excluir o registro.",
-      );
-    } finally {
-      setConfirmingDelete(false);
-    }
+    },
+    onError: (e) => {
+      toast.error(e.message || "Não foi possível excluir o registro.");
+    },
+    onSettled: () => setConfirmingDelete(false),
+  });
+
+  function handleDelete() {
+    deleteAnimal.mutate();
   }
 
-  if (error) {
-    return (
-      <ErrorPage
-        message="Não foi possível obter os dados do animal."
-        onRetry={() => window.location.reload()}
-      />
-    );
+  if (isPending) {
+    return <DetailsSkeleton />;
   }
 
   if (!animal) {
-    return <DetailsSkeleton />;
+    // Não existe mais (ex.: excluído por outra pessoa): tentar de novo não adianta.
+    if (isNotFoundError(error)) {
+      return (
+        <ErrorPage
+          title="Animal não encontrado"
+          message="Ele pode ter sido excluído."
+          onBack={onClose ?? (() => navigate("/animais"))}
+          backLabel={onClose ? "Fechar" : "Voltar"}
+        />
+      );
+    }
+    return (
+      <ErrorPage
+        message="Não foi possível obter os dados do animal."
+        onRetry={() => refetch()}
+      />
+    );
   }
 
   const weighings = animal.weighings;

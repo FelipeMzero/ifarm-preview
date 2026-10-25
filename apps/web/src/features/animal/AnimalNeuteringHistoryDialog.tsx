@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
   CircleAlert,
@@ -42,11 +43,13 @@ import { animalClient } from "@/lib/clients";
 import {
   ApiError,
   type AnimalNeuteringRecord,
+  type NeuteringCreatePayload,
   nowDateTime,
 } from "@ifarm/shared";
 import { AnimalNeuteringCorrectionForm } from "./AnimalNeuteringCorrectionForm";
-import { neuteringTechniqueClient } from "@/lib/clients";
+import { neuteringTechniqueListQuery } from "@/features/neutering-technique/queries";
 import { type NeuteringTechnique } from "@ifarm/shared";
+import { animalNeuteringsQuery, useReloadAnimals } from "./queries";
 import { techniqueItems } from "@/features/neutering-technique/items";
 import { SelectField } from "@/components/our/SelectField";
 import type { Commitment } from "@ifarm/shared";
@@ -62,8 +65,6 @@ interface AnimalNeuteringHistoryDialogProps {
   neutered: boolean;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  // Chamado após registrar, corrigir ou excluir, para quem abriu atualizar a castração exibida.
-  onChanged: () => void;
 }
 
 // Indica, abaixo da data, que a castração foi corrigida e quais eram os valores originais.
@@ -102,7 +103,6 @@ function NeuteringRegisterPanel({
   neutered,
   latest,
   techniques,
-  onChanged,
 }: {
   animalId: string;
   commitments: Commitment[];
@@ -111,13 +111,19 @@ function NeuteringRegisterPanel({
   techniques: NeuteringTechnique[];
   // undefined = histórico ainda carregando (o painel já aparece; só este texto espera).
   latest: AnimalNeuteringRecord | null | undefined;
-  onChanged: () => void;
 }) {
+  const reloadAnimal = useReloadAnimals();
   const [date, setDate] = useState(nowDateTime);
   const [techniqueId, setTechniqueId] = useState("");
   const [notes, setNotes] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [saving, setSaving] = useState(false);
+
+  const register = useMutation({
+    mutationFn: (data: NeuteringCreatePayload) =>
+      animalClient.createNeutering(animalId, data),
+    onSuccess: reloadAnimal,
+  });
+  const saving = register.isPending;
 
   async function handleSubmit(e: React.FormEvent) {
     // Eventos do React atravessam o portal do diálogo pela árvore de componentes:
@@ -133,26 +139,18 @@ function NeuteringRegisterPanel({
       return;
     }
 
-    setSaving(true);
     setErrors({});
     try {
-      await animalClient.createNeutering(animalId, {
-        date,
-        techniqueId,
-        notes,
-      });
+      await register.mutateAsync({ date, techniqueId, notes });
       toast.success(
         neutered ? "Recastração registrada." : "Castração registrada.",
       );
       setDate(nowDateTime());
       setTechniqueId("");
       setNotes("");
-      onChanged();
     } catch (err) {
       if (err instanceof ApiError && err.errors) setErrors(err.errors);
       else toast.error((err as Error).message);
-    } finally {
-      setSaving(false);
     }
   }
 
@@ -251,82 +249,52 @@ export function AnimalNeuteringHistoryDialog({
   neutered,
   open,
   onOpenChange,
-  onChanged,
 }: AnimalNeuteringHistoryDialogProps) {
-  const [neuterings, setNeuterings] = useState<AnimalNeuteringRecord[] | null>(
-    null,
-  );
-  const [loadFailed, setLoadFailed] = useState(false);
-  const [reloadKey, setReloadKey] = useState(0);
+  const reloadAnimal = useReloadAnimals();
   const [editing, setEditing] = useState<AnimalNeuteringRecord | null>(null);
   const [cancelling, setCancelling] = useState<AnimalNeuteringRecord | null>(
     null,
   );
-  const [techniques, setTechniques] = useState<NeuteringTechnique[]>([]);
 
-  // Técnicas cadastradas (inclui inativas, para exibir a gravada numa correção).
-  useEffect(() => {
-    if (!open) return;
-    let cancelled = false;
-    neuteringTechniqueClient
-      .getNeuteringTechniques()
-      .then((data) => {
-        if (!cancelled) setTechniques(data);
-      })
-      .catch(() => {
-        if (!cancelled) setTechniques([]);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [open]);
-
-  useEffect(() => {
-    if (!open) return;
-    let cancelled = false;
-
-    animalClient
-      .getNeuterings(animalId)
-      .then((data) => {
-        if (cancelled) return;
-        setNeuterings(data);
-        setLoadFailed(false);
-      })
-      .catch(() => {
-        if (!cancelled) setLoadFailed(true);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [open, animalId, reloadKey]);
+  // Técnicas cadastradas (inclui inativas, para exibir a gravada numa correção) e o histórico,
+  // só com a janela aberta (o histórico vem da mais recente para a mais antiga).
+  const { data: techniques = [] } = useQuery({
+    ...neuteringTechniqueListQuery(),
+    enabled: open,
+  });
+  const { data, isPending, isError } = useQuery({
+    ...animalNeuteringsQuery(animalId),
+    enabled: open,
+  });
+  const neuterings = isPending ? null : (data ?? []);
+  // Nada carregado: a falha de uma atualização com o histórico na tela é avisada à parte
+  // (aviso global), sem trocar a tabela por esta mensagem.
+  const loadFailed = isError && !data;
 
   function handleOpenChange(next: boolean) {
-    if (!next) {
-      setEditing(null);
-      setNeuterings(null);
-      setLoadFailed(false);
-    }
+    if (!next) setEditing(null);
     onOpenChange(next);
   }
 
-  function afterChange() {
-    setEditing(null);
-    setReloadKey((k) => k + 1);
-    onChanged();
-  }
-
-  async function handleCancel(keepNeutered?: boolean) {
-    if (!cancelling) return;
-    try {
-      await animalClient.cancelNeutering(animalId, cancelling.id, keepNeutered);
+  const cancel = useMutation({
+    mutationFn: ({
+      id,
+      keepNeutered,
+    }: {
+      id: number;
+      keepNeutered?: boolean;
+    }) => animalClient.cancelNeutering(animalId, id, keepNeutered),
+    onSuccess: () => {
       toast.success("Castração excluída.");
-      afterChange();
-    } catch (e) {
-      toast.error((e as Error).message);
-    } finally {
-      setCancelling(null);
-    }
+      setEditing(null);
+      return reloadAnimal();
+    },
+    onError: (e) => toast.error(e.message),
+    onSettled: () => setCancelling(null),
+  });
+
+  function handleCancel(keepNeutered?: boolean) {
+    if (cancelling) cancel.mutate({ id: cancelling.id, keepNeutered });
   }
 
   // Excluir a única castração registrada exige decidir se o animal continua castrado.
@@ -361,7 +329,6 @@ export function AnimalNeuteringHistoryDialog({
                   neuterings === null ? undefined : (neuterings[0] ?? null)
                 }
                 techniques={techniques}
-                onChanged={afterChange}
               />
               <h3 className="-mb-2 text-sm font-medium uppercase text-muted-foreground">
                 Histórico
@@ -377,7 +344,7 @@ export function AnimalNeuteringHistoryDialog({
               techniques={techniques}
               birthDate={birthDate}
               onCancel={() => setEditing(null)}
-              onSaved={afterChange}
+              onSaved={() => setEditing(null)}
             />
           ) : loadFailed ? (
             <p className="py-8 text-center text-sm text-destructive">

@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
   CircleAlert,
@@ -29,7 +30,13 @@ import {
 } from "@/components/ui/table";
 import { ConfirmDialog } from "@/components/our/ConfirmDialog";
 import { animalClient } from "@/lib/clients";
-import { ApiError, type AnimalWeighing, nowDateTime } from "@ifarm/shared";
+import {
+  ApiError,
+  type AnimalWeighing,
+  nowDateTime,
+  type WeighingCreatePayload,
+} from "@ifarm/shared";
+import { animalWeighingsQuery, useReloadAnimals } from "./queries";
 import { AnimalWeighingCorrectionForm } from "./AnimalWeighingCorrectionForm";
 import { WeighingCorrectionNote } from "./WeighingCorrectionNote";
 import type { Commitment } from "@ifarm/shared";
@@ -43,8 +50,6 @@ interface AnimalWeighingHistoryDialogProps {
   birthDate?: string | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  // Chamado após corrigir ou excluir, para quem abriu atualizar o peso atual.
-  onChanged: () => void;
 }
 
 // Registro na hora: a nova pesagem entra no histórico e o peso atual é recalculado.
@@ -53,20 +58,24 @@ function WeighingRegisterPanel({
   commitments,
   birthDate,
   latest,
-  onChanged,
 }: {
   animalId: string;
   commitments: Commitment[];
   birthDate?: string | null;
   // undefined = histórico ainda carregando (o painel já aparece; só este texto espera).
   latest: AnimalWeighing | null | undefined;
-  onChanged: () => void;
 }) {
+  const reloadAnimal = useReloadAnimals();
   const [weight, setWeight] = useState("");
   const [date, setDate] = useState(nowDateTime);
   const [notes, setNotes] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [saving, setSaving] = useState(false);
+
+  const register = useMutation({
+    mutationFn: (data: WeighingCreatePayload) =>
+      animalClient.createWeighing(animalId, data),
+    onSuccess: reloadAnimal,
+  });
 
   async function handleSubmit(e: React.FormEvent) {
     // Eventos do React atravessam o portal do diálogo pela árvore de componentes:
@@ -78,26 +87,19 @@ function WeighingRegisterPanel({
       return;
     }
 
-    setSaving(true);
     setErrors({});
     try {
-      await animalClient.createWeighing(animalId, {
-        weightKg: weight,
-        date,
-        notes,
-      });
+      await register.mutateAsync({ weightKg: weight, date, notes });
       toast.success(`Pesagem de ${formatKg(Number(weight))} registrada.`);
       setWeight("");
       setNotes("");
       setDate(nowDateTime());
-      onChanged();
     } catch (err) {
       if (err instanceof ApiError && err.errors) setErrors(err.errors);
       else toast.error((err as Error).message);
-    } finally {
-      setSaving(false);
     }
   }
+  const saving = register.isPending;
 
   const error = errors.weightKg ?? errors.date ?? errors.notes;
 
@@ -185,60 +187,39 @@ export function AnimalWeighingHistoryDialog({
   birthDate,
   open,
   onOpenChange,
-  onChanged,
 }: AnimalWeighingHistoryDialogProps) {
-  const [weighings, setWeighings] = useState<AnimalWeighing[] | null>(null);
-  const [loadFailed, setLoadFailed] = useState(false);
-  const [reloadKey, setReloadKey] = useState(0);
+  const reloadAnimal = useReloadAnimals();
   const [editing, setEditing] = useState<AnimalWeighing | null>(null);
   const [cancelling, setCancelling] = useState<AnimalWeighing | null>(null);
 
-  useEffect(() => {
-    if (!open) return;
-    let cancelled = false;
-
-    animalClient
-      .getWeighings(animalId)
-      .then((data) => {
-        if (cancelled) return;
-        setWeighings([...data].reverse());
-        setLoadFailed(false);
-      })
-      .catch(() => {
-        if (!cancelled) setLoadFailed(true);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [open, animalId, reloadKey]);
+  // Histórico só com a janela aberta; a mais recente primeiro.
+  const { data, isPending, isError } = useQuery({
+    ...animalWeighingsQuery(animalId),
+    enabled: open,
+    select: (list) => [...list].reverse(),
+  });
+  const weighings = isPending ? null : (data ?? []);
+  const loadFailed = isError && !data;
 
   function handleOpenChange(next: boolean) {
-    if (!next) {
-      setEditing(null);
-      setWeighings(null);
-      setLoadFailed(false);
-    }
+    if (!next) setEditing(null);
     onOpenChange(next);
   }
 
-  function afterChange() {
-    setEditing(null);
-    setReloadKey((k) => k + 1);
-    onChanged();
-  }
-
-  async function handleCancel() {
-    if (!cancelling) return;
-    try {
-      await animalClient.cancelWeighing(animalId, cancelling.id);
+  const cancel = useMutation({
+    mutationFn: (weighingId: number) =>
+      animalClient.cancelWeighing(animalId, weighingId),
+    onSuccess: () => {
       toast.success("Pesagem excluída.");
-      afterChange();
-    } catch (e) {
-      toast.error((e as Error).message);
-    } finally {
-      setCancelling(null);
-    }
+      setEditing(null);
+      return reloadAnimal();
+    },
+    onError: (e) => toast.error(e.message),
+    onSettled: () => setCancelling(null),
+  });
+
+  function handleCancel() {
+    if (cancelling) cancel.mutate(cancelling.id);
   }
 
   return (
@@ -261,7 +242,6 @@ export function AnimalWeighingHistoryDialog({
                 commitments={commitments}
                 birthDate={birthDate}
                 latest={weighings === null ? undefined : (weighings[0] ?? null)}
-                onChanged={afterChange}
               />
               <h3 className="-mb-2 text-sm font-medium uppercase text-muted-foreground">
                 Histórico
@@ -276,9 +256,11 @@ export function AnimalWeighingHistoryDialog({
               weighing={editing}
               birthDate={birthDate}
               onCancel={() => setEditing(null)}
-              onSaved={afterChange}
+              onSaved={() => setEditing(null)}
             />
           ) : loadFailed ? (
+            // Nada carregado: a falha de uma atualização com o histórico na tela é avisada à
+            // parte (aviso global), sem trocar a tabela por esta mensagem.
             <p className="py-8 text-center text-sm text-destructive">
               Não foi possível carregar as pesagens.
             </p>

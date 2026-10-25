@@ -119,7 +119,7 @@ export function PersonForm({
       if (id) {
         await save.mutateAsync(data);
         // Volta o formulário ao estado "sem alterações", com os dados salvos (e o cache junto).
-        const fresh = await queryClient.fetchQuery(personDetailQuery(id));
+        const fresh = await queryClient.query(personDetailQuery(id));
         reset(fresh);
         toast.success("Registro atualizado com sucesso!");
         onSuccess?.();

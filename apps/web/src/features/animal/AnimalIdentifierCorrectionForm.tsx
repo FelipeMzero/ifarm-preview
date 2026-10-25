@@ -1,4 +1,5 @@
 import { toInputDateTime } from "./format";
+import { useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
@@ -11,8 +12,9 @@ import { FormField } from "@/components/our/FormField";
 import { FieldRow } from "@/components/our/FieldRow";
 import { nowDateTime } from "@ifarm/shared";
 import { animalClient } from "@/lib/clients";
+import { applyServerErrors } from "@/lib/form-errors";
+import { useReloadAnimals } from "./queries";
 import {
-  ApiError,
   type AnimalIdentifierRecord,
   IDENTIFIER_MAX_LENGTH,
   identifierCorrectionSchemaFor,
@@ -56,6 +58,13 @@ export function AnimalIdentifierCorrectionForm({
     },
   });
 
+  const reloadAnimal = useReloadAnimals();
+  const correct = useMutation({
+    mutationFn: (payload: FormData) =>
+      animalClient.correctIdentifier(animalId, kind, record.id, payload),
+    onSuccess: reloadAnimal,
+  });
+
   async function handleSubmit(data: FormData) {
     const dateChanged =
       !record.fromSession &&
@@ -63,7 +72,7 @@ export function AnimalIdentifierCorrectionForm({
       data.date !== toInputDateTime(record.date);
 
     try {
-      await animalClient.correctIdentifier(animalId, kind, record.id, {
+      await correct.mutateAsync({
         value: data.value,
         notes: data.notes,
         date: dateChanged ? data.date : undefined,
@@ -71,15 +80,7 @@ export function AnimalIdentifierCorrectionForm({
       toast.success(`${label} corrigido com sucesso!`);
       onSaved();
     } catch (error) {
-      if (error instanceof ApiError && error.errors) {
-        Object.entries(error.errors).forEach(([field, message]) => {
-          form.setError(field as keyof FormData, { type: "server", message });
-        });
-      } else if (error instanceof ApiError) {
-        toast.error(error.message);
-      } else {
-        toast.error("A requisição falhou! Tente novamente.");
-      }
+      applyServerErrors(form.setError, error);
     }
   }
 

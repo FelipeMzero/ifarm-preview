@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { X } from "lucide-react";
 
 import { SelectField, SelectFieldItem } from "@/components/our/SelectField";
@@ -10,8 +10,8 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { batchClient } from "@/lib/clients";
-import { breedClient } from "@/lib/clients";
+import { batchListQuery } from "@/features/batch/queries";
+import { breedListQuery } from "@/features/breed/queries";
 import {
   ANIMAL_ORIGIN_ITEMS,
   ANIMAL_STATUS_ITEMS,
@@ -83,17 +83,14 @@ const URL_VALUES: Partial<Record<UrlFilterKey, Record<string, string>>> = {
   },
 };
 
-export function filtersFromQuery(
-  query: Record<string, string | string[] | undefined>,
-): AnimalListFilters {
+export function filtersFromQuery(query: URLSearchParams): AnimalListFilters {
   const filters = { ...DEFAULT_FILTERS };
-  const status = Array.isArray(query.status) ? query.status[0] : query.status;
+  const status = query.get("status");
   if (status === "todos") filters.status = "";
   else if (ANIMAL_STATUS_ITEMS.some((i) => i.value === status))
     filters.status = status!;
   for (const key of Object.keys(URL_PARAMS) as UrlFilterKey[]) {
-    const raw = query[URL_PARAMS[key]];
-    const value = Array.isArray(raw) ? raw[0] : raw;
+    const value = query.get(URL_PARAMS[key]);
     if (!value) continue;
     const mapping = URL_VALUES[key];
     const apiValue = mapping
@@ -133,35 +130,18 @@ export type FilterOptions = {
 };
 
 // Lotes vigentes da propriedade e todas as raças (ativas ou não), para o painel e
-// para os rótulos das etiquetas.
+// para os rótulos das etiquetas. Sem as opções (carregando ou com erro), o painel mostra só os
+// filtros fixos.
 export function useFilterOptions(propertyId?: string): FilterOptions {
-  const [options, setOptions] = useState<FilterOptions>({
-    batches: [],
-    breeds: [],
-  });
+  const { data: batches } = useQuery(
+    batchListQuery({ propertyId, status: "active", pageSize: 100 }),
+  );
+  const { data: breeds } = useQuery(breedListQuery());
 
-  useEffect(() => {
-    let cancelled = false;
-    Promise.all([
-      batchClient.getBatches({ propertyId, status: "active", pageSize: 100 }),
-      breedClient.getBreeds(),
-    ])
-      .then(([batches, breeds]) => {
-        if (cancelled) return;
-        setOptions({
-          batches: batches.data.map((b) => ({ value: b.id, label: b.name })),
-          breeds: breeds.map((b) => ({ value: b.id, label: b.name })),
-        });
-      })
-      .catch(() => {
-        // Sem as opções o painel mostra só os filtros fixos.
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [propertyId]);
-
-  return options;
+  return {
+    batches: batches?.data.map((b) => ({ value: b.id, label: b.name })) ?? [],
+    breeds: breeds?.map((b) => ({ value: b.id, label: b.name })) ?? [],
+  };
 }
 
 const labelOf = (items: SelectFieldItem[], value: string) =>

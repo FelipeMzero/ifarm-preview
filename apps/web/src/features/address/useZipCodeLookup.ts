@@ -30,7 +30,7 @@ export function useZipCodeLookup({
 
     setIsLoading(true);
     try {
-      const address = await queryClient.fetchQuery(zipCodeQuery(digits));
+      const address = await queryClient.query(zipCodeQuery(digits));
       if (!address) {
         toast.error("CEP não encontrado.");
         return;
@@ -44,7 +44,7 @@ export function useZipCodeLookup({
       if (setCoordinates) {
         // Sem coordenadas não é erro: o usuário pode marcá-las no mapa.
         const coordinates = await queryClient
-          .fetchQuery(
+          .query(
             geocodeQuery({
               street: address.street,
               city: address.city,

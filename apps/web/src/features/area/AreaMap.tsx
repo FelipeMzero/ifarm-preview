@@ -627,7 +627,7 @@ export function AreaMap() {
           return;
         }
         const coords = await queryClient
-          .fetchQuery(
+          .query(
             geocodeQuery({
               zipCode: details.zipCode,
               city: details.city,

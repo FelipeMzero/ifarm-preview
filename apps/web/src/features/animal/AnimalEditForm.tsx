@@ -1,6 +1,8 @@
 import { formatInstant } from "./format";
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Controller, useForm } from "react-hook-form";
+import { useNavigate } from "react-router";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   ArrowLeft,
@@ -13,12 +15,17 @@ import { toast } from "sonner";
 
 import { animalClient } from "@/lib/clients";
 import {
-  ApiError,
+  isNotFoundError,
   type AnimalDetail,
   type IdentifierKind,
 } from "@ifarm/shared";
-import { breedClient } from "@/lib/clients";
-import { type Breed } from "@ifarm/shared";
+import { applyServerErrors } from "@/lib/form-errors";
+import { breedListQuery } from "@/features/breed/queries";
+import {
+  animalCommitmentsQuery,
+  animalDetailQuery,
+  animalKeys,
+} from "./queries";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { FieldLegend, FieldSet } from "@/components/ui/field";
@@ -42,7 +49,6 @@ import { AnimalBatchChangeDialog } from "./AnimalBatchChangeDialog";
 import { AnimalWeighingHistoryDialog } from "./AnimalWeighingHistoryDialog";
 import { AnimalIdentifierHistoryDialog } from "./AnimalIdentifierHistoryDialog";
 import { AnimalNeuteringHistoryDialog } from "./AnimalNeuteringHistoryDialog";
-import type { Commitment } from "@ifarm/shared";
 import { FormSkeleton } from "@/components/our/PageSkeletons";
 
 // Edição pelo cadastro: os dados básicos, com as regras da API (troca de lote,
@@ -54,6 +60,13 @@ const animalEditFormSchema = animalUpdateSchema.pick({
   breedId: true,
 });
 type AnimalEditFormData = z.input<typeof animalEditFormSchema>;
+
+const toFormValues = (animal: AnimalDetail): AnimalEditFormData => ({
+  name: animal.name ?? "",
+  sex: animal.sex as AnimalEditFormData["sex"],
+  birthDate: animal.birthDate ?? "",
+  breedId: animal.breedId ?? "",
+});
 
 type AnimalEditFormProps = {
   id: string;
@@ -68,13 +81,21 @@ export function AnimalEditForm({
   onCancel,
   onSuccess,
 }: AnimalEditFormProps) {
-  const [isDataLoading, setIsDataLoading] = useState(true);
-  const [loadFailed, setLoadFailed] = useState(false);
-  const [animal, setAnimal] = useState<AnimalDetail | null>(null);
-  // Operações em aberto do animal, carregadas junto com ele para os avisos das janelas
-  // de registro já aparecerem ao abrir.
-  const [commitments, setCommitments] = useState<Commitment[]>([]);
-  const [breeds, setBreeds] = useState<Breed[]>([]);
+  const queryClient = useQueryClient();
+  const navigate = useNavigate();
+
+  const {
+    data: animal,
+    error,
+    isPending,
+    refetch,
+  } = useQuery(animalDetailQuery(id));
+  // Operações em aberto do animal, carregadas junto com ele para os avisos das janelas de
+  // registro já aparecerem ao abrir. Sem a lista, só os avisos antecipados somem: o servidor
+  // ainda barra.
+  const { data: commitments = [] } = useQuery(animalCommitmentsQuery(id));
+  const { data: breedList } = useQuery(breedListQuery());
+  const breeds = breedList?.filter((b) => !b.deactivatedAt) ?? [];
 
   const [batchDialogOpen, setBatchDialogOpen] = useState(false);
   const [pendingBatchId, setPendingBatchId] = useState<string | null>(null);
@@ -99,6 +120,11 @@ export function AnimalEditForm({
     formState: { isSubmitting },
   } = useForm<AnimalEditFormData>({
     resolver: zodResolver(animalEditFormSchema, undefined, { raw: true }),
+    // Dados do animal em edição. Se forem buscados de novo em segundo plano (ex.: depois de
+    // registrar uma pesagem), só os campos que o usuário não alterou são atualizados
+    // (keepDirtyValues).
+    values: animal && toFormValues(animal),
+    resetOptions: { keepDirtyValues: true },
     defaultValues: {
       name: "",
       sex: "MALE",
@@ -107,93 +133,57 @@ export function AnimalEditForm({
     },
   });
 
-  useEffect(() => {
-    async function loadData() {
-      try {
-        const [detail, open] = await Promise.all([
-          animalClient.getAnimal(id),
-          // Sem a lista, só os avisos antecipados somem: o servidor ainda barra.
-          animalClient.getAnimalCommitments(id).catch(() => []),
-        ]);
-        setAnimal(detail);
-        setCommitments(open);
-        reset({
-          name: detail.name ?? "",
-          sex: detail.sex as AnimalEditFormData["sex"],
-          birthDate: detail.birthDate ?? "",
-          breedId: detail.breedId ?? "",
-        });
-      } catch {
-        setLoadFailed(true);
-      } finally {
-        setIsDataLoading(false);
-      }
-    }
-    loadData();
-  }, [id, reset]);
-
-  useEffect(() => {
-    async function loadBreeds() {
-      try {
-        const breedList = await breedClient.getBreeds();
-        setBreeds(breedList.filter((b) => !b.deactivatedAt));
-      } catch {
-        setBreeds([]);
-      }
-    }
-    loadBreeds();
-  }, []);
-
-  async function onSubmit(data: AnimalEditFormData) {
-    try {
-      await animalClient.updateAnimal(id, {
+  const save = useMutation({
+    mutationFn: (data: AnimalEditFormData) =>
+      animalClient.updateAnimal(id, {
         ...data,
         newBatchId: pendingBatchId ?? undefined,
         batchChangeNotes: pendingBatchNotes,
-      });
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: animalKeys.all });
+    },
+  });
 
-      const fresh = await animalClient.getAnimal(id);
-      setAnimal(fresh);
-      reset({
-        name: fresh.name ?? "",
-        sex: fresh.sex as AnimalEditFormData["sex"],
-        birthDate: fresh.birthDate ?? "",
-        breedId: fresh.breedId ?? "",
-      });
+  async function onSubmit(data: AnimalEditFormData) {
+    try {
+      await save.mutateAsync(data);
+      // Volta o formulário ao estado "sem alterações", com os dados salvos (e o cache junto).
+      const fresh = await queryClient.query(animalDetailQuery(id));
+      reset(toFormValues(fresh));
       setPendingBatchId(null);
       setPendingBatchName(null);
       setPendingBatchNotes(undefined);
 
-      toast.success("Atualizado com sucesso!");
+      toast.success("Registro atualizado com sucesso!");
       onSuccess?.();
     } catch (error) {
-      if (error instanceof ApiError && error.errors) {
-        Object.entries(error.errors).forEach(([field, message]) => {
-          setError(field as keyof AnimalEditFormData, {
-            type: "server",
-            message,
-          });
-        });
-        toast.error("Verifique os campos destacados.");
-      } else if (error instanceof ApiError) {
-        toast.error(error.message);
-      } else {
-        toast.error("A requisição falhou! Tente novamente.");
-      }
+      applyServerErrors(setError, error);
     }
   }
 
-  if (loadFailed) {
+  if (isPending) {
+    return <FormSkeleton />;
+  }
+
+  if (!animal) {
+    // Não existe mais (ex.: excluído por outra pessoa): tentar de novo não adianta.
+    if (isNotFoundError(error)) {
+      return (
+        <ErrorPage
+          title="Animal não encontrado"
+          message="Ele pode ter sido excluído."
+          onBack={() => navigate("/animais")}
+          backLabel="Voltar"
+        />
+      );
+    }
     return (
       <ErrorPage
         message="Não foi possível obter os dados do servidor."
-        onRetry={() => window.location.reload()}
+        onRetry={() => refetch()}
       />
     );
-  }
-
-  if (isDataLoading || !animal) {
-    return <FormSkeleton />;
   }
 
   const displayBatchName = pendingBatchName ?? animal.currentBatchName;
@@ -480,6 +470,8 @@ export function AnimalEditForm({
         }}
       />
 
+      {/* As janelas gravam na hora e recarregam o animal (cache); o identificador, o peso e a
+          castração exibidos aqui se atualizam, e as alterações pendentes do formulário ficam. */}
       <AnimalIdentifierHistoryDialog
         animalId={animal.id}
         commitments={commitments}
@@ -489,14 +481,6 @@ export function AnimalEditForm({
         }
         open={identifierHistory !== null}
         onOpenChange={(open) => !open && setIdentifierHistory(null)}
-        onChanged={async () => {
-          // Só o identificador atual muda; as alterações pendentes do formulário são preservadas.
-          try {
-            setAnimal(await animalClient.getAnimal(id));
-          } catch {
-            toast.error("Não foi possível atualizar a identificação atual.");
-          }
-        }}
       />
 
       <AnimalWeighingHistoryDialog
@@ -505,14 +489,6 @@ export function AnimalEditForm({
         birthDate={animal.birthDate}
         open={weighingHistoryOpen}
         onOpenChange={setWeighingHistoryOpen}
-        onChanged={async () => {
-          // Só o peso atual muda; as alterações pendentes do formulário são preservadas.
-          try {
-            setAnimal(await animalClient.getAnimal(id));
-          } catch {
-            toast.error("Não foi possível atualizar o peso atual.");
-          }
-        }}
       />
 
       <AnimalNeuteringHistoryDialog
@@ -522,14 +498,6 @@ export function AnimalEditForm({
         neutered={animal.neutered}
         open={neuteringHistoryOpen}
         onOpenChange={setNeuteringHistoryOpen}
-        onChanged={async () => {
-          // Só a castração exibida muda; as alterações pendentes do formulário são preservadas.
-          try {
-            setAnimal(await animalClient.getAnimal(id));
-          } catch {
-            toast.error("Não foi possível atualizar a castração.");
-          }
-        }}
       />
     </>
   );

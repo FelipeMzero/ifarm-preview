@@ -60,7 +60,7 @@ export function usePersonOptions({
   /** Pessoa cadastrada agora (ex.: pelo modal): recarrega as opções e a põe no topo. */
   async function addCreated(id: string) {
     queryClient.invalidateQueries({ queryKey: personKeys.all });
-    const person = await queryClient.fetchQuery(personDetailQuery(id));
+    const person = await queryClient.query(personDetailQuery(id));
     setCreated({ value: id, label: person.name });
     return person;
   }
