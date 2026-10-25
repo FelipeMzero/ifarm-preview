@@ -1,10 +1,5 @@
-import { useCallback, useRef, useState } from "react";
-import {
-  keepPreviousData,
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from "@tanstack/react-query";
+import { useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { MaskedInput } from "@/components/our/MaskedInput";
@@ -16,7 +11,7 @@ import {
   propertySchema,
   type PropertyInput,
 } from "@ifarm/shared";
-import { personClient, propertyClient } from "@/lib/clients";
+import { propertyClient } from "@/lib/clients";
 import { ErrorPage } from "@/components/our/ErrorPage";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -26,10 +21,7 @@ import { FormField } from "@/components/our/FormField";
 import { FormActionBar } from "@/components/our/FormActionBar";
 import FieldRow from "@/components/our/FieldRow";
 
-import {
-  SearchCombobox,
-  SearchComboboxItem,
-} from "@/components/our/SearchCombobox";
+import { SearchCombobox } from "@/components/our/SearchCombobox";
 import { ArrowLeft, Loader2, MapPin, MapPinOff } from "lucide-react";
 import FormSkeleton from "@/components/our/FormSkeleton";
 import { Separator } from "@/components/ui/separator";
@@ -37,7 +29,7 @@ import { cn } from "@/lib/utils";
 import { applyServerErrors } from "@/lib/form-errors";
 import { LocationPickerDialog } from "./LocationPickerDialog";
 import { useCurrentProperty } from "@/features/shell/CurrentPropertyProvider";
-import { personKeys } from "../person/queries";
+import { usePersonOptions } from "../person/usePersonOptions";
 import { propertyDetailQuery, propertyKeys } from "./queries";
 import { geocodeQuery, zipCodeQuery } from "../address/queries";
 
@@ -152,42 +144,10 @@ export default function PropertyForm({
     enabled: !!id,
   });
 
-  // Opções de titular: as 5 primeiras pessoas ativas, ou a busca digitada (com espera).
-  const [ownerSearch, setOwnerSearch] = useState("");
-  const ownerDebounce = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const searchOwners = useCallback((query: string) => {
-    if (ownerDebounce.current) clearTimeout(ownerDebounce.current);
-    ownerDebounce.current = setTimeout(() => setOwnerSearch(query), 300);
-  }, []);
-  const ownerParams = {
-    search: ownerSearch,
-    pageSize: ownerSearch ? 20 : 5,
-    status: "active" as const,
-  };
-  const { data: owners } = useQuery({
-    queryKey: personKeys.list(ownerParams),
-    queryFn: () => personClient.getPeople(ownerParams),
-    placeholderData: keepPreviousData,
+  // Opções do campo de titular (uma pessoa).
+  const owners = usePersonOptions({
+    selected: property && { id: property.ownerId, name: property.ownerName },
   });
-  // Titular cadastrado agora pelo modal, que pode não estar entre as opções da lista.
-  const [createdOwner, setCreatedOwner] = useState<SearchComboboxItem | null>(
-    null,
-  );
-  const listedOwners: SearchComboboxItem[] =
-    owners?.data.map((p) => ({ value: p.id, label: p.name })) ?? [];
-  // Sem busca, o titular atual (e o recém-criado) entram no topo, se não vierem na lista.
-  const pinnedOwners: SearchComboboxItem[] = ownerSearch
-    ? []
-    : [
-        createdOwner,
-        property?.ownerId && property.ownerName
-          ? { value: property.ownerId, label: property.ownerName }
-          : null,
-      ].filter(
-        (o): o is SearchComboboxItem =>
-          !!o && !listedOwners.some((l) => l.value === o.value),
-      );
-  const ownerItems = [...pinnedOwners, ...listedOwners];
 
   const save = useMutation({
     mutationFn: (data: PropertyInput) =>
@@ -361,8 +321,8 @@ export default function PropertyForm({
                   id={fieldId}
                   field={field}
                   fieldState={fieldState}
-                  items={ownerItems}
-                  onInputValueChange={(val) => searchOwners(val)}
+                  items={owners.items}
+                  onInputValueChange={owners.search}
                   onCreateClick={() => setIsPersonModalOpen(true)}
                 />
               )}
@@ -646,13 +606,8 @@ export default function PropertyForm({
             onSuccess={async (newId) => {
               setIsPersonModalOpen(false);
               if (newId) {
-                // Recarrega as opções de titular e já seleciona a pessoa cadastrada.
-                queryClient.invalidateQueries({ queryKey: personKeys.all });
-                const person = await queryClient.fetchQuery({
-                  queryKey: personKeys.detail(newId),
-                  queryFn: () => personClient.getPerson(newId),
-                });
-                setCreatedOwner({ value: newId, label: person.name });
+                // A pessoa cadastrada entra nas opções e já fica selecionada.
+                await owners.addCreated(newId);
                 setValue("ownerId", newId, { shouldValidate: true });
                 toast.success("Titular vinculado à propriedade com sucesso.");
               }
