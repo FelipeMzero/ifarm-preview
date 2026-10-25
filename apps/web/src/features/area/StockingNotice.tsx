@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Info, TriangleAlert } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { stockingClient } from "@/lib/clients";
 import type { StockingPreview, StockingPreviewRequest } from "@ifarm/shared";
+import { stockingPreviewQuery } from "./queries";
 
 function formatUa(value: number) {
   return value.toLocaleString("pt-BR", {
@@ -47,28 +48,21 @@ export function StockingNotice({
   showWhenOk = false,
   className,
 }: StockingNoticeProps) {
+  // Busca depois de uma pausa (a operação costuma mudar enquanto o usuário escolhe ou digita).
   const key = request ? JSON.stringify(request) : null;
-  const [preview, setPreview] = useState<StockingPreview | null>(null);
-
+  const [debouncedKey, setDebouncedKey] = useState(key);
   useEffect(() => {
-    if (!key) return;
-    let cancelled = false;
-    const timer = setTimeout(async () => {
-      try {
-        const result = await stockingClient.getStockingPreview(JSON.parse(key));
-        if (!cancelled) setPreview(result);
-      } catch {
-        // A prévia é só informativa; sem ela a operação segue normalmente.
-        if (!cancelled) setPreview(null);
-      }
-    }, 300);
-    return () => {
-      cancelled = true;
-      clearTimeout(timer);
-    };
+    const timer = setTimeout(() => setDebouncedKey(key), 300);
+    return () => clearTimeout(timer);
   }, [key]);
 
-  if (!key || !preview) return null;
+  // A prévia é só informativa; sem ela (carregando ou com erro) a operação segue normalmente.
+  const { data: preview } = useQuery({
+    ...stockingPreviewQuery(JSON.parse(debouncedKey ?? "null")),
+    enabled: !!key && debouncedKey === key,
+  });
+
+  if (!key || debouncedKey !== key || !preview) return null;
 
   if (preview.exceeds) {
     return (

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from "react";
-import { useForm, useWatch, type Path } from "react-hook-form";
-import { useQueryClient } from "@tanstack/react-query";
+import { useForm, useWatch } from "react-hook-form";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { zodResolver } from "@hookform/resolvers/zod";
 import L from "leaflet";
 import {
@@ -32,7 +32,7 @@ import {
   Clock,
   Hourglass,
 } from "lucide-react";
-import { useNavigate } from "react-router";
+import { useNavigate, useSearchParams } from "react-router";
 import { cn } from "@/lib/utils";
 
 import "@geoman-io/leaflet-geoman-free";
@@ -62,15 +62,18 @@ import {
 } from "@/components/ui/select";
 import { useCurrentProperty } from "@/features/shell/CurrentPropertyProvider";
 import { geocodeQuery } from "@/features/address/queries";
-import { propertyClient } from "@/lib/clients";
+import { batchKeys } from "@/features/batch/queries";
+import { propertyDetailQuery } from "@/features/property/queries";
+import { ErrorPage } from "@/components/our/ErrorPage";
+import { applyServerErrors } from "@/lib/form-errors";
 import { areaSchema, type AreaInput } from "@ifarm/shared";
 import { areaClient } from "@/lib/clients";
 import {
   AreaOccupiedError,
   type AreaRow,
   type AreaStatus,
-  ApiError,
 } from "@ifarm/shared";
+import { areaKeys, areaListQuery, browserLocationQuery } from "./queries";
 import { AreaForm } from "./AreaForm";
 import { AreaDetails } from "./AreaDetails";
 import {
@@ -420,11 +423,6 @@ function GeomanController({
   return null;
 }
 
-// Mensagem de um erro capturado (o throw pode lançar qualquer coisa).
-function errorMessage(err: unknown): string | undefined {
-  return err instanceof Error ? err.message : undefined;
-}
-
 function isLatLng(pt: unknown): pt is L.LatLngLiteral {
   return (
     typeof pt === "object" &&
@@ -582,89 +580,72 @@ function EditablePolygon({
 export function AreaMap() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { property: currentProperty } = useCurrentProperty();
-
-  const [areas, setAreas] = useState<AreaRow[]>([]);
-  const [areasPropertyId, setAreasPropertyId] = useState<string | null>(null);
-  const [statusFilter, setStatusFilter] = useState<"active" | "inactive">(
-    "active",
-  );
-  const [mapMode, setMapMode] = useState<"padrao" | "satelite">("padrao");
-  const [loading, setLoading] = useState(true);
-  const [refreshKey, setRefreshKey] = useState(0);
-  const [propertyCoords, setPropertyCoords] = useState<[number, number] | null>(
-    null,
-  );
-  const [browserCoords, setBrowserCoords] = useState<[number, number] | null>(
-    null,
-  );
-  const [locatingProperty, setLocatingProperty] = useState(false);
-
+  const { property: currentProperty, isLoading: isPropertyLoading } =
+    useCurrentProperty();
   const currentPropertyId = currentProperty?.id;
-  useEffect(() => {
-    // Ao trocar de propriedade, descarta as coordenadas da anterior antes de buscar as novas.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setPropertyCoords(null);
-    setBrowserCoords(null);
 
-    if (!currentPropertyId) {
-      setLocatingProperty(false);
-      return;
-    }
+  // Filtro de situação na URL (?situacao=inativas; sem ele, as ativas).
+  const [searchParams, setSearchParams] = useSearchParams();
+  const statusFilter: "active" | "inactive" =
+    searchParams.get("situacao") === "inativas" ? "inactive" : "active";
+  function setStatusFilter(status: "active" | "inactive") {
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        if (status === "inactive") next.set("situacao", "inativas");
+        else next.delete("situacao");
+        return next;
+      },
+      { replace: true, preventScrollReset: true },
+    );
+  }
+  const [mapMode, setMapMode] = useState<"padrao" | "satelite">("padrao");
 
-    let active = true;
-    setLocatingProperty(true);
+  // Áreas da propriedade atual. A chave inclui a propriedade: ao trocar, as da anterior não
+  // aparecem enquanto as novas carregam.
+  const {
+    data: areasResult,
+    isPending: isAreasPending,
+    refetch: refetchAreas,
+  } = useQuery({
+    ...areaListQuery({ propertyId: currentPropertyId, status: statusFilter }),
+    enabled: !!currentPropertyId,
+  });
+  const areas: AreaRow[] = areasResult?.data ?? [];
 
-    async function loadPropertyCoords(propertyId: string) {
-      try {
-        const details = await propertyClient.getProperty(propertyId);
-        if (details.latitude && details.longitude) {
-          if (active)
-            setPropertyCoords([
-              Number(details.latitude),
-              Number(details.longitude),
-            ]);
-          return;
-        }
-        const coords = await queryClient
-          .query(
-            geocodeQuery({
-              zipCode: details.zipCode,
-              city: details.city,
-              state: details.state,
-            }),
-          )
-          .catch(() => null);
-        if (coords) {
-          if (active) setPropertyCoords([coords.latitude, coords.longitude]);
-          return;
-        }
-      } catch {
-        // sem localização/endereço cadastrados: cai para a geolocalização do navegador abaixo
-      }
-
-      if (!navigator.geolocation) return;
-      await new Promise<void>((resolve) => {
-        navigator.geolocation.getCurrentPosition(
-          (pos) => {
-            if (active)
-              setBrowserCoords([pos.coords.latitude, pos.coords.longitude]);
-            resolve();
-          },
-          () => resolve(),
-          { timeout: 8000 },
-        );
-      });
-    }
-
-    loadPropertyCoords(currentPropertyId).finally(() => {
-      if (active) setLocatingProperty(false);
-    });
-
-    return () => {
-      active = false;
-    };
-  }, [currentPropertyId, queryClient]);
+  // Onde centralizar o mapa quando não há áreas: as coordenadas da propriedade; sem elas, as
+  // do endereço (geocodificação); sem endereço, a localização do navegador.
+  const { data: propertyDetails, isPending: isDetailsPending } = useQuery({
+    ...propertyDetailQuery(currentPropertyId ?? ""),
+    enabled: !!currentPropertyId,
+  });
+  const ownCoords: [number, number] | null =
+    propertyDetails?.latitude && propertyDetails.longitude
+      ? [Number(propertyDetails.latitude), Number(propertyDetails.longitude)]
+      : null;
+  const needsGeocode = !!propertyDetails && !ownCoords;
+  const { data: geocoded, isPending: isGeocodePending } = useQuery({
+    ...geocodeQuery({
+      zipCode: propertyDetails?.zipCode,
+      city: propertyDetails?.city,
+      state: propertyDetails?.state,
+    }),
+    enabled: needsGeocode,
+  });
+  const propertyCoords: [number, number] | null =
+    ownCoords ?? (geocoded ? [geocoded.latitude, geocoded.longitude] : null);
+  const addressSettled =
+    !!currentPropertyId &&
+    !isDetailsPending &&
+    (!needsGeocode || !isGeocodePending);
+  const needsBrowserLocation = addressSettled && !propertyCoords;
+  const { data: browserCoords, isPending: isBrowserPending } = useQuery({
+    ...browserLocationQuery,
+    enabled: needsBrowserLocation,
+  });
+  const locatingProperty =
+    !!currentPropertyId &&
+    (!addressSettled || (needsBrowserLocation && isBrowserPending));
 
   const [mapInstance, setMapInstance] = useState<L.Map | null>(null);
   const [mapAreaEl, setMapAreaEl] = useState<HTMLDivElement | null>(null);
@@ -697,42 +678,6 @@ export function AreaMap() {
       propertyId: "",
     },
   });
-
-  useEffect(() => {
-    if (!currentProperty) {
-      // Sem propriedade selecionada não há o que carregar: encerra o carregamento.
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setLoading(false);
-      return;
-    }
-
-    let active = true;
-    async function fetchList() {
-      setLoading(true);
-      try {
-        const result = await areaClient.getAreas({
-          propertyId: currentProperty?.id,
-          status: statusFilter,
-        });
-        if (active) {
-          setAreas(result.data);
-          setAreasPropertyId(currentProperty!.id);
-        }
-      } catch (err) {
-        toast.error(
-          errorMessage(err) ??
-            "Não foi possível carregar as áreas de pastagem.",
-        );
-      } finally {
-        if (active) setLoading(false);
-      }
-    }
-
-    fetchList();
-    return () => {
-      active = false;
-    };
-  }, [currentProperty, statusFilter, refreshKey]);
 
   useEffect(() => {
     if (currentProperty) {
@@ -836,26 +781,33 @@ export function AreaMap() {
     setSheetOpen(true);
   };
 
+  // Mudar uma área também muda as áreas livres oferecidas aos lotes.
+  const reloadAreas = () =>
+    Promise.all([
+      queryClient.invalidateQueries({ queryKey: areaKeys.all }),
+      queryClient.invalidateQueries({ queryKey: batchKeys.all }),
+    ]);
+
+  const save = useMutation({
+    mutationFn: (data: AreaInput) =>
+      editingArea
+        ? areaClient.updateArea(editingArea.id, data)
+        : areaClient.createArea(data),
+    onSuccess: reloadAreas,
+  });
+
   const onSubmit = async (data: AreaInput) => {
     try {
-      if (editingArea) {
-        await areaClient.updateArea(editingArea.id, data);
-        toast.success("Registro atualizado com sucesso!");
-      } else {
-        await areaClient.createArea(data);
-        toast.success("Registro salvo com sucesso!");
-      }
+      await save.mutateAsync(data);
+      toast.success(
+        editingArea
+          ? "Registro atualizado com sucesso!"
+          : "Registro salvo com sucesso!",
+      );
       setSheetOpen(false);
       handleCleanup();
-      setRefreshKey((k) => k + 1);
     } catch (err) {
-      if (err instanceof ApiError && err.errors) {
-        Object.entries(err.errors).forEach(([field, msg]) => {
-          form.setError(field as Path<AreaInput>, { message: msg });
-        });
-      } else {
-        toast.error(errorMessage(err) ?? "Não foi possível salvar o registro.");
-      }
+      applyServerErrors(form.setError, err);
     }
   };
 
@@ -864,47 +816,56 @@ export function AreaMap() {
     setDeletingAreaId(id);
   };
 
-  const confirmDelete = async () => {
-    if (!deletingAreaId) return;
-    try {
-      await areaClient.deleteArea(deletingAreaId);
+  const deleteArea = useMutation({
+    mutationFn: (id: string) => areaClient.deleteArea(id),
+    onSuccess: () => {
       toast.success("Registro excluído com sucesso!");
-      setRefreshKey((k) => k + 1);
-    } catch (err) {
+      return reloadAreas();
+    },
+    onError: (err) => {
       toast.error(
-        errorMessage(err) ??
+        err.message ||
           "Este registro já possui vínculos e não pode ser excluído.",
       );
-    } finally {
-      setDeletingAreaId(null);
-      setDetailsArea(null);
-    }
+    },
+  });
+
+  const confirmDelete = () => {
+    if (deletingAreaId) deleteArea.mutate(deletingAreaId);
+    setDeletingAreaId(null);
+    setDetailsArea(null);
   };
 
-  const handleToggleStatus = async (area: AreaRow) => {
+  const toggleStatus = useMutation({
+    mutationFn: (area: AreaRow) => areaClient.toggleAreaStatus(area.id),
+    onSuccess: () => {
+      toast.success(
+        statusFilter === "active"
+          ? "Área desativada com sucesso!"
+          : "Área ativada com sucesso!",
+      );
+      return reloadAreas();
+    },
+    // Ocupada desde a última leitura: explica, oferece mover o lote e atualiza o mapa.
+    onError: (err, area) => {
+      if (err instanceof AreaOccupiedError) {
+        mapInstance?.closePopup();
+        setOccupiedArea({ name: area.name, batch: err.batch });
+        reloadAreas();
+        return;
+      }
+      toast.error(err.message || "Erro ao alterar o status do registro.");
+    },
+  });
+
+  const handleToggleStatus = (area: AreaRow) => {
     // Área ocupada não pode ser desativada: explica e oferece mover o lote.
     if (!area.closedAt && area.occupancy) {
       mapInstance?.closePopup();
       setOccupiedArea({ name: area.name, batch: area.occupancy.batch });
       return;
     }
-    try {
-      await areaClient.toggleAreaStatus(area.id);
-      toast.success(
-        statusFilter === "active"
-          ? "Área desativada com sucesso!"
-          : "Área ativada com sucesso!",
-      );
-      setRefreshKey((k) => k + 1);
-    } catch (err) {
-      if (err instanceof AreaOccupiedError) {
-        mapInstance?.closePopup();
-        setOccupiedArea({ name: area.name, batch: err.batch });
-        setRefreshKey((k) => k + 1);
-        return;
-      }
-      toast.error(errorMessage(err) ?? "Erro ao alterar o status do registro.");
-    }
+    toggleStatus.mutate(area);
   };
 
   const calculatedHectares = calculateAreaHectares(polygonPoints);
@@ -921,13 +882,8 @@ export function AreaMap() {
     }
   }
 
-  // Só usa `areas` no mapa quando já pertencem à propriedade atual — evita mostrar
-  // por um instante o polígono/centro da fazenda anterior enquanto a nova carrega.
-  const displayAreas =
-    currentProperty && areasPropertyId === currentProperty.id ? areas : [];
-
   // Calcula centro inicial baseado nas áreas cadastradas se houverem
-  const allAreaPoints = displayAreas.flatMap((a) =>
+  const allAreaPoints = areas.flatMap((a) =>
     Array.isArray(a.polygon)
       ? (a.polygon as { lat: number; lng: number }[])
       : [],
@@ -935,7 +891,7 @@ export function AreaMap() {
   const areasCentroid =
     allAreaPoints.length > 0 ? getCentroid(allAreaPoints) : null;
 
-  const fallbackCoords = propertyCoords ?? browserCoords;
+  const fallbackCoords = propertyCoords ?? browserCoords ?? null;
   const center: [number, number] =
     areasCentroid ?? fallbackCoords ?? DEFAULT_MAP_CENTER;
   const zoom = areasCentroid || fallbackCoords ? 15 : DEFAULT_MAP_ZOOM;
@@ -966,7 +922,7 @@ export function AreaMap() {
     );
   };
 
-  if (loading && areas.length === 0) {
+  if (isPropertyLoading || (currentPropertyId && isAreasPending)) {
     return (
       <div className="flex h-full items-center justify-center gap-2">
         <Loader2 className="h-6 w-6 animate-spin text-primary" />
@@ -974,6 +930,15 @@ export function AreaMap() {
           Carregando áreas de pastagem...
         </span>
       </div>
+    );
+  }
+
+  if (currentPropertyId && !areasResult) {
+    return (
+      <ErrorPage
+        message="Não foi possível carregar as áreas de pastagem."
+        onRetry={() => refetchAreas()}
+      />
     );
   }
 
@@ -1082,7 +1047,7 @@ export function AreaMap() {
               <MapTileLoadingOverlay />
               <MapReferenceController onMapReady={setMapInstance} />
               <MapBoundsController
-                areas={displayAreas}
+                areas={areas}
                 fallbackCoords={fallbackCoords}
                 locating={locatingProperty}
               />
@@ -1112,7 +1077,7 @@ export function AreaMap() {
                 onCancelEditing={handleCleanup}
               />
 
-              {displayAreas.map((area) => {
+              {areas.map((area) => {
                 const rawPoints = area.polygon as {
                   lat: number;
                   lng: number;
@@ -1276,7 +1241,7 @@ export function AreaMap() {
                 );
               })}
             </MapContainer>
-            {statusFilter === "active" && displayAreas.length > 0 && (
+            {statusFilter === "active" && areas.length > 0 && (
               <div className="pointer-events-none absolute bottom-6 left-3 z-1000 space-y-1 rounded-md border border-border bg-background/90 px-3 py-2 text-xs shadow-sm">
                 {(
                   [

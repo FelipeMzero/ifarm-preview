@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router";
 import { Boxes, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -9,9 +9,9 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { areaClient } from "@/lib/clients";
 import { type AreaOccupancyHistoryEntry, type AreaRow } from "@ifarm/shared";
 import { OccupancySummary } from "./occupancy";
+import { areaOccupancyHistoryQuery } from "./queries";
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString("pt-BR");
@@ -31,31 +31,14 @@ export function AreaDetails({
   onDelete,
 }: AreaDetailsProps) {
   const navigate = useNavigate();
-  const [history, setHistory] = useState<{
-    areaId: string;
-    entries: AreaOccupancyHistoryEntry[];
-  } | null>(null);
 
-  const areaId = open ? area?.id : undefined;
-
-  useEffect(() => {
-    if (!areaId) return;
-    let cancelled = false;
-    areaClient
-      .getAreaOccupancyHistory(areaId)
-      .then((entries) => {
-        if (!cancelled) setHistory({ areaId, entries });
-      })
-      .catch(() => {
-        if (!cancelled) setHistory({ areaId, entries: [] });
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [areaId]);
-
-  // Evita mostrar o histórico de outra área enquanto o desta carrega.
-  const entries = history && history.areaId === areaId ? history.entries : null;
+  // Histórico só com a janela aberta (null enquanto carrega; vazio se não carregar).
+  const { data, isError } = useQuery({
+    ...areaOccupancyHistoryQuery(area?.id ?? ""),
+    enabled: open && !!area,
+  });
+  const entries: AreaOccupancyHistoryEntry[] | null =
+    data ?? (isError ? [] : null);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
