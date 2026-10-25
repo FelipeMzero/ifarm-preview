@@ -3,7 +3,6 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { MaskedInput } from "@/components/our/MaskedInput";
-import { lazyComponent } from "@/lib/lazy";
 
 import {
   BR_STATE_ITEMS,
@@ -22,12 +21,13 @@ import { FormActionBar } from "@/components/our/FormActionBar";
 import FieldRow from "@/components/our/FieldRow";
 
 import { SearchCombobox } from "@/components/our/SearchCombobox";
-import { ArrowLeft, Loader2, MapPin, MapPinOff } from "lucide-react";
+import { ArrowLeft, Loader2 } from "lucide-react";
 import FormSkeleton from "@/components/our/FormSkeleton";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import { applyServerErrors } from "@/lib/form-errors";
-import { LocationPickerDialog } from "./LocationPickerDialog";
+import { LocationPickerDialog } from "@/components/our/location/LocationPickerDialog";
+import { LocationPreview } from "@/components/our/location/LocationPreview";
 import { useCurrentProperty } from "@/features/shell/CurrentPropertyProvider";
 import { usePersonOptions } from "../person/usePersonOptions";
 import { propertyDetailQuery, propertyKeys } from "./queries";
@@ -42,76 +42,6 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import PersonForm from "../person/PersonForm";
-
-const LocationPickerMap = lazyComponent(() => import("./LocationPickerMap"), {
-  loading: () => (
-    <div className="flex size-full items-center justify-center text-muted-foreground">
-      Carregando mapa...
-    </div>
-  ),
-});
-
-function isValidCoordinate(latitude: string, longitude: string) {
-  const lat = Number(latitude);
-  const lon = Number(longitude);
-  return (
-    Number.isFinite(lat) &&
-    Number.isFinite(lon) &&
-    lat >= -90 &&
-    lat <= 90 &&
-    lon >= -180 &&
-    lon <= 180
-  );
-}
-
-function MapPreview({
-  latitude,
-  longitude,
-  className,
-  onDoubleClick,
-}: {
-  latitude: string;
-  longitude: string;
-  className?: string;
-  onDoubleClick?: () => void;
-}) {
-  const hasInput = !!latitude || !!longitude;
-  const isValid =
-    !!latitude && !!longitude && isValidCoordinate(latitude, longitude);
-
-  return (
-    <div className={cn("flex min-h-0 min-w-0 flex-col gap-2", className)}>
-      <div
-        className="relative min-h-0 w-full flex-1 cursor-pointer overflow-hidden rounded-lg border border-input bg-input/40"
-        onDoubleClick={onDoubleClick}
-        title="Clique duas vezes para escolher no mapa"
-      >
-        {isValid ? (
-          <LocationPickerMap
-            latitude={Number(latitude)}
-            longitude={Number(longitude)}
-            onPick={() => {}}
-            readOnly
-          />
-        ) : (
-          <div className="flex h-full flex-col items-center justify-center gap-1 text-muted-foreground">
-            {hasInput ? (
-              <>
-                <MapPinOff className="size-5" />
-                <span className="text-xs">Sem localização</span>
-              </>
-            ) : (
-              <>
-                <MapPin className="size-5 opacity-50" />
-                <span className="text-xs">Informe a latitude e longitude</span>
-              </>
-            )}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
 
 type PropertyFormProps = {
   id?: string;
@@ -563,7 +493,7 @@ export default function PropertyForm({
               />
             </FieldRow>
 
-            <MapPreview
+            <LocationPreview
               latitude={latitude ?? ""}
               longitude={longitude ?? ""}
               onDoubleClick={() => setIsPickerOpen(true)}
