@@ -1,14 +1,18 @@
-import { useEffect, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import {
   InlineEditableList,
   InlineEditableColumn,
 } from "@/components/our/InlineEditableList";
 import { ErrorPage } from "@/components/our/ErrorPage";
-import { Skeleton } from "@/components/ui/skeleton";
+import { InlineListSkeleton } from "@/components/our/PageSkeletons";
 import { healthManagementTypeClient } from "@/lib/clients";
 import { type HealthManagementType } from "@ifarm/shared";
 import { FIELD_LIMITS } from "@ifarm/shared";
+import {
+  healthManagementTypeKeys,
+  healthManagementTypeListQuery,
+} from "./queries";
 
 const COLUMNS: InlineEditableColumn<HealthManagementType>[] = [
   {
@@ -19,80 +23,51 @@ const COLUMNS: InlineEditableColumn<HealthManagementType>[] = [
   },
 ];
 
-function HealthManagementTypeListSkeleton() {
-  return (
-    <div className="w-full max-w-2xl space-y-3">
-      <Skeleton className="h-6 w-24" />
-      <Skeleton className="h-10 w-full" />
-      <Skeleton className="h-40 w-full rounded-md" />
-    </div>
-  );
-}
-
 export function HealthManagementTypeList() {
-  const [types, setTypes] = useState<HealthManagementType[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+  const {
+    data: types,
+    isPending,
+    refetch,
+  } = useQuery(healthManagementTypeListQuery());
 
-  useEffect(() => {
-    let cancelled = false;
+  // Cada alteração recarrega a lista. O InlineEditableList espera a promessa (o onSuccess
+  // devolve a da invalidação) para limpar o campo ou sair da edição, e avisa se ela falhar.
+  const reloadTypes = () =>
+    queryClient.invalidateQueries({ queryKey: healthManagementTypeKeys.all });
 
-    async function load() {
-      setLoading(true);
-      try {
-        const data =
-          await healthManagementTypeClient.getHealthManagementTypes();
-        if (!cancelled) setTypes(data);
-      } catch (e) {
-        if (!cancelled) setError((e as Error).message);
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    }
+  const create = useMutation({
+    mutationFn: (name: string) =>
+      healthManagementTypeClient.createHealthManagementType(name),
+    onSuccess: reloadTypes,
+  });
+  const update = useMutation({
+    mutationFn: ({ id, name }: { id: string; name: string }) =>
+      healthManagementTypeClient.updateHealthManagementType(id, name),
+    onSuccess: reloadTypes,
+  });
+  const remove = useMutation({
+    mutationFn: (id: string) =>
+      healthManagementTypeClient.deleteHealthManagementType(id),
+    onSuccess: reloadTypes,
+  });
+  const toggleStatus = useMutation({
+    mutationFn: (id: string) =>
+      healthManagementTypeClient.toggleHealthManagementTypeStatus(id),
+    onSuccess: reloadTypes,
+  });
 
-    load();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  async function handleCreate(values: Record<string, string>) {
-    const created = await healthManagementTypeClient.createHealthManagementType(
-      values.name,
-    );
-    setTypes((prev) => [...prev, created]);
+  if (isPending) {
+    return <InlineListSkeleton />;
   }
 
-  async function handleUpdate(id: string, values: Record<string, string>) {
-    const updated = await healthManagementTypeClient.updateHealthManagementType(
-      id,
-      values.name,
-    );
-    setTypes((prev) => prev.map((type) => (type.id === id ? updated : type)));
-  }
-
-  async function handleDelete(id: string) {
-    await healthManagementTypeClient.deleteHealthManagementType(id);
-    setTypes((prev) => prev.filter((type) => type.id !== id));
-  }
-
-  async function handleToggleActive(id: string) {
-    const updated =
-      await healthManagementTypeClient.toggleHealthManagementTypeStatus(id);
-    setTypes((prev) => prev.map((type) => (type.id === id ? updated : type)));
-  }
-
-  if (error) {
+  if (!types) {
     return (
       <ErrorPage
         message="Não foi possível obter os tipos de manejo sanitário."
-        onRetry={() => window.location.reload()}
+        onRetry={() => refetch()}
       />
     );
-  }
-
-  if (loading) {
-    return <HealthManagementTypeListSkeleton />;
   }
 
   return (
@@ -101,12 +76,20 @@ export function HealthManagementTypeList() {
       <InlineEditableList
         items={types}
         columns={COLUMNS}
-        onCreate={handleCreate}
-        onUpdate={handleUpdate}
-        onDelete={handleDelete}
+        onCreate={async (values) => {
+          await create.mutateAsync(values.name);
+        }}
+        onUpdate={async (id, values) => {
+          await update.mutateAsync({ id, name: values.name });
+        }}
+        onDelete={async (id) => {
+          await remove.mutateAsync(id);
+        }}
         itemLabel="tipo de manejo sanitário"
         isActive={(type) => !type.deactivatedAt}
-        onToggleActive={handleToggleActive}
+        onToggleActive={async (id) => {
+          await toggleStatus.mutateAsync(id);
+        }}
       />
     </div>
   );

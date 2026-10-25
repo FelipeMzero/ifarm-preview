@@ -1,14 +1,15 @@
-import { useEffect, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import {
   InlineEditableList,
   InlineEditableColumn,
 } from "@/components/our/InlineEditableList";
 import { ErrorPage } from "@/components/our/ErrorPage";
-import { Skeleton } from "@/components/ui/skeleton";
+import { InlineListSkeleton } from "@/components/our/PageSkeletons";
 import { neuteringTechniqueClient } from "@/lib/clients";
 import { type NeuteringTechnique } from "@ifarm/shared";
 import { FIELD_LIMITS } from "@ifarm/shared";
+import { neuteringTechniqueKeys, neuteringTechniqueListQuery } from "./queries";
 
 const COLUMNS: InlineEditableColumn<NeuteringTechnique>[] = [
   {
@@ -19,83 +20,51 @@ const COLUMNS: InlineEditableColumn<NeuteringTechnique>[] = [
   },
 ];
 
-function NeuteringTechniqueListSkeleton() {
-  return (
-    <div className="w-full max-w-2xl space-y-3">
-      <Skeleton className="h-6 w-24" />
-      <Skeleton className="h-10 w-full" />
-      <Skeleton className="h-40 w-full rounded-md" />
-    </div>
-  );
-}
-
 export function NeuteringTechniqueList() {
-  const [techniques, setTechniques] = useState<NeuteringTechnique[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+  const {
+    data: techniques,
+    isPending,
+    refetch,
+  } = useQuery(neuteringTechniqueListQuery());
 
-  useEffect(() => {
-    let cancelled = false;
+  // Cada alteração recarrega a lista. O InlineEditableList espera a promessa (o onSuccess
+  // devolve a da invalidação) para limpar o campo ou sair da edição, e avisa se ela falhar.
+  const reloadTechniques = () =>
+    queryClient.invalidateQueries({ queryKey: neuteringTechniqueKeys.all });
 
-    async function load() {
-      setLoading(true);
-      try {
-        const data = await neuteringTechniqueClient.getNeuteringTechniques();
-        if (!cancelled) setTechniques(data);
-      } catch (e) {
-        if (!cancelled) setError((e as Error).message);
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    }
+  const create = useMutation({
+    mutationFn: (name: string) =>
+      neuteringTechniqueClient.createNeuteringTechnique(name),
+    onSuccess: reloadTechniques,
+  });
+  const update = useMutation({
+    mutationFn: ({ id, name }: { id: string; name: string }) =>
+      neuteringTechniqueClient.updateNeuteringTechnique(id, name),
+    onSuccess: reloadTechniques,
+  });
+  const remove = useMutation({
+    mutationFn: (id: string) =>
+      neuteringTechniqueClient.deleteNeuteringTechnique(id),
+    onSuccess: reloadTechniques,
+  });
+  const toggleStatus = useMutation({
+    mutationFn: (id: string) =>
+      neuteringTechniqueClient.toggleNeuteringTechniqueStatus(id),
+    onSuccess: reloadTechniques,
+  });
 
-    load();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  async function handleCreate(values: Record<string, string>) {
-    const created = await neuteringTechniqueClient.createNeuteringTechnique(
-      values.name,
-    );
-    setTechniques((prev) => [...prev, created]);
+  if (isPending) {
+    return <InlineListSkeleton />;
   }
 
-  async function handleUpdate(id: string, values: Record<string, string>) {
-    const updated = await neuteringTechniqueClient.updateNeuteringTechnique(
-      id,
-      values.name,
-    );
-    setTechniques((prev) =>
-      prev.map((technique) => (technique.id === id ? updated : technique)),
-    );
-  }
-
-  async function handleDelete(id: string) {
-    await neuteringTechniqueClient.deleteNeuteringTechnique(id);
-    setTechniques((prev) => prev.filter((technique) => technique.id !== id));
-  }
-
-  async function handleToggleActive(id: string) {
-    const updated =
-      await neuteringTechniqueClient.toggleNeuteringTechniqueStatus(id);
-    setTechniques((prev) =>
-      prev.map((technique) => (technique.id === id ? updated : technique)),
-    );
-  }
-
-  if (error) {
+  if (!techniques) {
     return (
       <ErrorPage
         message="Não foi possível obter as técnicas de castração."
-        onRetry={() => window.location.reload()}
+        onRetry={() => refetch()}
       />
     );
-  }
-
-  if (loading) {
-    return <NeuteringTechniqueListSkeleton />;
   }
 
   return (
@@ -104,12 +73,20 @@ export function NeuteringTechniqueList() {
       <InlineEditableList
         items={techniques}
         columns={COLUMNS}
-        onCreate={handleCreate}
-        onUpdate={handleUpdate}
-        onDelete={handleDelete}
+        onCreate={async (values) => {
+          await create.mutateAsync(values.name);
+        }}
+        onUpdate={async (id, values) => {
+          await update.mutateAsync({ id, name: values.name });
+        }}
+        onDelete={async (id) => {
+          await remove.mutateAsync(id);
+        }}
         itemLabel="técnica de castração"
         isActive={(technique) => !technique.deactivatedAt}
-        onToggleActive={handleToggleActive}
+        onToggleActive={async (id) => {
+          await toggleStatus.mutateAsync(id);
+        }}
       />
     </div>
   );
