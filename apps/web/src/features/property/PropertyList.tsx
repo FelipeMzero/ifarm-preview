@@ -10,7 +10,7 @@ import {
   Fence,
   User,
 } from "lucide-react";
-import { useNavigate } from "react-router";
+import { useNavigate, useSearchParams } from "react-router";
 import { toast } from "sonner";
 import {
   keepPreviousData,
@@ -42,6 +42,7 @@ import { propertyClient } from "@/lib/clients";
 import { type PropertyRow, type PropertyListParams } from "@ifarm/shared";
 import { ErrorPage } from "@/components/our/ErrorPage";
 import { useCurrentProperty } from "@/features/shell/CurrentPropertyProvider";
+import { useLocalStorageState } from "@/hooks/use-local-storage-state";
 import { propertyKeys, propertyListQuery } from "./queries";
 
 const DEFAULT_PAGE_SIZE = 10;
@@ -51,11 +52,38 @@ const STATUS_FILTER = {
   ACTIVE: "ativo",
   INACTIVE: "inativo",
 } as const;
+type StatusFilter = (typeof STATUS_FILTER)[keyof typeof STATUS_FILTER];
 
-function filterToStatus(filter: string): PropertyListParams["status"] {
-  if (filter === STATUS_FILTER.ACTIVE) return "active";
-  if (filter === STATUS_FILTER.INACTIVE) return "inactive";
-  return undefined;
+const STATUS_BY_FILTER: Record<StatusFilter, PropertyListParams["status"]> = {
+  todos: undefined,
+  ativo: "active",
+  inativo: "inactive",
+};
+
+const URL_DEFAULTS = {
+  busca: "",
+  situacao: STATUS_FILTER.ACTIVE as string,
+  pagina: "1",
+  itens: String(DEFAULT_PAGE_SIZE),
+};
+type UrlParam = keyof typeof URL_DEFAULTS;
+
+function readFilters(searchParams: URLSearchParams) {
+  const get = (key: UrlParam) => searchParams.get(key) ?? URL_DEFAULTS[key];
+  const situacao = get("situacao");
+  const filter = (
+    situacao in STATUS_BY_FILTER ? situacao : STATUS_FILTER.ACTIVE
+  ) as StatusFilter;
+  const positive = (key: UrlParam) => {
+    const n = Number(get(key));
+    return Number.isInteger(n) && n > 0 ? n : Number(URL_DEFAULTS[key]);
+  };
+  return {
+    search: get("busca"),
+    filter,
+    pageIndex: positive("pagina") - 1,
+    pageSize: Math.min(positive("itens"), 100),
+  };
 }
 
 const COLUMN_LABELS: Record<string, string> = {
@@ -177,30 +205,61 @@ export default function PropertyList() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { refresh: refreshCurrentProperty } = useCurrentProperty();
-  const [pageIndex, setPageIndex] = useState(0);
-  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
-  const [search, setSearch] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [filter, setFilter] = useState<string>(STATUS_FILTER.ACTIVE);
-  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({
-    totalArea: false,
-  });
+  const [searchParams, setSearchParams] = useSearchParams();
+  const {
+    search: debouncedSearch,
+    filter,
+    pageIndex,
+    pageSize,
+  } = readFilters(searchParams);
+
+  // Atualiza a URL (sem criar entrada no histórico a cada mudança de filtro).
+  function updateUrl(changes: Partial<Record<UrlParam, string | number>>) {
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        for (const [key, value] of Object.entries(changes)) {
+          const text = String(value);
+          if (text === URL_DEFAULTS[key as UrlParam]) next.delete(key);
+          else next.set(key, text);
+        }
+        return next;
+      },
+      { replace: true, preventScrollReset: true },
+    );
+  }
+  const setPageIndex = (index: number) => updateUrl({ pagina: index + 1 });
+
+  // O texto digitado fica aqui e vai para a URL depois de uma pausa. Se a URL mudar por fora
+  // (voltar/avançar do navegador), o campo acompanha.
+  const [search, setSearch] = useState(debouncedSearch);
+  const [urlSearch, setUrlSearch] = useState(debouncedSearch);
+  if (urlSearch !== debouncedSearch) {
+    setUrlSearch(debouncedSearch);
+    setSearch(debouncedSearch);
+  }
+  // Colunas visíveis: preferência lembrada neste navegador.
+  const [columnVisibility, setColumnVisibility] =
+    useLocalStorageState<VisibilityState>("propriedades:colunas", {
+      totalArea: false,
+    });
   const [viewingDetailsId, setViewingDetailsId] = useState<string | null>(null);
   const [togglingId, setTogglingId] = useState<string | null>(null);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearch(search);
-      setPageIndex(0);
-    }, 300);
+    if (search === debouncedSearch) return;
+    const timer = setTimeout(
+      () => updateUrl({ busca: search, pagina: 1 }),
+      300,
+    );
     return () => clearTimeout(timer);
-  }, [search]);
+  });
 
   const params: PropertyListParams = {
     page: pageIndex,
     pageSize,
     search: debouncedSearch,
-    status: filterToStatus(filter),
+    status: STATUS_BY_FILTER[filter],
   };
   // Ao trocar de página ou de filtro, a lista anterior fica na tela (esmaecida) até chegar a
   // nova (keepPreviousData).
@@ -277,10 +336,7 @@ export default function PropertyList() {
 
         <SelectField
           value={filter}
-          onValueChange={(val) => {
-            setFilter(val);
-            setPageIndex(0);
-          }}
+          onValueChange={(val) => updateUrl({ situacao: val, pagina: 1 })}
           items={[
             { value: STATUS_FILTER.ALL, label: "Todos" },
             { value: STATUS_FILTER.ACTIVE, label: "Ativo" },
@@ -333,10 +389,7 @@ export default function PropertyList() {
             total={data.total}
             initialSorting={[{ id: "updatedAt", desc: true }]}
             onPageChange={setPageIndex}
-            onPageSizeChange={(size) => {
-              setPageSize(size);
-              setPageIndex(0);
-            }}
+            onPageSizeChange={(size) => updateUrl({ itens: size, pagina: 1 })}
             columnVisibility={columnVisibility}
             onColumnVisibilityChange={setColumnVisibility}
           />
