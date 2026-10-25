@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/collapsible";
 import { FormField } from "@/components/our/FormField";
 import { ErrorPage } from "@/components/our/ErrorPage";
-import FieldRow from "@/components/our/FieldRow";
+import { FieldRow } from "@/components/our/FieldRow";
 import { FormActionBar } from "@/components/our/FormActionBar";
 import {
   SearchCombobox,

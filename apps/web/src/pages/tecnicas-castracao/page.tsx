@@ -1,4 +1,4 @@
-import NeuteringTechniqueList from "@/features/neutering-technique/NeuteringTechniqueList";
+import { NeuteringTechniqueList } from "@/features/neutering-technique/NeuteringTechniqueList";
 
 export default function Page() {
   return (

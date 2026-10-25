@@ -115,7 +115,7 @@ function buildColumns(
   ];
 }
 
-export default function ReceptionPurchaseList() {
+export function ReceptionPurchaseList() {
   const navigate = useNavigate();
   const { property: currentProperty } = useCurrentProperty();
 

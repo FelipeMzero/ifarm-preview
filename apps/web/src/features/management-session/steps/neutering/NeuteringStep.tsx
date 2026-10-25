@@ -27,7 +27,7 @@ export type NeuteringConfig = {
 
 type FormData = NeuteringPayload;
 
-export default function NeuteringStep({
+export function NeuteringStep({
   formId,
   step,
   animal,

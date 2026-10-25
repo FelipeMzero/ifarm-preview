@@ -29,7 +29,7 @@ function NeuteringTechniqueListSkeleton() {
   );
 }
 
-export default function NeuteringTechniqueList() {
+export function NeuteringTechniqueList() {
   const [techniques, setTechniques] = useState<NeuteringTechnique[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

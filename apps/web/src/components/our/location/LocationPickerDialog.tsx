@@ -10,13 +10,16 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
-const LocationPickerMap = lazyComponent(() => import("./LocationPickerMap"), {
-  loading: () => (
-    <div className="flex size-full items-center justify-center text-muted-foreground">
-      Carregando mapa...
-    </div>
-  ),
-});
+const LocationPickerMap = lazyComponent(
+  () => import("./LocationPickerMap").then((m) => m.LocationPickerMap),
+  {
+    loading: () => (
+      <div className="flex size-full items-center justify-center text-muted-foreground">
+        Carregando mapa...
+      </div>
+    ),
+  },
+);
 
 type LocationPickerBodyProps = {
   latitude: number | null;

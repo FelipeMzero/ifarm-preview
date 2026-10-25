@@ -142,7 +142,7 @@ function buildColumns(
   ];
 }
 
-export default function UserList() {
+export function UserList() {
   const { data: session, isPending: isSessionPending } = useSession();
   const [users, setUsers] = useState<UserRow[]>([]);
   const [total, setTotal] = useState(0);

@@ -1,4 +1,4 @@
-import ManagementSessionList from "@/features/management-session/ManagementSessionList";
+import { ManagementSessionList } from "@/features/management-session/ManagementSessionList";
 
 export default function Page() {
   return (

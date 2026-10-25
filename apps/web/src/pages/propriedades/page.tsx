@@ -1,4 +1,4 @@
-import PropertyList from "@/features/property/PropertyList";
+import { PropertyList } from "@/features/property/PropertyList";
 
 export default function Page() {
   return (

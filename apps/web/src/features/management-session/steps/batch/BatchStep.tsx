@@ -63,7 +63,7 @@ function Choice({
   );
 }
 
-export default function BatchStep({
+export function BatchStep({
   formId,
   step,
   animal,

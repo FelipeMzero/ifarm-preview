@@ -19,7 +19,7 @@ type FormData = WeighingPayload;
 // Variação acima disso em relação à última pesagem provavelmente é erro de digitação.
 const SUSPICIOUS_VARIATION = 0.3;
 
-export default function WeighingStep({
+export function WeighingStep({
   formId,
   animal,
   record,

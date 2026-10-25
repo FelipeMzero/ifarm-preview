@@ -78,7 +78,7 @@ type LocationPickerMapProps = {
   readOnly?: boolean;
 };
 
-export default function LocationPickerMap({
+export function LocationPickerMap({
   latitude,
   longitude,
   onPick,

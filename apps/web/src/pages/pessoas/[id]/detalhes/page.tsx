@@ -1,5 +1,5 @@
 import { useRouteParams } from "@/lib/route-params";
-import PersonDetails from "@/features/person/PersonDetails";
+import { PersonDetails } from "@/features/person/PersonDetails";
 
 export default function Page() {
   const { id } = useRouteParams<"id">();

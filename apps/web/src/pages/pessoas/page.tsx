@@ -1,4 +1,4 @@
-import PersonList from "@/features/person/PersonList";
+import { PersonList } from "@/features/person/PersonList";
 
 export default function Page() {
   return (

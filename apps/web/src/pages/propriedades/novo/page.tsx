@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router";
-import PropertyForm from "@/features/property/PropertyForm";
+import { PropertyForm } from "@/features/property/PropertyForm";
 
 export default function Page() {
   const navigate = useNavigate();

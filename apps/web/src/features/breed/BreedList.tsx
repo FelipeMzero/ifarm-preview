@@ -29,7 +29,7 @@ function BreedListSkeleton() {
   );
 }
 
-export default function BreedList() {
+export function BreedList() {
   const [breeds, setBreeds] = useState<Breed[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

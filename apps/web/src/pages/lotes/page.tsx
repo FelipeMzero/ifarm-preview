@@ -1,4 +1,4 @@
-import BatchList from "@/features/batch/BatchList";
+import { BatchList } from "@/features/batch/BatchList";
 
 export default function Page() {
   return (

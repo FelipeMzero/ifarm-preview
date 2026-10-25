@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router";
-import AnimalForm from "@/features/animal/AnimalForm";
+import { AnimalForm } from "@/features/animal/AnimalForm";
 
 export default function Page() {
   const navigate = useNavigate();

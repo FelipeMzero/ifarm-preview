@@ -1,4 +1,4 @@
-import BreedList from "@/features/breed/BreedList";
+import { BreedList } from "@/features/breed/BreedList";
 
 export default function Page() {
   return (

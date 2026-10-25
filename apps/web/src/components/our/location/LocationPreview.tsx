@@ -3,13 +3,16 @@ import { lazyComponent } from "@/lib/lazy";
 import { cn } from "@/lib/utils";
 
 // O mapa (Leaflet) é pesado: só é baixado quando há coordenadas para mostrar.
-const LocationPickerMap = lazyComponent(() => import("./LocationPickerMap"), {
-  loading: () => (
-    <div className="flex size-full items-center justify-center text-muted-foreground">
-      Carregando mapa...
-    </div>
-  ),
-});
+const LocationPickerMap = lazyComponent(
+  () => import("./LocationPickerMap").then((m) => m.LocationPickerMap),
+  {
+    loading: () => (
+      <div className="flex size-full items-center justify-center text-muted-foreground">
+        Carregando mapa...
+      </div>
+    ),
+  },
+);
 
 function isValidCoordinate(latitude: string, longitude: string) {
   const lat = Number(latitude);

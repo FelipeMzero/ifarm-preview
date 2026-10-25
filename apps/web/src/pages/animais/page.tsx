@@ -1,5 +1,5 @@
 import { useSearchParams } from "react-router";
-import AnimalList from "@/features/animal/AnimalList";
+import { AnimalList } from "@/features/animal/AnimalList";
 
 export default function Page() {
   const [searchParams] = useSearchParams();

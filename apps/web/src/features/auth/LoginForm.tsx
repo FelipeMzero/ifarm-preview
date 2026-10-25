@@ -25,7 +25,7 @@ const loginSchema = z.object({
 
 type LoginFormData = z.infer<typeof loginSchema>;
 
-export default function LoginForm() {
+export function LoginForm() {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
 

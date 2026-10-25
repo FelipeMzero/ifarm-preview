@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { FIELD_LIMITS } from "@ifarm/shared";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import FieldRow from "@/components/our/FieldRow";
+import { FieldRow } from "@/components/our/FieldRow";
 import {
   Dialog,
   DialogContent,

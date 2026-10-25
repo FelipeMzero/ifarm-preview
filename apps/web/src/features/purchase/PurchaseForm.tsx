@@ -24,7 +24,7 @@ import { ConfirmDialog } from "@/components/our/ConfirmDialog";
 import { ErrorPage } from "@/components/our/ErrorPage";
 import { FormActionBar } from "@/components/our/FormActionBar";
 import { FormField } from "@/components/our/FormField";
-import FieldRow from "@/components/our/FieldRow";
+import { FieldRow } from "@/components/our/FieldRow";
 import {
   SearchCombobox,
   type SearchComboboxItem,

@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { DialogFooter } from "@/components/ui/dialog";
 import { FormField } from "@/components/our/FormField";
-import FieldRow from "@/components/our/FieldRow";
+import { FieldRow } from "@/components/our/FieldRow";
 import { SelectField } from "@/components/our/SelectField";
 import { type NeuteringTechnique, nowDateTime } from "@ifarm/shared";
 import { techniqueItems } from "@/features/neutering-technique/items";

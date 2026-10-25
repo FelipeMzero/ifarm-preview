@@ -1,4 +1,4 @@
-import HealthManagementTypeList from "@/features/health-management-type/HealthManagementTypeList";
+import { HealthManagementTypeList } from "@/features/health-management-type/HealthManagementTypeList";
 
 export default function Page() {
   return (

@@ -29,7 +29,7 @@ function HealthManagementTypeListSkeleton() {
   );
 }
 
-export default function HealthManagementTypeList() {
+export function HealthManagementTypeList() {
   const [types, setTypes] = useState<HealthManagementType[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

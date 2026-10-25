@@ -1,4 +1,4 @@
-import PurchaseList from "@/features/purchase/PurchaseList";
+import { PurchaseList } from "@/features/purchase/PurchaseList";
 
 export default function Page() {
   return (

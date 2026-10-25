@@ -579,7 +579,7 @@ function EditablePolygon({
   );
 }
 
-export default function AreaMap() {
+export function AreaMap() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { property: currentProperty } = useCurrentProperty();

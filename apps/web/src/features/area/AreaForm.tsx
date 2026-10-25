@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/sheet";
 import type { AreaInput } from "@ifarm/shared";
 import { type AreaRow } from "@ifarm/shared";
-import FieldRow from "@/components/our/FieldRow";
+import { FieldRow } from "@/components/our/FieldRow";
 import { FormActionBar } from "@/components/our/FormActionBar";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 

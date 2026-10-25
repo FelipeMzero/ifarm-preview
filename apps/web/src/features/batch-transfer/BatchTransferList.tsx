@@ -134,7 +134,7 @@ function buildColumns(handlers: {
   ];
 }
 
-export default function BatchTransferList() {
+export function BatchTransferList() {
   const navigate = useNavigate();
   const { property: currentProperty } = useCurrentProperty();
 

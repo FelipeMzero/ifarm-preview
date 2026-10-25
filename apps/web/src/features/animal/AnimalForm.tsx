@@ -14,7 +14,7 @@ import { type BatchRow } from "@ifarm/shared";
 import { BatchForm } from "@/features/batch/BatchForm";
 import { StockingNotice } from "@/features/area/StockingNotice";
 import { personClient } from "@/lib/clients";
-import PersonForm from "@/features/person/PersonForm";
+import { PersonForm } from "@/features/person/PersonForm";
 import { useCurrentProperty } from "@/features/shell/CurrentPropertyProvider";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -31,7 +31,7 @@ import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
 import { FormField } from "@/components/our/FormField";
-import FieldRow from "@/components/our/FieldRow";
+import { FieldRow } from "@/components/our/FieldRow";
 import { SelectField } from "@/components/our/SelectField";
 
 import {
@@ -54,11 +54,7 @@ type AnimalFormProps = {
   onSuccess?: (newId?: string) => void;
 };
 
-export default function AnimalForm({
-  title,
-  onCancel,
-  onSuccess,
-}: AnimalFormProps) {
+export function AnimalForm({ title, onCancel, onSuccess }: AnimalFormProps) {
   const { property: currentProperty } = useCurrentProperty();
   const propertyId = currentProperty?.id;
 

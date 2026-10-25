@@ -150,7 +150,7 @@ function buildRecentActivity(animal: AnimalFullDetails): TimelineEvent[] {
   return events.sort((a, b) => b.date.localeCompare(a.date));
 }
 
-export default function AnimalDetails({
+export function AnimalDetails({
   id,
   onClose,
 }: {

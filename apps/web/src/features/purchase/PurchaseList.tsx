@@ -133,7 +133,7 @@ function buildColumns(onOpen: (id: string) => void): ColumnDef<PurchaseRow>[] {
   ];
 }
 
-export default function PurchaseList() {
+export function PurchaseList() {
   const navigate = useNavigate();
   const { property: currentProperty } = useCurrentProperty();
 

@@ -20,7 +20,12 @@ interface FieldRowProps extends React.ComponentProps<"div"> {
   cols?: 1 | 2 | 3 | 4;
 }
 
-function FieldRow({ className, cols = 1, children, ...props }: FieldRowProps) {
+export function FieldRow({
+  className,
+  cols = 1,
+  children,
+  ...props
+}: FieldRowProps) {
   return (
     <div
       data-slot="field-row"
@@ -31,5 +36,3 @@ function FieldRow({ className, cols = 1, children, ...props }: FieldRowProps) {
     </div>
   );
 }
-
-export default FieldRow;

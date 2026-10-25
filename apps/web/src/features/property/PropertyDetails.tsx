@@ -26,7 +26,7 @@ import { isNotFoundError } from "@ifarm/shared";
 import { propertyDetailQuery, propertyKeys } from "./queries";
 import { DetailsSkeleton } from "@/components/our/PageSkeletons";
 
-export default function PropertyDetails({
+export function PropertyDetails({
   id,
   onClose,
 }: {

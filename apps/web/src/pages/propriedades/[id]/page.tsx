@@ -1,6 +1,6 @@
 import { useRouteParams } from "@/lib/route-params";
 import { useNavigate } from "react-router";
-import PropertyForm from "@/features/property/PropertyForm";
+import { PropertyForm } from "@/features/property/PropertyForm";
 
 export default function Page() {
   const { id } = useRouteParams<"id">();

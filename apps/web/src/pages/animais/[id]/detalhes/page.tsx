@@ -1,5 +1,5 @@
 import { useRouteParams } from "@/lib/route-params";
-import AnimalDetails from "@/features/animal/AnimalDetails";
+import { AnimalDetails } from "@/features/animal/AnimalDetails";
 
 export default function Page() {
   const { id } = useRouteParams<"id">();

@@ -5,7 +5,7 @@ import { techniqueItems } from "@/features/neutering-technique/items";
 import type { PlanFieldsProps } from "../types";
 
 // Técnica prevista: vem pré-selecionada no registro de cada animal, que pode trocá-la.
-export default function NeuteringPlanFields({
+export function NeuteringPlanFields({
   index,
   control,
   options,

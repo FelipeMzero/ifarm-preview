@@ -26,7 +26,7 @@ import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { FormField } from "@/components/our/FormField";
 import { ErrorPage } from "@/components/our/ErrorPage";
-import FieldRow from "@/components/our/FieldRow";
+import { FieldRow } from "@/components/our/FieldRow";
 import { FormActionBar } from "@/components/our/FormActionBar";
 import { SearchCombobox } from "@/components/our/SearchCombobox";
 import {

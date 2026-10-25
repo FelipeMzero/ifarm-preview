@@ -17,7 +17,7 @@ type HealthRecord = { doseMl: number | null; notes: string | null };
 
 type FormData = HealthPayload;
 
-export default function HealthStep({
+export function HealthStep({
   formId,
   step,
   animal,

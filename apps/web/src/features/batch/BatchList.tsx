@@ -46,7 +46,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import BatchDetails from "./BatchDetails";
+import { BatchDetails } from "./BatchDetails";
 import { BatchReopenDialog } from "./BatchReopenDialog";
 import { ListSkeleton } from "@/components/our/PageSkeletons";
 
@@ -162,7 +162,7 @@ function buildColumns(
   ];
 }
 
-export default function BatchList() {
+export function BatchList() {
   const navigate = useNavigate();
   const { property: currentProperty } = useCurrentProperty();
 

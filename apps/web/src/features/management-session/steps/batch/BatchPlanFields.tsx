@@ -7,7 +7,7 @@ import type { PlanFieldsProps } from "../types";
 // Lotes que aparecem como atalho na apartação; qualquer outro lote ativo continua
 // disponível no registro. Busca + etiquetas em vez de uma lista de todos os lotes,
 // que ficaria enorme em propriedades com muitos lotes.
-export default function BatchPlanFields({
+export function BatchPlanFields({
   index,
   control,
   options,

@@ -1,16 +1,16 @@
 import type { ComponentType } from "react";
 import type { StepType } from "@ifarm/shared";
 import { STEP_ICONS } from "../display";
-import BatchPlanFields from "./batch/BatchPlanFields";
-import BatchStep from "./batch/BatchStep";
+import { BatchPlanFields } from "./batch/BatchPlanFields";
+import { BatchStep } from "./batch/BatchStep";
 import { healthToPlanForm } from "./health/config";
-import HealthPlanFields from "./health/HealthPlanFields";
-import HealthStep from "./health/HealthStep";
+import { HealthPlanFields } from "./health/HealthPlanFields";
+import { HealthStep } from "./health/HealthStep";
 import { RfidStep, TagStep } from "./identifier/IdentifierStep";
-import NeuteringPlanFields from "./neutering/NeuteringPlanFields";
-import NeuteringStep, { type NeuteringConfig } from "./neutering/NeuteringStep";
+import { NeuteringPlanFields } from "./neutering/NeuteringPlanFields";
+import { NeuteringStep, type NeuteringConfig } from "./neutering/NeuteringStep";
 import type { ClientStepModule, StepScreenProps } from "./types";
-import WeighingStep from "./weighing/WeighingStep";
+import { WeighingStep } from "./weighing/WeighingStep";
 
 // Telas de cada tipo de etapa. Um tipo novo entra aqui (e no registro da API).
 const CLIENT_STEP_MODULES: Record<StepType, ClientStepModule> = {

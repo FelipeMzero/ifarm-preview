@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router";
-import PersonForm from "@/features/person/PersonForm";
+import { PersonForm } from "@/features/person/PersonForm";
 
 export default function Page() {
   const navigate = useNavigate();

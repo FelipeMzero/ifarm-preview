@@ -94,7 +94,7 @@ const FICTITIOUS_SUPPLIED_PRODUCTS = [
   },
 ];
 
-export default function PersonDetails({
+export function PersonDetails({
   id,
   onClose,
 }: {

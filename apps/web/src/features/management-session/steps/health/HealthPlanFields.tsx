@@ -1,7 +1,7 @@
 import { useWatch } from "react-hook-form";
 import { Input } from "@/components/ui/input";
 import { FormField } from "@/components/our/FormField";
-import FieldRow from "@/components/our/FieldRow";
+import { FieldRow } from "@/components/our/FieldRow";
 import { SelectField } from "@/components/our/SelectField";
 import { FIELD_LIMITS } from "@ifarm/shared";
 import type { PlanFieldsProps } from "../types";
@@ -13,11 +13,7 @@ const DOSE_ITEMS = (Object.keys(DOSE_LABELS) as HealthDoseType[]).map(
 
 // Produto, responsável, carência e regra de dose são do procedimento (iguais para
 // todos os animais); no registro, cada animal só recebe a dose aplicada e observação.
-export default function HealthPlanFields({
-  index,
-  control,
-  options,
-}: PlanFieldsProps) {
+export function HealthPlanFields({ index, control, options }: PlanFieldsProps) {
   const doseType = useWatch({ control, name: `steps.${index}.doseType` });
 
   return (

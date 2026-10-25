@@ -16,7 +16,7 @@ import React, { useEffect, useState } from "react";
 
 import { DataTable } from "@/components/our/DataTable";
 import { ConfirmDialog } from "@/components/our/ConfirmDialog";
-import PersonDetails from "./PersonDetails";
+import { PersonDetails } from "./PersonDetails";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
@@ -187,7 +187,7 @@ function buildColumns(
   ];
 }
 
-export default function PersonList() {
+export function PersonList() {
   const navigate = useNavigate();
   const [people, setPeople] = useState<PersonRow[]>([]);
   const [pageIndex, setPageIndex] = useState(0);

@@ -20,7 +20,7 @@ import { FieldLegend, FieldSet } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { FormField } from "@/components/our/FormField";
 import { FormActionBar } from "@/components/our/FormActionBar";
-import FieldRow from "@/components/our/FieldRow";
+import { FieldRow } from "@/components/our/FieldRow";
 
 import { SearchCombobox } from "@/components/our/SearchCombobox";
 import { ArrowLeft, Loader2 } from "lucide-react";
@@ -42,7 +42,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import PersonForm from "../person/PersonForm";
+import { PersonForm } from "../person/PersonForm";
 import { FormSkeleton } from "@/components/our/PageSkeletons";
 
 type PropertyFormProps = {
@@ -52,7 +52,7 @@ type PropertyFormProps = {
   onSuccess?: (newId?: string) => void;
 };
 
-export default function PropertyForm({
+export function PropertyForm({
   id,
   title,
   onCancel,

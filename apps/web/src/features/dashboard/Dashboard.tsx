@@ -21,7 +21,7 @@ function DashboardSkeleton() {
   );
 }
 
-export default function Dashboard() {
+export function Dashboard() {
   const {
     property: currentProperty,
     options: propertyOptions,

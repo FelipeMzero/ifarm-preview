@@ -1,4 +1,4 @@
-import BatchTransferList from "@/features/batch-transfer/BatchTransferList";
+import { BatchTransferList } from "@/features/batch-transfer/BatchTransferList";
 
 export default function Page() {
   return (

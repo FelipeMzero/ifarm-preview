@@ -1,4 +1,4 @@
-import ReceptionPurchaseList from "@/features/reception/ReceptionPurchaseList";
+import { ReceptionPurchaseList } from "@/features/reception/ReceptionPurchaseList";
 
 export default function Page() {
   return (

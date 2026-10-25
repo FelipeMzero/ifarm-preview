@@ -43,7 +43,7 @@ import {
   SEX_ICON,
   STATUS_VARIANT,
 } from "./display";
-import AnimalDetails from "./AnimalDetails";
+import { AnimalDetails } from "./AnimalDetails";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { ANIMAL_ORIGIN_LABELS, ANIMAL_STATUS_LABELS } from "@ifarm/shared";
 import { ErrorPage } from "@/components/our/ErrorPage";
@@ -163,7 +163,7 @@ type QueryParams = Record<string, string | string[] | undefined>;
 const firstParam = (v: string | string[] | undefined) =>
   (Array.isArray(v) ? v[0] : v) ?? "";
 
-export default function AnimalList({
+export function AnimalList({
   initialQuery = {},
 }: {
   /** Parâmetros da URL: busca e filtros sobrevivem ao recarregar/compartilhar. */

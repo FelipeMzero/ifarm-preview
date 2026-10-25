@@ -120,7 +120,7 @@ function buildRecentActivity(batch: BatchFullDetails): TimelineEvent[] {
   return events.sort((a, b) => b.date.localeCompare(a.date));
 }
 
-export default function BatchDetails({
+export function BatchDetails({
   id,
   onClose,
 }: {

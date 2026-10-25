@@ -17,7 +17,7 @@ import { Button } from "@/components/ui/button";
 import { FieldLegend, FieldSet } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { FormField } from "@/components/our/FormField";
-import FieldRow from "@/components/our/FieldRow";
+import { FieldRow } from "@/components/our/FieldRow";
 
 import { SearchCombobox } from "@/components/our/SearchCombobox";
 import { ArrowLeft, Loader2 } from "lucide-react";
@@ -38,7 +38,7 @@ type PersonFormProps = {
   onSuccess?: (newId?: string) => void;
 };
 
-export default function PersonForm({
+export function PersonForm({
   id,
   title,
   onCancel,

@@ -23,7 +23,7 @@ import { useEffect, useState } from "react";
 
 import { DataTable } from "@/components/our/DataTable";
 import { ConfirmDialog } from "@/components/our/ConfirmDialog";
-import PropertyDetails from "./PropertyDetails";
+import { PropertyDetails } from "./PropertyDetails";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
@@ -201,7 +201,7 @@ function buildColumns(
   ];
 }
 
-export default function PropertyList() {
+export function PropertyList() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { refresh: refreshCurrentProperty } = useCurrentProperty();

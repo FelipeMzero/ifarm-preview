@@ -185,7 +185,7 @@ function buildColumns(handlers: {
   ];
 }
 
-export default function ManagementSessionList() {
+export function ManagementSessionList() {
   const navigate = useNavigate();
   const { property: currentProperty } = useCurrentProperty();
 
