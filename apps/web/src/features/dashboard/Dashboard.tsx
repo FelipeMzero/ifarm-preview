@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router";
 import { LandPlot, MapPin, Fence, User } from "lucide-react";
 
@@ -8,8 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorPage } from "@/components/our/ErrorPage";
 import { useCurrentProperty } from "@/features/shell/CurrentPropertyProvider";
-import { currentPropertyClient } from "@/lib/clients";
-import { type CurrentPropertyDetails } from "@ifarm/shared";
+import { currentPropertyDetailsQuery } from "@/features/shell/queries";
 
 function DashboardSkeleton() {
   return (
@@ -27,45 +26,29 @@ export function Dashboard() {
     options: propertyOptions,
     isLoading: isCurrentPropertyLoading,
   } = useCurrentProperty();
-  const [property, setProperty] = useState<CurrentPropertyDetails | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  // Busca de novo sempre que a propriedade selecionada mudar (trocada no seletor do menu),
+  // depois de saber qual é.
+  const {
+    data: property,
+    isPending,
+    isError,
+    refetch,
+  } = useQuery({
+    ...currentPropertyDetailsQuery(currentProperty?.id),
+    enabled: !isCurrentPropertyLoading,
+  });
 
-  useEffect(() => {
-    if (isCurrentPropertyLoading) return;
+  if (isPending) {
+    return <DashboardSkeleton />;
+  }
 
-    let cancelled = false;
-
-    async function load() {
-      setLoading(true);
-      try {
-        const data = await currentPropertyClient.getCurrentPropertyDetails();
-        if (!cancelled) setProperty(data);
-      } catch (e) {
-        if (!cancelled) setError((e as Error).message);
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    }
-
-    load();
-    return () => {
-      cancelled = true;
-    };
-    // Refaz a busca sempre que a propriedade selecionada mudar (trocada no seletor da sidebar).
-  }, [currentProperty?.id, isCurrentPropertyLoading]);
-
-  if (error) {
+  if (isError && property === undefined) {
     return (
       <ErrorPage
         message="Não foi possível obter os dados da propriedade."
-        onRetry={() => window.location.reload()}
+        onRetry={() => refetch()}
       />
     );
-  }
-
-  if (loading) {
-    return <DashboardSkeleton />;
   }
 
   if (!property) {
