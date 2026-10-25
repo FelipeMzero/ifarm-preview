@@ -62,6 +62,17 @@ export function ListSkeleton({ rows = 5, columns = 5 }: ListSkeletonProps) {
   );
 }
 
+/** Skeleton das listas editáveis na própria linha (InlineEditableList: raças, técnicas…). */
+export function InlineListSkeleton() {
+  return (
+    <div className="w-full max-w-2xl space-y-3">
+      <Skeleton className="h-6 w-24" />
+      <Skeleton className="h-10 w-full" />
+      <Skeleton className="h-40 w-full rounded-md" />
+    </div>
+  );
+}
+
 export function FormSkeleton() {
   return (
     <div className="flex flex-col w-full gap-8">

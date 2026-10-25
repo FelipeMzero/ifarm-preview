@@ -1,14 +1,15 @@
-import { useEffect, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import {
   InlineEditableList,
   InlineEditableColumn,
 } from "@/components/our/InlineEditableList";
 import { ErrorPage } from "@/components/our/ErrorPage";
-import { Skeleton } from "@/components/ui/skeleton";
+import { InlineListSkeleton } from "@/components/our/PageSkeletons";
 import { breedClient } from "@/lib/clients";
 import { type Breed } from "@ifarm/shared";
 import { FIELD_LIMITS } from "@ifarm/shared";
+import { breedKeys, breedListQuery } from "./queries";
 
 const COLUMNS: InlineEditableColumn<Breed>[] = [
   {
@@ -19,77 +20,44 @@ const COLUMNS: InlineEditableColumn<Breed>[] = [
   },
 ];
 
-function BreedListSkeleton() {
-  return (
-    <div className="w-full max-w-2xl space-y-3">
-      <Skeleton className="h-6 w-24" />
-      <Skeleton className="h-10 w-full" />
-      <Skeleton className="h-40 w-full rounded-md" />
-    </div>
-  );
-}
-
 export function BreedList() {
-  const [breeds, setBreeds] = useState<Breed[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+  const { data: breeds, isPending, refetch } = useQuery(breedListQuery());
 
-  useEffect(() => {
-    let cancelled = false;
+  // Cada alteração recarrega a lista. O InlineEditableList espera a promessa (o onSuccess
+  // devolve a da invalidação) para limpar o campo ou sair da edição, e avisa se ela falhar.
+  const reloadBreeds = () =>
+    queryClient.invalidateQueries({ queryKey: breedKeys.all });
 
-    async function load() {
-      setLoading(true);
-      try {
-        const data = await breedClient.getBreeds();
-        if (!cancelled) setBreeds(data);
-      } catch (e) {
-        if (!cancelled) setError((e as Error).message);
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    }
+  const create = useMutation({
+    mutationFn: (name: string) => breedClient.createBreed(name),
+    onSuccess: reloadBreeds,
+  });
+  const update = useMutation({
+    mutationFn: ({ id, name }: { id: string; name: string }) =>
+      breedClient.updateBreed(id, name),
+    onSuccess: reloadBreeds,
+  });
+  const remove = useMutation({
+    mutationFn: (id: string) => breedClient.deleteBreed(id),
+    onSuccess: reloadBreeds,
+  });
+  const toggleStatus = useMutation({
+    mutationFn: (id: string) => breedClient.toggleBreedStatus(id),
+    onSuccess: reloadBreeds,
+  });
 
-    load();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  async function handleCreate(values: Record<string, string>) {
-    const created = await breedClient.createBreed(values.name);
-    setBreeds((prev) => [...prev, created]);
+  if (isPending) {
+    return <InlineListSkeleton />;
   }
 
-  async function handleUpdate(id: string, values: Record<string, string>) {
-    const updated = await breedClient.updateBreed(id, values.name);
-    setBreeds((prev) =>
-      prev.map((breed) => (breed.id === id ? updated : breed)),
-    );
-  }
-
-  async function handleDelete(id: string) {
-    await breedClient.deleteBreed(id);
-    setBreeds((prev) => prev.filter((breed) => breed.id !== id));
-  }
-
-  async function handleToggleActive(id: string) {
-    const updated = await breedClient.toggleBreedStatus(id);
-    setBreeds((prev) =>
-      prev.map((breed) => (breed.id === id ? updated : breed)),
-    );
-  }
-
-  if (error) {
+  if (!breeds) {
     return (
       <ErrorPage
         message="Não foi possível obter as raças."
-        onRetry={() => window.location.reload()}
+        onRetry={() => refetch()}
       />
     );
-  }
-
-  if (loading) {
-    return <BreedListSkeleton />;
   }
 
   return (
@@ -98,12 +66,20 @@ export function BreedList() {
       <InlineEditableList
         items={breeds}
         columns={COLUMNS}
-        onCreate={handleCreate}
-        onUpdate={handleUpdate}
-        onDelete={handleDelete}
+        onCreate={async (values) => {
+          await create.mutateAsync(values.name);
+        }}
+        onUpdate={async (id, values) => {
+          await update.mutateAsync({ id, name: values.name });
+        }}
+        onDelete={async (id) => {
+          await remove.mutateAsync(id);
+        }}
         itemLabel="raça"
         isActive={(breed) => !breed.deactivatedAt}
-        onToggleActive={handleToggleActive}
+        onToggleActive={async (id) => {
+          await toggleStatus.mutateAsync(id);
+        }}
       />
     </div>
   );
