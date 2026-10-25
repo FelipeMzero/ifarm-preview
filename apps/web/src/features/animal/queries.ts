@@ -1,5 +1,10 @@
 import { queryOptions, useQueryClient } from "@tanstack/react-query";
-import type { AnimalListParams, IdentifierKind } from "@ifarm/shared";
+import type {
+  AnimalListParams,
+  CommitmentExclusion,
+  CommitmentIntent,
+  IdentifierKind,
+} from "@ifarm/shared";
 import { animalClient } from "@/lib/clients";
 
 // Chaves das consultas de animais no cache (TanStack Query). Invalidar `all` recarrega as
@@ -15,6 +20,14 @@ export const animalKeys = {
   neuterings: (id: string) => ["animals", "neuterings", id] as const,
   identifiers: (id: string, kind: IdentifierKind) =>
     ["animals", "identifiers", id, kind] as const,
+  // Página do seletor de animais (transferências, sessões de manejo), com a operação pretendida
+  // e a excluída, que decidem quais animais aparecem indisponíveis.
+  picker: (
+    params: AnimalListParams & {
+      intent?: CommitmentIntent;
+      exclude?: CommitmentExclusion;
+    },
+  ) => ["animals", "picker", params] as const,
 };
 
 /**

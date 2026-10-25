@@ -11,17 +11,20 @@ import { batchDetailQuery, batchKeys, batchListQuery } from "./queries";
 /**
  * Opções de um campo para escolher um lote vigente de uma propriedade (`propertyId`; sem ela, a
  * propriedade atual): os 10 primeiros ou, com busca digitada, até 20 que batem com ela (depois
- * de uma pausa). Sem busca, o recém-cadastrado (`addCreated`) entra no topo, se não vier na
- * lista. `exclude` tira um lote das opções (ex.: o atual, numa troca de lote); com `enabled`
- * falso (ex.: diálogo fechado), não busca.
+ * de uma pausa). Sem busca, o já escolhido (`selected`) e o recém-cadastrado (`addCreated`)
+ * entram no topo, se não vierem na lista, para o campo ter o nome deles. `exclude` tira um lote
+ * das opções (ex.: o atual, numa troca de lote); com `enabled` falso (ex.: diálogo fechado), não
+ * busca.
  */
 export function useBatchOptions({
   propertyId,
   exclude,
+  selected = null,
   enabled = true,
 }: {
   propertyId?: string;
   exclude?: string | null;
+  selected?: { id: string; name: string } | null;
   enabled?: boolean;
 } = {}) {
   const queryClient = useQueryClient();
@@ -59,10 +62,17 @@ export function useBatchOptions({
       .map((b) => ({ value: b.id, label: b.name })) ?? [];
 
   const [created, setCreated] = useState<SearchComboboxItem | null>(null);
-  const pinned =
-    !search && created && !listed.some((l) => l.value === created.value)
-      ? [created]
-      : [];
+  const pinned: SearchComboboxItem[] = search
+    ? []
+    : [
+        created,
+        selected ? { value: selected.id, label: selected.name } : null,
+      ].filter(
+        (o, i, all): o is SearchComboboxItem =>
+          !!o &&
+          !listed.some((l) => l.value === o.value) &&
+          all.findIndex((x) => x?.value === o.value) === i,
+      );
 
   /** Lote cadastrado agora (ex.: pelo modal): recarrega as opções e o põe no topo. */
   async function addCreated(id: string) {

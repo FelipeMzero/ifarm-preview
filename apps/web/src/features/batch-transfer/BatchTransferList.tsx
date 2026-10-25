@@ -9,9 +9,15 @@ import {
   Search,
   XCircle,
 } from "lucide-react";
-import { useNavigate } from "react-router";
+import { useNavigate, useSearchParams } from "react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 
 import { ConfirmDialog } from "@/components/our/ConfirmDialog";
 import { DataTable } from "@/components/our/DataTable";
@@ -26,25 +32,59 @@ import {
   type BatchTransferListParams,
 } from "@ifarm/shared";
 import { TransferStatusBadge, formatTransferDate } from "./display";
-import { stockingClient } from "@/lib/clients";
 import { describeStocking } from "@/features/area/StockingNotice";
+import { stockingPreviewQuery } from "@/features/area/queries";
+import { animalKeys } from "@/features/animal/queries";
+import { batchKeys } from "@/features/batch/queries";
 import { ListSkeleton } from "@/components/our/PageSkeletons";
+import { batchTransferKeys, batchTransferListQuery } from "./queries";
 
 const DEFAULT_PAGE_SIZE = 10;
 
 const STATUS_FILTER = {
   ALL: "todas",
-  PENDING: "pending",
-  CONFIRMED: "confirmed",
-  CANCELLED: "cancelled",
+  PENDING: "pendentes",
+  CONFIRMED: "confirmadas",
+  CANCELLED: "canceladas",
 } as const;
+type StatusFilter = (typeof STATUS_FILTER)[keyof typeof STATUS_FILTER];
 
-// Filtro da tela → situação aceita pela API (o que não está aqui = sem filtro).
-const STATUS_PARAM: Record<string, BatchTransferListParams["status"]> = {
-  [STATUS_FILTER.PENDING]: "pending",
-  [STATUS_FILTER.CONFIRMED]: "confirmed",
-  [STATUS_FILTER.CANCELLED]: "cancelled",
+// Filtro da tela (o valor na URL) → situação aceita pela API.
+const STATUS_BY_FILTER: Record<
+  StatusFilter,
+  BatchTransferListParams["status"]
+> = {
+  todas: undefined,
+  pendentes: "pending",
+  confirmadas: "confirmed",
+  canceladas: "cancelled",
 };
+
+const URL_DEFAULTS = {
+  busca: "",
+  situacao: STATUS_FILTER.PENDING as string,
+  pagina: "1",
+  itens: String(DEFAULT_PAGE_SIZE),
+};
+type UrlParam = keyof typeof URL_DEFAULTS;
+
+function readFilters(searchParams: URLSearchParams) {
+  const get = (key: UrlParam) => searchParams.get(key) ?? URL_DEFAULTS[key];
+  const situacao = get("situacao");
+  const filter = (
+    situacao in STATUS_BY_FILTER ? situacao : STATUS_FILTER.PENDING
+  ) as StatusFilter;
+  const positive = (key: UrlParam) => {
+    const n = Number(get(key));
+    return Number.isInteger(n) && n > 0 ? n : Number(URL_DEFAULTS[key]);
+  };
+  return {
+    search: get("busca"),
+    filter,
+    pageIndex: positive("pagina") - 1,
+    pageSize: Math.min(positive("itens"), 100),
+  };
+}
 
 type PendingAction = { type: "confirm" | "cancel"; row: BatchTransferRow };
 
@@ -136,126 +176,123 @@ function buildColumns(handlers: {
 
 export function BatchTransferList() {
   const navigate = useNavigate();
-  const { property: currentProperty } = useCurrentProperty();
+  const queryClient = useQueryClient();
+  const { property: currentProperty, isLoading: isPropertyLoading } =
+    useCurrentProperty();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const {
+    search: debouncedSearch,
+    filter,
+    pageIndex,
+    pageSize,
+  } = readFilters(searchParams);
 
-  const [transfers, setTransfers] = useState<BatchTransferRow[]>([]);
-  const [pageIndex, setPageIndex] = useState(0);
-  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
-  const [pageCount, setPageCount] = useState(0);
-  const [total, setTotal] = useState(0);
-  const [search, setSearch] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [filter, setFilter] = useState<string>(STATUS_FILTER.PENDING);
-  const [loading, setLoading] = useState(true);
-  const [isFirstLoad, setIsFirstLoad] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [refreshKey, setRefreshKey] = useState(0);
-  // Aviso de lotação excedida da transferência em confirmação (por id, para não
-  // exibir o aviso de outra linha enquanto a prévia carrega).
-  const [stockingWarning, setStockingWarning] = useState<{
-    transferId: string;
-    text: string;
-  } | null>(null);
+  // Atualiza a URL (sem criar entrada no histórico a cada mudança de filtro).
+  function updateUrl(changes: Partial<Record<UrlParam, string | number>>) {
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        for (const [key, value] of Object.entries(changes)) {
+          const text = String(value);
+          if (text === URL_DEFAULTS[key as UrlParam]) next.delete(key);
+          else next.set(key, text);
+        }
+        return next;
+      },
+      { replace: true, preventScrollReset: true },
+    );
+  }
+  const setPageIndex = (index: number) => updateUrl({ pagina: index + 1 });
+
+  // O texto digitado fica aqui e vai para a URL depois de uma pausa. Se a URL mudar por fora
+  // (voltar/avançar do navegador), o campo acompanha.
+  const [search, setSearch] = useState(debouncedSearch);
+  const [urlSearch, setUrlSearch] = useState(debouncedSearch);
+  if (urlSearch !== debouncedSearch) {
+    setUrlSearch(debouncedSearch);
+    setSearch(debouncedSearch);
+  }
   const [pendingAction, setPendingAction] = useState<PendingAction | null>(
     null,
   );
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearch(search);
-      setPageIndex(0);
-    }, 300);
+    if (search === debouncedSearch) return;
+    const timer = setTimeout(
+      () => updateUrl({ busca: search, pagina: 1 }),
+      300,
+    );
     return () => clearTimeout(timer);
-  }, [search]);
+  });
 
-  useEffect(() => {
-    let cancelled = false;
-
-    async function load() {
-      setLoading(true);
-      try {
-        const result = await batchTransferClient.getBatchTransfers({
-          propertyId: currentProperty?.id,
-          page: pageIndex,
-          pageSize,
-          search: debouncedSearch,
-          status: STATUS_PARAM[filter],
-        });
-        if (!cancelled) {
-          setTransfers(result.data);
-          setPageCount(result.pageCount);
-          setTotal(result.total);
-        }
-      } catch (e) {
-        if (!cancelled) setError((e as Error).message);
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-          setIsFirstLoad(false);
-        }
-      }
-    }
-
-    load();
-    return () => {
-      cancelled = true;
-    };
-  }, [
-    pageIndex,
+  const params: BatchTransferListParams = {
+    propertyId: currentProperty?.id,
+    page: pageIndex,
     pageSize,
-    debouncedSearch,
-    filter,
-    refreshKey,
-    currentProperty?.id,
-  ]);
+    search: debouncedSearch,
+    status: STATUS_BY_FILTER[filter],
+  };
+  // Ao trocar de página ou de filtro, a lista anterior fica na tela (esmaecida) até chegar a
+  // nova (keepPreviousData). Sem a propriedade atual, a busca traria as de todas.
+  const { data, isPending, isPlaceholderData, refetch } = useQuery({
+    ...batchTransferListQuery(params),
+    enabled: !isPropertyLoading,
+    placeholderData: keepPreviousData,
+  });
+  const transfers: BatchTransferRow[] = data?.data ?? [];
 
-  async function runPendingAction() {
-    if (!pendingAction) return;
-    const { type, row } = pendingAction;
-    setPendingAction(null);
-    try {
+  // Aviso de lotação excedida da transferência em confirmação (só com o diálogo aberto).
+  const confirmingId =
+    pendingAction?.type === "confirm" ? pendingAction.row.id : null;
+  const { data: stockingPreview } = useQuery({
+    ...stockingPreviewQuery({ transferId: confirmingId ?? "" }),
+    enabled: !!confirmingId,
+  });
+
+  // Confirmar muda os animais de lote: recarrega também lotes e animais.
+  const runAction = useMutation({
+    mutationFn: ({ type, row }: PendingAction) =>
+      type === "confirm"
+        ? batchTransferClient.confirmBatchTransfer(row.id)
+        : batchTransferClient.cancelBatchTransfer(row.id),
+    onSuccess: (_, { type }) => {
+      toast.success(
+        type === "confirm"
+          ? "Transferência confirmada! Os animais mudaram de lote."
+          : "Transferência cancelada.",
+      );
+      queryClient.invalidateQueries({ queryKey: batchTransferKeys.all });
       if (type === "confirm") {
-        await batchTransferClient.confirmBatchTransfer(row.id);
-        toast.success("Transferência confirmada! Os animais mudaram de lote.");
-      } else {
-        await batchTransferClient.cancelBatchTransfer(row.id);
-        toast.success("Transferência cancelada.");
+        queryClient.invalidateQueries({ queryKey: batchKeys.all });
+        queryClient.invalidateQueries({ queryKey: animalKeys.all });
       }
-      setRefreshKey((k) => k + 1);
-    } catch (e) {
-      toast.error((e as Error).message);
-    }
+    },
+    // O diálogo já fechou no clique (AlertDialogAction); o aviso explica a falha.
+    onError: (e) => toast.error(e.message),
+  });
+
+  function runPendingAction() {
+    if (pendingAction) runAction.mutate(pendingAction);
+    setPendingAction(null);
   }
 
   const columns = buildColumns({
     onEdit: (id) => navigate(`/lotes/transferencias/${id}`),
-    onConfirm: (row) => {
-      setPendingAction({ type: "confirm", row });
-      stockingClient
-        .getStockingPreview({ transferId: row.id })
-        .then((preview) =>
-          setStockingWarning(
-            preview?.exceeds
-              ? { transferId: row.id, text: describeStocking(preview) }
-              : null,
-          ),
-        )
-        .catch(() => setStockingWarning(null));
-    },
+    onConfirm: (row) => setPendingAction({ type: "confirm", row }),
     onCancel: (row) => setPendingAction({ type: "cancel", row }),
   });
 
-  if (error) {
+  if (isPending) {
+    return <ListSkeleton columns={5} />;
+  }
+
+  if (!data) {
     return (
       <ErrorPage
         message="Não foi possível obter os dados do servidor."
-        onRetry={() => window.location.reload()}
+        onRetry={() => refetch()}
       />
     );
-  }
-
-  if (isFirstLoad) {
-    return <ListSkeleton columns={5} />;
   }
 
   const actionRow = pendingAction?.row;
@@ -282,10 +319,9 @@ export function BatchTransferList() {
 
         <SelectField
           value={filter}
-          onValueChange={(val) => {
-            setFilter(val || STATUS_FILTER.PENDING);
-            setPageIndex(0);
-          }}
+          onValueChange={(val) =>
+            updateUrl({ situacao: val || STATUS_FILTER.PENDING, pagina: 1 })
+          }
           items={[
             { value: STATUS_FILTER.PENDING, label: "Pendentes" },
             { value: STATUS_FILTER.CONFIRMED, label: "Confirmadas" },
@@ -295,9 +331,15 @@ export function BatchTransferList() {
         />
       </div>
 
+      {/* Enquanto mostra a lista anterior (troca de filtro ou de página), fica esmaecida e sem
+          cliques, para ninguém agir sobre linhas que vão sair; a atualização em segundo plano,
+          ao voltar para a lista, não esmaece. */}
       <div
+        aria-busy={isPlaceholderData}
         className={
-          loading ? "opacity-60 transition-opacity" : "transition-opacity"
+          isPlaceholderData
+            ? "pointer-events-none opacity-60 transition-opacity"
+            : "transition-opacity"
         }
       >
         {transfers.length === 0 ? (
@@ -313,15 +355,12 @@ export function BatchTransferList() {
           <DataTable
             columns={columns}
             data={transfers}
-            pageCount={pageCount}
+            pageCount={data.pageCount}
             pageIndex={pageIndex}
             pageSize={pageSize}
-            total={total}
+            total={data.total}
             onPageChange={setPageIndex}
-            onPageSizeChange={(size) => {
-              setPageSize(size);
-              setPageIndex(0);
-            }}
+            onPageSizeChange={(size) => updateUrl({ itens: size, pagina: 1 })}
           />
         )}
       </div>
@@ -337,8 +376,8 @@ export function BatchTransferList() {
         description={
           actionRow
             ? `${actionRow.animalCount} animal(is) serão movidos para o lote "${actionRow.destinationBatch.name}" em ${formatTransferDate(actionRow.transferredAt)}. Após confirmada, a transferência não poderá mais ser alterada.${
-                stockingWarning?.transferId === actionRow.id
-                  ? ` Atenção, lotação excedida: ${stockingWarning.text}`
+                stockingPreview?.exceeds
+                  ? ` Atenção, lotação excedida: ${describeStocking(stockingPreview)}`
                   : ""
               }`
             : undefined

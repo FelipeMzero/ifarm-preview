@@ -1,4 +1,6 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "react-router";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -29,13 +31,11 @@ import { ErrorPage } from "@/components/our/ErrorPage";
 import { FormActionBar } from "@/components/our/FormActionBar";
 import { FormField } from "@/components/our/FormField";
 import { FieldRow } from "@/components/our/FieldRow";
-import {
-  SearchCombobox,
-  SearchComboboxItem,
-} from "@/components/our/SearchCombobox";
+import { SearchCombobox } from "@/components/our/SearchCombobox";
 import { cn } from "@/lib/utils";
 import { BatchForm } from "@/features/batch/BatchForm";
-import { batchClient } from "@/lib/clients";
+import { batchDetailQuery } from "@/features/batch/queries";
+import { useBatchOptions } from "@/features/batch/useBatchOptions";
 import { StockingNotice } from "@/features/area/StockingNotice";
 import { useCurrentProperty } from "@/features/shell/CurrentPropertyProvider";
 import {
@@ -51,16 +51,19 @@ import {
   SelectedAnimalsTable,
   useSelectedPage,
 } from "./SelectedAnimals";
-import { animalClient } from "@/lib/clients";
+import { animalListQuery } from "@/features/animal/queries";
 import { TransferStatusBadge } from "./display";
 import { z } from "zod";
 import { batchTransferSchema } from "@ifarm/shared";
 import { batchTransferClient } from "@/lib/clients";
 import {
   ApiError,
+  isNotFoundError,
   type BatchTransferDetail,
+  type BatchTransferPayload,
   type TransferAnimal,
 } from "@ifarm/shared";
+import { batchTransferDetailQuery, batchTransferKeys } from "./queries";
 import { FormSkeleton } from "@/components/our/PageSkeletons";
 
 // Dados da transferência com as regras da API; os animais são escolhidos à parte e entram
@@ -106,36 +109,66 @@ export function BatchTransferForm({
   onSuccess,
 }: BatchTransferFormProps) {
   const isEditing = !!id;
-  const { property: currentProperty } = useCurrentProperty();
+  const queryClient = useQueryClient();
+  const navigate = useNavigate();
+  const { property: currentProperty, isLoading: isPropertyLoading } =
+    useCurrentProperty();
   const propertyId = currentProperty?.id;
 
-  const [isDataLoading, setIsDataLoading] = useState(isEditing);
-  const [loadFailed, setLoadFailed] = useState(false);
-  const [detail, setDetail] = useState<BatchTransferDetail | null>(null);
+  // Transferência em edição (só com id).
+  const {
+    data: detail,
+    error,
+    isPending,
+    refetch,
+  } = useQuery({
+    ...batchTransferDetailQuery(id ?? ""),
+    enabled: isEditing,
+  });
+  // Destino pré-definido (atalho do lote): o nome, para o campo exibir.
+  const { data: presetBatch } = useQuery({
+    ...batchDetailQuery(initialDestinationBatchId ?? ""),
+    enabled: !!initialDestinationBatchId && !isEditing,
+  });
+
   const [selected, setSelected] = useState<TransferAnimal[]>([]);
   const [animalsError, setAnimalsError] = useState<string | null>(null);
   // Com o destino pré-definido os dados já estão completos (a data padrão é hoje).
   const [step, setStep] = useState<FormStep>(
     initialDestinationBatchId ? "animals" : "data",
   );
-  const [presetBatch, setPresetBatch] = useState<SearchComboboxItem | null>(
-    null,
-  );
+  // Num plano já criado, os animais dele entram na seleção (uma vez, ao carregar) e a etapa
+  // é a dos animais: é o que mais se ajusta. Buscas em segundo plano não mexem na seleção.
+  const [loadedId, setLoadedId] = useState<string | null>(null);
+  if (detail && loadedId !== detail.id) {
+    setLoadedId(detail.id);
+    setSelected(detail.animals);
+    setStep("animals");
+  }
   const [isBatchModalOpen, setIsBatchModalOpen] = useState(false);
 
-  const [batchItems, setBatchItems] = useState<SearchComboboxItem[]>([]);
-  const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Opções do destino, com o já gravado ou o pré-definido no topo (para o campo ter o nome).
+  const savedDestination = detail?.destinationBatch ?? presetBatch ?? null;
+  const batches = useBatchOptions({
+    selected: savedDestination && {
+      id: savedDestination.id,
+      name: savedDestination.name,
+    },
+  });
 
   const {
     handleSubmit,
     control,
-    reset,
     trigger,
     setValue,
     setError,
     formState: { isSubmitting, errors },
   } = useForm<BatchTransferFormData>({
     resolver: zodResolver(batchTransferFormSchema, undefined, { raw: true }),
+    // Dados da transferência em edição. Se forem buscados de novo em segundo plano, só os
+    // campos que o usuário não alterou são atualizados (keepDirtyValues).
+    values: detail && toFormValues(detail),
+    resetOptions: { keepDirtyValues: true },
     defaultValues: {
       destinationBatchId: initialDestinationBatchId ?? "",
       transferredAt: nowDateTime(),
@@ -144,7 +177,7 @@ export function BatchTransferForm({
   });
 
   const destinationBatchId = useWatch({ control, name: "destinationBatchId" });
-  const readOnly = detail !== null && detail.status !== "pending";
+  const readOnly = !!detail && detail.status !== "pending";
 
   const selectedIds = useMemo(
     () => new Set(selected.map((a) => a.id)),
@@ -163,87 +196,21 @@ export function BatchTransferForm({
     exclude: id ? { transferId: id } : undefined,
   });
 
-  const loadBatches = useCallback(
-    async (q: string) => {
-      try {
-        const result = await batchClient.getBatches({
+  // Lote a esvaziar (atalho "encerrar lote com animais"): ao abrir, todos os animais ativos
+  // dele entram na seleção. É uma ação de abertura da tela, uma vez só (depois de saber a
+  // propriedade atual), e não um dado exibido: por isso no efeito, e não com useQuery.
+  useEffect(() => {
+    if (!initialOriginBatchId || isPropertyLoading) return;
+    let cancelled = false;
+    queryClient
+      .query(
+        animalListQuery({
           propertyId,
-          status: "active",
-          search: q,
-          pageSize: 20,
-        });
-        setBatchItems(result.data.map((b) => ({ value: b.id, label: b.name })));
-      } catch (err) {
-        console.error("Erro ao carregar lotes para transferência:", err);
-        setBatchItems([]);
-      }
-    },
-    [propertyId],
-  );
-
-  const handleSearchBatches = useCallback(
-    (query: string) => {
-      if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
-      searchDebounceRef.current = setTimeout(() => loadBatches(query), 300);
-    },
-    [loadBatches],
-  );
-
-  useEffect(() => {
-    // Carga inicial: o setState do loadBatches só acontece depois do await.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    loadBatches("");
-  }, [loadBatches]);
-
-  useEffect(() => {
-    return () => {
-      if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!id) {
-      // Transferência nova: não há registro para carregar.
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setIsDataLoading(false);
-      return;
-    }
-
-    let cancelled = false;
-
-    async function loadData() {
-      try {
-        const data = await batchTransferClient.getBatchTransfer(id!);
-        if (cancelled) return;
-        setDetail(data);
-        setSelected(data.animals);
-        reset(toFormValues(data));
-        // Num plano já criado os dados estão completos; o que mais se ajusta é
-        // a seleção de animais.
-        setStep("animals");
-      } catch {
-        if (!cancelled) setLoadFailed(true);
-      } finally {
-        if (!cancelled) setIsDataLoading(false);
-      }
-    }
-
-    loadData();
-    return () => {
-      cancelled = true;
-    };
-  }, [id, reset]);
-
-  useEffect(() => {
-    if (!initialOriginBatchId) return;
-    let cancelled = false;
-    animalClient
-      .getAnimals({
-        propertyId,
-        batchId: initialOriginBatchId,
-        status: "ACTIVE",
-        pageSize: 2000,
-      })
+          batchId: initialOriginBatchId,
+          status: "ACTIVE",
+          pageSize: 2000,
+        }),
+      )
       .then((result) => {
         if (cancelled || !result.data.length) return;
         setSelected(result.data.map(toTransferAnimal));
@@ -257,38 +224,7 @@ export function BatchTransferForm({
     return () => {
       cancelled = true;
     };
-  }, [initialOriginBatchId, propertyId]);
-
-  useEffect(() => {
-    if (!initialDestinationBatchId) return;
-    let cancelled = false;
-    batchClient
-      .getBatch(initialDestinationBatchId)
-      .then((b) => {
-        if (!cancelled) setPresetBatch({ value: b.id, label: b.name });
-      })
-      .catch(() => {
-        // Sem o nome o campo mostra só o id; o usuário pode escolher outro lote.
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [initialDestinationBatchId]);
-
-  // Garante que o destino já gravado (ou pré-definido) tenha rótulo, mesmo fora da
-  // busca atual.
-  const comboItems = useMemo(() => {
-    const saved = detail?.destinationBatch
-      ? {
-          value: detail.destinationBatch.id,
-          label: detail.destinationBatch.name,
-        }
-      : presetBatch;
-    if (!saved || batchItems.some((i) => i.value === saved.value)) {
-      return batchItems;
-    }
-    return [saved, ...batchItems];
-  }, [batchItems, detail, presetBatch]);
+  }, [initialOriginBatchId, isPropertyLoading, propertyId, queryClient]);
 
   // Animais que já estão no novo destino não têm o que transferir: saem do plano.
   function handleDestinationChange(
@@ -320,6 +256,19 @@ export function BatchTransferForm({
     setSelected((prev) => prev.filter((a) => !toRemove.has(a.id)));
   }
 
+  const reloadTransfers = () =>
+    queryClient.invalidateQueries({ queryKey: batchTransferKeys.all });
+  const create = useMutation({
+    mutationFn: (payload: BatchTransferPayload) =>
+      batchTransferClient.createBatchTransfer(payload),
+    onSuccess: reloadTransfers,
+  });
+  const update = useMutation({
+    mutationFn: (payload: BatchTransferPayload) =>
+      batchTransferClient.updateBatchTransfer(id!, payload),
+    onSuccess: reloadTransfers,
+  });
+
   async function onSubmit(data: BatchTransferFormData) {
     const payload = {
       ...data,
@@ -329,11 +278,11 @@ export function BatchTransferForm({
 
     try {
       if (id) {
-        await batchTransferClient.updateBatchTransfer(id, payload);
+        await update.mutateAsync(payload);
         toast.success("Transferência atualizada com sucesso!");
         onSuccess?.(id);
       } else {
-        const response = await batchTransferClient.createBatchTransfer(payload);
+        const response = await create.mutateAsync(payload);
         toast.success("Transferência salva como pendente!");
         onSuccess?.(response.data.id);
       }
@@ -394,19 +343,30 @@ export function BatchTransferForm({
 
   const dataHasError = Object.keys(errors).length > 0;
   const destinationName =
-    comboItems.find((i) => i.value === destinationBatchId)?.label ?? null;
+    batches.items.find((i) => i.value === destinationBatchId)?.label ?? null;
 
-  if (loadFailed) {
+  if (isEditing && isPending) {
+    return <FormSkeleton />;
+  }
+
+  if (isEditing && !detail) {
+    // Não existe mais (ex.: excluída por outra pessoa): tentar de novo não adianta.
+    if (isNotFoundError(error)) {
+      return (
+        <ErrorPage
+          title="Transferência não encontrada"
+          message="Ela pode ter sido excluída."
+          onBack={() => navigate("/lotes/transferencias")}
+          backLabel="Voltar"
+        />
+      );
+    }
     return (
       <ErrorPage
         message="Não foi possível obter os dados do servidor."
-        onRetry={() => window.location.reload()}
+        onRetry={() => refetch()}
       />
     );
-  }
-
-  if (isDataLoading) {
-    return <FormSkeleton />;
   }
 
   return (
@@ -513,8 +473,8 @@ export function BatchTransferForm({
                           handleDestinationChange(v, field.onChange),
                       }}
                       fieldState={fieldState}
-                      items={comboItems}
-                      onInputValueChange={handleSearchBatches}
+                      items={batches.items}
+                      onInputValueChange={batches.search}
                       placeholder="Buscar lote..."
                       emptyMessage="Nenhum lote disponível"
                       onCreateClick={() => setIsBatchModalOpen(true)}
@@ -702,7 +662,8 @@ export function BatchTransferForm({
             onSuccess={async (newId) => {
               setIsBatchModalOpen(false);
               if (newId) {
-                await loadBatches("");
+                // O lote cadastrado entra nas opções e já fica selecionado.
+                await batches.addCreated(newId);
                 // Lote recém-criado está vazio: nenhum animal selecionado precisa sair.
                 setValue("destinationBatchId", newId, { shouldValidate: true });
                 toast.success("Lote definido como destino da transferência.");

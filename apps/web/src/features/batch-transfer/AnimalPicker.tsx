@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { ListPlus, Loader2, Search } from "lucide-react";
 import { toast } from "sonner";
 
@@ -17,7 +18,9 @@ import {
 } from "@/components/ui/table";
 import { animalClient } from "@/lib/clients";
 import { type AnimalRow, toAnimalListParams } from "@ifarm/shared";
-import { batchClient } from "@/lib/clients";
+import { animalKeys } from "@/features/animal/queries";
+import { batchListQuery } from "@/features/batch/queries";
+import { useCurrentProperty } from "@/features/shell/CurrentPropertyProvider";
 import { AnimalIdentification, SEX_ICON } from "@/features/animal/display";
 import {
   blockingReason,
@@ -29,6 +32,7 @@ import { cn } from "@/lib/utils";
 import { type TransferAnimal } from "@ifarm/shared";
 
 const PAGE_SIZE = 10;
+const NO_REASONS = new Map<string, string>();
 // Limite de segurança para "adicionar todos os filtrados".
 const ADD_ALL_LIMIT = 2000;
 
@@ -98,7 +102,6 @@ export function useAnimalPicker({
   const [search, setSearch] = useState("");
   const [sex, setSex] = useState("");
   const [batchFilter, setBatchFilter] = useState(initialBatchFilter ?? "");
-  const [batchItems, setBatchItems] = useState<SelectFieldItem[]>([]);
   const [minWeight, setMinWeight] = useState("");
   const [maxWeight, setMaxWeight] = useState("");
   const [filters, setFilters] = useState({
@@ -107,18 +110,7 @@ export function useAnimalPicker({
     maxWeight: "",
   });
   const [page, setPage] = useState(0);
-  const [animals, setAnimals] = useState<AnimalRow[]>([]);
-  const [total, setTotal] = useState(0);
-  const [pageCount, setPageCount] = useState(0);
-  const [loading, setLoading] = useState(false);
   const [addingAll, setAddingAll] = useState(false);
-  const [unavailable, setUnavailable] = useState<Map<string, string>>(
-    new Map(),
-  );
-  // Serializados para as buscas não dispararem a cada render por causa de um objeto
-  // novo (ex.: as etapas do planejamento ainda sendo editadas).
-  const intentKey = JSON.stringify(intent ?? null);
-  const excludeKey = JSON.stringify(exclude ?? {});
 
   // Texto e faixa de peso só disparam a busca depois de uma pausa na digitação.
   useEffect(() => {
@@ -129,25 +121,16 @@ export function useAnimalPicker({
     return () => clearTimeout(timer);
   }, [search, minWeight, maxWeight]);
 
-  useEffect(() => {
-    let cancelled = false;
+  // Quem usa o seletor passa a propriedade atual: até ela carregar, a busca traria animais e
+  // lotes de todas as propriedades.
+  const { isLoading: isPropertyLoading } = useCurrentProperty();
 
-    batchClient
-      .getBatches({ propertyId, status: "active", pageSize: 100 })
-      .then((result) => {
-        if (!cancelled)
-          setBatchItems(
-            result.data.map((b) => ({ value: b.id, label: b.name })),
-          );
-      })
-      .catch(() => {
-        if (!cancelled) setBatchItems([]);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [propertyId]);
+  const { data: batches } = useQuery({
+    ...batchListQuery({ propertyId, status: "active", pageSize: 100 }),
+    enabled: !isPropertyLoading,
+  });
+  const batchItems: SelectFieldItem[] =
+    batches?.data.map((b) => ({ value: b.id, label: b.name })) ?? [];
 
   // O filtro de lote não pode apontar para o destino (a lista viria sempre vazia).
   const originFilter = batchFilter === destinationBatchId ? "" : batchFilter;
@@ -165,45 +148,37 @@ export function useAnimalPicker({
     [propertyId, originFilter, destinationBatchId, sex, filters],
   );
 
-  useEffect(() => {
-    let cancelled = false;
+  // A página de animais e o motivo de indisponibilidade de cada um vêm juntos, para a tabela
+  // não mostrar como disponível um animal que está em outra operação. Ao mudar de página ou de
+  // filtro, a página anterior fica na tela (esmaecida) até chegar a nova.
+  const { data, isPending, isPlaceholderData, isError } = useQuery({
+    queryKey: animalKeys.picker({ ...query, page, intent, exclude }),
+    queryFn: async () => {
+      const result = await animalClient.getAnimals({
+        ...query,
+        page,
+        pageSize: PAGE_SIZE,
+      });
+      const unavailable = await unavailableAnimals(
+        result.data.map((a) => a.id),
+        intent,
+        exclude,
+      );
+      return { ...result, unavailable };
+    },
+    enabled: !isPropertyLoading,
+    placeholderData: keepPreviousData,
+  });
+  const animals: AnimalRow[] = data?.data ?? [];
+  const unavailable = data?.unavailable ?? NO_REASONS;
+  const total = data?.total ?? 0;
+  const pageCount = data?.pageCount ?? 0;
+  const loading = isPending || isPlaceholderData;
 
-    async function load() {
-      setLoading(true);
-      try {
-        const result = await animalClient.getAnimals({
-          ...query,
-          page,
-          pageSize: PAGE_SIZE,
-        });
-        if (cancelled) return;
-        // Trocar o destino pode encolher o resultado; volta para a primeira página.
-        if (page > 0 && page >= result.pageCount) {
-          setPage(0);
-          return;
-        }
-        const reasons = await unavailableAnimals(
-          result.data.map((a) => a.id),
-          JSON.parse(intentKey) ?? undefined,
-          JSON.parse(excludeKey),
-        );
-        if (cancelled) return;
-        setUnavailable(reasons);
-        setAnimals(result.data);
-        setTotal(result.total);
-        setPageCount(result.pageCount);
-      } catch {
-        if (!cancelled) toast.error("Não foi possível buscar os animais.");
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    }
-
-    load();
-    return () => {
-      cancelled = true;
-    };
-  }, [query, page, intentKey, excludeKey]);
+  // Trocar o destino pode encolher o resultado; volta para a primeira página.
+  if (data && !isPlaceholderData && page > 0 && page >= data.pageCount) {
+    setPage(0);
+  }
 
   async function addAll() {
     setAddingAll(true);
@@ -296,6 +271,7 @@ export function useAnimalPicker({
     total,
     pageCount,
     loading,
+    loadFailed: isError && !data,
     addingAll,
     addAll,
     headerChecked,
@@ -427,7 +403,9 @@ export function AnimalPickerTable({ picker: p, className }: PartProps) {
                 colSpan={5}
                 className="h-24 text-center text-muted-foreground"
               >
-                Nenhum animal encontrado.
+                {p.loadFailed
+                  ? "Não foi possível buscar os animais."
+                  : "Nenhum animal encontrado."}
               </TableCell>
             </TableRow>
           ) : (
