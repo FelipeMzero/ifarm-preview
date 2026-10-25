@@ -177,28 +177,3 @@
 .leaflet-popup-tip {
   background: var(--popover);
 }
-
-/* Indicadores de navegação: a barra (components/our/NavigationProgress.tsx) e o skeleton da
-   página de destino (layouts/ProtectedLayout.tsx) surgem depois de 150 ms, para não piscar
-   nas trocas rápidas; a barra corre da esquerda para a direita. */
-.nav-progress,
-.nav-pending {
-  opacity: 0;
-  animation: nav-progress-appear 0s 150ms forwards;
-}
-.nav-progress-bar {
-  animation: nav-progress-run 1s ease-in-out infinite;
-}
-@keyframes nav-progress-appear {
-  to {
-    opacity: 1;
-  }
-}
-@keyframes nav-progress-run {
-  from {
-    transform: translateX(-100%);
-  }
-  to {
-    transform: translateX(300%);
-  }
-}

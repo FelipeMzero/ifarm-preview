@@ -42,13 +42,9 @@ import { propertyClient } from "@/lib/clients";
 import { type PropertyRow, type PropertyListParams } from "@ifarm/shared";
 import { ErrorPage } from "@/components/our/ErrorPage";
 import { useCurrentProperty } from "@/features/shell/CurrentPropertyProvider";
-import {
-  INITIAL_PROPERTY_LIST_PARAMS,
-  propertyKeys,
-  propertyListQuery,
-} from "./queries";
+import { propertyKeys, propertyListQuery } from "./queries";
 
-const DEFAULT_PAGE_SIZE = INITIAL_PROPERTY_LIST_PARAMS.pageSize;
+const DEFAULT_PAGE_SIZE = 10;
 
 const STATUS_FILTER = {
   ALL: "todos",

@@ -10,8 +10,8 @@ export const propertyKeys = {
   detail: (id: string) => ["properties", "detail", id] as const,
 };
 
-// As consultas (com o cliente do @ifarm/shared), usadas pelas telas (useQuery) e pelos loaders
-// das rotas (src/router.tsx), que começam a busca no clique, junto com o código da página.
+// As consultas (com o cliente do @ifarm/shared), usadas pelas telas com useQuery; definidas aqui
+// para a chave e a busca andarem juntas.
 export const propertyListQuery = (params: PropertyListParams) =>
   queryOptions({
     queryKey: propertyKeys.list(params),
@@ -23,11 +23,3 @@ export const propertyDetailQuery = (id: string) =>
     queryKey: propertyKeys.detail(id),
     queryFn: () => propertyClient.getProperty(id),
   });
-
-// Filtros com que a lista abre (os mesmos do estado inicial de PropertyList).
-export const INITIAL_PROPERTY_LIST_PARAMS = {
-  page: 0,
-  pageSize: 10,
-  search: "",
-  status: "active",
-} satisfies PropertyListParams;
