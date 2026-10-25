@@ -10,9 +10,15 @@ import {
   PackageOpen,
   RotateCcw,
 } from "lucide-react";
-import { useNavigate } from "react-router";
+import { useNavigate, useSearchParams } from "react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 
 import { DataTable } from "@/components/our/DataTable";
 import { Button } from "@/components/ui/button";
@@ -49,6 +55,8 @@ import {
 import { BatchDetails } from "./BatchDetails";
 import { BatchReopenDialog } from "./BatchReopenDialog";
 import { ListSkeleton } from "@/components/our/PageSkeletons";
+import { useLocalStorageState } from "@/hooks/use-local-storage-state";
+import { batchKeys, batchListQuery } from "./queries";
 
 const DEFAULT_PAGE_SIZE = 10;
 
@@ -57,11 +65,38 @@ const STATUS_FILTER = {
   ACTIVE: "vigente",
   INACTIVE: "encerrado",
 } as const;
+type StatusFilter = (typeof STATUS_FILTER)[keyof typeof STATUS_FILTER];
 
-function filterToStatus(filter: string): BatchListParams["status"] {
-  if (filter === STATUS_FILTER.ACTIVE) return "active";
-  if (filter === STATUS_FILTER.INACTIVE) return "inactive";
-  return undefined;
+const STATUS_BY_FILTER: Record<StatusFilter, BatchListParams["status"]> = {
+  todos: undefined,
+  vigente: "active",
+  encerrado: "inactive",
+};
+
+const URL_DEFAULTS = {
+  busca: "",
+  situacao: STATUS_FILTER.ACTIVE as string,
+  pagina: "1",
+  itens: String(DEFAULT_PAGE_SIZE),
+};
+type UrlParam = keyof typeof URL_DEFAULTS;
+
+function readFilters(searchParams: URLSearchParams) {
+  const get = (key: UrlParam) => searchParams.get(key) ?? URL_DEFAULTS[key];
+  const situacao = get("situacao");
+  const filter = (
+    situacao in STATUS_BY_FILTER ? situacao : STATUS_FILTER.ACTIVE
+  ) as StatusFilter;
+  const positive = (key: UrlParam) => {
+    const n = Number(get(key));
+    return Number.isInteger(n) && n > 0 ? n : Number(URL_DEFAULTS[key]);
+  };
+  return {
+    search: get("busca"),
+    filter,
+    pageIndex: positive("pagina") - 1,
+    pageSize: Math.min(positive("itens"), 100),
+  };
 }
 
 const COLUMN_LABELS: Record<string, string> = {
@@ -164,22 +199,46 @@ function buildColumns(
 
 export function BatchList() {
   const navigate = useNavigate();
-  const { property: currentProperty } = useCurrentProperty();
+  const queryClient = useQueryClient();
+  const { property: currentProperty, isLoading: isPropertyLoading } =
+    useCurrentProperty();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const {
+    search: debouncedSearch,
+    filter,
+    pageIndex,
+    pageSize,
+  } = readFilters(searchParams);
 
-  const [batches, setBatches] = useState<BatchRow[]>([]);
-  const [pageIndex, setPageIndex] = useState(0);
-  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
-  const [pageCount, setPageCount] = useState(0);
-  const [total, setTotal] = useState(0);
-  const [search, setSearch] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [filter, setFilter] = useState<string>(STATUS_FILTER.ACTIVE);
-  const [loading, setLoading] = useState(true);
-  const [isFirstLoad, setIsFirstLoad] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
+  // Atualiza a URL (sem criar entrada no histórico a cada mudança de filtro).
+  function updateUrl(changes: Partial<Record<UrlParam, string | number>>) {
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        for (const [key, value] of Object.entries(changes)) {
+          const text = String(value);
+          if (text === URL_DEFAULTS[key as UrlParam]) next.delete(key);
+          else next.set(key, text);
+        }
+        return next;
+      },
+      { replace: true, preventScrollReset: true },
+    );
+  }
+  const setPageIndex = (index: number) => updateUrl({ pagina: index + 1 });
+
+  // O texto digitado fica aqui e vai para a URL depois de uma pausa. Se a URL mudar por fora
+  // (voltar/avançar do navegador), o campo acompanha.
+  const [search, setSearch] = useState(debouncedSearch);
+  const [urlSearch, setUrlSearch] = useState(debouncedSearch);
+  if (urlSearch !== debouncedSearch) {
+    setUrlSearch(debouncedSearch);
+    setSearch(debouncedSearch);
+  }
+  // Colunas visíveis: preferência lembrada neste navegador.
+  const [columnVisibility, setColumnVisibility] =
+    useLocalStorageState<VisibilityState>("lotes:colunas", {});
   const [viewingDetailsId, setViewingDetailsId] = useState<string | null>(null);
-  const [refreshKey, setRefreshKey] = useState(0);
   const [closingBatch, setClosingBatch] = useState<BatchRow | null>(null);
   const [reopeningBatch, setReopeningBatch] = useState<BatchRow | null>(null);
   // Lote que não pôde ser encerrado por ainda ter animais.
@@ -189,53 +248,29 @@ export function BatchList() {
   } | null>(null);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearch(search);
-      setPageIndex(0);
-    }, 300);
+    if (search === debouncedSearch) return;
+    const timer = setTimeout(
+      () => updateUrl({ busca: search, pagina: 1 }),
+      300,
+    );
     return () => clearTimeout(timer);
-  }, [search]);
+  });
 
-  useEffect(() => {
-    let cancelled = false;
-
-    async function load() {
-      setLoading(true);
-      try {
-        const result = await batchClient.getBatches({
-          propertyId: currentProperty?.id,
-          page: pageIndex,
-          pageSize,
-          search: debouncedSearch,
-          status: filterToStatus(filter),
-        });
-        if (!cancelled) {
-          setBatches(result.data);
-          setPageCount(result.pageCount);
-          setTotal(result.total);
-        }
-      } catch (e) {
-        if (!cancelled) setError((e as Error).message);
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-          setIsFirstLoad(false);
-        }
-      }
-    }
-
-    load();
-    return () => {
-      cancelled = true;
-    };
-  }, [
-    pageIndex,
+  const params: BatchListParams = {
+    propertyId: currentProperty?.id,
+    page: pageIndex,
     pageSize,
-    debouncedSearch,
-    filter,
-    refreshKey,
-    currentProperty?.id,
-  ]);
+    search: debouncedSearch,
+    status: STATUS_BY_FILTER[filter],
+  };
+  // Ao trocar de página ou de filtro, a lista anterior fica na tela (esmaecida) até chegar a
+  // nova (keepPreviousData). Sem a propriedade atual, a busca traria lotes de todas.
+  const { data, isPending, isPlaceholderData, refetch } = useQuery({
+    ...batchListQuery(params),
+    enabled: !isPropertyLoading,
+    placeholderData: keepPreviousData,
+  });
+  const batches: BatchRow[] = data?.data ?? [];
 
   function requestClose(row: BatchRow) {
     // A contagem da listagem já indica animais; o servidor confirma na hora de encerrar.
@@ -246,21 +281,26 @@ export function BatchList() {
     }
   }
 
-  async function confirmClose() {
-    const row = closingBatch;
-    if (!row) return;
-    setClosingBatch(null);
-    try {
-      await batchClient.closeBatch(row.id);
+  const closeBatch = useMutation({
+    mutationFn: (row: BatchRow) => batchClient.closeBatch(row.id),
+    onSuccess: (_, row) => {
       toast.success(`Lote "${row.name}" encerrado.`);
-      setRefreshKey((k) => k + 1);
-    } catch (e) {
+      queryClient.invalidateQueries({ queryKey: batchKeys.all });
+    },
+    // O diálogo já fechou no clique (AlertDialogAction). Se ainda há animais (alguém pôs
+    // depois da listagem), explica e oferece a transferência.
+    onError: (e, row) => {
       if (e instanceof BatchCloseError && e.code === "HAS_ANIMALS") {
         setBatchWithAnimals({ row, animalCount: e.animalCount ?? 0 });
       } else {
-        toast.error((e as Error).message);
+        toast.error(e.message || "Não foi possível encerrar o lote.");
       }
-    }
+    },
+  });
+
+  function confirmClose() {
+    if (closingBatch) closeBatch.mutate(closingBatch);
+    setClosingBatch(null);
   }
 
   const columns = buildColumns(
@@ -270,17 +310,17 @@ export function BatchList() {
     setReopeningBatch,
   );
 
-  if (error) {
+  if (isPending) {
+    return <ListSkeleton columns={5} />;
+  }
+
+  if (!data) {
     return (
       <ErrorPage
         message="Não foi possível obter os dados do servidor."
-        onRetry={() => window.location.reload()}
+        onRetry={() => refetch()}
       />
     );
-  }
-
-  if (isFirstLoad) {
-    return <ListSkeleton columns={5} />;
   }
 
   return (
@@ -307,10 +347,7 @@ export function BatchList() {
 
         <SelectField
           value={filter}
-          onValueChange={(val) => {
-            setFilter(val);
-            setPageIndex(0);
-          }}
+          onValueChange={(val) => updateUrl({ situacao: val, pagina: 1 })}
           items={[
             { value: STATUS_FILTER.ALL, label: "Todos" },
             { value: STATUS_FILTER.ACTIVE, label: "Vigente" },
@@ -343,9 +380,15 @@ export function BatchList() {
         </DropdownMenu>
       </div>
 
+      {/* Enquanto mostra a lista anterior (troca de filtro ou de página), fica esmaecida e sem
+          cliques, para ninguém agir sobre linhas que vão sair; a atualização em segundo plano,
+          ao voltar para a lista, não esmaece. */}
       <div
+        aria-busy={isPlaceholderData}
         className={
-          loading ? "opacity-60 transition-opacity" : "transition-opacity"
+          isPlaceholderData
+            ? "pointer-events-none opacity-60 transition-opacity"
+            : "transition-opacity"
         }
       >
         {batches.length === 0 ? (
@@ -357,16 +400,13 @@ export function BatchList() {
           <DataTable
             columns={columns}
             data={batches}
-            pageCount={pageCount}
+            pageCount={data.pageCount}
             pageIndex={pageIndex}
             pageSize={pageSize}
-            total={total}
+            total={data.total}
             initialSorting={[{ id: "updatedAt", desc: true }]}
             onPageChange={setPageIndex}
-            onPageSizeChange={(size) => {
-              setPageSize(size);
-              setPageIndex(0);
-            }}
+            onPageSizeChange={(size) => updateUrl({ itens: size, pagina: 1 })}
             columnVisibility={columnVisibility}
             onColumnVisibilityChange={setColumnVisibility}
           />
@@ -416,7 +456,6 @@ export function BatchList() {
         onOpenChange={(open) => {
           if (!open) setReopeningBatch(null);
         }}
-        onReopened={() => setRefreshKey((k) => k + 1)}
       />
 
       <AlertDialog

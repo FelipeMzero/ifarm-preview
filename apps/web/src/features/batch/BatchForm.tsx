@@ -1,5 +1,7 @@
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useEffect, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm, useWatch } from "react-hook-form";
+import { useNavigate } from "react-router";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowLeft, ArrowRightLeft, ChevronDown, Loader2 } from "lucide-react";
 import { toast } from "sonner";
@@ -20,17 +22,17 @@ import { FormField } from "@/components/our/FormField";
 import { ErrorPage } from "@/components/our/ErrorPage";
 import { FieldRow } from "@/components/our/FieldRow";
 import { FormActionBar } from "@/components/our/FormActionBar";
-import {
-  SearchCombobox,
-  SearchComboboxItem,
-} from "@/components/our/SearchCombobox";
+import { SearchCombobox } from "@/components/our/SearchCombobox";
 import { useCurrentProperty } from "@/features/shell/CurrentPropertyProvider";
 import { z } from "zod";
 import { batchFieldsSchema, requireBatchGoal } from "@ifarm/shared";
 import type { BatchAreaChangeData } from "./BatchAreaChangeDialog";
 import { batchClient } from "@/lib/clients";
-import { ApiError, type BatchDetail } from "@ifarm/shared";
+import { isNotFoundError, type BatchDetail } from "@ifarm/shared";
+import { applyServerErrors } from "@/lib/form-errors";
 import { BatchAreaChangeDialog } from "./BatchAreaChangeDialog";
+import { batchDetailQuery, batchKeys } from "./queries";
+import { useAvailableAreaOptions } from "./useAvailableAreaOptions";
 import { FormSkeleton } from "@/components/our/PageSkeletons";
 
 // Um formulário para criar e editar: os campos e as regras da API (batchFieldsSchema e a
@@ -61,12 +63,26 @@ function toFormValues(detail: BatchDetail): BatchFormData {
 
 export function BatchForm({ id, title, onCancel, onSuccess }: BatchFormProps) {
   const isEditing = !!id;
-  const { property: currentProperty } = useCurrentProperty();
+  const queryClient = useQueryClient();
+  const navigate = useNavigate();
+  const { property: currentProperty, isLoading: isPropertyLoading } =
+    useCurrentProperty();
   const propertyId = currentProperty?.id;
 
-  const [isDataLoading, setIsDataLoading] = useState(isEditing);
-  const [loadFailed, setLoadFailed] = useState(false);
-  const [editingBatch, setEditingBatch] = useState<BatchDetail | null>(null);
+  // Lote em edição (só com id).
+  const {
+    data: editingBatch,
+    error,
+    isPending,
+    refetch,
+  } = useQuery({ ...batchDetailQuery(id ?? ""), enabled: isEditing });
+  // Áreas livres para o lote novo (na edição, a troca vai pelo diálogo). Sem a propriedade
+  // atual, a busca traria áreas de todas.
+  const areas = useAvailableAreaOptions({
+    propertyId,
+    enabled: !isEditing && !isPropertyLoading,
+  });
+
   const [pendingAreaId, setPendingAreaId] = useState<string | null>(null);
   const [pendingAreaName, setPendingAreaName] = useState<string | null>(null);
   // Descrição da troca de área informada no diálogo (vai junto com newAreaId).
@@ -74,9 +90,6 @@ export function BatchForm({ id, title, onCancel, onSuccess }: BatchFormProps) {
     string | undefined
   >(undefined);
   const [areaChangeOpen, setAreaChangeOpen] = useState(false);
-
-  const [areaItems, setAreaItems] = useState<SearchComboboxItem[]>([]);
-  const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const {
     handleSubmit,
@@ -87,6 +100,10 @@ export function BatchForm({ id, title, onCancel, onSuccess }: BatchFormProps) {
     formState: { isSubmitting },
   } = useForm<BatchFormData>({
     resolver: zodResolver(batchFormSchema, undefined, { raw: true }),
+    // Dados do lote em edição. Se forem buscados de novo em segundo plano, só os campos que o
+    // usuário não alterou são atualizados (keepDirtyValues).
+    values: editingBatch && toFormValues(editingBatch),
+    resetOptions: { keepDirtyValues: true },
     defaultValues: {
       name: "",
       areaId: "",
@@ -99,93 +116,41 @@ export function BatchForm({ id, title, onCancel, onSuccess }: BatchFormProps) {
 
   const hasMeta = useWatch({ control, name: "hasMeta" });
 
-  const loadAreas = useCallback(
-    async (q: string) => {
-      try {
-        const result = await batchClient.getAreasForBatch(q, propertyId);
-        setAreaItems(result.data.map((a) => ({ value: a.id, label: a.name })));
-      } catch (err) {
-        console.error("Erro ao carregar áreas para o lote:", err);
-        setAreaItems([]);
-      }
-    },
-    [propertyId],
-  );
-
-  const handleSearchAreas = useCallback(
-    (query: string) => {
-      if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
-      searchDebounceRef.current = setTimeout(() => {
-        loadAreas(query);
-      }, 300);
-    },
-    [loadAreas],
-  );
-
-  useEffect(() => {
-    // Carga inicial: o setState do loadAreas só acontece depois do await.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (!isEditing) loadAreas("");
-  }, [isEditing, loadAreas]);
-
+  // Lote novo: a área escolhida é da propriedade atual; ao trocar de propriedade, sai.
   useEffect(() => {
     if (!isEditing) setValue("areaId", "");
   }, [propertyId, isEditing, setValue]);
 
-  useEffect(() => {
-    return () => {
-      if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!id) {
-      // Lote novo: não há registro para carregar.
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setIsDataLoading(false);
-      return;
-    }
-
-    let cancelled = false;
-
-    async function loadData() {
-      try {
-        const detail = await batchClient.getBatch(id!);
-        if (cancelled) return;
-        setEditingBatch(detail);
-        reset(toFormValues(detail));
-      } catch {
-        if (!cancelled) setLoadFailed(true);
-      } finally {
-        if (!cancelled) setIsDataLoading(false);
-      }
-    }
-
-    loadData();
-    return () => {
-      cancelled = true;
-    };
-  }, [id, reset]);
+  const reloadBatches = () =>
+    queryClient.invalidateQueries({ queryKey: batchKeys.all });
+  const create = useMutation({
+    mutationFn: (data: BatchFormData) =>
+      batchClient.createBatch({ ...data, propertyId }),
+    onSuccess: reloadBatches,
+  });
+  // A troca de área escolhida no diálogo vai junto com os dados do lote.
+  const update = useMutation({
+    mutationFn: (data: BatchFormData) =>
+      batchClient.updateBatch(id!, {
+        name: data.name,
+        notes: data.notes,
+        hasMeta: data.hasMeta,
+        targetDate: data.targetDate,
+        targetWeight: data.targetWeight,
+        ...(pendingAreaId && {
+          newAreaId: pendingAreaId,
+          areaChangeDescription: pendingAreaDescription,
+        }),
+      }),
+    onSuccess: reloadBatches,
+  });
 
   async function onSubmit(data: BatchFormData) {
     try {
       if (id) {
-        const updateData: Parameters<typeof batchClient.updateBatch>[1] = {
-          name: data.name,
-          notes: data.notes,
-          hasMeta: data.hasMeta,
-          targetDate: data.targetDate,
-          targetWeight: data.targetWeight,
-        };
-
-        if (pendingAreaId) {
-          updateData.newAreaId = pendingAreaId;
-          updateData.areaChangeDescription = pendingAreaDescription;
-        }
-
-        await batchClient.updateBatch(id, updateData);
-        const fresh = await batchClient.getBatch(id);
-        setEditingBatch(fresh);
+        await update.mutateAsync(data);
+        // Volta o formulário ao estado "sem alterações", com os dados salvos (e o cache junto).
+        const fresh = await queryClient.query(batchDetailQuery(id));
         reset(toFormValues(fresh));
         setPendingAreaId(null);
         setPendingAreaName(null);
@@ -193,25 +158,12 @@ export function BatchForm({ id, title, onCancel, onSuccess }: BatchFormProps) {
         toast.success("Registro atualizado com sucesso!");
         onSuccess?.();
       } else {
-        const response = await batchClient.createBatch({
-          ...data,
-          propertyId,
-        });
+        const response = await create.mutateAsync(data);
         toast.success("Registro salvo com sucesso!");
         onSuccess?.(response.data.id);
       }
     } catch (error) {
-      if (error instanceof ApiError && error.errors) {
-        Object.entries(error.errors).forEach(([field, message]) => {
-          setError(field as keyof BatchFormData, {
-            type: "server",
-            message,
-          });
-        });
-        toast.error("Verifique os campos destacados.");
-      } else {
-        toast.error("A requisição falhou! Tente novamente.");
-      }
+      applyServerErrors(setError, error);
     }
   }
 
@@ -228,17 +180,28 @@ export function BatchForm({ id, title, onCancel, onSuccess }: BatchFormProps) {
   const currentAreaName = editingBatch?.currentArea?.name ?? null;
   const displayAreaName = pendingAreaName ?? currentAreaName;
 
-  if (loadFailed) {
+  if (isEditing && isPending) {
+    return <FormSkeleton />;
+  }
+
+  if (isEditing && !editingBatch) {
+    // Não existe mais (ex.: excluído por outra pessoa): tentar de novo não adianta.
+    if (isNotFoundError(error)) {
+      return (
+        <ErrorPage
+          title="Lote não encontrado"
+          message="Ele pode ter sido excluído."
+          onBack={() => navigate("/lotes")}
+          backLabel="Voltar"
+        />
+      );
+    }
     return (
       <ErrorPage
         message="Não foi possível obter os dados do servidor."
-        onRetry={() => window.location.reload()}
+        onRetry={() => refetch()}
       />
     );
-  }
-
-  if (isDataLoading) {
-    return <FormSkeleton />;
   }
 
   return (
@@ -344,8 +307,8 @@ export function BatchForm({ id, title, onCancel, onSuccess }: BatchFormProps) {
                     id={fieldId}
                     field={field}
                     fieldState={fieldState}
-                    items={areaItems}
-                    onInputValueChange={handleSearchAreas}
+                    items={areas.items}
+                    onInputValueChange={areas.search}
                     placeholder="Buscar área disponível..."
                     emptyMessage="Nenhuma área disponível"
                   />

@@ -1,4 +1,3 @@
-import { useState, useCallback, useEffect, useRef } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
@@ -13,13 +12,10 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { FormField } from "@/components/our/FormField";
-import {
-  SearchCombobox,
-  SearchComboboxItem,
-} from "@/components/our/SearchCombobox";
+import { SearchCombobox } from "@/components/our/SearchCombobox";
 import { z } from "zod";
 import { batchFieldsSchema } from "@ifarm/shared";
-import { batchClient } from "@/lib/clients";
+import { useAvailableAreaOptions } from "./useAvailableAreaOptions";
 import { StockingNotice } from "@/features/area/StockingNotice";
 
 // Estado do diálogo: a área de destino e a descrição da troca, que viram
@@ -48,8 +44,12 @@ export function BatchAreaChangeDialog({
   onConfirm,
   propertyId,
 }: BatchAreaChangeDialogProps) {
-  const [areaItems, setAreaItems] = useState<SearchComboboxItem[]>([]);
-  const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Áreas livres da propriedade, menos a atual (só com o diálogo aberto).
+  const areas = useAvailableAreaOptions({
+    propertyId,
+    exclude: currentAreaId,
+    enabled: open,
+  });
 
   const form = useForm<BatchAreaChangeData>({
     resolver: zodResolver(batchAreaChangeSchema, undefined, { raw: true }),
@@ -57,63 +57,21 @@ export function BatchAreaChangeDialog({
   });
   const newAreaId = useWatch({ control: form.control, name: "newAreaId" });
 
-  const loadAreas = useCallback(
-    async (q: string) => {
-      try {
-        const result = await batchClient.getAreasForBatch(q, propertyId);
-        setAreaItems(
-          result.data
-            .filter((a) => a.id !== currentAreaId)
-            .map((a) => ({ value: a.id, label: a.name })),
-        );
-      } catch (err) {
-        console.error("Erro ao carregar áreas para troca de lote:", err);
-        setAreaItems([]);
-      }
-    },
-    [currentAreaId, propertyId],
-  );
-
-  const handleSearchAreas = useCallback(
-    (query: string) => {
-      if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
-      searchDebounceRef.current = setTimeout(() => {
-        loadAreas(query);
-      }, 300);
-    },
-    [loadAreas],
-  );
-
-  useEffect(() => {
-    if (open) {
-      if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
-      form.reset({ newAreaId: "", description: "" });
-      // Carga ao abrir o diálogo: o setState do loadAreas só acontece depois do await.
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      loadAreas("");
-    }
-  }, [open, loadAreas, form]);
-
-  useEffect(() => {
-    return () => {
-      if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
-    };
-  }, []);
-
+  // Ao fechar, o diálogo volta ao estado inicial (abre limpo na próxima vez).
   function handleOpenChange(nextOpen: boolean) {
-    if (nextOpen) {
+    if (!nextOpen) {
       form.reset({ newAreaId: "", description: "" });
-      loadAreas("");
+      areas.clearSearch();
     }
     onOpenChange(nextOpen);
   }
 
   function handleSubmit(data: BatchAreaChangeData) {
-    const selectedItem = areaItems.find(
+    const selectedItem = areas.items.find(
       (item) => item.value === data.newAreaId,
     );
     onConfirm(data, selectedItem?.label);
-    onOpenChange(false);
+    handleOpenChange(false);
   }
 
   return (
@@ -137,8 +95,8 @@ export function BatchAreaChangeDialog({
                 id={id}
                 field={field}
                 fieldState={fieldState}
-                items={areaItems}
-                onInputValueChange={handleSearchAreas}
+                items={areas.items}
+                onInputValueChange={areas.search}
                 placeholder="Buscar área disponível..."
                 emptyMessage="Nenhuma área disponível"
               />
@@ -171,7 +129,7 @@ export function BatchAreaChangeDialog({
             <Button
               type="button"
               variant="secondary"
-              onClick={() => onOpenChange(false)}
+              onClick={() => handleOpenChange(false)}
             >
               Cancelar
             </Button>

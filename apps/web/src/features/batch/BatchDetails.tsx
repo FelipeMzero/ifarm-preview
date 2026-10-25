@@ -1,4 +1,5 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router";
 import {
   ArrowDownLeft,
@@ -63,8 +64,12 @@ import {
 import { cn } from "@/lib/utils";
 import { BatchGoalChart } from "./BatchGoalChart";
 import { projectBatch } from "@ifarm/shared";
-import { batchClient } from "@/lib/clients";
-import { type BatchFullDetails, formatEventDateTime } from "@ifarm/shared";
+import {
+  type BatchFullDetails,
+  formatEventDateTime,
+  isNotFoundError,
+} from "@ifarm/shared";
+import { batchFullDetailsQuery } from "./queries";
 import { DetailsSkeleton } from "@/components/our/PageSkeletons";
 
 function formatAdg(value: number | null | undefined) {
@@ -128,27 +133,14 @@ export function BatchDetails({
   onClose?: () => void;
 }) {
   const navigate = useNavigate();
-  const [batch, setBatch] = useState<BatchFullDetails | null>(null);
-  const [error, setError] = useState<string | null>(null);
   const [simulatedAdg, setSimulatedAdg] = useState("");
 
-  useEffect(() => {
-    let cancelled = false;
-
-    async function load() {
-      try {
-        const data = await batchClient.getBatchDetails(id);
-        if (!cancelled) setBatch(data);
-      } catch (e) {
-        if (!cancelled) setError((e as Error).message);
-      }
-    }
-
-    load();
-    return () => {
-      cancelled = true;
-    };
-  }, [id]);
+  const {
+    data: batch,
+    error,
+    isPending,
+    refetch,
+  } = useQuery(batchFullDetailsQuery(id));
 
   const simulated = simulatedAdg.trim() ? Number(simulatedAdg) : null;
   const projection = useMemo(
@@ -163,17 +155,28 @@ export function BatchDetails({
     [batch, simulated],
   );
 
-  if (error) {
-    return (
-      <ErrorPage
-        message="Não foi possível obter os dados do lote."
-        onRetry={() => window.location.reload()}
-      />
-    );
+  if (isPending) {
+    return <DetailsSkeleton />;
   }
 
   if (!batch || !projection) {
-    return <DetailsSkeleton />;
+    // Não existe mais (ex.: excluído por outra pessoa): tentar de novo não adianta.
+    if (isNotFoundError(error)) {
+      return (
+        <ErrorPage
+          title="Lote não encontrado"
+          message="Ele pode ter sido excluído."
+          onBack={onClose ?? (() => navigate("/lotes"))}
+          backLabel={onClose ? "Fechar" : "Voltar"}
+        />
+      );
+    }
+    return (
+      <ErrorPage
+        message="Não foi possível obter os dados do lote."
+        onRetry={() => refetch()}
+      />
+    );
   }
 
   const goal = batch.saleGoal;
