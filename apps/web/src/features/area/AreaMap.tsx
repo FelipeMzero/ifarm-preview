@@ -60,7 +60,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useCurrentProperty } from "@/features/shell/CurrentPropertyProvider";
+import { useCurrentProperty } from "@/features/shell/useCurrentProperty";
 import { geocodeQuery } from "@/features/address/queries";
 import { batchKeys } from "@/features/batch/queries";
 import { propertyDetailQuery } from "@/features/property/queries";

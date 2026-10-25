@@ -38,7 +38,7 @@ import {
   useSelectedPage,
 } from "@/features/batch-transfer/SelectedAnimals";
 import { type TransferAnimal } from "@ifarm/shared";
-import { useCurrentProperty } from "@/features/shell/CurrentPropertyProvider";
+import { useCurrentProperty } from "@/features/shell/useCurrentProperty";
 import { SessionStatusBadge, formatSessionDateTime } from "./display";
 import { planFormSchema, toStepPayload, type PlanFormData } from "./schema";
 import { managementSessionClient } from "@/lib/clients";

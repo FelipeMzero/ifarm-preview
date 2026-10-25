@@ -25,7 +25,7 @@ import { ErrorPage } from "@/components/our/ErrorPage";
 import { SelectField } from "@/components/our/SelectField";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useCurrentProperty } from "@/features/shell/CurrentPropertyProvider";
+import { useCurrentProperty } from "@/features/shell/useCurrentProperty";
 import { batchTransferClient } from "@/lib/clients";
 import {
   type BatchTransferRow,

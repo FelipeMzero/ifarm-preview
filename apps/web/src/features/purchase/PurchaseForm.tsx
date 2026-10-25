@@ -31,7 +31,7 @@ import { animalKeys } from "@/features/animal/queries";
 import { breedListQuery } from "@/features/breed/queries";
 import { usePersonOptions } from "@/features/person/usePersonOptions";
 import { SessionStatusBadge } from "@/features/management-session/display";
-import { useCurrentProperty } from "@/features/shell/CurrentPropertyProvider";
+import { useCurrentProperty } from "@/features/shell/useCurrentProperty";
 import { Badge } from "@/components/ui/badge";
 import { CategoriesEditor } from "./CategoriesEditor";
 import { PaymentDialog } from "./PaymentDialog";

@@ -23,7 +23,7 @@ import {
   NewValueMark,
   SEX_ICON,
 } from "@/features/animal/display";
-import { useCurrentProperty } from "@/features/shell/CurrentPropertyProvider";
+import { useCurrentProperty } from "@/features/shell/useCurrentProperty";
 import {
   ParticipantStatusBadge,
   STEP_ICONS,

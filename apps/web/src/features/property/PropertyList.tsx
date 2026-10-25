@@ -40,7 +40,6 @@ import { SelectField } from "@/components/our/SelectField";
 import { propertyClient } from "@/lib/clients";
 import { type PropertyRow, type PropertyListParams } from "@ifarm/shared";
 import { ErrorPage } from "@/components/our/ErrorPage";
-import { useCurrentProperty } from "@/features/shell/CurrentPropertyProvider";
 import { useLocalStorageState } from "@/hooks/use-local-storage-state";
 import { propertyKeys, propertyListQuery } from "./queries";
 import { ListSkeleton } from "@/components/our/PageSkeletons";
@@ -204,7 +203,6 @@ function buildColumns(
 export function PropertyList() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { refresh: refreshCurrentProperty } = useCurrentProperty();
   const [searchParams, setSearchParams] = useSearchParams();
   const {
     search: debouncedSearch,
@@ -277,7 +275,6 @@ export function PropertyList() {
     onSuccess: () => {
       reloadProperties();
       setTogglingId(null);
-      refreshCurrentProperty();
     },
     // O diálogo já fechou no clique (AlertDialogAction); o aviso explica a falha.
     onError: (e) => {

@@ -20,7 +20,7 @@ import { SelectField } from "@/components/our/SelectField";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useCurrentProperty } from "@/features/shell/CurrentPropertyProvider";
+import { useCurrentProperty } from "@/features/shell/useCurrentProperty";
 import { SessionStatusBadge, formatSessionDateTime } from "./display";
 import { managementSessionClient } from "@/lib/clients";
 import {

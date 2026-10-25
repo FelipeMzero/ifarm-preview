@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/card";
 import { FormField } from "@/components/our/FormField";
 import { signIn } from "@/lib/auth-client";
+import { queryClient } from "@/lib/query-client";
 
 const loginSchema = z.object({
   email: z.email("E-mail inválido"),
@@ -47,6 +48,8 @@ export function LoginForm() {
       return;
     }
 
+    // Nova sessão começa sem os dados guardados de quem entrou antes neste navegador.
+    queryClient.clear();
     navigate("/painel", { replace: true });
   }
 

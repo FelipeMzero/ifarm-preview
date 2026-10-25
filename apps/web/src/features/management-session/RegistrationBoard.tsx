@@ -32,7 +32,7 @@ import {
   type TransferAnimal,
   nowDateTime,
 } from "@ifarm/shared";
-import { useCurrentProperty } from "@/features/shell/CurrentPropertyProvider";
+import { useCurrentProperty } from "@/features/shell/useCurrentProperty";
 import type { ParticipantStatus } from "@ifarm/shared";
 import { SessionStatusBadge, formatSessionDateTime } from "./display";
 import { managementSessionClient } from "@/lib/clients";

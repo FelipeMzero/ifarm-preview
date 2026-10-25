@@ -20,7 +20,7 @@ import { animalClient } from "@/lib/clients";
 import { type AnimalRow, toAnimalListParams } from "@ifarm/shared";
 import { animalKeys } from "@/features/animal/queries";
 import { batchListQuery } from "@/features/batch/queries";
-import { useCurrentProperty } from "@/features/shell/CurrentPropertyProvider";
+import { useCurrentProperty } from "@/features/shell/useCurrentProperty";
 import { AnimalIdentification, SEX_ICON } from "@/features/animal/display";
 import {
   blockingReason,

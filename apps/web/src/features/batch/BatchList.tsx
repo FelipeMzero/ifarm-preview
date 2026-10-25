@@ -40,7 +40,7 @@ import {
 } from "@ifarm/shared";
 import { ConfirmDialog } from "@/components/our/ConfirmDialog";
 import { ErrorPage } from "@/components/our/ErrorPage";
-import { useCurrentProperty } from "@/features/shell/CurrentPropertyProvider";
+import { useCurrentProperty } from "@/features/shell/useCurrentProperty";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import {
   AlertDialog,

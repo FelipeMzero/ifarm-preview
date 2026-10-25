@@ -10,7 +10,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useCurrentProperty } from "./CurrentPropertyProvider";
+import { useCurrentProperty } from "./useCurrentProperty";
 
 export function PropertySwitcher() {
   const { property, options, isLoading, select, refresh } =

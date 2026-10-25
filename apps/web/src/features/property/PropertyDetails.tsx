@@ -21,7 +21,6 @@ import { Separator } from "@/components/ui/separator";
 import { ConfirmDialog } from "@/components/our/ConfirmDialog";
 import { ErrorPage } from "@/components/our/ErrorPage";
 import { propertyClient } from "@/lib/clients";
-import { useCurrentProperty } from "@/features/shell/CurrentPropertyProvider";
 import { isNotFoundError } from "@ifarm/shared";
 import { propertyDetailQuery, propertyKeys } from "./queries";
 import { DetailsSkeleton } from "@/components/our/PageSkeletons";
@@ -35,7 +34,6 @@ export function PropertyDetails({
 }) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { refresh: refreshCurrentProperty } = useCurrentProperty();
   const [confirmingDelete, setConfirmingDelete] = useState(false);
 
   const {
@@ -53,7 +51,6 @@ export function PropertyDetails({
       toast.success("Registro excluído com sucesso!");
       queryClient.removeQueries({ queryKey: propertyKeys.detail(id) });
       queryClient.invalidateQueries({ queryKey: propertyKeys.all });
-      refreshCurrentProperty();
       if (onClose) onClose();
       else navigate("/propriedades");
     },

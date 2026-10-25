@@ -30,7 +30,7 @@ import {
   receptionDocumentsSchema,
   type ManagementOptions,
 } from "@ifarm/shared";
-import { useCurrentProperty } from "@/features/shell/CurrentPropertyProvider";
+import { useCurrentProperty } from "@/features/shell/useCurrentProperty";
 import { receptionClient } from "@/lib/clients";
 import { applyServerErrors } from "@/lib/form-errors";
 import { useReloadReception } from "./queries";

@@ -23,7 +23,7 @@ import { ErrorPage } from "@/components/our/ErrorPage";
 import { FieldRow } from "@/components/our/FieldRow";
 import { FormActionBar } from "@/components/our/FormActionBar";
 import { SearchCombobox } from "@/components/our/SearchCombobox";
-import { useCurrentProperty } from "@/features/shell/CurrentPropertyProvider";
+import { useCurrentProperty } from "@/features/shell/useCurrentProperty";
 import { z } from "zod";
 import { batchFieldsSchema, requireBatchGoal } from "@ifarm/shared";
 import type { BatchAreaChangeData } from "./BatchAreaChangeDialog";

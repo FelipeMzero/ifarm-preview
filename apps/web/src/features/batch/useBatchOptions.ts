@@ -5,7 +5,7 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import type { SearchComboboxItem } from "@/components/our/SearchCombobox";
-import { useCurrentProperty } from "@/features/shell/CurrentPropertyProvider";
+import { useCurrentProperty } from "@/features/shell/useCurrentProperty";
 import { batchDetailQuery, batchKeys, batchListQuery } from "./queries";
 
 /**

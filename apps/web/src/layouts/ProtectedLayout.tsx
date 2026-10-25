@@ -10,7 +10,6 @@ import {
 } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
 import { AppBreadcrumb } from "@/features/shell/Breadcrumbs";
-import { CurrentPropertyProvider } from "@/features/shell/CurrentPropertyProvider";
 import { readClosedSections } from "@/features/shell/nav";
 
 // Páginas que exigem login. A sessão vem da API; sem ela, vai para o login. O papel só
@@ -37,23 +36,21 @@ export function ProtectedLayout() {
   if (forbidden) return <Navigate to="/painel" replace />;
 
   return (
-    <CurrentPropertyProvider>
-      <SidebarProvider className="h-svh overflow-hidden">
-        <Sidebar initialClosedSections={readClosedSections()} />
-        <SidebarInset className="min-h-0 min-w-0">
-          <header className="flex min-w-0 shrink-0 items-center gap-2 p-2">
-            <SidebarTrigger />
-            <Separator
-              orientation="vertical"
-              className="data-[orientation=vertical]:h-4"
-            />
-            <AppBreadcrumb />
-          </header>
-          <main className="min-w-0 flex-1 overflow-y-auto">
-            <Outlet />
-          </main>
-        </SidebarInset>
-      </SidebarProvider>
-    </CurrentPropertyProvider>
+    <SidebarProvider className="h-svh overflow-hidden">
+      <Sidebar initialClosedSections={readClosedSections()} />
+      <SidebarInset className="min-h-0 min-w-0">
+        <header className="flex min-w-0 shrink-0 items-center gap-2 p-2">
+          <SidebarTrigger />
+          <Separator
+            orientation="vertical"
+            className="data-[orientation=vertical]:h-4"
+          />
+          <AppBreadcrumb />
+        </header>
+        <main className="min-w-0 flex-1 overflow-y-auto">
+          <Outlet />
+        </main>
+      </SidebarInset>
+    </SidebarProvider>
   );
 }

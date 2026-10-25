@@ -29,7 +29,6 @@ import { cn } from "@/lib/utils";
 import { applyServerErrors } from "@/lib/form-errors";
 import { LocationPickerDialog } from "@/components/our/location/LocationPickerDialog";
 import { LocationPreview } from "@/components/our/location/LocationPreview";
-import { useCurrentProperty } from "@/features/shell/CurrentPropertyProvider";
 import { usePersonOptions } from "../person/usePersonOptions";
 import { propertyDetailQuery, propertyKeys } from "./queries";
 import { useZipCodeLookup } from "../address/useZipCodeLookup";
@@ -60,7 +59,6 @@ export function PropertyForm({
 }: PropertyFormProps) {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
-  const { refresh: refreshCurrentProperty } = useCurrentProperty();
 
   // Estado para controle do modal de Nova Pessoa
   const [isPersonModalOpen, setIsPersonModalOpen] = useState(false);
@@ -88,7 +86,6 @@ export function PropertyForm({
         : propertyClient.createProperty(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: propertyKeys.all });
-      refreshCurrentProperty();
     },
   });
 

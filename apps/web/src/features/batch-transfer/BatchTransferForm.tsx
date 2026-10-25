@@ -37,7 +37,7 @@ import { BatchForm } from "@/features/batch/BatchForm";
 import { batchDetailQuery } from "@/features/batch/queries";
 import { useBatchOptions } from "@/features/batch/useBatchOptions";
 import { StockingNotice } from "@/features/area/StockingNotice";
-import { useCurrentProperty } from "@/features/shell/CurrentPropertyProvider";
+import { useCurrentProperty } from "@/features/shell/useCurrentProperty";
 import {
   AnimalPickerFilters,
   AnimalPickerPagination,
