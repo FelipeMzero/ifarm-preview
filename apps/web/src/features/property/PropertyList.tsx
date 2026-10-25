@@ -369,13 +369,14 @@ export function PropertyList() {
         </DropdownMenu>
       </div>
 
-      {/* Esmaece só enquanto mostra a lista anterior (troca de filtro ou de página); a
-          atualização em segundo plano, ao voltar para a lista, não esmaece. */}
+      {/* Enquanto mostra a lista anterior (troca de filtro ou de página), fica esmaecida e sem
+          cliques, para ninguém agir sobre linhas que vão sair; a atualização em segundo plano,
+          ao voltar para a lista, não esmaece. */}
       <div
         aria-busy={isPlaceholderData}
         className={
           isPlaceholderData
-            ? "opacity-60 transition-opacity"
+            ? "pointer-events-none opacity-60 transition-opacity"
             : "transition-opacity"
         }
       >
