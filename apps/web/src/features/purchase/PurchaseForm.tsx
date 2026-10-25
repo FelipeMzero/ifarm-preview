@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -25,12 +26,10 @@ import { ErrorPage } from "@/components/our/ErrorPage";
 import { FormActionBar } from "@/components/our/FormActionBar";
 import { FormField } from "@/components/our/FormField";
 import { FieldRow } from "@/components/our/FieldRow";
-import {
-  SearchCombobox,
-  type SearchComboboxItem,
-} from "@/components/our/SearchCombobox";
-import { breedClient } from "@/lib/clients";
-import { personClient } from "@/lib/clients";
+import { SearchCombobox } from "@/components/our/SearchCombobox";
+import { animalKeys } from "@/features/animal/queries";
+import { breedListQuery } from "@/features/breed/queries";
+import { usePersonOptions } from "@/features/person/usePersonOptions";
 import { SessionStatusBadge } from "@/features/management-session/display";
 import { useCurrentProperty } from "@/features/shell/CurrentPropertyProvider";
 import { Badge } from "@/components/ui/badge";
@@ -48,7 +47,14 @@ import {
   type PurchasePayload as PurchaseFormData,
 } from "@ifarm/shared";
 import { purchaseClient } from "@/lib/clients";
-import { ApiError, isSessionOpen, type PurchaseDetail } from "@ifarm/shared";
+import { applyServerErrors } from "@/lib/form-errors";
+import {
+  isNotFoundError,
+  isSessionOpen,
+  type PurchaseDetail,
+  type PurchasePayload,
+} from "@ifarm/shared";
+import { purchaseDetailQuery, purchaseKeys } from "./queries";
 import { FormSkeleton } from "@/components/our/PageSkeletons";
 
 const str = (v: number | null | undefined) => (v == null ? "" : String(v));
@@ -81,16 +87,21 @@ type Action = "pay" | "undoPay" | "consolidate" | "cancel";
 
 export function PurchaseForm({ id }: { id?: string }) {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { property: currentProperty } = useCurrentProperty();
-
-  const [detail, setDetail] = useState<PurchaseDetail | null>(null);
-  const [loading, setLoading] = useState(!!id);
-  const [loadFailed, setLoadFailed] = useState(false);
-  const [refreshKey, setRefreshKey] = useState(0);
-  const [breeds, setBreeds] = useState<{ id: string; name: string }[]>([]);
-  const [sellerItems, setSellerItems] = useState<SearchComboboxItem[]>([]);
   const [action, setAction] = useState<Action | null>(null);
-  const sellerDebounce = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Compra em edição (só com id).
+  const {
+    data: detail,
+    error,
+    isPending,
+    refetch,
+  } = useQuery({ ...purchaseDetailQuery(id ?? ""), enabled: !!id });
+  // Opções: raças ativas e vendedores (o gravado entra no topo, para o campo ter o nome).
+  const { data: breedList } = useQuery(breedListQuery());
+  const breeds = breedList?.filter((b) => !b.deactivatedAt) ?? [];
+  const sellers = usePersonOptions({ selected: detail?.seller });
 
   const {
     control,
@@ -103,6 +114,10 @@ export function PurchaseForm({ id }: { id?: string }) {
     // raw: valida com o schema da API e envia os valores do formulário; a API converte
     // e descarta os campos que não são da forma de preço escolhida.
     resolver: zodResolver(purchaseSchema, undefined, { raw: true }),
+    // Dados da compra em edição. Se forem buscados de novo em segundo plano (ex.: depois de
+    // pagar), só os campos que o usuário não alterou são atualizados (keepDirtyValues).
+    values: detail && toFormValues(detail),
+    resetOptions: { keepDirtyValues: true },
     defaultValues: {
       title: "",
       sellerId: "",
@@ -127,133 +142,94 @@ export function PurchaseForm({ id }: { id?: string }) {
     },
   });
 
-  const loadSellers = useCallback(async (q: string) => {
-    try {
-      const result = await personClient.getPeople({
-        search: q,
-        pageSize: q ? 20 : 5,
-        status: "active",
-      });
-      setSellerItems(result.data.map((p) => ({ value: p.id, label: p.name })));
-    } catch {
-      setSellerItems([]);
-    }
-  }, []);
-
-  useEffect(() => {
-    let cancelled = false;
-    personClient
-      .getPeople({ pageSize: 5, status: "active" })
-      .then((result) => {
-        if (!cancelled)
-          setSellerItems(
-            result.data.map((p) => ({ value: p.id, label: p.name })),
-          );
-      })
-      .catch(() => {});
-    breedClient
-      .getBreeds()
-      .then((list) => {
-        if (!cancelled) setBreeds(list.filter((b) => !b.deactivatedAt));
-      })
-      .catch(() => {});
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!id) return;
-    let cancelled = false;
-    purchaseClient
-      .getPurchase(id)
-      .then((data) => {
-        if (cancelled) return;
-        setDetail(data);
-        reset(toFormValues(data));
-      })
-      .catch(() => {
-        if (!cancelled) setLoadFailed(true);
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [id, reset, refreshKey]);
-
   const editable = !detail || detail.status === "open";
   // Paga: o que define o valor fica bloqueado até desfazer o pagamento.
   const locked = !!detail?.paymentDate;
 
-  // Garante o rótulo do vendedor gravado, mesmo fora da busca atual.
-  const sellerOptions =
-    detail && !sellerItems.some((i) => i.value === detail.seller.id)
-      ? [{ value: detail.seller.id, label: detail.seller.name }, ...sellerItems]
-      : sellerItems;
+  const reloadPurchases = () =>
+    queryClient.invalidateQueries({ queryKey: purchaseKeys.all });
+  const create = useMutation({
+    mutationFn: (payload: PurchasePayload) =>
+      purchaseClient.createPurchase(payload),
+    onSuccess: reloadPurchases,
+  });
+  const update = useMutation({
+    mutationFn: (payload: PurchasePayload) =>
+      purchaseClient.updatePurchase(id!, payload),
+    onSuccess: reloadPurchases,
+  });
 
   async function onSubmit(data: PurchaseFormData) {
     const payload = { ...data, propertyId: currentProperty?.id };
     try {
       if (id) {
-        await purchaseClient.updatePurchase(id, payload);
+        await update.mutateAsync(payload);
+        // Volta o formulário ao estado "sem alterações", com os dados salvos (e o cache junto).
+        const fresh = await queryClient.query(purchaseDetailQuery(id));
+        reset(toFormValues(fresh));
         toast.success("Compra atualizada!");
-        setRefreshKey((k) => k + 1);
       } else {
-        const result = await purchaseClient.createPurchase(payload);
+        const result = await create.mutateAsync(payload);
         toast.success("Compra registrada!");
         navigate(`/compras/${result.data.id}`, { replace: true });
       }
     } catch (error) {
-      if (error instanceof ApiError && error.errors) {
-        Object.entries(error.errors).forEach(([field, message]) =>
-          setError(field as keyof PurchaseFormData, {
-            type: "server",
-            message,
-          }),
-        );
-        toast.error(error.message);
-      } else if (error instanceof ApiError) {
-        toast.error(error.message);
-      } else {
-        toast.error("A requisição falhou! Tente novamente.");
-      }
+      applyServerErrors(setError, error);
     }
   }
 
-  async function runAction() {
-    if (!id || !action) return;
-    const current = action;
-    setAction(null);
-    try {
+  // Ações da compra (o pagamento tem diálogo próprio). Consolidar rateia o custo nos animais
+  // recebidos: recarrega também os animais.
+  const runAction = useMutation({
+    mutationFn: (current: Exclude<Action, "pay">) =>
+      current === "consolidate"
+        ? purchaseClient.consolidatePurchase(id!)
+        : current === "undoPay"
+          ? purchaseClient.undoPurchasePayment(id!)
+          : purchaseClient.cancelPurchase(id!),
+    onSuccess: (_, current) => {
+      toast.success(
+        current === "consolidate"
+          ? "Compra consolidada. Os custos dos animais foram rateados."
+          : current === "undoPay"
+            ? "Pagamento desfeito. Os valores podem ser corrigidos."
+            : "Compra cancelada.",
+      );
+      reloadPurchases();
       if (current === "consolidate") {
-        await purchaseClient.consolidatePurchase(id);
-        toast.success(
-          "Compra consolidada. Os custos dos animais foram rateados.",
-        );
-      } else if (current === "undoPay") {
-        await purchaseClient.undoPurchasePayment(id);
-        toast.success("Pagamento desfeito. Os valores podem ser corrigidos.");
-      } else {
-        await purchaseClient.cancelPurchase(id);
-        toast.success("Compra cancelada.");
+        queryClient.invalidateQueries({ queryKey: animalKeys.all });
       }
-      setRefreshKey((k) => k + 1);
-    } catch (e) {
-      toast.error((e as Error).message);
-    }
+    },
+    // O diálogo já fechou no clique (AlertDialogAction); o aviso explica a falha.
+    onError: (e) => toast.error(e.message),
+  });
+
+  function confirmAction() {
+    if (id && action && action !== "pay") runAction.mutate(action);
+    setAction(null);
   }
 
-  if (loadFailed) {
+  if (id && isPending) return <FormSkeleton />;
+
+  if (id && !detail) {
+    // Não existe mais (ex.: excluída por outra pessoa): tentar de novo não adianta.
+    if (isNotFoundError(error)) {
+      return (
+        <ErrorPage
+          title="Compra não encontrada"
+          message="Ela pode ter sido excluída."
+          onBack={() => navigate("/compras")}
+          backLabel="Voltar"
+        />
+      );
+    }
     return (
       <ErrorPage
         message="Não foi possível obter os dados do servidor."
-        onRetry={() => window.location.reload()}
+        onRetry={() => refetch()}
       />
     );
   }
-  if (loading) return <FormSkeleton />;
 
   const expected =
     detail?.categories.reduce((s, c) => s + c.expectedQuantity, 0) ?? 0;
@@ -415,16 +391,9 @@ export function PurchaseForm({ id }: { id?: string }) {
                     id={fieldId}
                     field={field}
                     fieldState={fieldState}
-                    items={sellerOptions}
+                    items={sellers.items}
                     placeholder="Buscar pessoa..."
-                    onInputValueChange={(q) => {
-                      if (sellerDebounce.current)
-                        clearTimeout(sellerDebounce.current);
-                      sellerDebounce.current = setTimeout(
-                        () => loadSellers(q),
-                        300,
-                      );
-                    }}
+                    onInputValueChange={sellers.search}
                   />
                 )}
               />
@@ -556,13 +525,12 @@ export function PurchaseForm({ id }: { id?: string }) {
           value={totalValue}
           open={action === "pay"}
           onOpenChange={(open) => !open && setAction(null)}
-          onPaid={() => setRefreshKey((k) => k + 1)}
         />
       )}
       <ConfirmDialog
         open={action === "undoPay"}
         onOpenChange={(open) => !open && setAction(null)}
-        onConfirm={runAction}
+        onConfirm={confirmAction}
         variant="default"
         title="Desfazer pagamento"
         description="O registro do pagamento é removido e os valores voltam a ser editáveis. Use para corrigir um pagamento registrado por engano."
@@ -572,7 +540,7 @@ export function PurchaseForm({ id }: { id?: string }) {
       <ConfirmDialog
         open={action === "consolidate"}
         onOpenChange={(open) => !open && setAction(null)}
-        onConfirm={runAction}
+        onConfirm={confirmAction}
         variant="default"
         title="Consolidar compra"
         description={consolidateDescription}
@@ -582,7 +550,7 @@ export function PurchaseForm({ id }: { id?: string }) {
       <ConfirmDialog
         open={action === "cancel"}
         onOpenChange={(open) => !open && setAction(null)}
-        onConfirm={runAction}
+        onConfirm={confirmAction}
         title="Cancelar compra"
         description="A compra será cancelada, junto com as recepções ainda vazias. O registro é mantido no filtro de canceladas."
         confirmLabel="Sim, cancelar"

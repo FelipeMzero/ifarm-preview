@@ -1,3 +1,4 @@
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
@@ -22,20 +23,20 @@ import {
   type PurchasePaymentPayload as PaymentFormData,
 } from "@ifarm/shared";
 import { purchaseClient } from "@/lib/clients";
+import { applyServerErrors } from "@/lib/form-errors";
+import { purchaseKeys } from "./queries";
 
 export function PaymentDialog({
   purchaseId,
   value,
   open,
   onOpenChange,
-  onPaid,
 }: {
   purchaseId: string;
   /** Valor da compra (estimado enquanto por cabeça depende dos recebidos). */
   value: number | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onPaid: () => void;
 }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -61,11 +62,7 @@ export function PaymentDialog({
         {open && (
           <PaymentForm
             purchaseId={purchaseId}
-            onCancel={() => onOpenChange(false)}
-            onPaid={() => {
-              onOpenChange(false);
-              onPaid();
-            }}
+            onClose={() => onOpenChange(false)}
           />
         )}
       </DialogContent>
@@ -75,29 +72,37 @@ export function PaymentDialog({
 
 function PaymentForm({
   purchaseId,
-  onCancel,
-  onPaid,
+  onClose,
 }: {
   purchaseId: string;
-  onCancel: () => void;
-  onPaid: () => void;
+  onClose: () => void;
 }) {
+  const queryClient = useQueryClient();
   const {
     control,
     handleSubmit,
+    setError,
     formState: { isSubmitting },
   } = useForm<PaymentFormData>({
     resolver: zodResolver(purchasePaymentSchema, undefined, { raw: true }),
     defaultValues: { paymentDate: today(), paymentReference: "" },
   });
 
+  // A compra na tela é recarregada (cache) e passa a mostrar o pagamento.
+  const pay = useMutation({
+    mutationFn: (data: PaymentFormData) =>
+      purchaseClient.payPurchase(purchaseId, data),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: purchaseKeys.all }),
+  });
+
   async function onSubmit(data: PaymentFormData) {
     try {
-      await purchaseClient.payPurchase(purchaseId, data);
+      await pay.mutateAsync(data);
       toast.success("Pagamento registrado.");
-      onPaid();
+      onClose();
     } catch (e) {
-      toast.error((e as Error).message);
+      applyServerErrors(setError, e);
     }
   }
 
@@ -127,7 +132,7 @@ function PaymentForm({
         )}
       />
       <DialogFooter>
-        <Button type="button" variant="secondary" onClick={onCancel}>
+        <Button type="button" variant="secondary" onClick={onClose}>
           Cancelar
         </Button>
         <Button type="submit" className="w-auto" disabled={isSubmitting}>

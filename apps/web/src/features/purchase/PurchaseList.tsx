@@ -1,7 +1,8 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { Eye, Pencil, Plus, Search, ShoppingCart } from "lucide-react";
-import { useNavigate } from "react-router";
+import { useNavigate, useSearchParams } from "react-router";
 import { useEffect, useState } from "react";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 
 import { DataTable } from "@/components/our/DataTable";
 import { ErrorPage } from "@/components/our/ErrorPage";
@@ -16,26 +17,53 @@ import {
   formatBRL,
   formatDay,
 } from "./display";
-import { purchaseClient } from "@/lib/clients";
 import { type PurchaseRow, type PurchaseListParams } from "@ifarm/shared";
 import { ListSkeleton } from "@/components/our/PageSkeletons";
+import { purchaseListQuery } from "./queries";
 
 const DEFAULT_PAGE_SIZE = 10;
 
 const STATUS_FILTER = {
-  OPEN: "open",
-  CONFIRMED: "confirmed",
-  CANCELLED: "cancelled",
-  ALL: "all",
+  OPEN: "andamento",
+  CONFIRMED: "consolidadas",
+  CANCELLED: "canceladas",
+  ALL: "todas",
 } as const;
+type StatusFilter = (typeof STATUS_FILTER)[keyof typeof STATUS_FILTER];
 
-// Filtro da tela → situação aceita pela API (o que não está aqui = sem filtro).
-const STATUS_PARAM: Record<string, PurchaseListParams["status"]> = {
-  [STATUS_FILTER.OPEN]: "open",
-  [STATUS_FILTER.CONFIRMED]: "confirmed",
-  [STATUS_FILTER.CANCELLED]: "cancelled",
-  [STATUS_FILTER.ALL]: "all",
+// Filtro da tela (o valor na URL) → situação aceita pela API.
+const STATUS_BY_FILTER: Record<StatusFilter, PurchaseListParams["status"]> = {
+  andamento: "open",
+  consolidadas: "confirmed",
+  canceladas: "cancelled",
+  todas: "all",
 };
+
+const URL_DEFAULTS = {
+  busca: "",
+  situacao: STATUS_FILTER.OPEN as string,
+  pagina: "1",
+  itens: String(DEFAULT_PAGE_SIZE),
+};
+type UrlParam = keyof typeof URL_DEFAULTS;
+
+function readFilters(searchParams: URLSearchParams) {
+  const get = (key: UrlParam) => searchParams.get(key) ?? URL_DEFAULTS[key];
+  const situacao = get("situacao");
+  const filter = (
+    situacao in STATUS_BY_FILTER ? situacao : STATUS_FILTER.OPEN
+  ) as StatusFilter;
+  const positive = (key: UrlParam) => {
+    const n = Number(get(key));
+    return Number.isInteger(n) && n > 0 ? n : Number(URL_DEFAULTS[key]);
+  };
+  return {
+    search: get("busca"),
+    filter,
+    pageIndex: positive("pagina") - 1,
+    pageSize: Math.min(positive("itens"), 100),
+  };
+}
 
 function buildColumns(onOpen: (id: string) => void): ColumnDef<PurchaseRow>[] {
   return [
@@ -135,73 +163,79 @@ function buildColumns(onOpen: (id: string) => void): ColumnDef<PurchaseRow>[] {
 
 export function PurchaseList() {
   const navigate = useNavigate();
-  const { property: currentProperty } = useCurrentProperty();
+  const { property: currentProperty, isLoading: isPropertyLoading } =
+    useCurrentProperty();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const {
+    search: debouncedSearch,
+    filter,
+    pageIndex,
+    pageSize,
+  } = readFilters(searchParams);
 
-  const [purchases, setPurchases] = useState<PurchaseRow[]>([]);
-  const [pageIndex, setPageIndex] = useState(0);
-  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
-  const [pageCount, setPageCount] = useState(0);
-  const [total, setTotal] = useState(0);
-  const [search, setSearch] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [filter, setFilter] = useState<string>(STATUS_FILTER.OPEN);
-  const [loading, setLoading] = useState(true);
-  const [isFirstLoad, setIsFirstLoad] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearch(search);
-      setPageIndex(0);
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [search]);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    async function load() {
-      setLoading(true);
-      try {
-        const result = await purchaseClient.getPurchases({
-          propertyId: currentProperty?.id,
-          page: pageIndex,
-          pageSize,
-          search: debouncedSearch,
-          status: STATUS_PARAM[filter],
-        });
-        if (cancelled) return;
-        setPurchases(result.data);
-        setPageCount(result.pageCount);
-        setTotal(result.total);
-      } catch (e) {
-        if (!cancelled) setError((e as Error).message);
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-          setIsFirstLoad(false);
+  // Atualiza a URL (sem criar entrada no histórico a cada mudança de filtro).
+  function updateUrl(changes: Partial<Record<UrlParam, string | number>>) {
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        for (const [key, value] of Object.entries(changes)) {
+          const text = String(value);
+          if (text === URL_DEFAULTS[key as UrlParam]) next.delete(key);
+          else next.set(key, text);
         }
-      }
-    }
+        return next;
+      },
+      { replace: true, preventScrollReset: true },
+    );
+  }
+  const setPageIndex = (index: number) => updateUrl({ pagina: index + 1 });
 
-    load();
-    return () => {
-      cancelled = true;
-    };
-  }, [pageIndex, pageSize, debouncedSearch, filter, currentProperty?.id]);
+  // O texto digitado fica aqui e vai para a URL depois de uma pausa. Se a URL mudar por fora
+  // (voltar/avançar do navegador), o campo acompanha.
+  const [search, setSearch] = useState(debouncedSearch);
+  const [urlSearch, setUrlSearch] = useState(debouncedSearch);
+  if (urlSearch !== debouncedSearch) {
+    setUrlSearch(debouncedSearch);
+    setSearch(debouncedSearch);
+  }
+
+  useEffect(() => {
+    if (search === debouncedSearch) return;
+    const timer = setTimeout(
+      () => updateUrl({ busca: search, pagina: 1 }),
+      300,
+    );
+    return () => clearTimeout(timer);
+  });
+
+  const params: PurchaseListParams = {
+    propertyId: currentProperty?.id,
+    page: pageIndex,
+    pageSize,
+    search: debouncedSearch,
+    status: STATUS_BY_FILTER[filter],
+  };
+  // Ao trocar de página ou de filtro, a lista anterior fica na tela (esmaecida) até chegar a
+  // nova (keepPreviousData). Sem a propriedade atual, a busca traria as de todas.
+  const { data, isPending, isPlaceholderData, refetch } = useQuery({
+    ...purchaseListQuery(params),
+    enabled: !isPropertyLoading,
+    placeholderData: keepPreviousData,
+  });
+  const purchases: PurchaseRow[] = data?.data ?? [];
 
   const columns = buildColumns((id) => navigate(`/compras/${id}`));
 
-  if (error) {
+  if (isPending) return <ListSkeleton columns={6} />;
+
+  if (!data) {
     return (
       <ErrorPage
         message="Não foi possível obter os dados do servidor."
-        onRetry={() => window.location.reload()}
+        onRetry={() => refetch()}
       />
     );
   }
-
-  if (isFirstLoad) return <ListSkeleton columns={6} />;
 
   return (
     <div className="w-full max-w-6xl space-y-4">
@@ -224,10 +258,9 @@ export function PurchaseList() {
         </div>
         <SelectField
           value={filter}
-          onValueChange={(val) => {
-            setFilter(val || STATUS_FILTER.OPEN);
-            setPageIndex(0);
-          }}
+          onValueChange={(val) =>
+            updateUrl({ situacao: val || STATUS_FILTER.OPEN, pagina: 1 })
+          }
           items={[
             { value: STATUS_FILTER.OPEN, label: "Em andamento" },
             { value: STATUS_FILTER.CONFIRMED, label: "Consolidadas" },
@@ -237,9 +270,15 @@ export function PurchaseList() {
         />
       </div>
 
+      {/* Enquanto mostra a lista anterior (troca de filtro ou de página), fica esmaecida e sem
+          cliques, para ninguém agir sobre linhas que vão sair; a atualização em segundo plano,
+          ao voltar para a lista, não esmaece. */}
       <div
+        aria-busy={isPlaceholderData}
         className={
-          loading ? "opacity-60 transition-opacity" : "transition-opacity"
+          isPlaceholderData
+            ? "pointer-events-none opacity-60 transition-opacity"
+            : "transition-opacity"
         }
       >
         {purchases.length === 0 ? (
@@ -251,15 +290,12 @@ export function PurchaseList() {
           <DataTable
             columns={columns}
             data={purchases}
-            pageCount={pageCount}
+            pageCount={data.pageCount}
             pageIndex={pageIndex}
             pageSize={pageSize}
-            total={total}
+            total={data.total}
             onPageChange={setPageIndex}
-            onPageSizeChange={(size) => {
-              setPageSize(size);
-              setPageIndex(0);
-            }}
+            onPageSizeChange={(size) => updateUrl({ itens: size, pagina: 1 })}
           />
         )}
       </div>
