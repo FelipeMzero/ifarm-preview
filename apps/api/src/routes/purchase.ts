@@ -14,7 +14,7 @@ import {
   purchaseSchema,
   RESOURCE_ACCESS,
 } from "@ifarm/shared";
-import { errorResponse, validationErrorResponse } from "../http";
+import { errorResponse, uuidParam, validationErrorResponse } from "../http";
 import { requireSession } from "../session";
 
 export const purchaseRoutes = new Hono();
@@ -54,7 +54,7 @@ purchaseRoutes.post("/", async (c) => {
   }
 });
 
-purchaseRoutes.get("/:id", async (c) => {
+purchaseRoutes.get(`/${uuidParam("id")}`, async (c) => {
   const { response } = await requireSession(RESOURCE_ACCESS.compras);
   if (response) return response;
 
@@ -67,7 +67,7 @@ purchaseRoutes.get("/:id", async (c) => {
 });
 
 // Altera a negociação enquanto a compra está em andamento.
-purchaseRoutes.put("/:id", async (c) => {
+purchaseRoutes.put(`/${uuidParam("id")}`, async (c) => {
   const { response } = await requireSession(RESOURCE_ACCESS.compras);
   if (response) return response;
 
@@ -84,7 +84,7 @@ purchaseRoutes.put("/:id", async (c) => {
 });
 
 // Cancela (desconsidera) uma compra em andamento, sem animais recebidos e não paga.
-purchaseRoutes.post("/:id/cancel", async (c) => {
+purchaseRoutes.post(`/${uuidParam("id")}/cancel`, async (c) => {
   const { response } = await requireSession(RESOURCE_ACCESS.compras);
   if (response) return response;
 
@@ -98,7 +98,7 @@ purchaseRoutes.post("/:id/cancel", async (c) => {
 });
 
 // Consolida a compra: rateia o custo de cada animal e encerra o processo.
-purchaseRoutes.post("/:id/consolidate", async (c) => {
+purchaseRoutes.post(`/${uuidParam("id")}/consolidate`, async (c) => {
   const { response } = await requireSession(RESOURCE_ACCESS.compras);
   if (response) return response;
 
@@ -112,7 +112,7 @@ purchaseRoutes.post("/:id/consolidate", async (c) => {
 });
 
 // Registra o pagamento (data informada ou hoje).
-purchaseRoutes.post("/:id/pay", async (c) => {
+purchaseRoutes.post(`/${uuidParam("id")}/pay`, async (c) => {
   const { response } = await requireSession(RESOURCE_ACCESS.compras);
   if (response) return response;
 
@@ -131,7 +131,7 @@ purchaseRoutes.post("/:id/pay", async (c) => {
 });
 
 // Desfaz o pagamento (correção de um registro feito por engano).
-purchaseRoutes.delete("/:id/pay", async (c) => {
+purchaseRoutes.delete(`/${uuidParam("id")}/pay`, async (c) => {
   const { response } = await requireSession(RESOURCE_ACCESS.compras);
   if (response) return response;
 

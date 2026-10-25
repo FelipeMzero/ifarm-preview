@@ -7,7 +7,7 @@ import {
 } from "@ifarm/domain/breed/mutations";
 import { listBreeds } from "@ifarm/domain/breed/queries";
 import { breedSchema, RESOURCE_ACCESS } from "@ifarm/shared";
-import { errorResponse, validationErrorResponse } from "../http";
+import { errorResponse, uuidParam, validationErrorResponse } from "../http";
 import { requireSession } from "../session";
 
 export const breedRoutes = new Hono();
@@ -38,7 +38,7 @@ breedRoutes.post("/", async (c) => {
   }
 });
 
-breedRoutes.put("/:id", async (c) => {
+breedRoutes.put(`/${uuidParam("id")}`, async (c) => {
   const { response } = await requireSession(RESOURCE_ACCESS.racas);
   if (response) return response;
 
@@ -54,7 +54,7 @@ breedRoutes.put("/:id", async (c) => {
   }
 });
 
-breedRoutes.delete("/:id", async (c) => {
+breedRoutes.delete(`/${uuidParam("id")}`, async (c) => {
   const { response } = await requireSession(RESOURCE_ACCESS.racas);
   if (response) return response;
 
@@ -68,7 +68,7 @@ breedRoutes.delete("/:id", async (c) => {
 });
 
 // Ativa ou desativa a raça.
-breedRoutes.patch("/:id", async (c) => {
+breedRoutes.patch(`/${uuidParam("id")}`, async (c) => {
   const { response } = await requireSession(RESOURCE_ACCESS.racas);
   if (response) return response;
 

@@ -14,7 +14,7 @@ import {
   batchTransferSchema,
   RESOURCE_ACCESS,
 } from "@ifarm/shared";
-import { errorResponse, validationErrorResponse } from "../http";
+import { errorResponse, uuidParam, validationErrorResponse } from "../http";
 import { requireSession } from "../session";
 
 export const batchTransferRoutes = new Hono();
@@ -53,7 +53,7 @@ batchTransferRoutes.post("/", async (c) => {
   }
 });
 
-batchTransferRoutes.get("/:id", async (c) => {
+batchTransferRoutes.get(`/${uuidParam("id")}`, async (c) => {
   const { response } = await requireSession(RESOURCE_ACCESS.lotes);
   if (response) return response;
 
@@ -65,7 +65,7 @@ batchTransferRoutes.get("/:id", async (c) => {
   }
 });
 
-batchTransferRoutes.put("/:id", async (c) => {
+batchTransferRoutes.put(`/${uuidParam("id")}`, async (c) => {
   const { response } = await requireSession(RESOURCE_ACCESS.lotes);
   if (response) return response;
 
@@ -82,7 +82,7 @@ batchTransferRoutes.put("/:id", async (c) => {
 });
 
 // Cancela um plano pendente (o registro é mantido para auditoria).
-batchTransferRoutes.post("/:id/cancel", async (c) => {
+batchTransferRoutes.post(`/${uuidParam("id")}/cancel`, async (c) => {
   const { response } = await requireSession(RESOURCE_ACCESS.lotes);
   if (response) return response;
 
@@ -96,7 +96,7 @@ batchTransferRoutes.post("/:id/cancel", async (c) => {
 });
 
 // Efetiva o plano: os animais passam para o lote de destino.
-batchTransferRoutes.post("/:id/confirm", async (c) => {
+batchTransferRoutes.post(`/${uuidParam("id")}/confirm`, async (c) => {
   const { response } = await requireSession(RESOURCE_ACCESS.lotes);
   if (response) return response;
 

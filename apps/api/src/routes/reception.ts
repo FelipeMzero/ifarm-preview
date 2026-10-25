@@ -9,7 +9,7 @@ import {
   receptionPurchaseQuerySchema,
   RESOURCE_ACCESS,
 } from "@ifarm/shared";
-import { errorResponse, validationErrorResponse } from "../http";
+import { errorResponse, uuidParam, validationErrorResponse } from "../http";
 import { requireSession } from "../session";
 
 export const receptionRoutes = new Hono();
@@ -34,7 +34,7 @@ receptionRoutes.get("/purchases", async (c) => {
 });
 
 // Uma compra vista pela área de recepções (sem valores).
-receptionRoutes.get("/purchases/:id", async (c) => {
+receptionRoutes.get(`/purchases/${uuidParam("id")}`, async (c) => {
   const { response } = await requireSession(RESOURCE_ACCESS.recepcoes);
   if (response) return response;
 
@@ -47,7 +47,7 @@ receptionRoutes.get("/purchases/:id", async (c) => {
 });
 
 // "Receber animais": abre uma recepção (viagem) da compra.
-receptionRoutes.post("/purchases/:id/receptions", async (c) => {
+receptionRoutes.post(`/purchases/${uuidParam("id")}/receptions`, async (c) => {
   const { response } = await requireSession(RESOURCE_ACCESS.recepcoes);
   if (response) return response;
 

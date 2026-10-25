@@ -18,7 +18,7 @@ import {
   batchUpdateSchema,
   RESOURCE_ACCESS,
 } from "@ifarm/shared";
-import { errorResponse, validationErrorResponse } from "../http";
+import { errorResponse, uuidParam, validationErrorResponse } from "../http";
 import { requireSession } from "../session";
 
 export const batchRoutes = new Hono();
@@ -55,7 +55,7 @@ batchRoutes.post("/", async (c) => {
   }
 });
 
-batchRoutes.get("/:id", async (c) => {
+batchRoutes.get(`/${uuidParam("id")}`, async (c) => {
   const { response } = await requireSession(RESOURCE_ACCESS.lotes);
   if (response) return response;
 
@@ -67,7 +67,7 @@ batchRoutes.get("/:id", async (c) => {
   }
 });
 
-batchRoutes.put("/:id", async (c) => {
+batchRoutes.put(`/${uuidParam("id")}`, async (c) => {
   const { response } = await requireSession(RESOURCE_ACCESS.lotes);
   if (response) return response;
 
@@ -83,7 +83,7 @@ batchRoutes.put("/:id", async (c) => {
   }
 });
 
-batchRoutes.delete("/:id", async (c) => {
+batchRoutes.delete(`/${uuidParam("id")}`, async (c) => {
   const { response } = await requireSession(RESOURCE_ACCESS.lotes);
   if (response) return response;
 
@@ -97,7 +97,7 @@ batchRoutes.delete("/:id", async (c) => {
 });
 
 // Encerra um lote vazio e libera a área que ele ocupava.
-batchRoutes.post("/:id/close", async (c) => {
+batchRoutes.post(`/${uuidParam("id")}/close`, async (c) => {
   const { response } = await requireSession(RESOURCE_ACCESS.lotes);
   if (response) return response;
 
@@ -111,7 +111,7 @@ batchRoutes.post("/:id/close", async (c) => {
 });
 
 // Painel do lote (animais, indicadores, movimentações, transferências e compras).
-batchRoutes.get("/:id/details", async (c) => {
+batchRoutes.get(`/${uuidParam("id")}/details`, async (c) => {
   const { response } = await requireSession(RESOURCE_ACCESS.lotes);
   if (response) return response;
 
@@ -124,7 +124,7 @@ batchRoutes.get("/:id/details", async (c) => {
 });
 
 // Reativa um lote encerrado numa área livre.
-batchRoutes.post("/:id/reopen", async (c) => {
+batchRoutes.post(`/${uuidParam("id")}/reopen`, async (c) => {
   const { response } = await requireSession(RESOURCE_ACCESS.lotes);
   if (response) return response;
 

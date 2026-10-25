@@ -41,7 +41,7 @@ import {
   weighingCorrectionSchema,
   weighingCreateSchema,
 } from "@ifarm/shared";
-import { errorResponse, validationErrorResponse } from "../http";
+import { errorResponse, uuidParam, validationErrorResponse } from "../http";
 import { requireSession } from "../session";
 
 const notFound = () =>
@@ -111,7 +111,7 @@ animalRoutes.post("/", async (c) => {
   }
 });
 
-animalRoutes.get("/:id", async (c) => {
+animalRoutes.get(`/${uuidParam("id")}`, async (c) => {
   const { response } = await requireSession(RESOURCE_ACCESS.animais);
   if (response) return response;
 
@@ -123,7 +123,7 @@ animalRoutes.get("/:id", async (c) => {
   }
 });
 
-animalRoutes.put("/:id", async (c) => {
+animalRoutes.put(`/${uuidParam("id")}`, async (c) => {
   const { response } = await requireSession(RESOURCE_ACCESS.animais);
   if (response) return response;
 
@@ -140,7 +140,7 @@ animalRoutes.put("/:id", async (c) => {
   }
 });
 
-animalRoutes.delete("/:id", async (c) => {
+animalRoutes.delete(`/${uuidParam("id")}`, async (c) => {
   const { response } = await requireSession(RESOURCE_ACCESS.animais);
   if (response) return response;
 
@@ -154,7 +154,7 @@ animalRoutes.delete("/:id", async (c) => {
 });
 
 // Operações abertas que já contam com o animal, para as telas avisarem antes de salvar.
-animalRoutes.get("/:id/commitments", async (c) => {
+animalRoutes.get(`/${uuidParam("id")}/commitments`, async (c) => {
   const { response } = await requireSession(RESOURCE_ACCESS.animais);
   if (response) return response;
 
@@ -167,7 +167,7 @@ animalRoutes.get("/:id/commitments", async (c) => {
 });
 
 // Ficha completa do animal (históricos e compra de origem).
-animalRoutes.get("/:id/details", async (c) => {
+animalRoutes.get(`/${uuidParam("id")}/details`, async (c) => {
   const { response } = await requireSession(RESOURCE_ACCESS.animais);
   if (response) return response;
 
@@ -180,7 +180,7 @@ animalRoutes.get("/:id/details", async (c) => {
 });
 
 // Castrações válidas (não canceladas), da mais recente para a mais antiga.
-animalRoutes.get("/:id/neuterings", async (c) => {
+animalRoutes.get(`/${uuidParam("id")}/neuterings`, async (c) => {
   const { response } = await requireSession(RESOURCE_ACCESS.animais);
   if (response) return response;
 
@@ -193,7 +193,7 @@ animalRoutes.get("/:id/neuterings", async (c) => {
 });
 
 // Registra uma castração avulsa na hora (recastração exige o motivo).
-animalRoutes.post("/:id/neuterings", async (c) => {
+animalRoutes.post(`/${uuidParam("id")}/neuterings`, async (c) => {
   const { response } = await requireSession(RESOURCE_ACCESS.animais);
   if (response) return response;
 
@@ -212,7 +212,7 @@ animalRoutes.post("/:id/neuterings", async (c) => {
   }
 });
 
-animalRoutes.get("/:id/weighings", async (c) => {
+animalRoutes.get(`/${uuidParam("id")}/weighings`, async (c) => {
   const { response } = await requireSession(RESOURCE_ACCESS.animais);
   if (response) return response;
 
@@ -225,7 +225,7 @@ animalRoutes.get("/:id/weighings", async (c) => {
 });
 
 // Registra uma pesagem avulsa na hora (o peso atual passa a ser o da mais recente).
-animalRoutes.post("/:id/weighings", async (c) => {
+animalRoutes.post(`/${uuidParam("id")}/weighings`, async (c) => {
   const { response } = await requireSession(RESOURCE_ACCESS.animais);
   if (response) return response;
 
@@ -246,7 +246,7 @@ animalRoutes.post("/:id/weighings", async (c) => {
 
 // Histórico válido (não excluído) de brincos ou RFIDs do animal, do mais recente
 // para o mais antigo.
-animalRoutes.get("/:id/identifiers/:kind", async (c) => {
+animalRoutes.get(`/${uuidParam("id")}/identifiers/:kind`, async (c) => {
   const { response } = await requireSession(RESOURCE_ACCESS.animais);
   if (response) return response;
 
@@ -260,7 +260,7 @@ animalRoutes.get("/:id/identifiers/:kind", async (c) => {
 });
 
 // Troca (ou remove, com value vazio) o identificador na hora.
-animalRoutes.post("/:id/identifiers/:kind", async (c) => {
+animalRoutes.post(`/${uuidParam("id")}/identifiers/:kind`, async (c) => {
   const { response } = await requireSession(RESOURCE_ACCESS.animais);
   if (response) return response;
 
@@ -284,7 +284,7 @@ animalRoutes.post("/:id/identifiers/:kind", async (c) => {
   }
 });
 
-animalRoutes.patch("/:id/neuterings/:neuteringId", async (c) => {
+animalRoutes.patch(`/${uuidParam("id")}/neuterings/:neuteringId`, async (c) => {
   const { response } = await requireSession(RESOURCE_ACCESS.animais);
   if (response) return response;
 
@@ -300,27 +300,33 @@ animalRoutes.patch("/:id/neuterings/:neuteringId", async (c) => {
   }
 });
 
-animalRoutes.delete("/:id/neuterings/:neuteringId", async (c) => {
-  const { response } = await requireSession(RESOURCE_ACCESS.animais);
-  if (response) return response;
+animalRoutes.delete(
+  `/${uuidParam("id")}/neuterings/:neuteringId`,
+  async (c) => {
+    const { response } = await requireSession(RESOURCE_ACCESS.animais);
+    if (response) return response;
 
-  try {
-    const { id, neuteringId } = c.req.param();
-    const validation = neuteringCancelSchema.safeParse(
-      await c.req.json().catch(() => ({})),
-    );
-    if (!validation.success) {
-      return c.json({ success: false, message: "Parâmetros inválidos." }, 400);
+    try {
+      const { id, neuteringId } = c.req.param();
+      const validation = neuteringCancelSchema.safeParse(
+        await c.req.json().catch(() => ({})),
+      );
+      if (!validation.success) {
+        return c.json(
+          { success: false, message: "Parâmetros inválidos." },
+          400,
+        );
+      }
+
+      await cancelNeutering(id, neuteringId, validation.data);
+      return c.json({ success: true });
+    } catch (error) {
+      return errorResponse(error);
     }
+  },
+);
 
-    await cancelNeutering(id, neuteringId, validation.data);
-    return c.json({ success: true });
-  } catch (error) {
-    return errorResponse(error);
-  }
-});
-
-animalRoutes.patch("/:id/weighings/:weighingId", async (c) => {
+animalRoutes.patch(`/${uuidParam("id")}/weighings/:weighingId`, async (c) => {
   const { response } = await requireSession(RESOURCE_ACCESS.animais);
   if (response) return response;
 
@@ -336,7 +342,7 @@ animalRoutes.patch("/:id/weighings/:weighingId", async (c) => {
   }
 });
 
-animalRoutes.delete("/:id/weighings/:weighingId", async (c) => {
+animalRoutes.delete(`/${uuidParam("id")}/weighings/:weighingId`, async (c) => {
   const { response } = await requireSession(RESOURCE_ACCESS.animais);
   if (response) return response;
 
@@ -350,38 +356,44 @@ animalRoutes.delete("/:id/weighings/:weighingId", async (c) => {
 });
 
 // Corrige valor, data (só registros avulsos) e observação de um brinco/RFID.
-animalRoutes.patch("/:id/identifiers/:kind/:recordId", async (c) => {
-  const { response } = await requireSession(RESOURCE_ACCESS.animais);
-  if (response) return response;
+animalRoutes.patch(
+  `/${uuidParam("id")}/identifiers/:kind/:recordId`,
+  async (c) => {
+    const { response } = await requireSession(RESOURCE_ACCESS.animais);
+    if (response) return response;
 
-  try {
-    const { id, kind, recordId } = c.req.param();
-    if (!isIdentifierKind(kind)) return notFound();
+    try {
+      const { id, kind, recordId } = c.req.param();
+      if (!isIdentifierKind(kind)) return notFound();
 
-    const validation = identifierCorrectionSchemaFor(kind).safeParse(
-      await c.req.json().catch(() => ({})),
-    );
-    if (!validation.success) return validationErrorResponse(validation.error);
+      const validation = identifierCorrectionSchemaFor(kind).safeParse(
+        await c.req.json().catch(() => ({})),
+      );
+      if (!validation.success) return validationErrorResponse(validation.error);
 
-    await correctIdentifier(kind, id, recordId, validation.data);
-    return c.json({ success: true });
-  } catch (error) {
-    return errorResponse(error);
-  }
-});
+      await correctIdentifier(kind, id, recordId, validation.data);
+      return c.json({ success: true });
+    } catch (error) {
+      return errorResponse(error);
+    }
+  },
+);
 
 // Exclusão lógica: o registro sai do histórico e o identificador atual é recalculado.
-animalRoutes.delete("/:id/identifiers/:kind/:recordId", async (c) => {
-  const { response } = await requireSession(RESOURCE_ACCESS.animais);
-  if (response) return response;
+animalRoutes.delete(
+  `/${uuidParam("id")}/identifiers/:kind/:recordId`,
+  async (c) => {
+    const { response } = await requireSession(RESOURCE_ACCESS.animais);
+    if (response) return response;
 
-  try {
-    const { id, kind, recordId } = c.req.param();
-    if (!isIdentifierKind(kind)) return notFound();
+    try {
+      const { id, kind, recordId } = c.req.param();
+      if (!isIdentifierKind(kind)) return notFound();
 
-    await cancelIdentifier(kind, id, recordId);
-    return c.json({ success: true });
-  } catch (error) {
-    return errorResponse(error);
-  }
-});
+      await cancelIdentifier(kind, id, recordId);
+      return c.json({ success: true });
+    } catch (error) {
+      return errorResponse(error);
+    }
+  },
+);

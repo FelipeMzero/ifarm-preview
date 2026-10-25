@@ -7,7 +7,7 @@ import {
 } from "@ifarm/domain/health-management-type/mutations";
 import { listHealthManagementTypes } from "@ifarm/domain/health-management-type/queries";
 import { healthManagementTypeSchema, RESOURCE_ACCESS } from "@ifarm/shared";
-import { errorResponse, validationErrorResponse } from "../http";
+import { errorResponse, uuidParam, validationErrorResponse } from "../http";
 import { requireSession } from "../session";
 
 export const healthManagementTypeRoutes = new Hono();
@@ -42,7 +42,7 @@ healthManagementTypeRoutes.post("/", async (c) => {
   }
 });
 
-healthManagementTypeRoutes.put("/:id", async (c) => {
+healthManagementTypeRoutes.put(`/${uuidParam("id")}`, async (c) => {
   const { response } = await requireSession(
     RESOURCE_ACCESS["tipos-sanitarios"],
   );
@@ -60,7 +60,7 @@ healthManagementTypeRoutes.put("/:id", async (c) => {
   }
 });
 
-healthManagementTypeRoutes.delete("/:id", async (c) => {
+healthManagementTypeRoutes.delete(`/${uuidParam("id")}`, async (c) => {
   const { response } = await requireSession(
     RESOURCE_ACCESS["tipos-sanitarios"],
   );
@@ -76,7 +76,7 @@ healthManagementTypeRoutes.delete("/:id", async (c) => {
 });
 
 // Ativa ou desativa o tipo de manejo sanitário.
-healthManagementTypeRoutes.patch("/:id", async (c) => {
+healthManagementTypeRoutes.patch(`/${uuidParam("id")}`, async (c) => {
   const { response } = await requireSession(
     RESOURCE_ACCESS["tipos-sanitarios"],
   );

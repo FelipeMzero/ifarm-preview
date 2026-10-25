@@ -11,7 +11,7 @@ import {
   listAreas,
 } from "@ifarm/domain/area/queries";
 import { areaQuerySchema, areaSchema, RESOURCE_ACCESS } from "@ifarm/shared";
-import { errorResponse, validationErrorResponse } from "../http";
+import { errorResponse, uuidParam, validationErrorResponse } from "../http";
 import { requireSession } from "../session";
 
 export const areaRoutes = new Hono();
@@ -49,7 +49,7 @@ areaRoutes.post("/", async (c) => {
   }
 });
 
-areaRoutes.get("/:id", async (c) => {
+areaRoutes.get(`/${uuidParam("id")}`, async (c) => {
   const { response } = await requireSession(RESOURCE_ACCESS.areas);
   if (response) return response;
 
@@ -61,7 +61,7 @@ areaRoutes.get("/:id", async (c) => {
   }
 });
 
-areaRoutes.put("/:id", async (c) => {
+areaRoutes.put(`/${uuidParam("id")}`, async (c) => {
   const { response } = await requireSession(RESOURCE_ACCESS.areas);
   if (response) return response;
 
@@ -77,7 +77,7 @@ areaRoutes.put("/:id", async (c) => {
   }
 });
 
-areaRoutes.delete("/:id", async (c) => {
+areaRoutes.delete(`/${uuidParam("id")}`, async (c) => {
   const { response } = await requireSession(RESOURCE_ACCESS.areas);
   if (response) return response;
 
@@ -91,7 +91,7 @@ areaRoutes.delete("/:id", async (c) => {
 });
 
 // Ativa ou desativa a área (recusa desativar área ocupada por lote).
-areaRoutes.patch("/:id", async (c) => {
+areaRoutes.patch(`/${uuidParam("id")}`, async (c) => {
   const { response } = await requireSession(RESOURCE_ACCESS.areas);
   if (response) return response;
 
@@ -105,7 +105,7 @@ areaRoutes.patch("/:id", async (c) => {
 });
 
 // Lotes que ocuparam a área, do mais recente para o mais antigo.
-areaRoutes.get("/:id/history", async (c) => {
+areaRoutes.get(`/${uuidParam("id")}/history`, async (c) => {
   const { response } = await requireSession(RESOURCE_ACCESS.areas);
   if (response) return response;
 

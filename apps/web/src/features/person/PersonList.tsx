@@ -10,7 +10,14 @@ import {
   User,
   Users,
 } from "lucide-react";
-import { useNavigate } from "react-router";
+import { useNavigate, useSearchParams } from "react-router";
+import { toast } from "sonner";
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 
 import React, { useEffect, useState } from "react";
 
@@ -37,35 +44,57 @@ import {
   type PersonRow,
   type PersonListParams,
 } from "@ifarm/shared";
-import { PERSON_TYPE_ITEMS, PERSON_TYPE_LABELS } from "@ifarm/shared";
+import { PERSON_TYPE_LABELS } from "@ifarm/shared";
 import { ErrorPage } from "@/components/our/ErrorPage";
 import { ListSkeleton } from "@/components/our/PageSkeletons";
+import { useLocalStorageState } from "@/hooks/use-local-storage-state";
+import { formatPhone } from "./format";
+import { personKeys, personListQuery } from "./queries";
 
 const DEFAULT_PAGE_SIZE = 10;
 
-const STATUS_FILTER = {
-  ALL: "todos",
-  ACTIVE: "ativo",
-  INACTIVE: "inativo",
-} as const;
+// O filtro da lista (situação ou tipo de pessoa): o valor na URL e o que vai para a API.
+const FILTERS = {
+  todos: { label: "Todos", params: {} },
+  ativo: { label: "Ativo", params: { status: "active" } },
+  inativo: { label: "Inativo", params: { status: "inactive" } },
+  fisica: {
+    label: PERSON_TYPE_LABELS[PersonType.INDIVIDUAL],
+    params: { type: PersonType.INDIVIDUAL },
+  },
+  juridica: {
+    label: PERSON_TYPE_LABELS[PersonType.COMPANY],
+    params: { type: PersonType.COMPANY },
+  },
+} satisfies Record<
+  string,
+  { label: string; params: Pick<PersonListParams, "type" | "status"> }
+>;
+type Filter = keyof typeof FILTERS;
+const DEFAULT_FILTER: Filter = "ativo";
 
-function filterToParams(
-  filter: string,
-): Pick<PersonListParams, "type" | "status"> {
-  if (filter === STATUS_FILTER.ACTIVE) return { status: "active" };
-  if (filter === STATUS_FILTER.INACTIVE) return { status: "inactive" };
-  if (filter === PersonType.INDIVIDUAL || filter === PersonType.COMPANY)
-    return { type: filter };
-  return {};
-}
+const URL_DEFAULTS = {
+  busca: "",
+  filtro: DEFAULT_FILTER as string,
+  pagina: "1",
+  itens: String(DEFAULT_PAGE_SIZE),
+};
+type UrlParam = keyof typeof URL_DEFAULTS;
 
-function formatPhone(value: string): string {
-  const digits = value.replace(/\D/g, "");
-  if (digits.length === 11)
-    return digits.replace(/(\d{2})(\d{5})(\d{4})/, "($1) $2-$3");
-  if (digits.length === 10)
-    return digits.replace(/(\d{2})(\d{4})(\d{4})/, "($1) $2-$3");
-  return value;
+function readFilters(searchParams: URLSearchParams) {
+  const get = (key: UrlParam) => searchParams.get(key) ?? URL_DEFAULTS[key];
+  const filtro = get("filtro");
+  const filter = (filtro in FILTERS ? filtro : DEFAULT_FILTER) as Filter;
+  const positive = (key: UrlParam) => {
+    const n = Number(get(key));
+    return Number.isInteger(n) && n > 0 ? n : Number(URL_DEFAULTS[key]);
+  };
+  return {
+    search: get("busca"),
+    filter,
+    pageIndex: positive("pagina") - 1,
+    pageSize: Math.min(positive("itens"), 100),
+  };
 }
 
 const COLUMN_LABELS: Record<string, string> = {
@@ -189,80 +218,91 @@ function buildColumns(
 
 export function PersonList() {
   const navigate = useNavigate();
-  const [people, setPeople] = useState<PersonRow[]>([]);
-  const [pageIndex, setPageIndex] = useState(0);
-  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
-  const [pageCount, setPageCount] = useState(0);
-  const [total, setTotal] = useState(0);
-  const [search, setSearch] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [filter, setFilter] = useState<string>(STATUS_FILTER.ACTIVE);
-  const [loading, setLoading] = useState(true);
-  const [isFirstLoad, setIsFirstLoad] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({
-    phone: false,
-    email: false,
-  });
-  const [refreshKey, setRefreshKey] = useState(0);
-  const [viewingDetailsId, setViewingProfileId] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const {
+    search: debouncedSearch,
+    filter,
+    pageIndex,
+    pageSize,
+  } = readFilters(searchParams);
+
+  // Atualiza a URL (sem criar entrada no histórico a cada mudança de filtro).
+  function updateUrl(changes: Partial<Record<UrlParam, string | number>>) {
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        for (const [key, value] of Object.entries(changes)) {
+          const text = String(value);
+          if (text === URL_DEFAULTS[key as UrlParam]) next.delete(key);
+          else next.set(key, text);
+        }
+        return next;
+      },
+      { replace: true, preventScrollReset: true },
+    );
+  }
+  const setPageIndex = (index: number) => updateUrl({ pagina: index + 1 });
+
+  // O texto digitado fica aqui e vai para a URL depois de uma pausa. Se a URL mudar por fora
+  // (voltar/avançar do navegador), o campo acompanha.
+  const [search, setSearch] = useState(debouncedSearch);
+  const [urlSearch, setUrlSearch] = useState(debouncedSearch);
+  if (urlSearch !== debouncedSearch) {
+    setUrlSearch(debouncedSearch);
+    setSearch(debouncedSearch);
+  }
+  // Colunas visíveis: preferência lembrada neste navegador.
+  const [columnVisibility, setColumnVisibility] =
+    useLocalStorageState<VisibilityState>("pessoas:colunas", {
+      phone: false,
+      email: false,
+    });
+  const [viewingDetailsId, setViewingDetailsId] = useState<string | null>(null);
   const [togglingId, setTogglingId] = useState<string | null>(null);
-  const [isToggling, setIsToggling] = useState(false);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearch(search);
-      setPageIndex(0);
-    }, 300);
+    if (search === debouncedSearch) return;
+    const timer = setTimeout(
+      () => updateUrl({ busca: search, pagina: 1 }),
+      300,
+    );
     return () => clearTimeout(timer);
-  }, [search]);
+  });
 
-  useEffect(() => {
-    let cancelled = false;
+  const params: PersonListParams = {
+    page: pageIndex,
+    pageSize,
+    search: debouncedSearch,
+    ...FILTERS[filter].params,
+  };
+  // Ao trocar de página ou de filtro, a lista anterior fica na tela (esmaecida) até chegar a
+  // nova (keepPreviousData).
+  const { data, isPending, isPlaceholderData, refetch } = useQuery({
+    ...personListQuery(params),
+    placeholderData: keepPreviousData,
+  });
+  const people: PersonRow[] = data?.data ?? [];
 
-    async function load() {
-      setLoading(true);
-      try {
-        const result = await personClient.getPeople({
-          page: pageIndex,
-          pageSize,
-          search: debouncedSearch,
-          ...filterToParams(filter),
-        });
-        if (!cancelled) {
-          setPeople(result.data);
-          setPageCount(result.pageCount);
-          setTotal(result.total);
-        }
-      } catch (e) {
-        if (!cancelled) setError((e as Error).message);
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-          setIsFirstLoad(false);
-        }
-      }
-    }
+  const reloadPeople = () =>
+    queryClient.invalidateQueries({ queryKey: personKeys.all });
 
-    load();
-    return () => {
-      cancelled = true;
-    };
-  }, [pageIndex, pageSize, debouncedSearch, filter, refreshKey]);
-
-  async function confirmToggleStatus() {
-    if (!togglingId) return;
-
-    setIsToggling(true);
-    try {
-      await personClient.togglePersonStatus(togglingId);
-      setRefreshKey((k) => k + 1);
+  const toggleStatus = useMutation({
+    mutationFn: (id: string) => personClient.togglePersonStatus(id),
+    onSuccess: () => {
+      reloadPeople();
       setTogglingId(null);
-    } catch {
-      // erro silencioso
-    } finally {
-      setIsToggling(false);
-    }
+    },
+    // O diálogo já fechou no clique (AlertDialogAction); o aviso explica a falha.
+    onError: (e) => {
+      toast.error(
+        e.message || "Não foi possível alterar a situação da pessoa.",
+      );
+    },
+  });
+
+  function confirmToggleStatus() {
+    if (togglingId) toggleStatus.mutate(togglingId);
   }
 
   const togglingPerson = people.find((p) => p.id === togglingId);
@@ -270,20 +310,20 @@ export function PersonList() {
   const columns = buildColumns(
     setTogglingId,
     (id) => navigate(`/pessoas/${id}`),
-    setViewingProfileId,
+    setViewingDetailsId,
   );
 
-  if (error) {
+  if (isPending) {
+    return <ListSkeleton columns={7} />;
+  }
+
+  if (!data) {
     return (
       <ErrorPage
         message={"Não foi possível obter os dados do servidor."}
-        onRetry={() => window.location.reload()}
+        onRetry={() => refetch()}
       />
     );
-  }
-
-  if (isFirstLoad) {
-    return <ListSkeleton columns={7} />;
   }
 
   return (
@@ -310,16 +350,11 @@ export function PersonList() {
 
         <SelectField
           value={filter}
-          onValueChange={(val) => {
-            setFilter(val);
-            setPageIndex(0);
-          }}
-          items={[
-            { value: STATUS_FILTER.ALL, label: "Todos" },
-            { value: STATUS_FILTER.ACTIVE, label: "Ativo" },
-            { value: STATUS_FILTER.INACTIVE, label: "Inativo" },
-            ...PERSON_TYPE_ITEMS,
-          ]}
+          onValueChange={(val) => updateUrl({ filtro: val, pagina: 1 })}
+          items={Object.entries(FILTERS).map(([value, { label }]) => ({
+            value,
+            label,
+          }))}
         />
 
         <DropdownMenu>
@@ -347,9 +382,15 @@ export function PersonList() {
         </DropdownMenu>
       </div>
 
+      {/* Enquanto mostra a lista anterior (troca de filtro ou de página), fica esmaecida e sem
+          cliques, para ninguém agir sobre linhas que vão sair; a atualização em segundo plano,
+          ao voltar para a lista, não esmaece. */}
       <div
+        aria-busy={isPlaceholderData}
         className={
-          loading ? "opacity-60 transition-opacity" : "transition-opacity"
+          isPlaceholderData
+            ? "pointer-events-none opacity-60 transition-opacity"
+            : "transition-opacity"
         }
       >
         {people.length === 0 ? (
@@ -361,16 +402,13 @@ export function PersonList() {
           <DataTable
             columns={columns}
             data={people}
-            pageCount={pageCount}
+            pageCount={data.pageCount}
             pageIndex={pageIndex}
             pageSize={pageSize}
-            total={total}
+            total={data.total}
             initialSorting={[{ id: "updatedAt", desc: true }]}
             onPageChange={setPageIndex}
-            onPageSizeChange={(size) => {
-              setPageSize(size);
-              setPageIndex(0);
-            }}
+            onPageSizeChange={(size) => updateUrl({ itens: size, pagina: 1 })}
             columnVisibility={columnVisibility}
             onColumnVisibilityChange={setColumnVisibility}
           />
@@ -380,7 +418,7 @@ export function PersonList() {
       <Dialog
         open={viewingDetailsId !== null}
         onOpenChange={(open) => {
-          if (!open) setViewingProfileId(null);
+          if (!open) setViewingDetailsId(null);
         }}
       >
         <DialogContent className="p-8 sm:max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -388,8 +426,8 @@ export function PersonList() {
             <PersonDetails
               id={viewingDetailsId}
               onClose={() => {
-                setViewingProfileId(null);
-                setRefreshKey((k) => k + 1);
+                setViewingDetailsId(null);
+                reloadPeople();
               }}
             />
           )}
@@ -398,7 +436,9 @@ export function PersonList() {
 
       <ConfirmDialog
         open={togglingId !== null}
-        onOpenChange={(open) => !open && !isToggling && setTogglingId(null)}
+        onOpenChange={(open) =>
+          !open && !toggleStatus.isPending && setTogglingId(null)
+        }
         onConfirm={confirmToggleStatus}
         title={
           togglingPerson?.deactivatedAt

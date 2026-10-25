@@ -119,7 +119,8 @@ export const router = createBrowserRouter([
       { path: "/tipos-sanitarios", Component: TiposSanitariosPage },
       { path: "/usuarios", Component: UsuariosPage },
       { path: "/vendas", Component: VendasPage },
+      // Endereço inexistente: dentro do layout, com o menu (sem login, vai para o login).
+      { path: "*", Component: NaoEncontradaPage },
     ],
   },
-  { path: "*", Component: NaoEncontradaPage },
 ]);

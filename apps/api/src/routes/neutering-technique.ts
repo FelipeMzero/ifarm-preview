@@ -7,7 +7,7 @@ import {
 } from "@ifarm/domain/neutering-technique/mutations";
 import { listNeuteringTechniques } from "@ifarm/domain/neutering-technique/queries";
 import { neuteringTechniqueSchema, RESOURCE_ACCESS } from "@ifarm/shared";
-import { errorResponse, validationErrorResponse } from "../http";
+import { errorResponse, uuidParam, validationErrorResponse } from "../http";
 import { requireSession } from "../session";
 
 export const neuteringTechniqueRoutes = new Hono();
@@ -42,7 +42,7 @@ neuteringTechniqueRoutes.post("/", async (c) => {
   }
 });
 
-neuteringTechniqueRoutes.put("/:id", async (c) => {
+neuteringTechniqueRoutes.put(`/${uuidParam("id")}`, async (c) => {
   const { response } = await requireSession(
     RESOURCE_ACCESS["tecnicas-castracao"],
   );
@@ -60,7 +60,7 @@ neuteringTechniqueRoutes.put("/:id", async (c) => {
   }
 });
 
-neuteringTechniqueRoutes.delete("/:id", async (c) => {
+neuteringTechniqueRoutes.delete(`/${uuidParam("id")}`, async (c) => {
   const { response } = await requireSession(
     RESOURCE_ACCESS["tecnicas-castracao"],
   );
@@ -76,7 +76,7 @@ neuteringTechniqueRoutes.delete("/:id", async (c) => {
 });
 
 // Ativa ou desativa a técnica de castração.
-neuteringTechniqueRoutes.patch("/:id", async (c) => {
+neuteringTechniqueRoutes.patch(`/${uuidParam("id")}`, async (c) => {
   const { response } = await requireSession(
     RESOURCE_ACCESS["tecnicas-castracao"],
   );

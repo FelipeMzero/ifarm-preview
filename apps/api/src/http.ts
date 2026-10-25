@@ -6,6 +6,15 @@ import {
   ValidationError,
 } from "@ifarm/domain/errors";
 
+// Parâmetro de rota que é UUID (os ids no banco são `@db.Uuid`): um valor em outro formato não
+// casa com a rota e recebe 404, sem chegar ao banco (que recusaria a consulta com um 500).
+// Uso: `/${uuidParam("id")}/animals/${uuidParam("animalId")}`.
+const UUID =
+  "[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}";
+// O tipo literal (`as const`) deixa o Hono deduzir o nome do parâmetro em `c.req.param()`.
+export const uuidParam = <N extends string>(name: N) =>
+  `:${name}{${UUID}}` as const;
+
 // Erros de validação no formato que os formulários esperam: a primeira mensagem de cada campo
 // (campos aninhados como "steps.0.value").
 export function validationErrorResponse(error: z.ZodError) {

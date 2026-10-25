@@ -11,7 +11,7 @@ import {
   personSchema,
   RESOURCE_ACCESS,
 } from "@ifarm/shared";
-import { errorResponse, validationErrorResponse } from "../http";
+import { errorResponse, uuidParam, validationErrorResponse } from "../http";
 import { requireSession } from "../session";
 
 export const personRoutes = new Hono();
@@ -50,7 +50,7 @@ personRoutes.post("/", async (c) => {
   }
 });
 
-personRoutes.get("/:id", async (c) => {
+personRoutes.get(`/${uuidParam("id")}`, async (c) => {
   const { response } = await requireSession(RESOURCE_ACCESS.pessoas);
   if (response) return response;
 
@@ -62,7 +62,7 @@ personRoutes.get("/:id", async (c) => {
   }
 });
 
-personRoutes.put("/:id", async (c) => {
+personRoutes.put(`/${uuidParam("id")}`, async (c) => {
   const { response } = await requireSession(RESOURCE_ACCESS.pessoas);
   if (response) return response;
 
@@ -78,7 +78,7 @@ personRoutes.put("/:id", async (c) => {
   }
 });
 
-personRoutes.delete("/:id", async (c) => {
+personRoutes.delete(`/${uuidParam("id")}`, async (c) => {
   const { response } = await requireSession(RESOURCE_ACCESS.pessoas);
   if (response) return response;
 
@@ -92,7 +92,7 @@ personRoutes.delete("/:id", async (c) => {
 });
 
 // Ativa ou desativa a pessoa.
-personRoutes.patch("/:id", async (c) => {
+personRoutes.patch(`/${uuidParam("id")}`, async (c) => {
   const { response } = await requireSession(RESOURCE_ACCESS.pessoas);
   if (response) return response;
 

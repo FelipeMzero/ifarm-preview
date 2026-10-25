@@ -88,6 +88,12 @@ app.route("/api/reception", receptionRoutes);
 app.route("/api/stocking-preview", stockingPreviewRoutes);
 app.route("/api/user", userRoutes);
 
+// Nenhuma rota casou (caminho inexistente ou id em formato inválido): 404 no mesmo formato JSON
+// dos outros erros, que é o que os clientes leem.
+app.notFound((c) =>
+  c.json({ success: false, message: "Recurso não encontrado." }, 404),
+);
+
 const port = Number(process.env.PORT ?? 3001);
 serve({ fetch: app.fetch, port }, (info) => {
   console.log(`API do iFarm em http://localhost:${info.port}`);

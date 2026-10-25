@@ -1,12 +1,13 @@
 import {
   FIELD_LIMITS,
   PersonType,
+  isNotFoundError,
   personSchema,
   type PersonInput,
-  ApiError,
 } from "@ifarm/shared";
-import { useEffect, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm, useWatch } from "react-hook-form";
+import { useNavigate } from "react-router";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { MaskedInput } from "@/components/our/MaskedInput";
 
@@ -26,8 +27,10 @@ import { BR_STATE_ITEMS } from "@ifarm/shared";
 import { PERSON_TYPE_ITEMS, MARITAL_STATUS_ITEMS } from "@ifarm/shared";
 import { FormActionBar } from "@/components/our/FormActionBar";
 import { cn } from "@/lib/utils";
+import { applyServerErrors } from "@/lib/form-errors";
 import { useZipCodeLookup } from "../address/useZipCodeLookup";
 import { FormSkeleton } from "@/components/our/PageSkeletons";
+import { personDetailQuery, personKeys } from "./queries";
 
 const PHONE_MASK = [{ mask: "(00) 0000-0000" }, { mask: "(00) 00000-0000" }];
 
@@ -44,8 +47,29 @@ export function PersonForm({
   onCancel,
   onSuccess,
 }: PersonFormProps) {
-  const [isDataLoading, setIsDataLoading] = useState(!!id);
-  const [loadFailed, setLoadFailed] = useState(false);
+  const queryClient = useQueryClient();
+  const navigate = useNavigate();
+
+  // Pessoa em edição (só com id).
+  const {
+    data: person,
+    error,
+    isPending,
+    refetch,
+  } = useQuery({
+    ...personDetailQuery(id ?? ""),
+    enabled: !!id,
+  });
+
+  const save = useMutation({
+    mutationFn: (data: PersonInput) =>
+      id
+        ? personClient.updatePerson(id, data)
+        : personClient.createPerson(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: personKeys.all });
+    },
+  });
 
   const {
     handleSubmit,
@@ -56,6 +80,10 @@ export function PersonForm({
     formState: { isSubmitting },
   } = useForm<PersonInput>({
     resolver: zodResolver(personSchema),
+    // Dados da pessoa em edição. Se forem buscados de novo em segundo plano, só os campos que o
+    // usuário não alterou são atualizados (keepDirtyValues).
+    values: person,
+    resetOptions: { keepDirtyValues: true },
     defaultValues: {
       type: PersonType.INDIVIDUAL,
       taxId: "",
@@ -80,23 +108,6 @@ export function PersonForm({
   const type = useWatch({ control, name: "type" });
   const isCompany = type === PersonType.COMPANY;
 
-  useEffect(() => {
-    if (!id) return;
-
-    async function loadData() {
-      try {
-        const data = await personClient.getPerson(id!);
-        reset(data);
-      } catch {
-        setLoadFailed(true);
-      } finally {
-        setIsDataLoading(false);
-      }
-    }
-
-    loadData();
-  }, [id, reset]);
-
   // Ao sair do campo de CEP: preenche o endereço.
   const zipLookup = useZipCodeLookup({
     setAddressField: (field, value) =>
@@ -106,39 +117,44 @@ export function PersonForm({
   async function onSubmit(data: PersonInput) {
     try {
       if (id) {
-        await personClient.updatePerson(id, data);
-        const fresh = await personClient.getPerson(id);
+        await save.mutateAsync(data);
+        // Volta o formulário ao estado "sem alterações", com os dados salvos (e o cache junto).
+        const fresh = await queryClient.fetchQuery(personDetailQuery(id));
         reset(fresh);
-        toast.success("Atualizado com sucesso!");
+        toast.success("Registro atualizado com sucesso!");
         onSuccess?.();
       } else {
-        const response = await personClient.createPerson(data);
-        toast.success("Salvo com sucesso!");
+        const response = await save.mutateAsync(data);
+        toast.success("Registro salvo com sucesso!");
         onSuccess?.(response.data.id);
       }
     } catch (error) {
-      if (error instanceof ApiError && error.errors) {
-        Object.entries(error.errors).forEach(([field, message]) => {
-          setError(field as keyof PersonInput, { type: "server", message });
-        });
-        toast.error("Verifique os campos destacados.");
-      } else {
-        toast.error("A requisição falhou! Tente novamente.");
-      }
+      applyServerErrors(setError, error);
     }
   }
 
-  if (loadFailed) {
+  if (id && isPending) {
+    return <FormSkeleton />;
+  }
+
+  if (id && !person) {
+    // Não existe mais (ex.: excluída por outra pessoa): tentar de novo não adianta.
+    if (isNotFoundError(error)) {
+      return (
+        <ErrorPage
+          title="Pessoa não encontrada"
+          message="Ela pode ter sido excluída."
+          onBack={() => navigate("/pessoas")}
+          backLabel="Voltar"
+        />
+      );
+    }
     return (
       <ErrorPage
         message={"Não foi possível obter os dados do servidor."}
-        onRetry={() => window.location.reload()}
+        onRetry={() => refetch()}
       />
     );
-  }
-
-  if (isDataLoading) {
-    return <FormSkeleton />;
   }
 
   return (

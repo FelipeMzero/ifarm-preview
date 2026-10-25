@@ -27,7 +27,7 @@ import {
   RESOURCE_ACCESS,
   sessionParticipantsSchema,
 } from "@ifarm/shared";
-import { errorResponse, validationErrorResponse } from "../http";
+import { errorResponse, uuidParam, validationErrorResponse } from "../http";
 import { requireSession } from "../session";
 
 export const managementSessionRoutes = new Hono();
@@ -86,7 +86,7 @@ managementSessionRoutes.post("/", async (c) => {
   }
 });
 
-managementSessionRoutes.get("/:id", async (c) => {
+managementSessionRoutes.get(`/${uuidParam("id")}`, async (c) => {
   const { response } = await requireSession(RESOURCE_ACCESS.manejos);
   if (response) return response;
 
@@ -99,7 +99,7 @@ managementSessionRoutes.get("/:id", async (c) => {
 });
 
 // Altera o planejamento enquanto a sessão não for consolidada ou cancelada.
-managementSessionRoutes.put("/:id", async (c) => {
+managementSessionRoutes.put(`/${uuidParam("id")}`, async (c) => {
   const { response } = await requireSession(RESOURCE_ACCESS.manejos);
   if (response) return response;
 
@@ -116,7 +116,7 @@ managementSessionRoutes.put("/:id", async (c) => {
 });
 
 // Cancela a sessão (os registros ficam gravados, mas não passam a valer).
-managementSessionRoutes.post("/:id/cancel", async (c) => {
+managementSessionRoutes.post(`/${uuidParam("id")}/cancel`, async (c) => {
   const { response } = await requireSession(RESOURCE_ACCESS.manejos);
   if (response) return response;
 
@@ -130,7 +130,7 @@ managementSessionRoutes.post("/:id/cancel", async (c) => {
 });
 
 // Consolida a sessão: os registros passam a valer.
-managementSessionRoutes.post("/:id/confirm", async (c) => {
+managementSessionRoutes.post(`/${uuidParam("id")}/confirm`, async (c) => {
   const { response } = await requireSession(RESOURCE_ACCESS.manejos);
   if (response) return response;
 
@@ -144,7 +144,7 @@ managementSessionRoutes.post("/:id/confirm", async (c) => {
 });
 
 // Inclui na sessão animais que não estavam no planejamento.
-managementSessionRoutes.post("/:id/participants", async (c) => {
+managementSessionRoutes.post(`/${uuidParam("id")}/participants`, async (c) => {
   const { response } = await requireSession(RESOURCE_ACCESS.manejos);
   if (response) return response;
 
@@ -161,7 +161,7 @@ managementSessionRoutes.post("/:id/participants", async (c) => {
 });
 
 // Documentos da carga (GTA e nota fiscal) de uma recepção em aberto.
-managementSessionRoutes.patch("/:id/reception", async (c) => {
+managementSessionRoutes.patch(`/${uuidParam("id")}/reception`, async (c) => {
   const { response } = await requireSession(RESOURCE_ACCESS.recepcoes);
   if (response) return response;
 
@@ -180,7 +180,7 @@ managementSessionRoutes.patch("/:id/reception", async (c) => {
 });
 
 // Inicia o registro (ou corrige a data do manejo enquanto não consolidada).
-managementSessionRoutes.post("/:id/start", async (c) => {
+managementSessionRoutes.post(`/${uuidParam("id")}/start`, async (c) => {
   const { response } = await requireSession(RESOURCE_ACCESS.manejos);
   if (response) return response;
 
@@ -199,74 +199,86 @@ managementSessionRoutes.post("/:id/start", async (c) => {
 });
 
 // Recebe um animal que desceu do caminhão (cria o animal e o inclui na sessão).
-managementSessionRoutes.post("/:id/reception/animals", async (c) => {
-  const { response } = await requireSession(RESOURCE_ACCESS.manejos);
-  if (response) return response;
+managementSessionRoutes.post(
+  `/${uuidParam("id")}/reception/animals`,
+  async (c) => {
+    const { response } = await requireSession(RESOURCE_ACCESS.manejos);
+    if (response) return response;
 
-  try {
-    const { id } = c.req.param();
-    const validation = receiveAnimalSchema.safeParse(
-      await c.req.json().catch(() => ({})),
-    );
-    if (!validation.success) return validationErrorResponse(validation.error);
+    try {
+      const { id } = c.req.param();
+      const validation = receiveAnimalSchema.safeParse(
+        await c.req.json().catch(() => ({})),
+      );
+      if (!validation.success) return validationErrorResponse(validation.error);
 
-    const data = await receiveSessionAnimal(id, validation.data);
-    return c.json({ success: true, data }, 201);
-  } catch (error) {
-    return errorResponse(error);
-  }
-});
+      const data = await receiveSessionAnimal(id, validation.data);
+      return c.json({ success: true, data }, 201);
+    } catch (error) {
+      return errorResponse(error);
+    }
+  },
+);
 
 // Tudo o que as telas de etapa precisam de um animal da sessão.
-managementSessionRoutes.get("/:id/animals/:animalId", async (c) => {
-  const { response } = await requireSession(RESOURCE_ACCESS.manejos);
-  if (response) return response;
+managementSessionRoutes.get(
+  `/${uuidParam("id")}/animals/${uuidParam("animalId")}`,
+  async (c) => {
+    const { response } = await requireSession(RESOURCE_ACCESS.manejos);
+    if (response) return response;
 
-  try {
-    const { id, animalId } = c.req.param();
-    return c.json(await getSessionAnimal(id, animalId));
-  } catch (error) {
-    return errorResponse(error);
-  }
-});
+    try {
+      const { id, animalId } = c.req.param();
+      return c.json(await getSessionAnimal(id, animalId));
+    } catch (error) {
+      return errorResponse(error);
+    }
+  },
+);
 
 // Tira o animal da sessão, desfazendo os registros que ele já tinha.
-managementSessionRoutes.delete("/:id/participants/:animalId", async (c) => {
-  const { response } = await requireSession(RESOURCE_ACCESS.manejos);
-  if (response) return response;
+managementSessionRoutes.delete(
+  `/${uuidParam("id")}/participants/${uuidParam("animalId")}`,
+  async (c) => {
+    const { response } = await requireSession(RESOURCE_ACCESS.manejos);
+    if (response) return response;
 
-  try {
-    const { id, animalId } = c.req.param();
-    await removeParticipant(id, animalId);
-    return c.json({ success: true });
-  } catch (error) {
-    return errorResponse(error);
-  }
-});
+    try {
+      const { id, animalId } = c.req.param();
+      await removeParticipant(id, animalId);
+      return c.json({ success: true });
+    } catch (error) {
+      return errorResponse(error);
+    }
+  },
+);
 
 // Registra (ou corrige) uma etapa do manejo no animal e devolve o contexto atualizado.
 // Os dados são validados pelo módulo da etapa.
-managementSessionRoutes.put("/:id/animals/:animalId/steps/:key", async (c) => {
-  const { response } = await requireSession(RESOURCE_ACCESS.manejos);
-  if (response) return response;
+managementSessionRoutes.put(
+  `/${uuidParam("id")}/animals/${uuidParam("animalId")}/steps/:key`,
+  async (c) => {
+    const { response } = await requireSession(RESOURCE_ACCESS.manejos);
+    if (response) return response;
 
-  try {
-    const { id, animalId, key } = c.req.param();
-    const data = await saveSessionAnimalStep(
-      id,
-      animalId,
-      decodeURIComponent(key),
-      await c.req.json(),
-    );
-    return c.json({ success: true, data });
-  } catch (error) {
-    return errorResponse(error);
-  }
-});
+    try {
+      const { id, animalId, key } = c.req.param();
+      const data = await saveSessionAnimalStep(
+        id,
+        animalId,
+        decodeURIComponent(key),
+        await c.req.json(),
+      );
+      return c.json({ success: true, data });
+    } catch (error) {
+      return errorResponse(error);
+    }
+  },
+);
 
 // Desfaz o registro da etapa no animal e devolve o contexto atualizado.
 managementSessionRoutes.delete(
-  "/:id/animals/:animalId/steps/:key",
+  `/${uuidParam("id")}/animals/${uuidParam("animalId")}/steps/:key`,
   async (c) => {
     const { response } = await requireSession(RESOURCE_ACCESS.manejos);
     if (response) return response;

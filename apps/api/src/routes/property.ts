@@ -15,7 +15,7 @@ import {
   propertySchema,
   RESOURCE_ACCESS,
 } from "@ifarm/shared";
-import { errorResponse, validationErrorResponse } from "../http";
+import { errorResponse, uuidParam, validationErrorResponse } from "../http";
 import { requireSession } from "../session";
 
 export const propertyRoutes = new Hono();
@@ -68,7 +68,7 @@ propertyRoutes.post("/", async (c) => {
   }
 });
 
-propertyRoutes.get("/:id", async (c) => {
+propertyRoutes.get(`/${uuidParam("id")}`, async (c) => {
   const { response } = await requireSession(RESOURCE_ACCESS.propriedades);
   if (response) return response;
 
@@ -80,7 +80,7 @@ propertyRoutes.get("/:id", async (c) => {
   }
 });
 
-propertyRoutes.put("/:id", async (c) => {
+propertyRoutes.put(`/${uuidParam("id")}`, async (c) => {
   const { response } = await requireSession(RESOURCE_ACCESS.propriedades);
   if (response) return response;
 
@@ -96,7 +96,7 @@ propertyRoutes.put("/:id", async (c) => {
   }
 });
 
-propertyRoutes.delete("/:id", async (c) => {
+propertyRoutes.delete(`/${uuidParam("id")}`, async (c) => {
   const { response } = await requireSession(RESOURCE_ACCESS.propriedades);
   if (response) return response;
 
@@ -110,7 +110,7 @@ propertyRoutes.delete("/:id", async (c) => {
 });
 
 // Ativa ou desativa a propriedade.
-propertyRoutes.patch("/:id", async (c) => {
+propertyRoutes.patch(`/${uuidParam("id")}`, async (c) => {
   const { response } = await requireSession(RESOURCE_ACCESS.propriedades);
   if (response) return response;
 

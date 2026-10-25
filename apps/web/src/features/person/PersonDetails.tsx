@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router";
 import { toast } from "sonner";
 import {
@@ -34,19 +35,12 @@ import {
   PersonType,
   formatDate,
   formatTaxId,
-  type PersonInput,
+  isNotFoundError,
 } from "@ifarm/shared";
 import { MARITAL_STATUS_LABELS as MARITAL_STATUS_LABEL } from "@ifarm/shared";
 import { DetailsSkeleton } from "@/components/our/PageSkeletons";
-
-function formatPhone(value: string): string {
-  const digits = value.replace(/\D/g, "");
-  if (digits.length === 11)
-    return digits.replace(/(\d{2})(\d{5})(\d{4})/, "($1) $2-$3");
-  if (digits.length === 10)
-    return digits.replace(/(\d{2})(\d{4})(\d{4})/, "($1) $2-$3");
-  return value;
-}
+import { formatPhone } from "./format";
+import { personDetailQuery, personKeys } from "./queries";
 
 // Dados ilustrativos: essas informações ainda não existem no sistema (RF-PESSOA-04 em construção).
 const FICTITIOUS_PROPERTIES = [
@@ -102,58 +96,57 @@ export function PersonDetails({
   onClose?: () => void;
 }) {
   const navigate = useNavigate();
-  const [person, setPerson] = useState<PersonInput | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
   const [confirmingDelete, setConfirmingDelete] = useState(false);
 
-  useEffect(() => {
-    let cancelled = false;
+  const {
+    data: person,
+    error,
+    isPending,
+    refetch,
+  } = useQuery(personDetailQuery(id));
 
-    async function load() {
-      setLoading(true);
-      try {
-        const data = await personClient.getPerson(id);
-        if (!cancelled) setPerson(data);
-      } catch (e) {
-        if (!cancelled) setError((e as Error).message);
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    }
-
-    load();
-    return () => {
-      cancelled = true;
-    };
-  }, [id]);
-
-  async function handleDelete() {
-    try {
-      await personClient.deletePerson(id);
+  const deletePerson = useMutation({
+    mutationFn: () => personClient.deletePerson(id),
+    onSuccess: () => {
       toast.success("Registro excluído com sucesso!");
+      queryClient.removeQueries({ queryKey: personKeys.detail(id) });
+      queryClient.invalidateQueries({ queryKey: personKeys.all });
       if (onClose) onClose();
       else navigate("/pessoas");
-    } catch (e) {
-      toast.error(
-        (e as Error).message || "Não foi possível excluir o registro.",
-      );
-    } finally {
-      setConfirmingDelete(false);
-    }
+    },
+    onError: (e) => {
+      toast.error(e.message || "Não foi possível excluir o registro.");
+    },
+    onSettled: () => setConfirmingDelete(false),
+  });
+
+  function handleDelete() {
+    deletePerson.mutate();
   }
 
-  if (error) {
+  if (isPending) {
+    return <DetailsSkeleton variant="cards" />;
+  }
+
+  if (!person) {
+    // Não existe mais (ex.: excluída por outra pessoa): tentar de novo não adianta.
+    if (isNotFoundError(error)) {
+      return (
+        <ErrorPage
+          title="Pessoa não encontrada"
+          message="Ela pode ter sido excluída."
+          onBack={onClose ?? (() => navigate("/pessoas"))}
+          backLabel={onClose ? "Fechar" : "Voltar"}
+        />
+      );
+    }
     return (
       <ErrorPage
         message="Não foi possível obter os dados da pessoa."
-        onRetry={() => window.location.reload()}
+        onRetry={() => refetch()}
       />
     );
-  }
-
-  if (loading || !person) {
-    return <DetailsSkeleton variant="cards" />;
   }
 
   const isIndividual = person.type === PersonType.INDIVIDUAL;
