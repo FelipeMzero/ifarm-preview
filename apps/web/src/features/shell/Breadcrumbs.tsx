@@ -34,13 +34,13 @@ const RECORD_LABELS: Record<string, string> = {
 const DEFAULT_RECORD_LABEL = "Animal";
 
 // Segmentos que só organizam a URL, sem página própria nem significado para o
-// usuário (/recepcoes/compras/[id] é a compra dentro de Recepções, não o módulo
+// usuário (/recepcoes/compras/:id é a compra dentro de Recepções, não o módulo
 // Compras).
 const HIDDEN_SEGMENTS: Record<string, string[]> = {
   "/recepcoes": ["compras"],
 };
 
-// Cadastros em que /[id] é a edição e /[id]/detalhes a visualização: o id some do
+// Cadastros em que /:id é a edição e /:id/detalhes a visualização: o id some do
 // caminho e fica só "Editar" ou "Detalhes".
 const WITH_DETAILS_PAGE = ["/animais", "/lotes", "/pessoas", "/propriedades"];
 

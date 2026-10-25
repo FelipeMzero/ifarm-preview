@@ -52,10 +52,10 @@ Os comandos da API e do seed estão no [README do apps/api](../../apps/api/READM
 
 ## 📂 Estrutura
 
-| Caminho                       | O que fica ali                                                        |
-| :---------------------------- | :-------------------------------------------------------------------- |
-| `index.html` e `src/main.tsx` | A entrada da aplicação: fontes, CSS global, tema e o roteador         |
-| `src/router.tsx`              | As URLs das páginas                                                   |
-| `src/pages/`                  | Uma pasta por URL, com o `page.tsx` que monta a feature               |
-| `src/layouts/`                | `ProtectedLayout` (login, permissão e menu) e `GuestLayout` (o login) |
-| `src/features/`               | As telas, formulários e listas de cada domínio                        |
+| Caminho                       | O que fica ali                                                                                                     |
+| :---------------------------- | :----------------------------------------------------------------------------------------------------------------- |
+| `index.html` e `src/main.tsx` | A entrada da aplicação: fontes, CSS global, tema e o roteador                                                      |
+| `src/router.tsx`              | As URLs das páginas (em português) e o componente de cada uma                                                      |
+| `src/pages/`                  | Um arquivo por domínio (`person.tsx`…) com as páginas que montam a feature: leem a URL e decidem para onde navegar |
+| `src/layouts/`                | `ProtectedLayout` (login, permissão e menu) e `GuestLayout` (o login)                                              |
+| `src/features/`               | As telas, formulários e listas de cada domínio                                                                     |
