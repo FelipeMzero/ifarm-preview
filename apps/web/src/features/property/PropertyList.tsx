@@ -263,7 +263,7 @@ export function PropertyList() {
   };
   // Ao trocar de página ou de filtro, a lista anterior fica na tela (esmaecida) até chegar a
   // nova (keepPreviousData).
-  const { data, isPending, isFetching, refetch } = useQuery({
+  const { data, isPending, isPlaceholderData, refetch } = useQuery({
     ...propertyListQuery(params),
     placeholderData: keepPreviousData,
   });
@@ -369,9 +369,14 @@ export function PropertyList() {
         </DropdownMenu>
       </div>
 
+      {/* Esmaece só enquanto mostra a lista anterior (troca de filtro ou de página); a
+          atualização em segundo plano, ao voltar para a lista, não esmaece. */}
       <div
+        aria-busy={isPlaceholderData}
         className={
-          isFetching ? "opacity-60 transition-opacity" : "transition-opacity"
+          isPlaceholderData
+            ? "opacity-60 transition-opacity"
+            : "transition-opacity"
         }
       >
         {properties.length === 0 ? (
