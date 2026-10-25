@@ -1,16 +1,21 @@
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, ArrowLeft } from "lucide-react";
 import { Button } from "../ui/button";
 
 type ErrorPageProps = {
   title?: string;
   message: string;
   onRetry?: () => void;
+  /** Botão de voltar (ex.: para a lista, quando o registro não existe mais). */
+  onBack?: () => void;
+  backLabel?: string;
 };
 
 export function ErrorPage({
   title = "Algo deu errado",
   message,
   onRetry,
+  onBack,
+  backLabel = "Voltar",
 }: ErrorPageProps) {
   return (
     <div className="flex min-h-100 flex-col items-center justify-center gap-6 p-8 text-center">
@@ -24,10 +29,19 @@ export function ErrorPage({
         <p className="mt-2 text-muted-foreground">{message}</p>
       </div>
 
-      {onRetry && (
-        <Button onClick={onRetry} className="w-40">
-          Tentar novamente
-        </Button>
+      {(onRetry || onBack) && (
+        <div className="flex flex-wrap justify-center gap-2">
+          {onBack && (
+            <Button variant="outline" onClick={onBack}>
+              <ArrowLeft className="size-4" /> {backLabel}
+            </Button>
+          )}
+          {onRetry && (
+            <Button onClick={onRetry} className="w-40">
+              Tentar novamente
+            </Button>
+          )}
+        </div>
       )}
     </div>
   );

@@ -9,6 +9,8 @@ export type ApiRequestInit = {
 
 export type ApiResponse = {
   ok: boolean;
+  /** Código HTTP da resposta (200, 404…). */
+  status: number;
   json(): Promise<unknown>;
 };
 
@@ -22,17 +24,39 @@ export class ApiError extends Error {
   errors?: Record<string, string>;
   /** Corpo completo da resposta de erro, para casos com dados extras (ex.: `code`). */
   body?: Record<string, unknown>;
+  /** Código HTTP da resposta de erro (ex.: 404). */
+  status?: number;
 
   constructor(
     message: string,
     errors?: Record<string, string>,
     body?: Record<string, unknown>,
+    status?: number,
   ) {
     super(message);
     this.name = "ApiError";
     this.errors = errors;
     this.body = body;
+    this.status = status;
   }
+}
+
+/**
+ * Erro do lado de quem pede (4xx: não encontrado, sem permissão, dados inválidos): pedir de
+ * novo dá a mesma resposta.
+ */
+export function isClientError(error: unknown): error is ApiError {
+  return (
+    error instanceof ApiError &&
+    error.status !== undefined &&
+    error.status >= 400 &&
+    error.status < 500
+  );
+}
+
+/** O registro pedido não existe (ou foi excluído). */
+export function isNotFoundError(error: unknown): error is ApiError {
+  return error instanceof ApiError && error.status === 404;
 }
 
 type ErrorBody = { message?: string; errors?: Record<string, string> };
@@ -55,6 +79,7 @@ export async function readJson<T>(
       fieldMessage ?? message ?? fallbackMessage,
       errors,
       (body ?? {}) as Record<string, unknown>,
+      response.status,
     );
   }
   return body as T;

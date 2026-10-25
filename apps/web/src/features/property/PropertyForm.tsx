@@ -1,12 +1,14 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm, useWatch } from "react-hook-form";
+import { useNavigate } from "react-router";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { MaskedInput } from "@/components/our/MaskedInput";
 
 import {
   BR_STATE_ITEMS,
   FIELD_LIMITS,
+  isNotFoundError,
   propertySchema,
   type PropertyInput,
 } from "@ifarm/shared";
@@ -57,6 +59,7 @@ export default function PropertyForm({
   onSuccess,
 }: PropertyFormProps) {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const { refresh: refreshCurrentProperty } = useCurrentProperty();
   const [isZipLoading, setIsZipLoading] = useState(false);
 
@@ -66,8 +69,8 @@ export default function PropertyForm({
   // Propriedade em edição (só com id).
   const {
     data: property,
+    error,
     isPending,
-    isError,
     refetch,
   } = useQuery({
     ...propertyDetailQuery(id ?? ""),
@@ -189,17 +192,28 @@ export default function PropertyForm({
     }
   }
 
-  if (id && isError) {
+  if (id && isPending) {
+    return <FormSkeleton />;
+  }
+
+  if (id && !property) {
+    // Não existe mais (ex.: excluída por outra pessoa): tentar de novo não adianta.
+    if (isNotFoundError(error)) {
+      return (
+        <ErrorPage
+          title="Propriedade não encontrada"
+          message="Ela pode ter sido excluída."
+          onBack={() => navigate("/propriedades")}
+          backLabel="Voltar"
+        />
+      );
+    }
     return (
       <ErrorPage
         message={"Não foi possível obter os dados do servidor."}
         onRetry={() => refetch()}
       />
     );
-  }
-
-  if (id && isPending) {
-    return <FormSkeleton />;
   }
 
   return (

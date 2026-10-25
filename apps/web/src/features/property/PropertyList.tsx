@@ -263,7 +263,7 @@ export default function PropertyList() {
   };
   // Ao trocar de página ou de filtro, a lista anterior fica na tela (esmaecida) até chegar a
   // nova (keepPreviousData).
-  const { data, isPending, isFetching, isError, refetch } = useQuery({
+  const { data, isPending, isFetching, refetch } = useQuery({
     ...propertyListQuery(params),
     placeholderData: keepPreviousData,
   });
@@ -299,17 +299,17 @@ export default function PropertyList() {
     setViewingDetailsId,
   );
 
-  if (isError) {
+  if (isPending) {
+    return <ListSkeleton columns={5} />;
+  }
+
+  if (!data) {
     return (
       <ErrorPage
         message={"Não foi possível obter os dados do servidor."}
         onRetry={() => refetch()}
       />
     );
-  }
-
-  if (isPending) {
-    return <ListSkeleton columns={5} />;
   }
 
   return (

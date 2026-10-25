@@ -22,6 +22,7 @@ import { ConfirmDialog } from "@/components/our/ConfirmDialog";
 import { ErrorPage } from "@/components/our/ErrorPage";
 import { propertyClient } from "@/lib/clients";
 import { useCurrentProperty } from "@/features/shell/CurrentPropertyProvider";
+import { isNotFoundError } from "@ifarm/shared";
 import { propertyDetailQuery, propertyKeys } from "./queries";
 import { DetailsSkeleton } from "@/components/our/PageSkeletons";
 
@@ -39,8 +40,8 @@ export default function PropertyDetails({
 
   const {
     data: property,
+    error,
     isPending,
-    isError,
     refetch,
   } = useQuery({
     ...propertyDetailQuery(id),
@@ -66,17 +67,28 @@ export default function PropertyDetails({
     deleteProperty.mutate();
   }
 
-  if (isError) {
+  if (isPending) {
+    return <DetailsSkeleton variant="cards" />;
+  }
+
+  if (!property) {
+    // Não existe mais (ex.: excluída por outra pessoa): tentar de novo não adianta.
+    if (isNotFoundError(error)) {
+      return (
+        <ErrorPage
+          title="Propriedade não encontrada"
+          message="Ela pode ter sido excluída."
+          onBack={onClose ?? (() => navigate("/propriedades"))}
+          backLabel={onClose ? "Fechar" : "Voltar"}
+        />
+      );
+    }
     return (
       <ErrorPage
         message="Não foi possível obter os dados da propriedade."
         onRetry={() => refetch()}
       />
     );
-  }
-
-  if (isPending) {
-    return <DetailsSkeleton variant="cards" />;
   }
 
   const address = [

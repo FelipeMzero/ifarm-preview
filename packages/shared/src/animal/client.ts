@@ -397,7 +397,12 @@ export function createAnimalClient(request: ApiRequest) {
     async getAnimalCommitments(id: string) {
       const response = await request(`${ANIMAL_BY_ID(id)}/commitments`);
       if (!response.ok) {
-        throw new ApiError("Não foi possível carregar as operações do animal.");
+        throw new ApiError(
+          "Não foi possível carregar as operações do animal.",
+          undefined,
+          undefined,
+          response.status,
+        );
       }
       return (await response.json()) as Commitment[];
     },
@@ -418,6 +423,9 @@ export function createAnimalClient(request: ApiRequest) {
       if (!response.ok) {
         throw new ApiError(
           "Não foi possível verificar as operações dos animais.",
+          undefined,
+          undefined,
+          response.status,
         );
       }
       return (await response.json()) as Record<string, Commitment[]>;
