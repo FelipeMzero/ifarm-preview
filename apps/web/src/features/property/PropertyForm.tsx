@@ -11,7 +11,6 @@ import { MaskedInput } from "@/components/our/MaskedInput";
 import { lazyComponent } from "@/lib/lazy";
 
 import {
-  ApiError,
   BR_STATE_ITEMS,
   FIELD_LIMITS,
   propertySchema,
@@ -35,6 +34,7 @@ import { ArrowLeft, Loader2, MapPin, MapPinOff } from "lucide-react";
 import FormSkeleton from "@/components/our/FormSkeleton";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
+import { applyServerErrors } from "@/lib/form-errors";
 import { LocationPickerDialog } from "./LocationPickerDialog";
 import { useCurrentProperty } from "@/features/shell/CurrentPropertyProvider";
 import { personKeys } from "../person/queries";
@@ -295,17 +295,7 @@ export default function PropertyForm({
         onSuccess?.(response.data.id);
       }
     } catch (error) {
-      if (error instanceof ApiError && error.errors) {
-        Object.entries(error.errors).forEach(([field, message]) => {
-          setError(field as keyof PropertyInput, {
-            type: "server",
-            message,
-          });
-        });
-        toast.error("Verifique os campos destacados.");
-      } else {
-        toast.error("A requisição falhou! Tente novamente.");
-      }
+      applyServerErrors(setError, error);
     }
   }
 
