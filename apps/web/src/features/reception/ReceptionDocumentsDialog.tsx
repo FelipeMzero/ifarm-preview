@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -15,6 +16,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { receptionClient } from "@/lib/clients";
+import { useReloadReception } from "./queries";
 
 type Documents = { gtaNumber: string | null; invoiceNumber: string | null };
 
@@ -25,13 +27,11 @@ export function ReceptionDocumentsDialog({
   initial,
   open,
   onOpenChange,
-  onSaved,
 }: {
   sessionId: string;
   initial: Documents;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSaved: () => void;
 }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -47,11 +47,7 @@ export function ReceptionDocumentsDialog({
           <DocumentsForm
             sessionId={sessionId}
             initial={initial}
-            onCancel={() => onOpenChange(false)}
-            onSaved={() => {
-              onOpenChange(false);
-              onSaved();
-            }}
+            onClose={() => onOpenChange(false)}
           />
         )}
       </DialogContent>
@@ -62,33 +58,32 @@ export function ReceptionDocumentsDialog({
 function DocumentsForm({
   sessionId,
   initial,
-  onCancel,
-  onSaved,
+  onClose,
 }: {
   sessionId: string;
   initial: Documents;
-  onCancel: () => void;
-  onSaved: () => void;
+  onClose: () => void;
 }) {
+  const reloadReception = useReloadReception();
   const [gta, setGta] = useState(initial.gtaNumber ?? "");
   const [invoice, setInvoice] = useState(initial.invoiceNumber ?? "");
-  const [saving, setSaving] = useState(false);
 
-  async function submit(e: React.FormEvent) {
-    e.preventDefault();
-    setSaving(true);
-    try {
-      await receptionClient.updateReceptionDocuments(sessionId, {
-        gtaNumber: gta || null,
-        invoiceNumber: invoice || null,
-      });
+  // A recepção na tela (e as listas, que buscam pela GTA) é recarregada (cache).
+  const save = useMutation({
+    mutationFn: (documents: Documents) =>
+      receptionClient.updateReceptionDocuments(sessionId, documents),
+    onSuccess: () => {
       toast.success("Documentos da carga salvos.");
-      onSaved();
-    } catch (error) {
-      toast.error((error as Error).message);
-    } finally {
-      setSaving(false);
-    }
+      onClose();
+      return reloadReception();
+    },
+    onError: (error) => toast.error(error.message),
+  });
+  const saving = save.isPending;
+
+  function submit(e: React.FormEvent) {
+    e.preventDefault();
+    save.mutate({ gtaNumber: gta || null, invoiceNumber: invoice || null });
   }
 
   return (
@@ -113,7 +108,7 @@ function DocumentsForm({
         />
       </div>
       <DialogFooter>
-        <Button type="button" variant="secondary" onClick={onCancel}>
+        <Button type="button" variant="secondary" onClick={onClose}>
           Cancelar
         </Button>
         <Button type="submit" disabled={saving}>

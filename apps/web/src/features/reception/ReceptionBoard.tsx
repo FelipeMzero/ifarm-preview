@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router";
 import { ArrowLeft, CircleCheckBig, Loader2, Search, X } from "lucide-react";
 import { toast } from "sonner";
@@ -14,11 +15,12 @@ import {
 } from "@/features/management-session/display";
 import { managementSessionClient } from "@/lib/clients";
 import {
+  isNotFoundError,
   isSessionOpen,
-  type ManagementSessionDetail,
   type SessionParticipant,
   nowDateTime,
 } from "@ifarm/shared";
+import { managementSessionDetailQuery } from "@/features/management-session/queries";
 import {
   ParticipantTabs,
   SessionDateDialog,
@@ -29,6 +31,7 @@ import {
 import { ReceptionDocumentsDialog } from "./ReceptionDocumentsDialog";
 import { ReceptionPanel } from "./ReceptionPanel";
 import { ListSkeleton } from "@/components/our/PageSkeletons";
+import { useReloadReception } from "./queries";
 
 const TAB_LABELS = {
   pending: "A manejar",
@@ -50,44 +53,76 @@ export function ReceptionBoard({ id }: { id: string }) {
   const navigate = useNavigate();
   const boardPath = `/recepcoes/${id}`;
 
-  const [detail, setDetail] = useState<ManagementSessionDetail | null>(null);
-  const [loadFailed, setLoadFailed] = useState(false);
   const [search, setSearch] = useState("");
   const [dateDialog, setDateDialog] = useState(false);
   const [documentsDialog, setDocumentsDialog] = useState(false);
   const [removing, setRemoving] = useState<SessionParticipant | null>(null);
   const [confirming, setConfirming] = useState(false);
-  const [consolidating, setConsolidating] = useState(false);
   const [cancelling, setCancelling] = useState(false);
 
-  const [refreshKey, setRefreshKey] = useState(0);
-  const reload = () => setRefreshKey((k) => k + 1);
+  const {
+    data: detail,
+    error,
+    isPending,
+    refetch,
+  } = useQuery(managementSessionDetailQuery(id));
 
-  useEffect(() => {
-    let cancelled = false;
-    managementSessionClient
-      .getManagementSession(id)
-      .then((data) => {
-        if (!cancelled) setDetail(data);
-      })
-      .catch(() => {
-        if (!cancelled) setLoadFailed(true);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [id, refreshKey]);
+  // Toda alteração na recepção recarrega a sessão e o que ela afeta (compra, animais, lotes).
+  const reloadReception = useReloadReception();
 
-  if (loadFailed) {
+  const changeDate = useMutation({
+    mutationFn: (date: string) =>
+      managementSessionClient.startManagementSession(id, date),
+    onSuccess: () => {
+      toast.success("Data da recepção alterada.");
+      return reloadReception();
+    },
+  });
+  const removeAnimal = useMutation({
+    mutationFn: (animalId: string) =>
+      managementSessionClient.removeParticipant(id, animalId),
+    onSuccess: () => {
+      toast.success("Recebimento desfeito.");
+      return reloadReception();
+    },
+    onError: (e) => toast.error(e.message),
+  });
+  const confirmReception = useMutation({
+    mutationFn: () => managementSessionClient.confirmManagementSession(id),
+    onSuccess: (result) => {
+      toast.success(
+        `Recepção concluída: ${result.data.handled} animal(is) recebido(s).`,
+      );
+      return reloadReception();
+    },
+    onError: (e) => toast.error(e.message),
+  });
+  const cancelReception = useMutation({
+    mutationFn: () => managementSessionClient.cancelManagementSession(id),
+    onError: (e) => toast.error(e.message),
+  });
+
+  if (isPending) return <ListSkeleton columns={4} />;
+
+  if (!detail) {
+    // Não existe mais (ex.: excluída por outra pessoa): tentar de novo não adianta.
+    if (isNotFoundError(error)) {
+      return (
+        <ErrorPage
+          title="Recepção não encontrada"
+          message="Ela pode ter sido excluída."
+          onBack={() => navigate("/recepcoes")}
+          backLabel="Voltar"
+        />
+      );
+    }
     return (
       <ErrorPage
         message="Não foi possível obter os dados do servidor."
-        onRetry={() => window.location.reload()}
+        onRetry={() => refetch()}
       />
     );
   }
-
-  if (!detail) return <ListSkeleton columns={4} />;
 
   const reception = detail.reception;
   if (!reception) {
@@ -148,56 +183,38 @@ export function ReceptionBoard({ id }: { id: string }) {
       toast.warning("Nenhum animal da recepção encontrado.");
   }
 
+  // O diálogo de data espera a promessa: fecha no sucesso e continua aberto na falha.
   async function handleDate(date: string) {
     try {
-      await managementSessionClient.startManagementSession(id, date);
-      toast.success("Data da recepção alterada.");
-      reload();
+      await changeDate.mutateAsync(date);
     } catch (e) {
       toast.error((e as Error).message);
       throw e;
     }
   }
 
-  async function handleRemove() {
-    if (!removing) return;
-    const target = removing;
+  function handleRemove() {
+    if (removing) removeAnimal.mutate(removing.animal.id);
     setRemoving(null);
-    try {
-      await managementSessionClient.removeParticipant(id, target.animal.id);
-      toast.success("Recebimento desfeito.");
-      reload();
-    } catch (e) {
-      toast.error((e as Error).message);
-    }
   }
 
-  async function handleConfirm() {
+  function handleConfirm() {
     setConfirming(false);
-    setConsolidating(true);
-    try {
-      const result = await managementSessionClient.confirmManagementSession(id);
-      toast.success(
-        `Recepção concluída: ${result.data.handled} animal(is) recebido(s).`,
-      );
-      reload();
-    } catch (e) {
-      toast.error((e as Error).message);
-    } finally {
-      setConsolidating(false);
-    }
+    confirmReception.mutate();
   }
 
-  async function handleCancel() {
+  // Cancelada, a recepção sai da tela: volta para a compra antes de recarregar.
+  function handleCancel() {
     setCancelling(false);
-    try {
-      await managementSessionClient.cancelManagementSession(id);
-      toast.success("Recepção cancelada.");
-      navigate(purchaseUrl);
-    } catch (e) {
-      toast.error((e as Error).message);
-    }
+    cancelReception.mutate(undefined, {
+      onSuccess: () => {
+        toast.success("Recepção cancelada.");
+        navigate(purchaseUrl);
+        reloadReception();
+      },
+    });
   }
+  const consolidating = confirmReception.isPending;
 
   const confirmDescription = [
     `${counts.total} animal(is) recebido(s) nesta recepção.`,
@@ -313,7 +330,6 @@ export function ReceptionBoard({ id }: { id: string }) {
         hasSteps={hasSteps}
         onReceived={(animalId, openSteps) => {
           if (openSteps) openAnimal(animalId);
-          else reload();
         }}
       />
 
@@ -372,7 +388,6 @@ export function ReceptionBoard({ id }: { id: string }) {
         }}
         open={documentsDialog}
         onOpenChange={setDocumentsDialog}
-        onSaved={reload}
       />
 
       <ConfirmDialog

@@ -54,6 +54,7 @@ import {
   type PurchaseDetail,
   type PurchasePayload,
 } from "@ifarm/shared";
+import { receptionKeys } from "@/features/reception/queries";
 import { purchaseDetailQuery, purchaseKeys } from "./queries";
 import { FormSkeleton } from "@/components/our/PageSkeletons";
 
@@ -146,8 +147,12 @@ export function PurchaseForm({ id }: { id?: string }) {
   // Paga: o que define o valor fica bloqueado até desfazer o pagamento.
   const locked = !!detail?.paymentDate;
 
+  // A compra aparece também na recepção (categorias, recebidos e situação).
   const reloadPurchases = () =>
-    queryClient.invalidateQueries({ queryKey: purchaseKeys.all });
+    Promise.all([
+      queryClient.invalidateQueries({ queryKey: purchaseKeys.all }),
+      queryClient.invalidateQueries({ queryKey: receptionKeys.all }),
+    ]);
   const create = useMutation({
     mutationFn: (payload: PurchasePayload) =>
       purchaseClient.createPurchase(payload),

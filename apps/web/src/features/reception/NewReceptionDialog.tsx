@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useForm, type Control } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -25,13 +25,15 @@ import {
   toStepPayload,
   type PlanFormData,
 } from "@/features/management-session/schema";
-import { managementSessionClient } from "@/lib/clients";
+import { managementOptionsQuery } from "@/features/management-session/queries";
 import {
   receptionDocumentsSchema,
   type ManagementOptions,
 } from "@ifarm/shared";
 import { useCurrentProperty } from "@/features/shell/CurrentPropertyProvider";
 import { receptionClient } from "@/lib/clients";
+import { applyServerErrors } from "@/lib/form-errors";
+import { useReloadReception } from "./queries";
 
 // Documentos da carga com as regras da API (podem ser informados depois, na tela da
 // recepção), o lote de entrada e os manejos de chegada (opcionais: receber os animais já
@@ -101,12 +103,21 @@ function ReceptionForm({
   onCancel: () => void;
   onCreated: (sessionId: string) => void;
 }) {
-  const { property: currentProperty } = useCurrentProperty();
-  const [options, setOptions] = useState<ManagementOptions>(EMPTY_OPTIONS);
+  const { property: currentProperty, isLoading: isPropertyLoading } =
+    useCurrentProperty();
+  const reloadReception = useReloadReception();
+
+  // Lotes de entrada e opções dos manejos. Sem a propriedade atual, viriam os de todas.
+  const { data, isError } = useQuery({
+    ...managementOptionsQuery(currentProperty?.id),
+    enabled: !isPropertyLoading,
+  });
+  const options = data ?? EMPTY_OPTIONS;
 
   const {
     control,
     handleSubmit,
+    setError,
     formState: { isSubmitting },
   } = useForm<ReceptionFormData>({
     resolver: zodResolver(receptionFormSchema, undefined, { raw: true }),
@@ -118,33 +129,24 @@ function ReceptionForm({
     },
   });
 
-  useEffect(() => {
-    let cancelled = false;
-    managementSessionClient
-      .getManagementOptions(currentProperty?.id)
-      .then((result) => {
-        if (!cancelled) setOptions(result);
-      })
-      .catch(() => {
-        if (!cancelled) toast.error("Não foi possível carregar os lotes.");
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [currentProperty?.id]);
+  const create = useMutation({
+    mutationFn: (form: ReceptionFormData) =>
+      receptionClient.createReception(purchaseId, {
+        entryBatchId: form.entryBatchId,
+        gtaNumber: form.gtaNumber || null,
+        invoiceNumber: form.invoiceNumber || null,
+        steps: form.steps.map(toStepPayload),
+      }),
+    onSuccess: reloadReception,
+  });
 
-  async function onSubmit(data: ReceptionFormData) {
+  async function onSubmit(form: ReceptionFormData) {
     try {
-      const result = await receptionClient.createReception(purchaseId, {
-        entryBatchId: data.entryBatchId,
-        gtaNumber: data.gtaNumber || null,
-        invoiceNumber: data.invoiceNumber || null,
-        steps: data.steps.map(toStepPayload),
-      });
+      const result = await create.mutateAsync(form);
       toast.success("Recepção aberta.");
       onCreated(result.data.sessionId);
     } catch (e) {
-      toast.error((e as Error).message);
+      applyServerErrors(setError, e);
     }
   }
 
@@ -166,7 +168,11 @@ function ReceptionForm({
               label: b.name,
             }))}
             placeholder="Buscar lote..."
-            emptyMessage="Nenhum lote ativo"
+            emptyMessage={
+              isError
+                ? "Não foi possível carregar os lotes."
+                : "Nenhum lote ativo"
+            }
           />
         )}
       />

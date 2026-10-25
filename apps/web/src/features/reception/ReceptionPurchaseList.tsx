@@ -1,7 +1,8 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { ChevronRight, Search, Truck } from "lucide-react";
-import { useNavigate } from "react-router";
+import { useNavigate, useSearchParams } from "react-router";
 import { useEffect, useState } from "react";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 
 import { DataTable } from "@/components/our/DataTable";
 import { ErrorPage } from "@/components/our/ErrorPage";
@@ -11,11 +12,43 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useCurrentProperty } from "@/features/shell/CurrentPropertyProvider";
 import { ReceivedCount, formatDay } from "@/features/purchase/display";
-import { receptionClient } from "@/lib/clients";
 import { type ReceptionFilter, type ReceptionPurchase } from "@ifarm/shared";
 import { ListSkeleton } from "@/components/our/PageSkeletons";
+import { receptionPurchaseListQuery } from "./queries";
 
 const DEFAULT_PAGE_SIZE = 10;
+
+// Filtro da tela (o valor na URL) → filtro aceito pela API.
+const FILTER_BY_URL: Record<string, ReceptionFilter> = {
+  "a-receber": "pending",
+  todas: "all",
+};
+
+const URL_DEFAULTS = {
+  busca: "",
+  situacao: "a-receber",
+  pagina: "1",
+  itens: String(DEFAULT_PAGE_SIZE),
+};
+type UrlParam = keyof typeof URL_DEFAULTS;
+
+function readFilters(searchParams: URLSearchParams) {
+  const get = (key: UrlParam) => searchParams.get(key) ?? URL_DEFAULTS[key];
+  const situacao = get("situacao");
+  const urlFilter =
+    situacao in FILTER_BY_URL ? situacao : URL_DEFAULTS.situacao;
+  const positive = (key: UrlParam) => {
+    const n = Number(get(key));
+    return Number.isInteger(n) && n > 0 ? n : Number(URL_DEFAULTS[key]);
+  };
+  return {
+    search: get("busca"),
+    urlFilter,
+    filter: FILTER_BY_URL[urlFilter],
+    pageIndex: positive("pagina") - 1,
+    pageSize: Math.min(positive("itens"), 100),
+  };
+}
 
 function buildColumns(
   onOpen: (id: string) => void,
@@ -117,73 +150,79 @@ function buildColumns(
 
 export function ReceptionPurchaseList() {
   const navigate = useNavigate();
-  const { property: currentProperty } = useCurrentProperty();
+  const { property: currentProperty, isLoading: isPropertyLoading } =
+    useCurrentProperty();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const {
+    search: debouncedSearch,
+    urlFilter,
+    filter,
+    pageIndex,
+    pageSize,
+  } = readFilters(searchParams);
 
-  const [purchases, setPurchases] = useState<ReceptionPurchase[]>([]);
-  const [pageIndex, setPageIndex] = useState(0);
-  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
-  const [pageCount, setPageCount] = useState(0);
-  const [total, setTotal] = useState(0);
-  const [search, setSearch] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [filter, setFilter] = useState<ReceptionFilter>("pending");
-  const [loading, setLoading] = useState(true);
-  const [isFirstLoad, setIsFirstLoad] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearch(search);
-      setPageIndex(0);
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [search]);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    async function load() {
-      setLoading(true);
-      try {
-        const result = await receptionClient.getReceptionPurchases({
-          propertyId: currentProperty?.id,
-          page: pageIndex,
-          pageSize,
-          search: debouncedSearch,
-          filter,
-        });
-        if (cancelled) return;
-        setPurchases(result.data);
-        setPageCount(result.pageCount);
-        setTotal(result.total);
-      } catch (e) {
-        if (!cancelled) setError((e as Error).message);
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-          setIsFirstLoad(false);
+  // Atualiza a URL (sem criar entrada no histórico a cada mudança de filtro).
+  function updateUrl(changes: Partial<Record<UrlParam, string | number>>) {
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        for (const [key, value] of Object.entries(changes)) {
+          const text = String(value);
+          if (text === URL_DEFAULTS[key as UrlParam]) next.delete(key);
+          else next.set(key, text);
         }
-      }
-    }
+        return next;
+      },
+      { replace: true, preventScrollReset: true },
+    );
+  }
+  const setPageIndex = (index: number) => updateUrl({ pagina: index + 1 });
 
-    load();
-    return () => {
-      cancelled = true;
-    };
-  }, [pageIndex, pageSize, debouncedSearch, filter, currentProperty?.id]);
+  // O texto digitado fica aqui e vai para a URL depois de uma pausa. Se a URL mudar por fora
+  // (voltar/avançar do navegador), o campo acompanha.
+  const [search, setSearch] = useState(debouncedSearch);
+  const [urlSearch, setUrlSearch] = useState(debouncedSearch);
+  if (urlSearch !== debouncedSearch) {
+    setUrlSearch(debouncedSearch);
+    setSearch(debouncedSearch);
+  }
+
+  useEffect(() => {
+    if (search === debouncedSearch) return;
+    const timer = setTimeout(
+      () => updateUrl({ busca: search, pagina: 1 }),
+      300,
+    );
+    return () => clearTimeout(timer);
+  });
+
+  // Ao trocar de página ou de filtro, a lista anterior fica na tela (esmaecida) até chegar a
+  // nova (keepPreviousData). Sem a propriedade atual, a busca traria as de todas.
+  const { data, isPending, isPlaceholderData, refetch } = useQuery({
+    ...receptionPurchaseListQuery({
+      propertyId: currentProperty?.id,
+      page: pageIndex,
+      pageSize,
+      search: debouncedSearch,
+      filter,
+    }),
+    enabled: !isPropertyLoading,
+    placeholderData: keepPreviousData,
+  });
+  const purchases: ReceptionPurchase[] = data?.data ?? [];
 
   const columns = buildColumns((id) => navigate(`/recepcoes/compras/${id}`));
 
-  if (error) {
+  if (isPending) return <ListSkeleton columns={5} />;
+
+  if (!data) {
     return (
       <ErrorPage
         message="Não foi possível obter os dados do servidor."
-        onRetry={() => window.location.reload()}
+        onRetry={() => refetch()}
       />
     );
   }
-
-  if (isFirstLoad) return <ListSkeleton columns={5} />;
 
   return (
     <div className="w-full max-w-6xl space-y-4">
@@ -202,21 +241,26 @@ export function ReceptionPurchaseList() {
           />
         </div>
         <SelectField
-          value={filter}
-          onValueChange={(val) => {
-            setFilter((val as ReceptionFilter) || "pending");
-            setPageIndex(0);
-          }}
+          value={urlFilter}
+          onValueChange={(val) =>
+            updateUrl({ situacao: val || URL_DEFAULTS.situacao, pagina: 1 })
+          }
           items={[
-            { value: "pending", label: "A receber" },
-            { value: "all", label: "Todas" },
+            { value: "a-receber", label: "A receber" },
+            { value: "todas", label: "Todas" },
           ]}
         />
       </div>
 
+      {/* Enquanto mostra a lista anterior (troca de filtro ou de página), fica esmaecida e sem
+          cliques, para ninguém agir sobre linhas que vão sair; a atualização em segundo plano,
+          ao voltar para a lista, não esmaece. */}
       <div
+        aria-busy={isPlaceholderData}
         className={
-          loading ? "opacity-60 transition-opacity" : "transition-opacity"
+          isPlaceholderData
+            ? "pointer-events-none opacity-60 transition-opacity"
+            : "transition-opacity"
         }
       >
         {purchases.length === 0 ? (
@@ -232,15 +276,12 @@ export function ReceptionPurchaseList() {
           <DataTable
             columns={columns}
             data={purchases}
-            pageCount={pageCount}
+            pageCount={data.pageCount}
             pageIndex={pageIndex}
             pageSize={pageSize}
-            total={total}
+            total={data.total}
             onPageChange={setPageIndex}
-            onPageSizeChange={(size) => {
-              setPageSize(size);
-              setPageIndex(0);
-            }}
+            onPageSizeChange={(size) => updateUrl({ itens: size, pagina: 1 })}
           />
         )}
       </div>

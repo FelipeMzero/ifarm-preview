@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router";
 import { ArrowLeft, ChevronRight, Plus } from "lucide-react";
 
@@ -9,43 +10,44 @@ import { ErrorPage } from "@/components/our/ErrorPage";
 import { ReceivedCount, formatDay } from "@/features/purchase/display";
 import { SessionStatusBadge } from "@/features/management-session/display";
 import { NewReceptionDialog } from "./NewReceptionDialog";
-import { receptionClient } from "@/lib/clients";
-import { type ReceptionPurchase } from "@ifarm/shared";
+import { isNotFoundError } from "@ifarm/shared";
 import { FormSkeleton } from "@/components/our/PageSkeletons";
+import { receptionPurchaseQuery } from "./queries";
 
 // A compra vista por quem recebe: o que foi negociado (em quantidade), o que já
 // chegou e as recepções. Daqui se abre uma nova recepção.
 export function ReceptionPurchaseDetail({ id }: { id: string }) {
   const navigate = useNavigate();
-  const [purchase, setPurchase] = useState<ReceptionPurchase | null>(null);
-  const [failed, setFailed] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
 
-  useEffect(() => {
-    let cancelled = false;
-    receptionClient
-      .getReceptionPurchase(id)
-      .then((data) => {
-        if (!cancelled) setPurchase(data);
-      })
-      .catch(() => {
-        if (!cancelled) setFailed(true);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [id]);
+  const {
+    data: purchase,
+    error,
+    isPending,
+    refetch,
+  } = useQuery(receptionPurchaseQuery(id));
 
-  if (failed) {
+  if (isPending) return <FormSkeleton />;
+
+  if (!purchase) {
+    // Não existe mais (ex.: excluída por outra pessoa): tentar de novo não adianta.
+    if (isNotFoundError(error)) {
+      return (
+        <ErrorPage
+          title="Compra não encontrada"
+          message="Ela pode ter sido excluída."
+          onBack={() => navigate("/recepcoes")}
+          backLabel="Voltar"
+        />
+      );
+    }
     return (
       <ErrorPage
         message="Não foi possível obter os dados do servidor."
-        onRetry={() => window.location.reload()}
+        onRetry={() => refetch()}
       />
     );
   }
-
-  if (!purchase) return <FormSkeleton />;
 
   return (
     <div className="mx-auto flex w-full max-w-4xl flex-col gap-4">

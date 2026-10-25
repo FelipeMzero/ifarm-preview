@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { ArrowRight, Loader2, Plus, TriangleAlert, Truck } from "lucide-react";
 import { toast } from "sonner";
 
@@ -10,9 +11,11 @@ import { SelectField } from "@/components/our/SelectField";
 import { managementSessionClient } from "@/lib/clients";
 import {
   ApiError,
+  type ReceiveAnimalPayload,
   type ReceptionCategory,
   type ReceptionInfo,
 } from "@ifarm/shared";
+import { useReloadReception } from "./queries";
 
 // Categoria em recebimento: lembrada por sessão neste navegador (conveniência de quem
 // está no tronco; a informação que vale fica no animal recebido).
@@ -76,8 +79,16 @@ export function ReceptionPanel({
   const [sex, setSex] = useState<string>(category?.sex ?? "MALE");
   const [age, setAge] = useState("");
   const [name, setName] = useState("");
-  const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // O animal recebido entra na lista da recepção (cache recarregado) e nas contagens da compra.
+  const reloadReception = useReloadReception();
+  const receiveAnimal = useMutation({
+    mutationFn: (data: ReceiveAnimalPayload) =>
+      managementSessionClient.receiveAnimal(sessionId, data),
+    onSuccess: reloadReception,
+  });
+  const saving = receiveAnimal.isPending;
 
   function chooseCategory(c: ReceptionCategory) {
     setCategoryId(c.id);
@@ -91,10 +102,9 @@ export function ReceptionPanel({
       setError("Escolha a categoria do animal.");
       return;
     }
-    setSaving(true);
     setError(null);
     try {
-      const result = await managementSessionClient.receiveAnimal(sessionId, {
+      const result = await receiveAnimal.mutateAsync({
         categoryId: category.id,
         sex: sex as "MALE" | "FEMALE",
         ageMonths: age ? Number(age) : null,
@@ -107,8 +117,6 @@ export function ReceptionPanel({
     } catch (e) {
       if (e instanceof ApiError) setError(e.message);
       else toast.error("A requisição falhou! Tente novamente.");
-    } finally {
-      setSaving(false);
     }
   }
 
