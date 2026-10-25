@@ -22,13 +22,13 @@ import FieldRow from "@/components/our/FieldRow";
 
 import { SearchCombobox } from "@/components/our/SearchCombobox";
 import { ArrowLeft, Loader2 } from "lucide-react";
-import FormSkeleton from "@/components/our/FormSkeleton";
 import { Separator } from "@/components/ui/separator";
 import { BR_STATE_ITEMS } from "@ifarm/shared";
 import { PERSON_TYPE_ITEMS, MARITAL_STATUS_ITEMS } from "@ifarm/shared";
 import { FormActionBar } from "@/components/our/FormActionBar";
 import { cn } from "@/lib/utils";
 import { zipCodeQuery } from "../address/queries";
+import { FormSkeleton } from "@/components/our/PageSkeletons";
 
 const PHONE_MASK = [{ mask: "(00) 0000-0000" }, { mask: "(00) 00000-0000" }];
 

@@ -66,12 +66,12 @@ import {
 } from "./format";
 import {
   CountBadge,
-  DetailsSkeleton,
   EmptyState,
   InfoItem,
   StatTile,
 } from "@/components/our/DetailParts";
 import { WeighingCorrectionNote } from "./WeighingCorrectionNote";
+import { DetailsSkeleton } from "@/components/our/PageSkeletons";
 
 const ARROBA_KG = 15;
 

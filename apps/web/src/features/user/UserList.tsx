@@ -8,7 +8,6 @@ import { toast } from "sonner";
 
 import { ConfirmDialog } from "@/components/our/ConfirmDialog";
 import { DataTable } from "@/components/our/DataTable";
-import ListSkeleton from "@/components/our/ListSkeleton";
 import { ErrorPage } from "@/components/our/ErrorPage";
 import { FormField } from "@/components/our/FormField";
 import { SelectField } from "@/components/our/SelectField";
@@ -19,6 +18,7 @@ import { Input } from "@/components/ui/input";
 import { authClient, useSession } from "@/lib/auth-client";
 import { ResetPasswordDialog } from "./ResetPasswordDialog";
 import { FIELD_LIMITS } from "@ifarm/shared";
+import { ListSkeleton } from "@/components/our/PageSkeletons";
 
 const DEFAULT_PAGE_SIZE = 10;
 

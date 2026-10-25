@@ -28,7 +28,6 @@ import { FieldSet } from "@/components/ui/field";
 import { ErrorPage } from "@/components/our/ErrorPage";
 import { FormActionBar } from "@/components/our/FormActionBar";
 import { FormField } from "@/components/our/FormField";
-import FormSkeleton from "@/components/our/FormSkeleton";
 import FieldRow from "@/components/our/FieldRow";
 import {
   SearchCombobox,
@@ -62,6 +61,7 @@ import {
   type BatchTransferDetail,
   type TransferAnimal,
 } from "@ifarm/shared";
+import { FormSkeleton } from "@/components/our/PageSkeletons";
 
 // Dados da transferência com as regras da API; os animais são escolhidos à parte e entram
 // no envio (animalIds), com a propriedade atual.

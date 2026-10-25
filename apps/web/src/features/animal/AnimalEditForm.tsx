@@ -26,7 +26,6 @@ import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { FormField } from "@/components/our/FormField";
 import { ErrorPage } from "@/components/our/ErrorPage";
-import FormSkeleton from "@/components/our/FormSkeleton";
 import FieldRow from "@/components/our/FieldRow";
 import { FormActionBar } from "@/components/our/FormActionBar";
 import { SearchCombobox } from "@/components/our/SearchCombobox";
@@ -44,6 +43,7 @@ import { AnimalWeighingHistoryDialog } from "./AnimalWeighingHistoryDialog";
 import { AnimalIdentifierHistoryDialog } from "./AnimalIdentifierHistoryDialog";
 import { AnimalNeuteringHistoryDialog } from "./AnimalNeuteringHistoryDialog";
 import type { Commitment } from "@ifarm/shared";
+import { FormSkeleton } from "@/components/our/PageSkeletons";
 
 // Edição pelo cadastro: os dados básicos, com as regras da API (troca de lote,
 // identificação, pesagem e castração têm diálogos próprios e entram no mesmo PUT).

@@ -15,7 +15,6 @@ import { toast } from "sonner";
 
 import { ConfirmDialog } from "@/components/our/ConfirmDialog";
 import { DataTable } from "@/components/our/DataTable";
-import ListSkeleton from "@/components/our/ListSkeleton";
 import { ErrorPage } from "@/components/our/ErrorPage";
 import { SelectField } from "@/components/our/SelectField";
 import { Button } from "@/components/ui/button";
@@ -29,6 +28,7 @@ import {
 import { TransferStatusBadge, formatTransferDate } from "./display";
 import { stockingClient } from "@/lib/clients";
 import { describeStocking } from "@/features/area/StockingNotice";
+import { ListSkeleton } from "@/components/our/PageSkeletons";
 
 const DEFAULT_PAGE_SIZE = 10;
 

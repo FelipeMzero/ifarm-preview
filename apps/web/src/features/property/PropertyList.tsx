@@ -22,7 +22,6 @@ import {
 import { useEffect, useState } from "react";
 
 import { DataTable } from "@/components/our/DataTable";
-import ListSkeleton from "@/components/our/ListSkeleton";
 import { ConfirmDialog } from "@/components/our/ConfirmDialog";
 import PropertyDetails from "./PropertyDetails";
 import { Badge } from "@/components/ui/badge";
@@ -44,6 +43,7 @@ import { ErrorPage } from "@/components/our/ErrorPage";
 import { useCurrentProperty } from "@/features/shell/CurrentPropertyProvider";
 import { useLocalStorageState } from "@/hooks/use-local-storage-state";
 import { propertyKeys, propertyListQuery } from "./queries";
+import { ListSkeleton } from "@/components/our/PageSkeletons";
 
 const DEFAULT_PAGE_SIZE = 10;
 

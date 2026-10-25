@@ -22,7 +22,6 @@ import FieldRow from "@/components/our/FieldRow";
 
 import { SearchCombobox } from "@/components/our/SearchCombobox";
 import { ArrowLeft, Loader2 } from "lucide-react";
-import FormSkeleton from "@/components/our/FormSkeleton";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import { applyServerErrors } from "@/lib/form-errors";
@@ -42,6 +41,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import PersonForm from "../person/PersonForm";
+import { FormSkeleton } from "@/components/our/PageSkeletons";
 
 type PropertyFormProps = {
   id?: string;

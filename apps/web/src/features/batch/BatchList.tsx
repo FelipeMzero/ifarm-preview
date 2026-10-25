@@ -15,7 +15,6 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { DataTable } from "@/components/our/DataTable";
-import ListSkeleton from "@/components/our/ListSkeleton";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -49,6 +48,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import BatchDetails from "./BatchDetails";
 import { BatchReopenDialog } from "./BatchReopenDialog";
+import { ListSkeleton } from "@/components/our/PageSkeletons";
 
 const DEFAULT_PAGE_SIZE = 10;
 

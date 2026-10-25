@@ -22,7 +22,6 @@ import { FieldSet } from "@/components/ui/field";
 import { ErrorPage } from "@/components/our/ErrorPage";
 import { FormActionBar } from "@/components/our/FormActionBar";
 import { FormField } from "@/components/our/FormField";
-import FormSkeleton from "@/components/our/FormSkeleton";
 import FieldRow from "@/components/our/FieldRow";
 import {
   AnimalPickerFilters,
@@ -48,6 +47,7 @@ import {
 } from "@ifarm/shared";
 import { StepsEditor } from "./StepsEditor";
 import { clientStepModule } from "./steps/registry";
+import { FormSkeleton } from "@/components/our/PageSkeletons";
 
 type FormStep = "data" | "animals";
 

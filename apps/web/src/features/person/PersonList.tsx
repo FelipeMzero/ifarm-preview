@@ -15,7 +15,6 @@ import { useNavigate } from "react-router";
 import React, { useEffect, useState } from "react";
 
 import { DataTable } from "@/components/our/DataTable";
-import ListSkeleton from "@/components/our/ListSkeleton";
 import { ConfirmDialog } from "@/components/our/ConfirmDialog";
 import PersonDetails from "./PersonDetails";
 import { Badge } from "@/components/ui/badge";
@@ -40,6 +39,7 @@ import {
 } from "@ifarm/shared";
 import { PERSON_TYPE_ITEMS, PERSON_TYPE_LABELS } from "@ifarm/shared";
 import { ErrorPage } from "@/components/our/ErrorPage";
+import { ListSkeleton } from "@/components/our/PageSkeletons";
 
 const DEFAULT_PAGE_SIZE = 10;
 

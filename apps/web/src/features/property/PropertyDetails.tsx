@@ -19,11 +19,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { ConfirmDialog } from "@/components/our/ConfirmDialog";
-import { DetailsSkeleton } from "@/components/our/DetailParts";
 import { ErrorPage } from "@/components/our/ErrorPage";
 import { propertyClient } from "@/lib/clients";
 import { useCurrentProperty } from "@/features/shell/CurrentPropertyProvider";
 import { propertyDetailQuery, propertyKeys } from "./queries";
+import { DetailsSkeleton } from "@/components/our/PageSkeletons";
 
 export default function PropertyDetails({
   id,

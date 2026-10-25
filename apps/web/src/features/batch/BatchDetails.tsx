@@ -46,7 +46,6 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   CountBadge,
-  DetailsSkeleton,
   EmptyState,
   InfoItem,
   StatTile,
@@ -66,6 +65,7 @@ import { BatchGoalChart } from "./BatchGoalChart";
 import { projectBatch } from "@ifarm/shared";
 import { batchClient } from "@/lib/clients";
 import { type BatchFullDetails, formatEventDateTime } from "@ifarm/shared";
+import { DetailsSkeleton } from "@/components/our/PageSkeletons";
 
 function formatAdg(value: number | null | undefined) {
   if (value == null) return "—";

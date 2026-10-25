@@ -15,7 +15,6 @@ import React, { useEffect, useState } from "react";
 
 import { ConfirmDialog } from "@/components/our/ConfirmDialog";
 import { DataTable } from "@/components/our/DataTable";
-import ListSkeleton from "@/components/our/ListSkeleton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -49,6 +48,7 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { ANIMAL_ORIGIN_LABELS, ANIMAL_STATUS_LABELS } from "@ifarm/shared";
 import { ErrorPage } from "@/components/our/ErrorPage";
 import { useCurrentProperty } from "@/features/shell/CurrentPropertyProvider";
+import { ListSkeleton } from "@/components/our/PageSkeletons";
 
 const DEFAULT_PAGE_SIZE = 10;
 

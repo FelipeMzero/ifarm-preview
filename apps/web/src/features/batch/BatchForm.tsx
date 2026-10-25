@@ -18,7 +18,6 @@ import {
 } from "@/components/ui/collapsible";
 import { FormField } from "@/components/our/FormField";
 import { ErrorPage } from "@/components/our/ErrorPage";
-import FormSkeleton from "@/components/our/FormSkeleton";
 import FieldRow from "@/components/our/FieldRow";
 import { FormActionBar } from "@/components/our/FormActionBar";
 import {
@@ -32,6 +31,7 @@ import type { BatchAreaChangeData } from "./BatchAreaChangeDialog";
 import { batchClient } from "@/lib/clients";
 import { ApiError, type BatchDetail } from "@ifarm/shared";
 import { BatchAreaChangeDialog } from "./BatchAreaChangeDialog";
+import { FormSkeleton } from "@/components/our/PageSkeletons";
 
 // Um formulário para criar e editar: os campos e as regras da API (batchFieldsSchema e a
 // meta, RN-LOTE-04), mais a área. Na edição a área só é exibida; a troca vai pelo diálogo.

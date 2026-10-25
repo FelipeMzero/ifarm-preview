@@ -28,7 +28,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { ConfirmDialog } from "@/components/our/ConfirmDialog";
-import { DetailsSkeleton } from "@/components/our/DetailParts";
 import { ErrorPage } from "@/components/our/ErrorPage";
 import { personClient } from "@/lib/clients";
 import {
@@ -38,6 +37,7 @@ import {
   type PersonInput,
 } from "@ifarm/shared";
 import { MARITAL_STATUS_LABELS as MARITAL_STATUS_LABEL } from "@ifarm/shared";
+import { DetailsSkeleton } from "@/components/our/PageSkeletons";
 
 function formatPhone(value: string): string {
   const digits = value.replace(/\D/g, "");

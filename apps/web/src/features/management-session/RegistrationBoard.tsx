@@ -24,7 +24,6 @@ import {
 } from "@/components/ui/dialog";
 import { ConfirmDialog } from "@/components/our/ConfirmDialog";
 import { ErrorPage } from "@/components/our/ErrorPage";
-import ListSkeleton from "@/components/our/ListSkeleton";
 import { AnimalPicker } from "@/features/batch-transfer/AnimalPicker";
 import { isSessionOpen, type TransferAnimal, nowDateTime } from "@ifarm/shared";
 import { useCurrentProperty } from "@/features/shell/CurrentPropertyProvider";
@@ -42,6 +41,7 @@ import {
   groupParticipants,
   matchesParticipant,
 } from "./SessionParticipants";
+import { ListSkeleton } from "@/components/our/PageSkeletons";
 
 const TAB_LABELS: Record<ParticipantStatus, string> = {
   pending: "A manejar",

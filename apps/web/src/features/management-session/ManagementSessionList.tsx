@@ -14,7 +14,6 @@ import { toast } from "sonner";
 
 import { ConfirmDialog } from "@/components/our/ConfirmDialog";
 import { DataTable } from "@/components/our/DataTable";
-import ListSkeleton from "@/components/our/ListSkeleton";
 import { ErrorPage } from "@/components/our/ErrorPage";
 import { SelectField } from "@/components/our/SelectField";
 import { Badge } from "@/components/ui/badge";
@@ -29,6 +28,7 @@ import {
   nowDateTime,
   type ManagementSessionListParams,
 } from "@ifarm/shared";
+import { ListSkeleton } from "@/components/our/PageSkeletons";
 
 const DEFAULT_PAGE_SIZE = 10;
 

@@ -17,7 +17,6 @@ import { Separator } from "@/components/ui/separator";
 import { ConfirmDialog } from "@/components/our/ConfirmDialog";
 import { ErrorPage } from "@/components/our/ErrorPage";
 import { FormActionBar } from "@/components/our/FormActionBar";
-import FormSkeleton from "@/components/our/FormSkeleton";
 import {
   AnimalIdentification,
   NewValueMark,
@@ -37,6 +36,7 @@ import {
 import { sessionView } from "./SessionParticipants";
 import { clientStepModule } from "./steps/registry";
 import { formatKg } from "./steps/formHelpers";
+import { FormSkeleton } from "@/components/our/PageSkeletons";
 
 const EMPTY_OPTIONS: ManagementOptions = {
   healthTypes: [],

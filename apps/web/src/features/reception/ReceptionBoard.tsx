@@ -8,7 +8,6 @@ import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { ConfirmDialog } from "@/components/our/ConfirmDialog";
 import { ErrorPage } from "@/components/our/ErrorPage";
-import ListSkeleton from "@/components/our/ListSkeleton";
 import {
   SessionStatusBadge,
   formatSessionDateTime,
@@ -29,6 +28,7 @@ import {
 } from "@/features/management-session/SessionParticipants";
 import { ReceptionDocumentsDialog } from "./ReceptionDocumentsDialog";
 import { ReceptionPanel } from "./ReceptionPanel";
+import { ListSkeleton } from "@/components/our/PageSkeletons";
 
 const TAB_LABELS = {
   pending: "A manejar",

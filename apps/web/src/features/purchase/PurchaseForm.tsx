@@ -24,7 +24,6 @@ import { ConfirmDialog } from "@/components/our/ConfirmDialog";
 import { ErrorPage } from "@/components/our/ErrorPage";
 import { FormActionBar } from "@/components/our/FormActionBar";
 import { FormField } from "@/components/our/FormField";
-import FormSkeleton from "@/components/our/FormSkeleton";
 import FieldRow from "@/components/our/FieldRow";
 import {
   SearchCombobox,
@@ -50,6 +49,7 @@ import {
 } from "@ifarm/shared";
 import { purchaseClient } from "@/lib/clients";
 import { ApiError, isSessionOpen, type PurchaseDetail } from "@ifarm/shared";
+import { FormSkeleton } from "@/components/our/PageSkeletons";
 
 const str = (v: number | null | undefined) => (v == null ? "" : String(v));
 
