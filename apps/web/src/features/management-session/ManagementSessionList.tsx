@@ -8,9 +8,10 @@ import {
   Search,
   XCircle,
 } from "lucide-react";
-import { useNavigate } from "react-router";
+import { useNavigate, useSearchParams } from "react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { keepPreviousData, useMutation, useQuery } from "@tanstack/react-query";
 
 import { ConfirmDialog } from "@/components/our/ConfirmDialog";
 import { DataTable } from "@/components/our/DataTable";
@@ -29,22 +30,54 @@ import {
   type ManagementSessionListParams,
 } from "@ifarm/shared";
 import { ListSkeleton } from "@/components/our/PageSkeletons";
+import { managementSessionListQuery, useReloadSessions } from "./queries";
 
 const DEFAULT_PAGE_SIZE = 10;
 
 const STATUS_FILTER = {
-  OPEN: "open",
-  CONFIRMED: "confirmed",
-  CANCELLED: "cancelled",
+  OPEN: "abertas",
+  CONFIRMED: "consolidadas",
+  CANCELLED: "canceladas",
   ALL: "todas",
 } as const;
+type StatusFilter = (typeof STATUS_FILTER)[keyof typeof STATUS_FILTER];
 
-// Filtro da tela → situação aceita pela API (o que não está aqui = sem filtro).
-const STATUS_PARAM: Record<string, ManagementSessionListParams["status"]> = {
-  [STATUS_FILTER.OPEN]: "open",
-  [STATUS_FILTER.CONFIRMED]: "confirmed",
-  [STATUS_FILTER.CANCELLED]: "cancelled",
+// Filtro da tela (o valor na URL) → situação aceita pela API.
+const STATUS_BY_FILTER: Record<
+  StatusFilter,
+  ManagementSessionListParams["status"]
+> = {
+  abertas: "open",
+  consolidadas: "confirmed",
+  canceladas: "cancelled",
+  todas: undefined,
 };
+
+const URL_DEFAULTS = {
+  busca: "",
+  situacao: STATUS_FILTER.OPEN as string,
+  pagina: "1",
+  itens: String(DEFAULT_PAGE_SIZE),
+};
+type UrlParam = keyof typeof URL_DEFAULTS;
+
+function readFilters(searchParams: URLSearchParams) {
+  const get = (key: UrlParam) => searchParams.get(key) ?? URL_DEFAULTS[key];
+  const situacao = get("situacao");
+  const filter = (
+    situacao in STATUS_BY_FILTER ? situacao : STATUS_FILTER.OPEN
+  ) as StatusFilter;
+  const positive = (key: UrlParam) => {
+    const n = Number(get(key));
+    return Number.isInteger(n) && n > 0 ? n : Number(URL_DEFAULTS[key]);
+  };
+  return {
+    search: get("busca"),
+    filter,
+    pageIndex: positive("pagina") - 1,
+    pageSize: Math.min(positive("itens"), 100),
+  };
+}
 
 function buildColumns(handlers: {
   onRegister: (id: string) => void;
@@ -187,112 +220,114 @@ function buildColumns(handlers: {
 
 export function ManagementSessionList() {
   const navigate = useNavigate();
-  const { property: currentProperty } = useCurrentProperty();
+  const { property: currentProperty, isLoading: isPropertyLoading } =
+    useCurrentProperty();
+  const reloadSessions = useReloadSessions();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const {
+    search: debouncedSearch,
+    filter,
+    pageIndex,
+    pageSize,
+  } = readFilters(searchParams);
 
-  const [sessions, setSessions] = useState<ManagementSessionRow[]>([]);
-  const [pageIndex, setPageIndex] = useState(0);
-  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
-  const [pageCount, setPageCount] = useState(0);
-  const [total, setTotal] = useState(0);
-  const [search, setSearch] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [filter, setFilter] = useState<string>(STATUS_FILTER.OPEN);
-  const [loading, setLoading] = useState(true);
-  const [isFirstLoad, setIsFirstLoad] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [refreshKey, setRefreshKey] = useState(0);
+  // Atualiza a URL (sem criar entrada no histórico a cada mudança de filtro).
+  function updateUrl(changes: Partial<Record<UrlParam, string | number>>) {
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        for (const [key, value] of Object.entries(changes)) {
+          const text = String(value);
+          if (text === URL_DEFAULTS[key as UrlParam]) next.delete(key);
+          else next.set(key, text);
+        }
+        return next;
+      },
+      { replace: true, preventScrollReset: true },
+    );
+  }
+  const setPageIndex = (index: number) => updateUrl({ pagina: index + 1 });
+
+  // O texto digitado fica aqui e vai para a URL depois de uma pausa. Se a URL mudar por fora
+  // (voltar/avançar do navegador), o campo acompanha.
+  const [search, setSearch] = useState(debouncedSearch);
+  const [urlSearch, setUrlSearch] = useState(debouncedSearch);
+  if (urlSearch !== debouncedSearch) {
+    setUrlSearch(debouncedSearch);
+    setSearch(debouncedSearch);
+  }
   const [cancelling, setCancelling] = useState<ManagementSessionRow | null>(
     null,
   );
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearch(search);
-      setPageIndex(0);
-    }, 300);
+    if (search === debouncedSearch) return;
+    const timer = setTimeout(
+      () => updateUrl({ busca: search, pagina: 1 }),
+      300,
+    );
     return () => clearTimeout(timer);
-  }, [search]);
+  });
 
-  useEffect(() => {
-    let cancelled = false;
+  // Ao trocar de página ou de filtro, a lista anterior fica na tela (esmaecida) até chegar a
+  // nova (keepPreviousData). Sem a propriedade atual, a busca traria as de todas.
+  const { data, isPending, isPlaceholderData, refetch } = useQuery({
+    ...managementSessionListQuery({
+      propertyId: currentProperty?.id,
+      page: pageIndex,
+      pageSize,
+      search: debouncedSearch,
+      status: STATUS_BY_FILTER[filter],
+    }),
+    enabled: !isPropertyLoading,
+    placeholderData: keepPreviousData,
+  });
+  const sessions: ManagementSessionRow[] = data?.data ?? [];
 
-    async function load() {
-      setLoading(true);
-      try {
-        const result = await managementSessionClient.getManagementSessions({
-          propertyId: currentProperty?.id,
-          page: pageIndex,
-          pageSize,
-          search: debouncedSearch,
-          status: STATUS_PARAM[filter],
-        });
-        if (!cancelled) {
-          setSessions(result.data);
-          setPageCount(result.pageCount);
-          setTotal(result.total);
-        }
-      } catch (e) {
-        if (!cancelled) setError((e as Error).message);
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-          setIsFirstLoad(false);
-        }
-      }
-    }
-
-    load();
-    return () => {
-      cancelled = true;
-    };
-  }, [
-    pageIndex,
-    pageSize,
-    debouncedSearch,
-    filter,
-    refreshKey,
-    currentProperty?.id,
-  ]);
-
-  async function runCancel() {
-    if (!cancelling) return;
-    const row = cancelling;
-    setCancelling(null);
-    try {
-      await managementSessionClient.cancelManagementSession(row.id);
+  const cancelSession = useMutation({
+    mutationFn: (row: ManagementSessionRow) =>
+      managementSessionClient.cancelManagementSession(row.id),
+    onSuccess: () => {
       toast.success("Sessão de manejo cancelada.");
-      setRefreshKey((k) => k + 1);
-    } catch (e) {
-      toast.error((e as Error).message);
-    }
+      return reloadSessions();
+    },
+    // O diálogo já fechou no clique (AlertDialogAction); o aviso explica a falha.
+    onError: (e) => toast.error(e.message),
+  });
+  // Inicia com a data de hoje; a data pode ser corrigida no cabeçalho do registro.
+  const startSession = useMutation({
+    mutationFn: (id: string) =>
+      managementSessionClient.startManagementSession(id, nowDateTime()),
+    onSuccess: (_, id) => {
+      toast.success("Registro iniciado com a data de hoje.");
+      reloadSessions();
+      navigate(`/manejos/${id}/registro`);
+    },
+    onError: (e) => toast.error(e.message),
+  });
+
+  function runCancel() {
+    if (cancelling) cancelSession.mutate(cancelling);
+    setCancelling(null);
   }
 
   const columns = buildColumns({
     onRegister: (id) => navigate(`/manejos/${id}/registro`),
-    // Inicia com a data de hoje; a data pode ser corrigida no cabeçalho do registro.
-    onStart: async (id) => {
-      try {
-        await managementSessionClient.startManagementSession(id, nowDateTime());
-        toast.success("Registro iniciado com a data de hoje.");
-        navigate(`/manejos/${id}/registro`);
-      } catch (e) {
-        toast.error((e as Error).message);
-      }
-    },
+    onStart: (id) => startSession.mutate(id),
     onEdit: (id) => navigate(`/manejos/${id}`),
     onCancel: setCancelling,
   });
 
-  if (error) {
+  if (isPending) return <ListSkeleton columns={6} />;
+
+  if (!data) {
     return (
       <ErrorPage
         message="Não foi possível obter os dados do servidor."
-        onRetry={() => window.location.reload()}
+        onRetry={() => refetch()}
       />
     );
   }
-
-  if (isFirstLoad) return <ListSkeleton columns={6} />;
 
   return (
     <div className="w-full max-w-6xl space-y-4">
@@ -316,10 +351,9 @@ export function ManagementSessionList() {
 
         <SelectField
           value={filter}
-          onValueChange={(val) => {
-            setFilter(val || STATUS_FILTER.OPEN);
-            setPageIndex(0);
-          }}
+          onValueChange={(val) =>
+            updateUrl({ situacao: val || STATUS_FILTER.OPEN, pagina: 1 })
+          }
           items={[
             { value: STATUS_FILTER.OPEN, label: "Em aberto" },
             { value: STATUS_FILTER.CONFIRMED, label: "Consolidadas" },
@@ -329,9 +363,15 @@ export function ManagementSessionList() {
         />
       </div>
 
+      {/* Enquanto mostra a lista anterior (troca de filtro ou de página), fica esmaecida e sem
+          cliques, para ninguém agir sobre linhas que vão sair; a atualização em segundo plano,
+          ao voltar para a lista, não esmaece. */}
       <div
+        aria-busy={isPlaceholderData}
         className={
-          loading ? "opacity-60 transition-opacity" : "transition-opacity"
+          isPlaceholderData
+            ? "pointer-events-none opacity-60 transition-opacity"
+            : "transition-opacity"
         }
       >
         {sessions.length === 0 ? (
@@ -347,15 +387,12 @@ export function ManagementSessionList() {
           <DataTable
             columns={columns}
             data={sessions}
-            pageCount={pageCount}
+            pageCount={data.pageCount}
             pageIndex={pageIndex}
             pageSize={pageSize}
-            total={total}
+            total={data.total}
             onPageChange={setPageIndex}
-            onPageSizeChange={(size) => {
-              setPageSize(size);
-              setPageIndex(0);
-            }}
+            onPageSizeChange={(size) => updateUrl({ itens: size, pagina: 1 })}
           />
         )}
       </div>

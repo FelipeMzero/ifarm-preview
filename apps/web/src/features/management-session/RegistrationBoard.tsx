@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router";
 import {
   ArrowLeft,
@@ -25,15 +26,18 @@ import {
 import { ConfirmDialog } from "@/components/our/ConfirmDialog";
 import { ErrorPage } from "@/components/our/ErrorPage";
 import { AnimalPicker } from "@/features/batch-transfer/AnimalPicker";
-import { isSessionOpen, type TransferAnimal, nowDateTime } from "@ifarm/shared";
+import {
+  isNotFoundError,
+  isSessionOpen,
+  type TransferAnimal,
+  nowDateTime,
+} from "@ifarm/shared";
 import { useCurrentProperty } from "@/features/shell/CurrentPropertyProvider";
 import type { ParticipantStatus } from "@ifarm/shared";
 import { SessionStatusBadge, formatSessionDateTime } from "./display";
 import { managementSessionClient } from "@/lib/clients";
-import {
-  type ManagementSessionDetail,
-  type SessionParticipant,
-} from "@ifarm/shared";
+import { type SessionParticipant } from "@ifarm/shared";
+import { managementSessionDetailQuery, useReloadSessions } from "./queries";
 import {
   ParticipantTabs,
   SessionDateDialog,
@@ -60,48 +64,86 @@ export function RegistrationBoard({ id }: { id: string }) {
   const navigate = useNavigate();
   const { property: currentProperty } = useCurrentProperty();
 
-  const [detail, setDetail] = useState<ManagementSessionDetail | null>(null);
-  const [loadFailed, setLoadFailed] = useState(false);
   const [search, setSearch] = useState("");
   const [dateDialog, setDateDialog] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [removing, setRemoving] = useState<SessionParticipant | null>(null);
   const [confirming, setConfirming] = useState(false);
-  const [consolidating, setConsolidating] = useState(false);
 
-  const [refreshKey, setRefreshKey] = useState(0);
-  const reload = () => setRefreshKey((k) => k + 1);
+  const {
+    data: detail,
+    error,
+    isPending,
+    refetch,
+  } = useQuery(managementSessionDetailQuery(id));
 
-  useEffect(() => {
-    let cancelled = false;
-    managementSessionClient
-      .getManagementSession(id)
-      .then((data) => {
-        if (!cancelled) setDetail(data);
-      })
-      .catch(() => {
-        if (!cancelled) setLoadFailed(true);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [id, refreshKey]);
+  // Toda alteração recarrega a sessão e o que ela afeta (animais e lotes).
+  const reloadSessions = useReloadSessions();
+  const startSession = useMutation({
+    mutationFn: (date: string) =>
+      managementSessionClient.startManagementSession(id, date),
+    onSuccess: reloadSessions,
+  });
+  const addAnimals = useMutation({
+    mutationFn: (animalIds: string[]) =>
+      managementSessionClient.addParticipants(id, animalIds),
+    onSuccess: (result) => {
+      toast.success(`${result.data.added} animal(is) incluído(s) na sessão.`);
+      return reloadSessions();
+    },
+    onError: (e) => toast.error(e.message),
+  });
+  const removeAnimal = useMutation({
+    mutationFn: (animalId: string) =>
+      managementSessionClient.removeParticipant(id, animalId),
+    onSuccess: () => {
+      toast.success("Animal removido da sessão.");
+      return reloadSessions();
+    },
+    onError: (e) => toast.error(e.message),
+  });
+  const confirmSession = useMutation({
+    mutationFn: () => managementSessionClient.confirmManagementSession(id),
+    onSuccess: (result) => {
+      toast.success(
+        `Manejo consolidado: ${result.data.handled} animal(is) manejado(s)${
+          result.data.removed
+            ? `, ${result.data.removed} removido(s) da sessão`
+            : ""
+        }.`,
+      );
+      return reloadSessions();
+    },
+    onError: (e) => toast.error(e.message),
+  });
+  const consolidating = confirmSession.isPending;
 
   const participantIds = useMemo(
     () => new Set(detail?.participants.map((p) => p.animal.id) ?? []),
     [detail],
   );
 
-  if (loadFailed) {
+  if (isPending) return <ListSkeleton columns={4} />;
+
+  if (!detail) {
+    // Não existe mais (ex.: excluída por outra pessoa): tentar de novo não adianta.
+    if (isNotFoundError(error)) {
+      return (
+        <ErrorPage
+          title="Sessão de manejo não encontrada"
+          message="Ela pode ter sido excluída."
+          onBack={() => navigate("/manejos")}
+          backLabel="Voltar"
+        />
+      );
+    }
     return (
       <ErrorPage
         message="Não foi possível obter os dados do servidor."
-        onRetry={() => window.location.reload()}
+        onRetry={() => refetch()}
       />
     );
   }
-
-  if (!detail) return <ListSkeleton columns={4} />;
 
   const { status, steps } = detail;
   const inProgress = status === "in_progress";
@@ -128,10 +170,9 @@ export function RegistrationBoard({ id }: { id: string }) {
   // O registro começa com a data de hoje; se precisar, ela é corrigida no cabeçalho.
   async function startToday(animalId?: string) {
     try {
-      await managementSessionClient.startManagementSession(id, nowDateTime());
+      await startSession.mutateAsync(nowDateTime());
       toast.success("Registro iniciado com a data de hoje.");
       if (animalId) navigate(`/manejos/${id}/registro/${animalId}`);
-      else reload();
     } catch (e) {
       toast.error((e as Error).message);
     }
@@ -165,60 +206,30 @@ export function RegistrationBoard({ id }: { id: string }) {
       toast.warning("Nenhum animal da sessão encontrado.");
   }
 
+  // O diálogo de data espera a promessa: fecha no sucesso e continua aberto na falha.
   async function handleStart(date: string) {
     try {
-      await managementSessionClient.startManagementSession(id, date);
+      await startSession.mutateAsync(date);
       toast.success("Data do manejo alterada.");
-      reload();
     } catch (e) {
       toast.error((e as Error).message);
       throw e;
     }
   }
 
-  async function handleAdd(animals: TransferAnimal[]) {
+  function handleAdd(animals: TransferAnimal[]) {
     const ids = animals.map((a) => a.id).filter((a) => !participantIds.has(a));
-    if (!ids.length) return;
-    try {
-      const result = await managementSessionClient.addParticipants(id, ids);
-      toast.success(`${result.data.added} animal(is) incluído(s) na sessão.`);
-      reload();
-    } catch (e) {
-      toast.error((e as Error).message);
-    }
+    if (ids.length) addAnimals.mutate(ids);
   }
 
-  async function handleRemove() {
-    if (!removing) return;
-    const target = removing;
+  function handleRemove() {
+    if (removing) removeAnimal.mutate(removing.animal.id);
     setRemoving(null);
-    try {
-      await managementSessionClient.removeParticipant(id, target.animal.id);
-      toast.success("Animal removido da sessão.");
-      reload();
-    } catch (e) {
-      toast.error((e as Error).message);
-    }
   }
 
-  async function handleConfirm() {
+  function handleConfirm() {
     setConfirming(false);
-    setConsolidating(true);
-    try {
-      const result = await managementSessionClient.confirmManagementSession(id);
-      toast.success(
-        `Manejo consolidado: ${result.data.handled} animal(is) manejado(s)${
-          result.data.removed
-            ? `, ${result.data.removed} removido(s) da sessão`
-            : ""
-        }.`,
-      );
-      reload();
-    } catch (e) {
-      toast.error((e as Error).message);
-    } finally {
-      setConsolidating(false);
-    }
+    confirmSession.mutate();
   }
 
   const confirmDescription = [

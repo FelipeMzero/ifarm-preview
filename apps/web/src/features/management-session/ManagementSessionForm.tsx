@@ -1,4 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { useNavigate } from "react-router";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -42,9 +44,16 @@ import { planFormSchema, toStepPayload, type PlanFormData } from "./schema";
 import { managementSessionClient } from "@/lib/clients";
 import {
   ApiError,
+  isNotFoundError,
   type ManagementOptions,
   type ManagementSessionDetail,
+  type ManagementSessionPayload,
 } from "@ifarm/shared";
+import {
+  managementOptionsQuery,
+  managementSessionDetailQuery,
+  useReloadSessions,
+} from "./queries";
 import { StepsEditor } from "./StepsEditor";
 import { clientStepModule } from "./steps/registry";
 import { FormSkeleton } from "@/components/our/PageSkeletons";
@@ -89,26 +98,51 @@ export function ManagementSessionForm({
   onSuccess,
 }: ManagementSessionFormProps) {
   const isEditing = !!id;
-  const { property: currentProperty } = useCurrentProperty();
+  const navigate = useNavigate();
+  const { property: currentProperty, isLoading: isPropertyLoading } =
+    useCurrentProperty();
   const propertyId = currentProperty?.id;
+  const reloadSessions = useReloadSessions();
 
-  const [isDataLoading, setIsDataLoading] = useState(isEditing);
-  const [loadFailed, setLoadFailed] = useState(false);
-  const [detail, setDetail] = useState<ManagementSessionDetail | null>(null);
-  const [options, setOptions] = useState<ManagementOptions>(EMPTY_OPTIONS);
+  // Sessão em edição (só com id) e as opções dos manejos (lotes, tipos sanitários…).
+  const {
+    data: detail,
+    error,
+    isPending,
+    refetch,
+  } = useQuery({
+    ...managementSessionDetailQuery(id ?? ""),
+    enabled: isEditing,
+  });
+  const { data: optionsData, isError: optionsFailed } = useQuery({
+    ...managementOptionsQuery(propertyId),
+    enabled: !isPropertyLoading,
+  });
+  const options = optionsData ?? EMPTY_OPTIONS;
+
   const [selected, setSelected] = useState<TransferAnimal[]>([]);
   const [animalsError, setAnimalsError] = useState<string | null>(null);
   const [step, setStep] = useState<FormStep>("data");
+  // Os animais da sessão entram na seleção uma vez, ao carregar; buscas em segundo plano
+  // não mexem no que o usuário marcou.
+  const [loadedId, setLoadedId] = useState<string | null>(null);
+  if (detail && loadedId !== detail.id) {
+    setLoadedId(detail.id);
+    setSelected(detail.participants.map((p) => p.animal));
+  }
 
   const {
     handleSubmit,
     control,
-    reset,
     trigger,
     setError,
     formState: { isSubmitting, errors },
   } = useForm<PlanFormData>({
     resolver: zodResolver(planFormSchema, undefined, { raw: true }),
+    // Dados da sessão em edição. Se forem buscados de novo em segundo plano, só os campos que
+    // o usuário não alterou são atualizados (keepDirtyValues).
+    values: detail && toFormValues(detail),
+    resetOptions: { keepDirtyValues: true },
     defaultValues: {
       title: "",
       scheduledAt: nowDateTime(),
@@ -118,7 +152,7 @@ export function ManagementSessionForm({
   });
 
   const readOnly =
-    detail !== null &&
+    !!detail &&
     (detail.status === "confirmed" || detail.status === "cancelled");
 
   const selectedIds = useMemo(
@@ -147,43 +181,6 @@ export function ManagementSessionForm({
     exclude: id ? { sessionId: id } : undefined,
   });
 
-  useEffect(() => {
-    let cancelled = false;
-    managementSessionClient
-      .getManagementOptions(propertyId)
-      .then((result) => {
-        if (!cancelled) setOptions(result);
-      })
-      .catch(() => {
-        if (!cancelled) toast.error("Não foi possível carregar as opções.");
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [propertyId]);
-
-  useEffect(() => {
-    if (!id) return;
-    let cancelled = false;
-    managementSessionClient
-      .getManagementSession(id)
-      .then((data) => {
-        if (cancelled) return;
-        setDetail(data);
-        setSelected(data.participants.map((p) => p.animal));
-        reset(toFormValues(data));
-      })
-      .catch(() => {
-        if (!cancelled) setLoadFailed(true);
-      })
-      .finally(() => {
-        if (!cancelled) setIsDataLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [id, reset]);
-
   function addAnimals(animals: TransferAnimal[]) {
     if (!animals.length) return;
     setAnimalsError(null);
@@ -198,6 +195,18 @@ export function ManagementSessionForm({
     setSelected((prev) => prev.filter((a) => !toRemove.has(a.id)));
   }
 
+  // Planejar muda as operações em aberto dos animais escolhidos: recarrega também os animais.
+  const create = useMutation({
+    mutationFn: (payload: ManagementSessionPayload) =>
+      managementSessionClient.createManagementSession(payload),
+    onSuccess: reloadSessions,
+  });
+  const update = useMutation({
+    mutationFn: (payload: ManagementSessionPayload) =>
+      managementSessionClient.updateManagementSession(id!, payload),
+    onSuccess: reloadSessions,
+  });
+
   async function onSubmit(data: PlanFormData) {
     const payload = {
       title: data.title,
@@ -210,12 +219,11 @@ export function ManagementSessionForm({
 
     try {
       if (id) {
-        await managementSessionClient.updateManagementSession(id, payload);
+        await update.mutateAsync(payload);
         toast.success("Planejamento atualizado!");
         onSuccess?.(id, false);
       } else {
-        const response =
-          await managementSessionClient.createManagementSession(payload);
+        const response = await create.mutateAsync(payload);
         toast.success("Sessão de manejo planejada!");
         onSuccess?.(response.data.id, true);
       }
@@ -257,16 +265,27 @@ export function ManagementSessionForm({
     handleSubmit(onSubmit, onInvalid)(e);
   }
 
-  if (loadFailed) {
+  if (isEditing && isPending) return <FormSkeleton />;
+
+  if (isEditing && !detail) {
+    // Não existe mais (ex.: excluída por outra pessoa): tentar de novo não adianta.
+    if (isNotFoundError(error)) {
+      return (
+        <ErrorPage
+          title="Sessão de manejo não encontrada"
+          message="Ela pode ter sido excluída."
+          onBack={() => navigate("/manejos")}
+          backLabel="Voltar"
+        />
+      );
+    }
     return (
       <ErrorPage
         message="Não foi possível obter os dados do servidor."
-        onRetry={() => window.location.reload()}
+        onRetry={() => refetch()}
       />
     );
   }
-
-  if (isDataLoading) return <FormSkeleton />;
 
   const dataHasError = Object.keys(errors).length > 0;
 
@@ -404,6 +423,12 @@ export function ManagementSessionForm({
               Manejos (na ordem de registro)
             </h3>
             <FieldSet className="border-0 p-0" disabled={readOnly}>
+              {optionsFailed && (
+                <p className="text-xs text-destructive">
+                  Não foi possível carregar as opções dos manejos (lotes, tipos
+                  sanitários e técnicas).
+                </p>
+              )}
               <StepsEditor
                 control={control}
                 options={options}

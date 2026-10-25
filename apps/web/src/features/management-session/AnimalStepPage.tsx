@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocation, useNavigate } from "react-router";
 import {
   ArrowLeft,
@@ -30,9 +31,15 @@ import {
 } from "./display";
 import { managementSessionClient } from "@/lib/clients";
 import {
+  isNotFoundError,
   type ManagementOptions,
   type SessionAnimalContext,
 } from "@ifarm/shared";
+import {
+  managementOptionsQuery,
+  managementSessionKeys,
+  sessionAnimalQuery,
+} from "./queries";
 import { sessionView } from "./SessionParticipants";
 import { clientStepModule } from "./steps/registry";
 import { formatKg } from "./steps/formHelpers";
@@ -81,12 +88,10 @@ export function AnimalStepPage({
   boardPath = sessionBoardPath(sessionId),
 }: AnimalStepPageProps) {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { pathname } = useLocation();
-  const { property: currentProperty } = useCurrentProperty();
-  const [context, setContext] = useState<SessionAnimalContext | null>(null);
-  const [options, setOptions] = useState<ManagementOptions>(EMPTY_OPTIONS);
-  const [failed, setFailed] = useState(false);
-  const [saving, setSaving] = useState(false);
+  const { property: currentProperty, isLoading: isPropertyLoading } =
+    useCurrentProperty();
   const [undoing, setUndoing] = useState(false);
   // Remonta a tela da etapa depois de desfazer, para limpar o formulário.
   const [version, setVersion] = useState(0);
@@ -97,45 +102,65 @@ export function AnimalStepPage({
     ? Number(pathname.slice(animalPath.length + 1)) || 1
     : null;
 
-  useEffect(() => {
-    let cancelled = false;
-    managementSessionClient
-      .getSessionAnimal(sessionId, animalId)
-      .then((data) => {
-        if (cancelled) return;
-        setContext(data);
-        // Aberto sem passo: fixa na URL o primeiro pendente (sem nova entrada no
-        // histórico), para recarregar a página cair no mesmo passo.
-        if (!window.location.pathname.startsWith(`${animalPath}/`)) {
-          window.history.replaceState(
-            null,
-            "",
-            stepUrl(boardPath, animalId, firstPendingStep(data)),
-          );
-        }
-      })
-      .catch(() => {
-        if (!cancelled) setFailed(true);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [sessionId, animalId, boardPath, animalPath]);
+  const {
+    data: context,
+    error,
+    isPending,
+    refetch,
+  } = useQuery(sessionAnimalQuery(sessionId, animalId));
+  // Sem as opções, só a apartação perde a lista de outros lotes.
+  const { data: optionsData } = useQuery({
+    ...managementOptionsQuery(currentProperty?.id),
+    enabled: !isPropertyLoading,
+  });
+  const options = optionsData ?? EMPTY_OPTIONS;
 
+  // Aberto sem passo: fixa na URL o primeiro pendente (sem nova entrada no histórico), para
+  // recarregar a página cair no mesmo passo. Sincroniza o histórico do navegador, um sistema
+  // fora do React: por isso no efeito.
+  const loaded = !!context;
   useEffect(() => {
-    let cancelled = false;
-    managementSessionClient
-      .getManagementOptions(currentProperty?.id)
-      .then((result) => {
-        if (!cancelled) setOptions(result);
-      })
-      .catch(() => {
-        // Sem as opções, só a apartação perde a lista de outros lotes.
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [currentProperty?.id]);
+    if (!context || window.location.pathname.startsWith(`${animalPath}/`)) {
+      return;
+    }
+    window.history.replaceState(
+      null,
+      "",
+      stepUrl(boardPath, animalId, firstPendingStep(context)),
+    );
+    // Só ao carregar: depois, os passos mudam a URL por conta própria.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loaded, animalPath, boardPath, animalId]);
+
+  // Registrar ou desfazer devolve o registro atualizado do animal: vai direto para o cache, e
+  // a sessão (lista de animais e contagens) é recarregada.
+  const applyContext = (updated: SessionAnimalContext) => {
+    queryClient.setQueryData(
+      managementSessionKeys.animal(sessionId, animalId),
+      updated,
+    );
+    queryClient.invalidateQueries({
+      queryKey: managementSessionKeys.detail(sessionId),
+    });
+    queryClient.invalidateQueries({ queryKey: managementSessionKeys.lists() });
+  };
+  const save = useMutation({
+    mutationFn: ({ key, payload }: { key: string; payload: unknown }) =>
+      managementSessionClient.saveStepRecord(sessionId, animalId, key, payload),
+    onSuccess: applyContext,
+  });
+  const clear = useMutation({
+    mutationFn: (key: string) =>
+      managementSessionClient.clearStepRecord(sessionId, animalId, key),
+    onSuccess: (updated) => {
+      applyContext(updated);
+      toast.success("Registro desfeito.");
+      // Remonta o formulário da etapa, que agora está sem registro.
+      setVersion((v) => v + 1);
+    },
+    onError: (e) => toast.error(e.message),
+  });
+  const saving = save.isPending;
 
   const index = context
     ? urlStep === null
@@ -159,16 +184,27 @@ export function AnimalStepPage({
       ?.focus();
   }, [screenKey]);
 
-  if (failed) {
+  if (isPending) return <FormSkeleton />;
+
+  if (!context) {
+    // O animal saiu da sessão (ou ela não existe mais): tentar de novo não adianta.
+    if (isNotFoundError(error)) {
+      return (
+        <ErrorPage
+          title="Animal não encontrado na sessão"
+          message="Ele pode ter sido removido da sessão."
+          onBack={() => navigate(boardPath)}
+          backLabel="Lista de animais"
+        />
+      );
+    }
     return (
       <ErrorPage
         message="Não foi possível obter os dados do servidor."
-        onRetry={() => window.location.reload()}
+        onRetry={() => refetch()}
       />
     );
   }
-
-  if (!context) return <FormSkeleton />;
 
   const { steps, animal, records } = context;
   const view = sessionView(animal, context.sessionValues);
@@ -200,39 +236,16 @@ export function AnimalStepPage({
     }
   }
 
+  // A falha volta para a tela da etapa, que mostra os erros nos campos.
   async function handleSubmit(payload: unknown) {
-    setSaving(true);
-    try {
-      const updated = await managementSessionClient.saveStepRecord(
-        sessionId,
-        animalId,
-        current.key,
-        payload,
-      );
-      if (isLast) toast.success("Registro do animal concluído.");
-      else setContext(updated);
-      goNext();
-    } finally {
-      setSaving(false);
-    }
+    await save.mutateAsync({ key: current.key, payload });
+    if (isLast) toast.success("Registro do animal concluído.");
+    goNext();
   }
 
-  async function handleUndo() {
+  function handleUndo() {
     setUndoing(false);
-    try {
-      setContext(
-        await managementSessionClient.clearStepRecord(
-          sessionId,
-          animalId,
-          current.key,
-        ),
-      );
-      toast.success("Registro desfeito.");
-      // Remonta o formulário da etapa, que agora está sem registro.
-      setVersion((v) => v + 1);
-    } catch (e) {
-      toast.error((e as Error).message);
-    }
+    clear.mutate(current.key);
   }
 
   return (
