@@ -124,7 +124,7 @@ const PEOPLE = {
   },
   vet: {
     type: "INDIVIDUAL",
-    taxId: "33344455501",
+    taxId: "33344455508",
     name: "Dr. Paulo Henrique Mendes",
     phone: "34991112222",
     email: "paulo.vet@example.com",
@@ -161,7 +161,7 @@ const PEOPLE = {
   },
   leiloes: {
     type: "COMPANY",
-    taxId: "33344455000170",
+    taxId: "33344455000183",
     name: "Leilões Cerrado Ltda",
     tradeName: "Leilões Cerrado",
     stateRegistration: "5556667778",
@@ -171,7 +171,7 @@ const PEOPLE = {
   // Pessoa inativa, para o filtro de inativas.
   inativo: {
     type: "INDIVIDUAL",
-    taxId: "44455566602",
+    taxId: "44455566619",
     name: "João Batista Pereira",
     phone: "34988776655",
     deactivatedAt: ago(60),
