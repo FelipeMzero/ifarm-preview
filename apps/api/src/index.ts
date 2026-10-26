@@ -15,7 +15,7 @@ import { neuteringTechniqueRoutes } from "./features/neutering-technique/routes"
 import { personRoutes } from "./features/person/routes";
 import { propertyRoutes } from "./features/property/routes";
 import { purchaseRoutes } from "./routes/purchase";
-import { receptionRoutes } from "./routes/reception";
+import { receptionRoutes } from "./features/reception/routes";
 import { stockingPreviewRoutes } from "./routes/stocking-preview";
 import { userRoutes } from "./routes/user";
 
