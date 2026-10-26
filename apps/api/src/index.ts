@@ -5,7 +5,7 @@ import { cors } from "hono/cors";
 import { auth } from "./auth";
 import { addressRoutes } from "./routes/address";
 import { animalRoutes } from "./routes/animal";
-import { areaRoutes } from "./features/area/routes";
+import { areaRoutes, stockingPreviewRoutes } from "./features/area/routes";
 import { batchRoutes } from "./features/batch/routes";
 import { batchTransferRoutes } from "./routes/batch-transfer";
 import { breedRoutes } from "./features/breed/routes";
@@ -16,7 +16,6 @@ import { personRoutes } from "./features/person/routes";
 import { propertyRoutes } from "./features/property/routes";
 import { purchaseRoutes } from "./routes/purchase";
 import { receptionRoutes } from "./features/reception/routes";
-import { stockingPreviewRoutes } from "./routes/stocking-preview";
 import { userRoutes } from "./routes/user";
 
 const app = new Hono();

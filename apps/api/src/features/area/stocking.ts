@@ -1,8 +1,9 @@
-import "server-only";
 import type { AreaOccupancy, Sex, StockingPreview } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
-import { NotFoundError } from "../errors";
-import { capacityCheck, sumUnits, type UaAnimal } from "./rules";
+import { capacityCheck, sumUnits, type UaAnimal } from "./stocking-rules";
+
+// Lotação das áreas em UA (RN-AREA-04), lida do banco: usada pela prévia de lotação, pelo
+// mapa de áreas e pelo painel do lote. O cálculo da UA fica em stocking-rules.ts.
 
 const UA_SELECT = {
   id: true,
@@ -108,24 +109,6 @@ export async function stockingPreview(params: {
     projectedUa,
     exceeds,
   };
-}
-
-// Mesma prévia, para a confirmação de uma transferência já salva: área do lote de destino e
-// animais da transferência.
-export async function transferStockingPreview(transferId: string) {
-  const transfer = await prisma.animalBatchTransfer.findUnique({
-    where: { id: transferId },
-    select: {
-      destinationBatchId: true,
-      items: { select: { animalId: true } },
-    },
-  });
-  if (!transfer) throw new NotFoundError("Transferência não encontrada.");
-
-  return stockingPreview({
-    batchId: transfer.destinationBatchId,
-    animalIds: transfer.items.map((i) => i.animalId),
-  });
 }
 
 // Ocupação atual de várias áreas de uma vez (para o mapa): lote aberto em cada área,

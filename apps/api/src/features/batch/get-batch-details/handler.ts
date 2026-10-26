@@ -3,8 +3,8 @@ import { prisma } from "@ifarm/db";
 import { sortWeighings, toWeighingDto } from "@ifarm/domain/animal/weighings";
 import { NotFoundError } from "@ifarm/domain/errors";
 import { effectiveWeighing } from "@ifarm/domain/management-session/effective";
-import { stockingPreview } from "@ifarm/domain/stocking/queries";
 import { fromDbDate } from "@ifarm/domain/db-dates";
+import { stockingPreview } from "../../area/stocking";
 import { averageDailyGain, groupPurchases, weightSeries } from "../rules";
 
 // Painel do lote: animais com GMD, peso médio ao longo do tempo, movimentações,

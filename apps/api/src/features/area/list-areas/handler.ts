@@ -1,7 +1,7 @@
 import type { AreaQuery, AreaRow } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
 import { getOrAssignCurrentProperty } from "@ifarm/domain/current-property/queries";
-import { areasLastExit, areasOccupancy } from "@ifarm/domain/stocking/queries";
+import { areasLastExit, areasOccupancy } from "../stocking";
 import { areaRotation, areaStatus } from "../rules";
 
 // Áreas da propriedade informada ou, sem ela, da propriedade atual do usuário; cada uma com a

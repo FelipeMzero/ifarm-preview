@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { animalUnits, capacityCheck, sumUnits, UA_KG } from "./rules";
-import { toDbDate } from "../db-dates";
+import { animalUnits, capacityCheck, sumUnits, UA_KG } from "./stocking-rules";
+import { toDbDate } from "@ifarm/domain/db-dates";
 
 const now = new Date("2026-10-19T12:00:00Z");
 const base = { currentWeight: null, birthDate: null, neutered: false } as const;
