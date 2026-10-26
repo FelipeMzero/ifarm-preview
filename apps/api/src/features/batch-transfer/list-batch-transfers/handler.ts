@@ -1,14 +1,11 @@
-import type { BatchTransferQuery } from "@ifarm/shared";
 import {
   fromLocalDateTime,
-  type BatchTransferDetail,
   type BatchTransferListResult,
+  type BatchTransferQuery,
 } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
 import { getOrAssignCurrentProperty } from "@ifarm/domain/current-property/queries";
-import { NotFoundError } from "@ifarm/domain/errors";
-import { TRANSFER_STATUS_WHERE, transferStatus } from "./rules";
-import { unavailableReason } from "../animal/rules";
+import { TRANSFER_STATUS_WHERE, transferStatus } from "../rules";
 
 function buildWhere(query: BatchTransferQuery, propertyId: string) {
   const where: Record<string, unknown> = {
@@ -98,66 +95,5 @@ export async function listBatchTransfers(
     page: query.page,
     pageSize: query.pageSize,
     pageCount: Math.ceil(total / query.pageSize),
-  };
-}
-
-export async function getBatchTransfer(
-  id: string,
-): Promise<BatchTransferDetail> {
-  const transfer = await prisma.animalBatchTransfer.findUnique({
-    where: { id },
-    include: {
-      destinationBatch: { select: { id: true, name: true } },
-      items: {
-        orderBy: { id: "asc" },
-        include: {
-          originBatch: { select: { id: true, name: true } },
-          animal: {
-            select: {
-              id: true,
-              code: true,
-              currentTag: true,
-              currentRfid: true,
-              name: true,
-              sex: true,
-              status: true,
-              currentPropertyId: true,
-              currentWeight: true,
-              currentBatch: { select: { id: true, name: true } },
-            },
-          },
-        },
-      },
-    },
-  });
-  if (!transfer) throw new NotFoundError("Transferência não encontrada.");
-
-  return {
-    id: transfer.id,
-    transferredAt: fromLocalDateTime(transfer.transferredAt),
-    notes: transfer.notes ?? "",
-    destinationBatch: transfer.destinationBatch,
-    propertyId: transfer.propertyId,
-    status: transferStatus(transfer),
-    confirmedAt: transfer.confirmedAt?.toISOString() ?? null,
-    cancelledAt: transfer.cancelledAt?.toISOString() ?? null,
-    updatedAt: transfer.updatedAt.toISOString(),
-    animals: transfer.items.map(({ animal, originBatch }) => ({
-      id: animal.id,
-      code: animal.code,
-      earTag: animal.currentTag,
-      rfid: animal.currentRfid,
-      name: animal.name,
-      sex: animal.sex,
-      status: animal.status,
-      currentWeightKg: animal.currentWeight?.toNumber() ?? null,
-      currentBatch: animal.currentBatch,
-      originBatch,
-      // Só pendente: depois de encerrada, não há o que remover.
-      unavailableReason:
-        transferStatus(transfer) === "pending"
-          ? unavailableReason(animal, transfer.propertyId)
-          : null,
-    })),
   };
 }
