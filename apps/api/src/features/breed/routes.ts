@@ -1,14 +1,14 @@
 import { Hono } from "hono";
+import { breedSchema, RESOURCE_ACCESS } from "@ifarm/shared";
+import { errorResponse, uuidParam, validationErrorResponse } from "../../http";
+import { requireSession } from "../../session";
 import {
   createBreed,
   deleteBreed,
   toggleBreedStatus,
   updateBreed,
-} from "@ifarm/domain/breed/mutations";
-import { listBreeds } from "@ifarm/domain/breed/queries";
-import { breedSchema, RESOURCE_ACCESS } from "@ifarm/shared";
-import { errorResponse, uuidParam, validationErrorResponse } from "../http";
-import { requireSession } from "../session";
+} from "./mutations";
+import { listBreeds } from "./queries";
 
 export const breedRoutes = new Hono();
 

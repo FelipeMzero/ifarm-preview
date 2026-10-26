@@ -1,4 +1,3 @@
-import "server-only";
 import type { Breed } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
 

@@ -8,7 +8,7 @@ import { animalRoutes } from "./routes/animal";
 import { areaRoutes } from "./routes/area";
 import { batchRoutes } from "./routes/batch";
 import { batchTransferRoutes } from "./routes/batch-transfer";
-import { breedRoutes } from "./routes/breed";
+import { breedRoutes } from "./features/breed/routes";
 import { healthManagementTypeRoutes } from "./routes/health-management-type";
 import { managementSessionRoutes } from "./routes/management-session";
 import { neuteringTechniqueRoutes } from "./routes/neutering-technique";

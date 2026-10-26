@@ -1,9 +1,8 @@
-import "server-only";
 import type { BreedInput } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
-import { write } from "../db-errors";
-import { NotFoundError } from "../errors";
-import { toggledDeactivatedAt } from "../status";
+import { write } from "@ifarm/domain/db-errors";
+import { NotFoundError } from "@ifarm/domain/errors";
+import { toggledDeactivatedAt } from "@ifarm/domain/status";
 import { toBreed } from "./queries";
 
 async function findOrThrow(id: string) {
