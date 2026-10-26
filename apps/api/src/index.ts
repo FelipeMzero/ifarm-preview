@@ -13,7 +13,7 @@ import { healthManagementTypeRoutes } from "./features/health-management-type/ro
 import { managementSessionRoutes } from "./routes/management-session";
 import { neuteringTechniqueRoutes } from "./features/neutering-technique/routes";
 import { personRoutes } from "./features/person/routes";
-import { propertyRoutes } from "./routes/property";
+import { propertyRoutes } from "./features/property/routes";
 import { purchaseRoutes } from "./routes/purchase";
 import { receptionRoutes } from "./routes/reception";
 import { stockingPreviewRoutes } from "./routes/stocking-preview";
