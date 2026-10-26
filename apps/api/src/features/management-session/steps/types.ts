@@ -1,7 +1,7 @@
 import type { ZodType } from "zod";
 import type { Prisma } from "@ifarm/db";
 import type { StepType } from "@ifarm/shared";
-import { BusinessError } from "@ifarm/domain/errors";
+import { BusinessError } from "../../../lib/errors";
 import { type SessionStep } from "../session-steps";
 
 export type Tx = Prisma.TransactionClient;

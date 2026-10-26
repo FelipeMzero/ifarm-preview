@@ -1,10 +1,10 @@
 import type { AnimalIdentifierRecord, IdentifierKind } from "@ifarm/shared";
 import { Prisma } from "@ifarm/db";
+import { BusinessError } from "../../../lib/errors";
 import {
   effectiveRfidTagging,
   effectiveTagging,
 } from "../../management-session/effective";
-import { BusinessError } from "@ifarm/domain/errors";
 
 type Tx = Prisma.TransactionClient;
 

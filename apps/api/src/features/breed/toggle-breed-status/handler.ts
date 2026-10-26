@@ -1,5 +1,5 @@
 import { prisma } from "@ifarm/db";
-import { toggledDeactivatedAt } from "@ifarm/domain/status";
+import { toggledDeactivatedAt } from "../../../lib/status";
 import { findBreedOrThrow, toBreed } from "../shared";
 
 export async function toggleBreedStatus(id: string) {

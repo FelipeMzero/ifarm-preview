@@ -1,4 +1,4 @@
-import { toDbDate } from "@ifarm/domain/db-dates";
+import { toDbDate } from "../../lib/db-dates";
 
 // Usados por mais de uma operação de lote.
 

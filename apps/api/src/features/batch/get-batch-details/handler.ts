@@ -1,10 +1,10 @@
 import { fromLocalDateTime, type BatchFullDetails } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
+import { fromDbDate } from "../../../lib/db-dates";
+import { NotFoundError } from "../../../lib/errors";
 import { sortWeighings, toWeighingDto } from "../../animal/weighing/shared";
-import { NotFoundError } from "@ifarm/domain/errors";
-import { effectiveWeighing } from "../../management-session/effective";
-import { fromDbDate } from "@ifarm/domain/db-dates";
 import { stockingPreview } from "../../area/stocking";
+import { effectiveWeighing } from "../../management-session/effective";
 import { averageDailyGain, groupPurchases, weightSeries } from "../rules";
 
 // Painel do lote: animais com GMD, peso médio ao longo do tempo, movimentações,

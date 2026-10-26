@@ -3,9 +3,9 @@ import {
   healthPlanSchema,
   REQUIRED_DOSE_MESSAGE,
 } from "@ifarm/shared";
+import { fromDbDate, toDbDate } from "../../../lib/db-dates";
 import { doseChangeBlocker, plannedDose, requiresDose } from "../rules";
 import { defineStep, StepError } from "./types";
-import { fromDbDate, toDbDate } from "@ifarm/domain/db-dates";
 
 // Datas do procedimento chegam como "AAAA-MM-DD" (ou null); no banco são @db.Date.
 const toDbDay = (v: string | null) => (v ? toDbDate(v) : null);

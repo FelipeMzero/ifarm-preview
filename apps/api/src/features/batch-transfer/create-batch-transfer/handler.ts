@@ -1,8 +1,8 @@
 import { toLocalDateTime, type BatchTransferData } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
-import { getOrAssignCurrentProperty } from "../../current-property/shared";
-import { BusinessError } from "@ifarm/domain/errors";
+import { BusinessError } from "../../../lib/errors";
 import { assertNoConflicts } from "../../animal/commitments";
+import { getOrAssignCurrentProperty } from "../../current-property/shared";
 import { validateTransferPlan } from "../shared";
 
 // Planeja uma transferência (pendente) para a propriedade informada ou a atual do usuário.

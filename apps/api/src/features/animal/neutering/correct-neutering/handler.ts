@@ -5,13 +5,13 @@ import {
 } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
 import { assertNotBeforeBirth, assertNotFuture } from "../../eventDate";
+import { sessionDateLock } from "../../rules";
+import { fieldError } from "../../shared";
 import {
   findActiveNeutering,
   INVALID_TECHNIQUE_MESSAGE,
   isValidNeuteringTechnique,
 } from "../shared";
-import { sessionDateLock } from "../../rules";
-import { fieldError } from "../../shared";
 
 // Corrige técnica, data (só castrações avulsas) e observação; guarda os valores originais.
 export async function correctNeutering(

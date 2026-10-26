@@ -1,5 +1,5 @@
 import { prisma } from "@ifarm/db";
-import { write } from "@ifarm/domain/db-errors";
+import { write } from "../../../lib/db-errors";
 import { findHealthManagementTypeOrThrow } from "../shared";
 
 // Exclusão bloqueada se houver procedimento sanitário vinculado (use a inativação).

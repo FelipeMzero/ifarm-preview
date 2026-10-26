@@ -1,7 +1,7 @@
 import { prisma } from "@ifarm/db";
-import { ValidationError } from "@ifarm/domain/errors";
-import { blockedTransferAnimals } from "./rules";
+import { ValidationError } from "../../lib/errors";
 import { animalLabel, summarize } from "../animal/rules";
+import { blockedTransferAnimals } from "./rules";
 
 // Usados por mais de uma operação de transferência.
 

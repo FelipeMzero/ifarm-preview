@@ -1,4 +1,3 @@
-import { BusinessError } from "@ifarm/domain/errors";
 import { Prisma } from "@ifarm/db";
 import {
   describeCommitment,
@@ -6,12 +5,13 @@ import {
   type CommitmentExclusion,
   type CommitmentIntent,
 } from "@ifarm/shared";
-import { animalLabel, blockingConflicts, summarize } from "./rules";
+import { BusinessError } from "../../lib/errors";
 import {
   sessionStepsSelect,
   stepKey,
   toSessionSteps,
 } from "../management-session/session-steps";
+import { animalLabel, blockingConflicts, summarize } from "./rules";
 
 // Compromissos pendentes dos animais (regras em packages/shared/src/animal/commitments.ts e em
 // docs/data-dictionary.md, seção 2.9).

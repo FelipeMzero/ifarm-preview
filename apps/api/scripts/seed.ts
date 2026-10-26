@@ -3,24 +3,24 @@
 // estão "atuais". Só popula um banco vazio: para recriar, rode
 //   pnpm exec prisma db push --force-reset && pnpm exec prisma db seed
 import { prisma } from "@ifarm/db";
-import { auth } from "../src/auth";
 import type { Prisma } from "@ifarm/db/client";
 import type { AnimalOrigin, AnimalStatus, Sex } from "@ifarm/db/enums";
-import { consolidateSession } from "../src/features/management-session/consolidate";
-import { findCommitments } from "../src/features/animal/commitments";
-import { toDbDate } from "@ifarm/domain/db-dates";
-import { saveAnimalStep } from "../src/features/management-session/session-animal/records";
-import { applyPlanSteps } from "../src/features/management-session/shared";
 import { planStepSchema } from "@ifarm/shared";
-import {
-  findReception,
-  receiveAnimal,
-} from "../src/features/purchase/reception";
+import { auth } from "../src/auth";
+import { findCommitments } from "../src/features/animal/commitments";
+import { consolidateSession } from "../src/features/management-session/consolidate";
+import { saveAnimalStep } from "../src/features/management-session/session-animal/records";
 import {
   type SessionStep,
   stepKey,
   toStepRows,
 } from "../src/features/management-session/session-steps";
+import { applyPlanSteps } from "../src/features/management-session/shared";
+import {
+  findReception,
+  receiveAnimal,
+} from "../src/features/purchase/reception";
+import { toDbDate } from "../src/lib/db-dates";
 
 // ---------------------------------------------------------------------------
 // Datas relativas ao dia do seed

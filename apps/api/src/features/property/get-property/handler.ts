@@ -1,6 +1,6 @@
 import type { PropertyInput } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
-import { NotFoundError } from "@ifarm/domain/errors";
+import { NotFoundError } from "../../../lib/errors";
 
 // Devolve a propriedade no mesmo formato do formulário, para edição e detalhes.
 export async function getProperty(id: string): Promise<PropertyInput> {

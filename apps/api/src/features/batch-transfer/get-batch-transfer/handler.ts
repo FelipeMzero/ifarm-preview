@@ -1,8 +1,8 @@
 import { fromLocalDateTime, type BatchTransferDetail } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
-import { NotFoundError } from "@ifarm/domain/errors";
-import { transferStatus } from "../rules";
+import { NotFoundError } from "../../../lib/errors";
 import { unavailableReason } from "../../animal/rules";
+import { transferStatus } from "../rules";
 
 export async function getBatchTransfer(
   id: string,

@@ -1,5 +1,5 @@
 import { type Prisma } from "@ifarm/db";
-import { ValidationError } from "@ifarm/domain/errors";
+import { ValidationError } from "../../lib/errors";
 
 // Ocupação de uma área por lote: usada pelas operações de área e pelas de lote (criar,
 // mover e reativar um lote).

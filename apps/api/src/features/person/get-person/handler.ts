@@ -1,7 +1,7 @@
 import type { PersonInput } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
-import { NotFoundError } from "@ifarm/domain/errors";
-import { fromDbDate } from "@ifarm/domain/db-dates";
+import { fromDbDate } from "../../../lib/db-dates";
+import { NotFoundError } from "../../../lib/errors";
 
 // Devolve a pessoa no mesmo formato do formulário, para edição e detalhes.
 export async function getPerson(id: string): Promise<PersonInput> {

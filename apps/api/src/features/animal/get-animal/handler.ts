@@ -1,7 +1,7 @@
 import type { AnimalDetail } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
-import { fromDbDate } from "@ifarm/domain/db-dates";
-import { NotFoundError } from "@ifarm/domain/errors";
+import { fromDbDate } from "../../../lib/db-dates";
+import { NotFoundError } from "../../../lib/errors";
 import { effectiveNeutering } from "../../management-session/effective";
 
 // Com recastração há mais de um registro: vale o mais recente.

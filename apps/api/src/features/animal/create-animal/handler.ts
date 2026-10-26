@@ -4,10 +4,10 @@ import {
   type AnimalCreateData,
 } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
+import { toDbDate } from "../../../lib/db-dates";
+import { write } from "../../../lib/db-errors";
+import { BusinessError } from "../../../lib/errors";
 import { getOrAssignCurrentProperty } from "../../current-property/shared";
-import { toDbDate } from "@ifarm/domain/db-dates";
-import { write } from "@ifarm/domain/db-errors";
-import { BusinessError } from "@ifarm/domain/errors";
 import {
   INVALID_TECHNIQUE_MESSAGE,
   isValidNeuteringTechnique,

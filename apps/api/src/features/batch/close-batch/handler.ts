@@ -1,5 +1,5 @@
 import { prisma } from "@ifarm/db";
-import { BusinessError } from "@ifarm/domain/errors";
+import { BusinessError } from "../../../lib/errors";
 
 // Encerra um lote vazio e libera a área que ele ocupava. Lote com animais ativos ou
 // destino de transferências pendentes não pode ser encerrado.

@@ -1,5 +1,5 @@
 import { prisma } from "@ifarm/db";
-import { write } from "@ifarm/domain/db-errors";
+import { write } from "../../../lib/db-errors";
 import { findPropertyOrThrow } from "../shared";
 
 export async function deleteProperty(id: string) {

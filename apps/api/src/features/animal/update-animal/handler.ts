@@ -1,8 +1,8 @@
 import { toLocalDateTime, type AnimalUpdateData } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
-import { toDbDate } from "@ifarm/domain/db-dates";
-import { write } from "@ifarm/domain/db-errors";
-import { NotFoundError } from "@ifarm/domain/errors";
+import { toDbDate } from "../../../lib/db-dates";
+import { write } from "../../../lib/db-errors";
+import { NotFoundError } from "../../../lib/errors";
 import { assertNoConflicts } from "../commitments";
 import {
   INVALID_TECHNIQUE_MESSAGE,

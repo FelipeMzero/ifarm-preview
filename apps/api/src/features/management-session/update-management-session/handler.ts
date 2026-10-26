@@ -3,7 +3,7 @@ import {
   type ManagementSessionData,
 } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
-import { diffIds } from "@ifarm/domain/diff";
+import { diffIds } from "../../../lib/diff";
 import { assertNoConflicts } from "../../animal/commitments";
 import { animalLabel, summarize } from "../../animal/rules";
 import { findReception } from "../../purchase/reception";

@@ -1,6 +1,6 @@
 import type { SessionAnimalContext } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
-import { NotFoundError } from "@ifarm/domain/errors";
+import { NotFoundError } from "../../../../lib/errors";
 import { loadAnimalContext } from "../animalContext";
 
 // Tudo o que as telas de etapa precisam de um animal da sessão (ver loadAnimalContext).

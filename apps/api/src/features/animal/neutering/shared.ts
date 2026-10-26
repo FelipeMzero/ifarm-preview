@@ -1,6 +1,6 @@
 import type { Prisma } from "@ifarm/db/client";
 import { prisma } from "@ifarm/db";
-import { NotFoundError } from "@ifarm/domain/errors";
+import { NotFoundError } from "../../../lib/errors";
 import { effectiveNeutering } from "../../management-session/effective";
 
 // Relações necessárias para exibir a técnica (atual e a lançada originalmente).

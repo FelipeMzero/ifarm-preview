@@ -4,9 +4,9 @@ import {
   rfidPlanSchema,
   tagPlanSchema,
 } from "@ifarm/shared";
+import { animalLabel, summarize } from "../../animal/rules";
 import { takenInSession } from "../rules";
 import { defineStep, StepError, type StepAnimal, type Tx } from "./types";
-import { animalLabel, summarize } from "../../animal/rules";
 
 type IdentifierItem = {
   id: number;

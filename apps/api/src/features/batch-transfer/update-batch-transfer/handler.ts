@@ -1,7 +1,7 @@
 import { toLocalDateTime, type BatchTransferData } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
-import { diffIds } from "@ifarm/domain/diff";
-import { BusinessError, NotFoundError } from "@ifarm/domain/errors";
+import { diffIds } from "../../../lib/diff";
+import { BusinessError, NotFoundError } from "../../../lib/errors";
 import { assertNoConflicts } from "../../animal/commitments";
 import { transferStatus } from "../rules";
 import { validateTransferPlan } from "../shared";

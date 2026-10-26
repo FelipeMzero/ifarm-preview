@@ -1,6 +1,6 @@
 import type { BatchReopenData } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
-import { BusinessError } from "@ifarm/domain/errors";
+import { BusinessError } from "../../../lib/errors";
 import { assertAreaAvailable } from "../../area/availability";
 
 // Reativa um lote encerrado numa área livre. Abre um novo registro de área (em vez

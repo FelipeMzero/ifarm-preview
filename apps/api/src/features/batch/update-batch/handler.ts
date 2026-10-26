@@ -1,7 +1,7 @@
 import type { BatchUpdateData } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
-import { write } from "@ifarm/domain/db-errors";
-import { NotFoundError } from "@ifarm/domain/errors";
+import { write } from "../../../lib/db-errors";
+import { NotFoundError } from "../../../lib/errors";
 import { assertAreaAvailable } from "../../area/availability";
 import { toTargetDate } from "../shared";
 

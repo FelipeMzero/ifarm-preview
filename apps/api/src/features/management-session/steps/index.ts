@@ -1,11 +1,11 @@
 import { type StepType } from "@ifarm/shared";
+import { type SessionStep, stepKey } from "../session-steps";
 import { batchStep } from "./batch";
 import { healthStep } from "./health";
 import { rfidStep, tagStep } from "./identifier";
 import { neuteringStep } from "./neutering";
 import type { SessionCtx, StepModule, Tx } from "./types";
 import { weighingStep } from "./weighing";
-import { type SessionStep, stepKey } from "../session-steps";
 
 // Registro dos tipos de etapa. Um tipo novo entra aqui e em packages/shared/src/management-session
 // (steps.ts, plan-steps.ts e step-payloads.ts).

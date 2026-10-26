@@ -4,13 +4,13 @@ import {
   type IdentifierKind,
 } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
+import { keepsOriginal, sessionDateLock } from "../../rules";
 import {
   ADAPTERS,
   IdentifierError,
   identifierNotFound,
   recomputeCurrent,
 } from "../shared";
-import { keepsOriginal, sessionDateLock } from "../../rules";
 
 // Corrige valor, data (só registros avulsos) e observação de um brinco/RFID.
 export async function correctIdentifier(

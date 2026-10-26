@@ -1,7 +1,7 @@
 import type { AreaInput } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
-import { write } from "@ifarm/domain/db-errors";
-import { ValidationError } from "@ifarm/domain/errors";
+import { write } from "../../../lib/db-errors";
+import { ValidationError } from "../../../lib/errors";
 import { toAreaData } from "../shared";
 
 export async function createArea(input: AreaInput) {

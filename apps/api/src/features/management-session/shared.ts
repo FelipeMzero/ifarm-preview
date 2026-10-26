@@ -1,5 +1,6 @@
 import { type ManagementSessionStatus, type StepType } from "@ifarm/shared";
 import type { CommitmentIntent } from "@ifarm/shared";
+import { animalLabel, summarize, unavailableReason } from "../animal/rules";
 import { repeatedStepMessage } from "./rules";
 import { stepModule } from "./steps";
 import { StepError, type SessionCtx, type Tx } from "./steps/types";
@@ -12,7 +13,6 @@ import {
   toSessionSteps,
   toStepRows,
 } from "./session-steps";
-import { animalLabel, summarize, unavailableReason } from "../animal/rules";
 
 export { StepError };
 

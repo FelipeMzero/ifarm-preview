@@ -1,4 +1,3 @@
-import "server-only";
 import { Prisma } from "@ifarm/db";
 import { ConflictError } from "./errors";
 

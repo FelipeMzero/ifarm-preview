@@ -1,6 +1,6 @@
 import type { PurchaseData } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
-import { toDbDate } from "@ifarm/domain/db-dates";
+import { toDbDate } from "../../../lib/db-dates";
 import { planCategoryChanges, PurchaseError, purchaseStatus } from "../rules";
 
 // Altera a negociação enquanto a compra está em andamento. Categorias com animais

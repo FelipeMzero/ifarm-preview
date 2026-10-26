@@ -1,6 +1,6 @@
 import type { CurrentProperty } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
-import { NotFoundError } from "@ifarm/domain/errors";
+import { NotFoundError } from "../../../lib/errors";
 
 // Troca a propriedade em que o usuário está trabalhando.
 export async function setCurrentProperty(

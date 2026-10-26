@@ -1,7 +1,7 @@
 import { type PersonInput } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
-import { NotFoundError } from "@ifarm/domain/errors";
-import { toDbDate } from "@ifarm/domain/db-dates";
+import { toDbDate } from "../../lib/db-dates";
+import { NotFoundError } from "../../lib/errors";
 
 // Usados por mais de uma operação de pessoa.
 

@@ -1,6 +1,6 @@
 import { prisma } from "@ifarm/db";
-import { ConflictError } from "@ifarm/domain/errors";
-import { toggledDeactivatedAt } from "@ifarm/domain/status";
+import { ConflictError } from "../../../lib/errors";
+import { toggledDeactivatedAt } from "../../../lib/status";
 import { findOccupyingBatch } from "../availability";
 import { findAreaOrThrow } from "../shared";
 

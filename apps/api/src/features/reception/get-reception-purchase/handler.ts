@@ -1,6 +1,6 @@
 import type { ReceptionPurchase } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
-import { NotFoundError } from "@ifarm/domain/errors";
+import { NotFoundError } from "../../../lib/errors";
 import { receptionPurchaseInclude, toReceptionPurchase } from "../shared";
 
 // Uma compra vista pela área de recepções: categorias com recebidos/esperados e as

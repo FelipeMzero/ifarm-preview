@@ -1,6 +1,6 @@
 import type { PropertyInput } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
-import { NotFoundError, ValidationError } from "@ifarm/domain/errors";
+import { NotFoundError, ValidationError } from "../../lib/errors";
 
 // Regras de propriedade (docs/requirements/mod-02-propriedades.md):
 // - RN-PROPRIEDADE-01 (registro fundiário único): restrições `@unique` em cib/ccir/car; o

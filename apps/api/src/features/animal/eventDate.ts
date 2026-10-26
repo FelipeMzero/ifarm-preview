@@ -1,7 +1,7 @@
 import { formatDate, fromLocalDay, toLocalDateTime } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
-import { ValidationError } from "@ifarm/domain/errors";
-import { fromDbDate } from "@ifarm/domain/db-dates";
+import { fromDbDate } from "../../lib/db-dates";
+import { ValidationError } from "../../lib/errors";
 
 // Data e hora de manejos avulsos e de correções (pesagem, castração, identificação),
 // recebidas como "AAAA-MM-DDTHH:mm" e interpretadas no fuso local.

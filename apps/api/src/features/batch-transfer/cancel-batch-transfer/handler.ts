@@ -1,5 +1,5 @@
 import { prisma } from "@ifarm/db";
-import { BusinessError } from "@ifarm/domain/errors";
+import { BusinessError } from "../../../lib/errors";
 
 // Cancela um plano pendente. O registro é mantido (cancelledAt) para auditoria.
 export async function cancelBatchTransfer(id: string) {

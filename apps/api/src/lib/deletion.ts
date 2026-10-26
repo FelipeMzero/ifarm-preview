@@ -1,4 +1,3 @@
-import "server-only";
 import { prisma, Prisma } from "@ifarm/db";
 import { BusinessError } from "./errors";
 

@@ -1,6 +1,6 @@
 import { today, type PurchasePaymentData } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
-import { toDbDate } from "@ifarm/domain/db-dates";
+import { toDbDate } from "../../../lib/db-dates";
 import { categoryLabel } from "../reception";
 import { missingValue, paymentBlocker, PurchaseError } from "../rules";
 

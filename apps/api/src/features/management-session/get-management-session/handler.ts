@@ -4,7 +4,7 @@ import {
   type ManagementSessionDetail,
 } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
-import { NotFoundError } from "@ifarm/domain/errors";
+import { NotFoundError } from "../../../lib/errors";
 import { unavailableReason } from "../../animal/rules";
 import { describeReception } from "../../purchase/reception";
 import { participantStatus } from "../session-steps";

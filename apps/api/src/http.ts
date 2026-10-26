@@ -4,7 +4,7 @@ import {
   ConflictError,
   NotFoundError,
   ValidationError,
-} from "@ifarm/domain/errors";
+} from "./lib/errors";
 
 // Parâmetro de rota que é UUID (os ids no banco são `@db.Uuid`): um valor em outro formato não
 // casa com a rota e recebe 404, sem chegar ao banco (que recusaria a consulta com um 500).
@@ -27,7 +27,7 @@ export function validationErrorResponse(error: z.ZodError) {
 }
 
 /**
- * Converte os erros lançados pelo domínio (@ifarm/domain) em respostas HTTP. Com `field`, um BusinessError é
+ * Converte os erros lançados pelos handlers (lib/errors.ts) em respostas HTTP. Com `field`, um BusinessError é
  * apresentado nesse campo do formulário (null = só a mensagem) em vez do campo do próprio erro.
  */
 export function errorResponse(

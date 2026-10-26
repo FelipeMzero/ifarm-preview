@@ -1,7 +1,7 @@
 import type { ManagementSessionData } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
-import { getOrAssignCurrentProperty } from "../../current-property/shared";
 import { assertNoConflicts } from "../../animal/commitments";
+import { getOrAssignCurrentProperty } from "../../current-property/shared";
 import {
   applyPlanSteps,
   invalidAnimals,

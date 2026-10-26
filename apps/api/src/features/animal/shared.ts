@@ -1,4 +1,4 @@
-import { ValidationError } from "@ifarm/domain/errors";
+import { ValidationError } from "../../lib/errors";
 
 // Usados por mais de uma operação de animal.
 

@@ -1,7 +1,7 @@
 import type { BatchDetail } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
-import { NotFoundError } from "@ifarm/domain/errors";
-import { fromDbDate } from "@ifarm/domain/db-dates";
+import { fromDbDate } from "../../../lib/db-dates";
+import { NotFoundError } from "../../../lib/errors";
 
 // Lote para edição: meta de venda, área atual e histórico de áreas.
 export async function getBatch(id: string): Promise<BatchDetail> {

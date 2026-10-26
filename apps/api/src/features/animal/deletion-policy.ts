@@ -1,5 +1,5 @@
 import type { Prisma } from "@ifarm/db";
-import type { DeletionPolicy } from "@ifarm/domain/deletion";
+import type { DeletionPolicy } from "../../lib/deletion";
 import {
   animalDeletionBlocker,
   isStandalonePurchase,

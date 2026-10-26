@@ -1,6 +1,6 @@
 import { prisma, Prisma } from "@ifarm/db";
 import type { AnimalWeighing } from "@ifarm/db/client";
-import { NotFoundError } from "@ifarm/domain/errors";
+import { NotFoundError } from "../../../lib/errors";
 import { effectiveWeighing } from "../../management-session/effective";
 
 type Tx = Prisma.TransactionClient;

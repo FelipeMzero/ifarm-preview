@@ -4,7 +4,7 @@ import {
   type PurchaseStatus,
 } from "@ifarm/shared";
 import type { Prisma } from "@ifarm/db";
-import { BusinessError } from "@ifarm/domain/errors";
+import { BusinessError } from "../../lib/errors";
 
 // Em andamento → consolidada (fim: custos rateados) ou cancelada (desconsiderada). O
 // pagamento é um fato do andamento, não uma situação.

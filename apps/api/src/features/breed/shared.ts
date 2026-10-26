@@ -1,6 +1,6 @@
 import type { Breed } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
-import { NotFoundError } from "@ifarm/domain/errors";
+import { NotFoundError } from "../../lib/errors";
 
 // Usados por mais de uma operação de raça.
 

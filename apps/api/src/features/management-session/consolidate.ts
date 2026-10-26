@@ -1,4 +1,10 @@
 import { assertNoConflicts } from "../animal/commitments";
+import {
+  animalLabel,
+  summarize,
+  unavailableAnimalsMessage,
+  unavailableReason,
+} from "../animal/rules";
 import { findReception } from "../purchase/reception";
 import { splitHandled } from "./rules";
 import {
@@ -9,12 +15,6 @@ import {
 } from "./shared";
 import { countDone, loadStepRecords, stepModule } from "./steps";
 import type { Tx } from "./steps/types";
-import {
-  animalLabel,
-  summarize,
-  unavailableAnimalsMessage,
-  unavailableReason,
-} from "../animal/rules";
 
 /**
  * Consolida a sessão: os animais sem nenhum registro saem da sessão e os registros

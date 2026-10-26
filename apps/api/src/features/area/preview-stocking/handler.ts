@@ -1,8 +1,8 @@
 import type { stockingPreviewSchema } from "@ifarm/shared";
 import type { z } from "zod";
 import { prisma } from "@ifarm/db";
-import { toDbDate } from "@ifarm/domain/db-dates";
-import { NotFoundError } from "@ifarm/domain/errors";
+import { toDbDate } from "../../../lib/db-dates";
+import { NotFoundError } from "../../../lib/errors";
 import { stockingPreview } from "../stocking";
 
 // Prévia da lotação da área que vai receber animais: de uma transferência já salva ou do que

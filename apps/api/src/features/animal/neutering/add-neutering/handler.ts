@@ -1,13 +1,13 @@
 import type { NeuteringCreateData } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
-import { NotFoundError } from "@ifarm/domain/errors";
+import { NotFoundError } from "../../../../lib/errors";
 import { assertNoConflicts } from "../../commitments";
 import { resolveEventDate } from "../../eventDate";
+import { fieldError } from "../../shared";
 import {
   INVALID_TECHNIQUE_MESSAGE,
   isValidNeuteringTechnique,
 } from "../shared";
-import { fieldError } from "../../shared";
 
 // Castração avulsa registrada na hora. Se o animal já é castrado, é uma recastração
 // (não é rotineira): o motivo é obrigatório.

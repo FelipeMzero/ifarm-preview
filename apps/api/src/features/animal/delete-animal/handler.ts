@@ -1,6 +1,6 @@
 import { Prisma } from "@ifarm/db";
-import { deleteRecord } from "@ifarm/domain/deletion";
-import { ConflictError, NotFoundError } from "@ifarm/domain/errors";
+import { deleteRecord } from "../../../lib/deletion";
+import { ConflictError, NotFoundError } from "../../../lib/errors";
 import { animalDeletionPolicy } from "../deletion-policy";
 
 // Exclusão pela política de animal (ver deletion-policy.ts).

@@ -1,7 +1,7 @@
 import type { BatchListResult, BatchQuery } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
+import { fromDbDate } from "../../../lib/db-dates";
 import { getOrAssignCurrentProperty } from "../../current-property/shared";
-import { fromDbDate } from "@ifarm/domain/db-dates";
 
 function buildWhere(query: BatchQuery, propertyId: string) {
   const where: Record<string, unknown> = { propertyId };

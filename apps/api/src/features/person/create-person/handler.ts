@@ -1,7 +1,7 @@
 import { type PersonInput } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
+import { write } from "../../../lib/db-errors";
 import { toAddressData } from "../../address/persistence";
-import { write } from "@ifarm/domain/db-errors";
 import { toPersonData } from "../shared";
 
 export async function createPerson(input: PersonInput) {

@@ -1,6 +1,6 @@
 import type { AreaInput } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
-import { write } from "@ifarm/domain/db-errors";
+import { write } from "../../../lib/db-errors";
 import { findAreaOrThrow, toAreaData } from "../shared";
 
 // A propriedade da área não muda na edição.
