@@ -11,7 +11,7 @@ import { batchTransferRoutes } from "./routes/batch-transfer";
 import { breedRoutes } from "./features/breed/routes";
 import { healthManagementTypeRoutes } from "./routes/health-management-type";
 import { managementSessionRoutes } from "./routes/management-session";
-import { neuteringTechniqueRoutes } from "./routes/neutering-technique";
+import { neuteringTechniqueRoutes } from "./features/neutering-technique/routes";
 import { personRoutes } from "./routes/person";
 import { propertyRoutes } from "./routes/property";
 import { purchaseRoutes } from "./routes/purchase";
