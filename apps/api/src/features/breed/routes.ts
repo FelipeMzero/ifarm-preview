@@ -1,82 +1,16 @@
 import { Hono } from "hono";
-import { breedSchema, RESOURCE_ACCESS } from "@ifarm/shared";
-import { errorResponse, uuidParam, validationErrorResponse } from "../../http";
-import { requireSession } from "../../session";
-import {
-  createBreed,
-  deleteBreed,
-  toggleBreedStatus,
-  updateBreed,
-} from "./mutations";
-import { listBreeds } from "./queries";
+import { createBreedRoute } from "./create-breed/route";
+import { deleteBreedRoute } from "./delete-breed/route";
+import { listBreedsRoute } from "./list-breeds/route";
+import { toggleBreedStatusRoute } from "./toggle-breed-status/route";
+import { updateBreedRoute } from "./update-breed/route";
 
+// As operações de raça, cada uma na própria pasta (endpoint em route.ts, o que ela faz em
+// handler.ts), montadas em /api/breed.
 export const breedRoutes = new Hono();
 
-breedRoutes.get("/", async (c) => {
-  const { response } = await requireSession(RESOURCE_ACCESS.racas);
-  if (response) return response;
-
-  try {
-    return c.json({ data: await listBreeds() });
-  } catch (error) {
-    return errorResponse(error);
-  }
-});
-
-breedRoutes.post("/", async (c) => {
-  const { response } = await requireSession(RESOURCE_ACCESS.racas);
-  if (response) return response;
-
-  try {
-    const validation = breedSchema.safeParse(await c.req.json());
-    if (!validation.success) return validationErrorResponse(validation.error);
-
-    const data = await createBreed(validation.data);
-    return c.json({ success: true, data }, 201);
-  } catch (error) {
-    return errorResponse(error);
-  }
-});
-
-breedRoutes.put(`/${uuidParam("id")}`, async (c) => {
-  const { response } = await requireSession(RESOURCE_ACCESS.racas);
-  if (response) return response;
-
-  try {
-    const { id } = c.req.param();
-    const validation = breedSchema.safeParse(await c.req.json());
-    if (!validation.success) return validationErrorResponse(validation.error);
-
-    const data = await updateBreed(id, validation.data);
-    return c.json({ success: true, data });
-  } catch (error) {
-    return errorResponse(error);
-  }
-});
-
-breedRoutes.delete(`/${uuidParam("id")}`, async (c) => {
-  const { response } = await requireSession(RESOURCE_ACCESS.racas);
-  if (response) return response;
-
-  try {
-    const { id } = c.req.param();
-    await deleteBreed(id);
-    return c.json({ success: true });
-  } catch (error) {
-    return errorResponse(error);
-  }
-});
-
-// Ativa ou desativa a raça.
-breedRoutes.patch(`/${uuidParam("id")}`, async (c) => {
-  const { response } = await requireSession(RESOURCE_ACCESS.racas);
-  if (response) return response;
-
-  try {
-    const { id } = c.req.param();
-    const data = await toggleBreedStatus(id);
-    return c.json({ success: true, data });
-  } catch (error) {
-    return errorResponse(error);
-  }
-});
+breedRoutes.route("/", listBreedsRoute);
+breedRoutes.route("/", createBreedRoute);
+breedRoutes.route("/", updateBreedRoute);
+breedRoutes.route("/", deleteBreedRoute);
+breedRoutes.route("/", toggleBreedStatusRoute);
