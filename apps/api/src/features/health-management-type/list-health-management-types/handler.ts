@@ -1,18 +1,6 @@
-import "server-only";
 import type { HealthManagementType } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
-
-export function toHealthManagementType(b: {
-  id: string;
-  name: string;
-  deactivatedAt: Date | null;
-}): HealthManagementType {
-  return {
-    id: b.id,
-    name: b.name,
-    deactivatedAt: b.deactivatedAt?.toISOString() ?? null,
-  };
-}
+import { toHealthManagementType } from "../shared";
 
 export async function listHealthManagementTypes(): Promise<
   HealthManagementType[]

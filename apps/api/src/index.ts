@@ -9,7 +9,7 @@ import { areaRoutes } from "./routes/area";
 import { batchRoutes } from "./routes/batch";
 import { batchTransferRoutes } from "./routes/batch-transfer";
 import { breedRoutes } from "./features/breed/routes";
-import { healthManagementTypeRoutes } from "./routes/health-management-type";
+import { healthManagementTypeRoutes } from "./features/health-management-type/routes";
 import { managementSessionRoutes } from "./routes/management-session";
 import { neuteringTechniqueRoutes } from "./features/neutering-technique/routes";
 import { personRoutes } from "./routes/person";
