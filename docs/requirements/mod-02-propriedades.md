@@ -15,8 +15,9 @@ Cada propriedade constitui uma unidade independente de gestão dentro do sistema
 | `CAR`            | Cadastro Ambiental Rural                                     | Texto      | Não    | Único (`RN-PROPRIEDADE-01`); formato UF-9999999-XXXX.XXXX.XXXX.XXXX.XXXX.XXXX.XXXX.XXXX, ex.: MT-5107909-E8C2.A75A.C69A.4A7C.8C26.99F5.CC59.9B9A |
 | `CIB`            | Cadastro Imobiliário Brasileiro                              | Texto      | Não    | Único (`RN-PROPRIEDADE-01`); formato AAAAAAA-D, ex.: ABC1234-5                                                                                   |
 | `CCIR`           | Certificado de Cadastro de Imóvel Rural no INCRA             | Texto      | Não    | Único (`RN-PROPRIEDADE-01`); formato 999.999.999.999-9                                                                                           |
-| `Latitude`       | Latitude da propriedade                                      | Real       | Não    | Entre -90 e 90                                                                                                                                   |
-| `Longitude`      | Longitude da propriedade                                     | Real       | Não    | Entre -180 e 180                                                                                                                                 |
+| `Latitude`       | Latitude da propriedade                                      | Real       | Sim    | Entre -90 e 90 (`RN-PROPRIEDADE-04`)                                                                                                             |
+| `Longitude`      | Longitude da propriedade                                     | Real       | Sim    | Entre -180 e 180 (`RN-PROPRIEDADE-04`)                                                                                                           |
+| `Fuso Horário`   | Fuso horário do local onde a propriedade fica                | Texto      | Sim    | Identificador IANA, ex.: `America/Sao_Paulo`, `America/Cuiaba` (`RN-PROPRIEDADE-05`)                                                             |
 | `Endereço`       | Endereço da propriedade                                      | Referência | Não    | Ver [Endereço](comum.md#endereço)                                                                                                                |
 | `Status`         | Situação do cadastro                                         | Enum       | Sim    | `Ativo` ou `Inativo` (ver [Exclusão vs Inativação](comum.md#exclusão-vs-inativação))                                                             |
 
@@ -27,6 +28,8 @@ Cada propriedade constitui uma unidade independente de gestão dentro do sistema
 - **`RN-PROPRIEDADE-01` - Identificação Fundiária Única:** Um registro fundiário oficial (CIB, CCIR ou CAR) identifica uma única propriedade; duas propriedades não podem ter o mesmo registro.
 - **`RN-PROPRIEDADE-02` - Titularidade Obrigatória:** Toda propriedade tem um titular, pessoa física ou jurídica responsável legal por ela.
 - **`RN-PROPRIEDADE-03` - Consistência de Área:** A área produtiva de uma propriedade não pode ser maior que a sua área total.
+- **`RN-PROPRIEDADE-04` - Localização Obrigatória:** Toda propriedade tem uma localização geográfica (latitude e longitude), que identifica onde ela fica.
+- **`RN-PROPRIEDADE-05` - Fuso Horário da Propriedade:** Toda propriedade tem um fuso horário, o do local onde ela fica. A data e a hora dos eventos da propriedade (manejos, transferências, recepções etc.) seguem esse fuso, inclusive para definir o dia em que cada evento aconteceu.
 
 ---
 
@@ -106,7 +109,7 @@ Permite cadastrar propriedades (fazendas), registrando novos imóveis rurais par
 | :-------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **User Story**        | Como **Administrador** ou **Gerente**, quero **cadastrar uma propriedade** no sistema para que ela possa ter suas áreas, lotes e animais gerenciados de forma independente. |
 | **Dependências**      | `RF-PESSOA-02` (o `Titular` deve existir previamente como pessoa)                                                                                                           |
-| **Regras Vinculadas** | `RN-PROPRIEDADE-01`, `RN-PROPRIEDADE-02`, `RN-PROPRIEDADE-03`                                                                                                               |
+| **Regras Vinculadas** | `RN-PROPRIEDADE-01`, `RN-PROPRIEDADE-02`, `RN-PROPRIEDADE-03`, `RN-PROPRIEDADE-04`, `RN-PROPRIEDADE-05`                                                                     |
 | **Atores**            | Administrador, Gerente                                                                                                                                                      |
 | **Plataformas**       | Web                                                                                                                                                                         |
 | **Versão**            | 1                                                                                                                                                                           |
@@ -114,7 +117,7 @@ Permite cadastrar propriedades (fazendas), registrando novos imóveis rurais par
 
 ### 2.2.2 - Critérios de Aceitação
 
-- [ ] Os campos `Nome` e `Titular` são obrigatórios; os demais são opcionais (`RN-PROPRIEDADE-02`).
+- [ ] Os campos `Nome`, `Titular`, `Latitude`, `Longitude` e `Fuso Horário` são obrigatórios; os demais são opcionais (`RN-PROPRIEDADE-02`, `RN-PROPRIEDADE-04`, `RN-PROPRIEDADE-05`).
 - [ ] O `Titular` deve ser escolhido entre as pessoas ativas, com possibilidade de busca por nome.
 - [ ] Deve ser possível cadastrar uma nova pessoa a partir da escolha do `Titular`, sem sair do cadastro da propriedade (`RF-PESSOA-02`); a pessoa cadastrada passa a ser o titular.
 - [ ] Os campos `CIB`, `CCIR` e `CAR` são únicos quando informados (`RN-PROPRIEDADE-01`) e devem seguir os seus formatos oficiais.
@@ -123,6 +126,8 @@ Permite cadastrar propriedades (fazendas), registrando novos imóveis rurais par
 - [ ] Ao ser informado um CEP válido, o sistema deve consultar a localização no serviço OpenStreetMap e preencher automaticamente `Latitude` e `Longitude`.
 - [ ] Deve ser possível definir `Latitude` e `Longitude` escolhendo um ponto em um mapa.
 - [ ] A localização informada deve ser exibida em um mapa.
+- [ ] O `Fuso Horário` deve ser sugerido automaticamente a partir da `Latitude` e da `Longitude`; enquanto o usuário não escolher outro, a sugestão acompanha as mudanças da localização.
+- [ ] O usuário pode escolher outro `Fuso Horário`, entre os fusos do Brasil, exibidos com o nome da região e o deslocamento em relação ao UTC (ex.: _"Mato Grosso (UTC−4)"_).
 
 ### 2.2.3 - Fluxos
 
@@ -130,9 +135,9 @@ Permite cadastrar propriedades (fazendas), registrando novos imóveis rurais par
 
 1. O fluxo começa quando o usuário aciona a criação de uma nova propriedade na listagem (`RF-PROPRIEDADE-01`).
 2. O sistema exibe o formulário de cadastro, com um mapa para a localização da propriedade.
-3. O usuário preenche os dados da propriedade, podendo cadastrar um novo titular, informar o `Endereço` pelo CEP e definir a localização no mapa (ver fluxos alternativos).
+3. O usuário preenche os dados da propriedade, podendo cadastrar um novo titular, informar o `Endereço` pelo CEP, definir a localização no mapa e escolher outro `Fuso Horário` (ver fluxos alternativos).
 4. O usuário aciona a ação "Salvar".
-5. O sistema valida os dados (`RN-PROPRIEDADE-01`, `RN-PROPRIEDADE-02`, `RN-PROPRIEDADE-03`), persiste o registro com `Status` `Ativo` e exibe a mensagem: _"Registro salvo com sucesso!"_
+5. O sistema valida os dados (`RN-PROPRIEDADE-01`, `RN-PROPRIEDADE-02`, `RN-PROPRIEDADE-03`, `RN-PROPRIEDADE-04`, `RN-PROPRIEDADE-05`), persiste o registro com `Status` `Ativo` e exibe a mensagem: _"Registro salvo com sucesso!"_
 6. O fluxo termina.
 
 **Fluxos alternativos**
@@ -145,7 +150,7 @@ Permite cadastrar propriedades (fazendas), registrando novos imóveis rurais par
 
 - **A2 – Preenchimento do endereço pelo CEP (passo 3):**
   1. O usuário informa o `CEP`.
-  2. O sistema preenche automaticamente os demais campos do endereço (ver [Endereço](comum.md#endereço)), consulta a localização no serviço OpenStreetMap, preenche `Latitude` e `Longitude` e exibe a localização no mapa.
+  2. O sistema preenche automaticamente os demais campos do endereço (ver [Endereço](comum.md#endereço)), consulta a localização no serviço OpenStreetMap, preenche `Latitude` e `Longitude`, exibe a localização no mapa e sugere o `Fuso Horário` da localização.
   3. O fluxo retorna ao passo 3.
 
 - **A3 – CEP não encontrado (passo A2.2):**
@@ -155,7 +160,7 @@ Permite cadastrar propriedades (fazendas), registrando novos imóveis rurais par
 
 - **A4 – Localização pelo mapa (passo 3):**
   1. O usuário escolhe um ponto no mapa.
-  2. O sistema preenche `Latitude` e `Longitude` com as coordenadas do ponto escolhido.
+  2. O sistema preenche `Latitude` e `Longitude` com as coordenadas do ponto escolhido e sugere o `Fuso Horário` da localização.
   3. O fluxo retorna ao passo 3.
 
 - **A5 – Área produtiva maior que a área total (passo 5):**
@@ -169,8 +174,13 @@ Permite cadastrar propriedades (fazendas), registrando novos imóveis rurais par
   3. O fluxo retorna ao passo 3.
 
 - **A7 – Campos obrigatórios ausentes (passo 5):**
-  1. O `Nome` ou o `Titular` não foi preenchido.
+  1. O `Nome`, o `Titular` ou a localização (`Latitude` e `Longitude`) não foi preenchido.
   2. O sistema impede a gravação, mantém os dados já digitados e destaca os campos ausentes com a mensagem: _"Este campo é obrigatório."_
+  3. O fluxo retorna ao passo 3.
+
+- **A8 – Escolha de outro fuso horário (passo 3):**
+  1. O usuário escolhe outro `Fuso Horário`.
+  2. O sistema mantém o fuso escolhido, que deixa de acompanhar as mudanças da localização.
   3. O fluxo retorna ao passo 3.
 
 </div>
@@ -187,7 +197,7 @@ Permite editar os dados cadastrais de uma propriedade já registrada.
 | :-------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **User Story**        | Como **Administrador** ou **Gerente**, quero **atualizar os dados de uma propriedade já cadastrada** para manter as informações corretas e atualizadas no sistema. |
 | **Dependências**      | `RF-PROPRIEDADE-01`, `RF-PROPRIEDADE-02`                                                                                                                           |
-| **Regras Vinculadas** | `RN-PROPRIEDADE-01`, `RN-PROPRIEDADE-02`, `RN-PROPRIEDADE-03`                                                                                                      |
+| **Regras Vinculadas** | `RN-PROPRIEDADE-01`, `RN-PROPRIEDADE-02`, `RN-PROPRIEDADE-03`, `RN-PROPRIEDADE-04`, `RN-PROPRIEDADE-05`                                                            |
 | **Atores**            | Administrador, Gerente                                                                                                                                             |
 | **Plataformas**       | Web                                                                                                                                                                |
 | **Versão**            | 1                                                                                                                                                                  |
@@ -197,6 +207,8 @@ Permite editar os dados cadastrais de uma propriedade já registrada.
 
 - [ ] Todos os campos podem ser alterados, com as mesmas regras de preenchimento da criação (`RF-PROPRIEDADE-02`).
 - [ ] Ao trocar o `Titular`, o novo titular deve ser escolhido entre as pessoas ativas.
+- [ ] Ao alterar a localização, o `Fuso Horário` acompanha a nova localização, como na criação, enquanto o usuário não escolher outro.
+- [ ] Alterar o `Fuso Horário` não altera os registros da propriedade, só a forma como os horários deles são exibidos; por isso, a alteração não exige confirmação.
 
 ### 2.3.3 - Fluxos
 
@@ -204,16 +216,16 @@ Permite editar os dados cadastrais de uma propriedade já registrada.
 
 1. O fluxo começa quando o usuário aciona a ação "Editar" de uma propriedade na listagem (`RF-PROPRIEDADE-01`).
 2. O sistema exibe o formulário com os dados atuais da propriedade e a sua localização no mapa.
-3. O usuário altera os campos desejados, podendo informar o `Endereço` pelo CEP e ajustar a localização no mapa (ver fluxos alternativos).
+3. O usuário altera os campos desejados, podendo informar o `Endereço` pelo CEP, ajustar a localização no mapa e trocar o `Fuso Horário` (ver fluxos alternativos).
 4. O usuário aciona a ação "Salvar".
-5. O sistema valida os dados (`RN-PROPRIEDADE-01`, `RN-PROPRIEDADE-02`, `RN-PROPRIEDADE-03`), persiste as alterações e exibe a mensagem: _"Registro atualizado com sucesso!"_
+5. O sistema valida os dados (`RN-PROPRIEDADE-01`, `RN-PROPRIEDADE-02`, `RN-PROPRIEDADE-03`, `RN-PROPRIEDADE-04`, `RN-PROPRIEDADE-05`), persiste as alterações e exibe a mensagem: _"Registro atualizado com sucesso!"_
 6. O fluxo termina.
 
 **Fluxos alternativos**
 
 - **A1 – Preenchimento do endereço pelo CEP (passo 3):**
   1. O usuário informa o `CEP`.
-  2. O sistema preenche automaticamente os demais campos do endereço (ver [Endereço](comum.md#endereço)), consulta a localização no serviço OpenStreetMap, preenche `Latitude` e `Longitude` e exibe a localização no mapa.
+  2. O sistema preenche automaticamente os demais campos do endereço (ver [Endereço](comum.md#endereço)), consulta a localização no serviço OpenStreetMap, preenche `Latitude` e `Longitude`, exibe a localização no mapa e, se o usuário não tiver escolhido outro fuso, preenche o `Fuso Horário` da localização.
   3. O fluxo retorna ao passo 3.
 
 - **A2 – CEP não encontrado (passo A1.2):**
@@ -223,7 +235,7 @@ Permite editar os dados cadastrais de uma propriedade já registrada.
 
 - **A3 – Localização pelo mapa (passo 3):**
   1. O usuário escolhe um ponto no mapa.
-  2. O sistema preenche `Latitude` e `Longitude` com as coordenadas do ponto escolhido.
+  2. O sistema preenche `Latitude` e `Longitude` com as coordenadas do ponto escolhido e, se o usuário não tiver escolhido outro fuso, o `Fuso Horário` da nova localização.
   3. O fluxo retorna ao passo 3.
 
 - **A4 – Área produtiva maior que a área total (passo 5):**
@@ -237,8 +249,13 @@ Permite editar os dados cadastrais de uma propriedade já registrada.
   3. O fluxo retorna ao passo 3.
 
 - **A6 – Campos obrigatórios ausentes (passo 5):**
-  1. O usuário removeu o `Nome` ou o `Titular` da propriedade.
+  1. O usuário removeu o `Nome`, o `Titular` ou a localização (`Latitude` e `Longitude`) da propriedade.
   2. O sistema impede a gravação, mantém os dados já digitados e destaca os campos ausentes com a mensagem: _"Este campo é obrigatório."_
+  3. O fluxo retorna ao passo 3.
+
+- **A7 – Escolha de outro fuso horário (passo 3):**
+  1. O usuário escolhe outro `Fuso Horário`.
+  2. O sistema mantém o fuso escolhido, que deixa de acompanhar as mudanças da localização.
   3. O fluxo retorna ao passo 3.
 
 </div>
@@ -265,7 +282,7 @@ Permite consultar as informações detalhadas de uma propriedade: dados cadastra
 
 - [ ] Exibir `Nome` e `Titular`.
 - [ ] Exibir `Área Total`, `Área Produtiva`, `CIB`, `CCIR` e `CAR`.
-- [ ] Exibir `Endereço`, `Latitude` e `Longitude`.
+- [ ] Exibir `Endereço`, `Latitude`, `Longitude` e `Fuso Horário`.
 - [ ] Campos não preenchidos devem ser indicados como tal.
 - [ ] Exibir os lotes e os animais vinculados à propriedade.
 - [ ] Permitir acionar a exclusão da propriedade (`RF-PROPRIEDADE-05`).

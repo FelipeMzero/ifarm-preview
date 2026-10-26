@@ -26,8 +26,9 @@ model Property {
   car            String?   @unique // Cadastro Ambiental Rural
   cib            String?   @unique // Cadastro Imobiliário Brasileiro
   ccir           String?   @unique // Certificado de Cadastro de Imóvel Rural (INCRA)
-  latitude       Float?
-  longitude      Float?
+  latitude       Float
+  longitude      Float
+  timeZone       String    @default("America/Sao_Paulo") @map("time_zone") // Fuso horário IANA
   deactivatedAt  DateTime? @map("deactivated_at")
 
   addressId Int?     @unique @map("address_id")

@@ -1,7 +1,8 @@
 import { z } from "zod";
 import { addressFields, checkAddress } from "../address/schema";
 import { FIELD_LIMITS } from "../field-limits";
-import { optionalNumericField } from "../zod-utils";
+import { numericField, optionalNumericField } from "../zod-utils";
+import { BR_TIME_ZONES } from "./time-zones";
 
 const latitudeSchema = z.coerce
   .number()
@@ -45,8 +46,11 @@ export const propertySchema = z
       .optional(),
     ccir: z.string().optional(),
     car: z.string().optional(),
-    latitude: optionalNumericField(latitudeSchema),
-    longitude: optionalNumericField(longitudeSchema),
+    // RN-PROPRIEDADE-04: toda propriedade tem localização.
+    latitude: numericField(latitudeSchema, "Este campo é obrigatório"),
+    longitude: numericField(longitudeSchema, "Este campo é obrigatório"),
+    // RN-PROPRIEDADE-05: o fuso do local da propriedade (sugerido pela localização na tela).
+    timeZone: z.enum(BR_TIME_ZONES, "Selecione o fuso horário"),
 
     ...addressFields,
   })

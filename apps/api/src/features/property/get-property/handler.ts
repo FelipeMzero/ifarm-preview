@@ -19,8 +19,10 @@ export async function getProperty(id: string): Promise<PropertyInput> {
     cib: property.cib ?? "",
     ccir: property.ccir ?? "",
     car: property.car ?? "",
-    latitude: property.latitude?.toString() ?? "",
-    longitude: property.longitude?.toString() ?? "",
+    latitude: property.latitude.toString(),
+    longitude: property.longitude.toString(),
+    // Gravado sempre a partir do propertySchema (um dos fusos do Brasil) ou do padrão do banco.
+    timeZone: property.timeZone as PropertyInput["timeZone"],
     zipCode: property.address?.zipCode ?? "",
     street: property.address?.street ?? "",
     number: property.address?.number ?? "",

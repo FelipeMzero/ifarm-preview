@@ -8,6 +8,8 @@ import { NotFoundError, ValidationError } from "../../lib/errors";
 // - RN-PROPRIEDADE-02 (titular obrigatório): campo obrigatório no propertySchema e, aqui,
 //   titular precisa ser uma pessoa ativa (assertActiveOwner).
 // - RN-PROPRIEDADE-03 (área produtiva ≤ total): propertySchema, em @ifarm/shared.
+// - RN-PROPRIEDADE-04 (localização obrigatória) e RN-PROPRIEDADE-05 (fuso horário): campos
+//   obrigatórios no propertySchema; o fuso é um dos fusos do Brasil (BR_TIME_ZONES).
 // - Exclusão bloqueada por áreas ou usuários vinculados: FKs com onDelete: Restrict.
 
 // Converte o que veio do formulário (números como texto, "" para vazio) para o formato do banco.
@@ -20,8 +22,9 @@ export function toPropertyData(input: PropertyInput) {
     cib: input.cib || null,
     ccir: input.ccir || null,
     car: input.car || null,
-    latitude: number(input.latitude),
-    longitude: number(input.longitude),
+    latitude: parseFloat(input.latitude),
+    longitude: parseFloat(input.longitude),
+    timeZone: input.timeZone,
     owner: { connect: { id: input.ownerId } },
   };
 }

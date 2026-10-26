@@ -5,7 +5,7 @@
 import { prisma } from "@ifarm/db";
 import type { Prisma } from "@ifarm/db/client";
 import type { AnimalOrigin, AnimalStatus, Sex } from "@ifarm/db/enums";
-import { planStepSchema } from "@ifarm/shared";
+import { planStepSchema, type BrTimeZone } from "@ifarm/shared";
 import { auth } from "../src/auth";
 import { findCommitments } from "../src/features/animal/commitments";
 import { consolidateSession } from "../src/features/management-session/consolidate";
@@ -298,6 +298,8 @@ type PropKey = "SR" | "BV";
 
 type PropertySeed = Omit<Prisma.PropertyCreateInput, "owner"> & {
   ownerKey: PersonKey;
+  /** O fuso do local (RN-PROPRIEDADE-05), sem cair no padrão do banco. */
+  timeZone: BrTimeZone;
   /** Canto noroeste da grade de piquetes. */
   origin: { lat: number; lng: number };
 };
@@ -312,6 +314,7 @@ const PROPERTIES: Record<PropKey, PropertySeed> = {
     car: "MG-3170206-1A2B3C4D5E6F",
     latitude: -18.9636,
     longitude: -48.3532,
+    timeZone: "America/Sao_Paulo",
     address: {
       create: {
         zipCode: "38400000",
@@ -330,6 +333,7 @@ const PROPERTIES: Record<PropKey, PropertySeed> = {
     ccir: "123.456.789.012-3",
     latitude: -15.5321,
     longitude: -55.8654,
+    timeZone: "America/Cuiaba",
     address: {
       create: {
         zipCode: "78000000",

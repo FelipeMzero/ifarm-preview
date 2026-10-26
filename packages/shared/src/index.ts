@@ -19,6 +19,7 @@ export * from "./address/schema";
 export * from "./address/client";
 export * from "./zod-utils";
 export * from "./property/schema";
+export * from "./property/time-zones";
 export * from "./property/client";
 export * from "./area/schema";
 export * from "./area/client";

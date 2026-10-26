@@ -9,8 +9,9 @@ erDiagram
     String car "❓"
     String cib "❓"
     String ccir "❓"
-    Float latitude "❓"
-    Float longitude "❓"
+    Float latitude 
+    Float longitude 
+    String time_zone 
     DateTime deactivated_at "❓"
     Int address_id "❓"
     String owner_id 

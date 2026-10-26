@@ -1,4 +1,5 @@
 import { readJson, type ApiRequest } from "../client";
+import type { BrTimeZone } from "../property/time-zones";
 import type { GeocodeParams } from "./schema";
 
 /** Endereço encontrado pelo CEP. */
@@ -37,6 +38,20 @@ export function createAddressClient(request: ApiRequest) {
       const result = await readJson<{ data: Coordinates | null }>(
         response,
         "Não foi possível localizar o endereço.",
+      );
+      return result.data;
+    },
+
+    /** Fuso horário do Brasil em que fica o ponto; null se o ponto fica fora do Brasil. */
+    async lookupTimeZone({ latitude, longitude }: Coordinates) {
+      const query = new URLSearchParams({
+        latitude: String(latitude),
+        longitude: String(longitude),
+      });
+      const response = await request(`${ADDRESS}/time-zone?${query}`);
+      const result = await readJson<{ data: BrTimeZone | null }>(
+        response,
+        "Não foi possível obter o fuso horário da localização.",
       );
       return result.data;
     },

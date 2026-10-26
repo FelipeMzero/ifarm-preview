@@ -90,3 +90,11 @@ export const geocodeQuerySchema = z.object({
 
 export type GeocodeParams = z.input<typeof geocodeQuerySchema>;
 export type GeocodeQuery = z.output<typeof geocodeQuerySchema>;
+
+// Fuso horário de um ponto (sugestão do fuso da propriedade): parâmetros da URL, como texto.
+export const timeZoneQuerySchema = z.object({
+  latitude: z.coerce.number().min(-90).max(90),
+  longitude: z.coerce.number().min(-180).max(180),
+});
+
+export type TimeZoneQuery = z.output<typeof timeZoneQuerySchema>;

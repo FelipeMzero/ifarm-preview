@@ -7,9 +7,13 @@ import { MaskedInput } from "@/components/our/MaskedInput";
 
 import {
   BR_STATE_ITEMS,
+  BR_TIME_ZONE_ITEMS,
+  DEFAULT_TIME_ZONE,
   FIELD_LIMITS,
+  isBrTimeZone,
   isNotFoundError,
   propertySchema,
+  type BrTimeZone,
   type PropertyInput,
 } from "@ifarm/shared";
 import { propertyClient } from "@/lib/clients";
@@ -23,6 +27,7 @@ import { FormActionBar } from "@/components/our/FormActionBar";
 import { FieldRow } from "@/components/our/FieldRow";
 
 import { SearchCombobox } from "@/components/our/SearchCombobox";
+import { SelectField } from "@/components/our/SelectField";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
@@ -32,6 +37,7 @@ import { LocationPreview } from "@/components/our/location/LocationPreview";
 import { usePersonOptions } from "../person/usePersonOptions";
 import { propertyDetailQuery, propertyKeys } from "./queries";
 import { useZipCodeLookup } from "../address/useZipCodeLookup";
+import { timeZoneQuery } from "../address/queries";
 
 // Importações do Modal e do Componente de Pessoa
 import {
@@ -50,6 +56,15 @@ type PropertyFormProps = {
   onCancel?: () => void;
   onSuccess?: (newId?: string) => void;
 };
+
+const TIME_ZONE_ITEMS = [...BR_TIME_ZONE_ITEMS];
+
+// Antes de haver localização, o fuso sugerido é o do navegador: quem cadastra a propriedade
+// costuma estar na região dela.
+function browserTimeZone(): BrTimeZone {
+  const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  return isBrTimeZone(timeZone) ? timeZone : DEFAULT_TIME_ZONE;
+}
 
 export function PropertyForm({
   id,
@@ -94,6 +109,7 @@ export function PropertyForm({
     control,
     reset,
     setValue,
+    getValues,
     setError,
     formState: { isSubmitting },
   } = useForm<PropertyInput>({
@@ -112,6 +128,7 @@ export function PropertyForm({
       car: "",
       latitude: "",
       longitude: "",
+      timeZone: browserTimeZone(),
       zipCode: "",
       street: "",
       number: "",
@@ -126,6 +143,30 @@ export function PropertyForm({
   const longitude = useWatch({ control, name: "longitude" });
   const [isPickerOpen, setIsPickerOpen] = useState(false);
 
+  // Fuso horário (RN-PROPRIEDADE-05): acompanha a localização até o usuário escolher outro.
+  // Trocá-lo não altera os registros, só a exibição dos horários; por isso, sem confirmação.
+  const [timeZoneChosen, setTimeZoneChosen] = useState(false);
+
+  async function suggestTimeZone(lat?: string, lon?: string) {
+    // Só com as duas coordenadas válidas (as mesmas regras do formulário).
+    const { latitude: latField, longitude: lonField } = propertySchema.shape;
+    if (!latField.safeParse(lat).success || !lonField.safeParse(lon).success) {
+      return;
+    }
+    const coordinates = { latitude: Number(lat), longitude: Number(lon) };
+
+    // Sem sugestão (fora do Brasil, falha) não é erro: o usuário escolhe o fuso.
+    const suggested = await queryClient
+      .query(timeZoneQuery(coordinates))
+      .catch(() => null);
+    if (suggested && !timeZoneChosen) {
+      setValue("timeZone", suggested, {
+        shouldValidate: true,
+        shouldDirty: true,
+      });
+    }
+  }
+
   // Ao sair do campo de CEP: preenche o endereço e as coordenadas.
   const zipLookup = useZipCodeLookup({
     setAddressField: (field, value) =>
@@ -133,6 +174,7 @@ export function PropertyForm({
     setCoordinates: (lat, lon) => {
       setValue("latitude", lat, { shouldValidate: true });
       setValue("longitude", lon, { shouldValidate: true });
+      suggestTimeZone(lat, lon);
     },
   });
 
@@ -443,6 +485,7 @@ export function PropertyForm({
               <FormField
                 name="latitude"
                 label="Latitude"
+                required
                 control={control}
                 render={({ field, id: fieldId }) => (
                   <Input
@@ -451,12 +494,17 @@ export function PropertyForm({
                     type="number"
                     step="any"
                     placeholder="Ex: -15.6014"
+                    onBlur={() => {
+                      field.onBlur();
+                      suggestTimeZone(field.value, getValues("longitude"));
+                    }}
                   />
                 )}
               />
               <FormField
                 name="longitude"
                 label="Longitude"
+                required
                 control={control}
                 render={({ field, id: fieldId }) => (
                   <Input
@@ -465,6 +513,34 @@ export function PropertyForm({
                     type="number"
                     step="any"
                     placeholder="Ex: -56.0979"
+                    onBlur={() => {
+                      field.onBlur();
+                      suggestTimeZone(getValues("latitude"), field.value);
+                    }}
+                  />
+                )}
+              />
+            </FieldRow>
+
+            <FieldRow cols={1}>
+              <FormField
+                name="timeZone"
+                label="Fuso horário"
+                required
+                control={control}
+                render={({ field, id: fieldId, fieldState }) => (
+                  <SelectField
+                    id={fieldId}
+                    value={field.value}
+                    onValueChange={(value) => {
+                      if (!isBrTimeZone(value)) return;
+                      setTimeZoneChosen(true);
+                      field.onChange(value);
+                    }}
+                    items={TIME_ZONE_ITEMS}
+                    searchable
+                    searchPlaceholder="Buscar fuso..."
+                    aria-invalid={fieldState.invalid}
                   />
                 )}
               />
@@ -494,6 +570,7 @@ export function PropertyForm({
           onConfirm={(lat, lon) => {
             setValue("latitude", lat.toFixed(6), { shouldValidate: true });
             setValue("longitude", lon.toFixed(6), { shouldValidate: true });
+            suggestTimeZone(lat.toFixed(6), lon.toFixed(6));
           }}
         />
       </form>

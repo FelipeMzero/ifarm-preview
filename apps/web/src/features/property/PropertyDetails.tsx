@@ -4,6 +4,7 @@ import { useNavigate } from "react-router";
 import { toast } from "sonner";
 import {
   ArrowLeft,
+  Clock,
   Compass,
   Fence,
   LandPlot,
@@ -21,7 +22,7 @@ import { Separator } from "@/components/ui/separator";
 import { ConfirmDialog } from "@/components/our/ConfirmDialog";
 import { ErrorPage } from "@/components/our/ErrorPage";
 import { propertyClient } from "@/lib/clients";
-import { isNotFoundError } from "@ifarm/shared";
+import { isNotFoundError, timeZoneLabel } from "@ifarm/shared";
 import { propertyDetailQuery, propertyKeys } from "./queries";
 import { DetailsSkeleton } from "@/components/our/PageSkeletons";
 
@@ -193,6 +194,10 @@ export function PropertyDetails({
           <div className="flex items-center gap-4 text-muted-foreground">
             <span>Lat: {property.latitude || "—"}</span>
             <span>Long: {property.longitude || "—"}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Clock className="size-4 text-muted-foreground" />
+            <span>Fuso horário: {timeZoneLabel(property.timeZone)}</span>
           </div>
         </CardContent>
       </Card>
