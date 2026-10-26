@@ -3,7 +3,7 @@ import type {
   ReceptionPurchaseQuery,
 } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
-import { getOrAssignCurrentProperty } from "@ifarm/domain/current-property/queries";
+import { getOrAssignCurrentProperty } from "../../current-property/shared";
 import { isPending } from "../rules";
 import { receptionPurchaseInclude, toReceptionPurchase } from "../shared";
 

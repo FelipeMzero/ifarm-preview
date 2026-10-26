@@ -4,7 +4,7 @@ import {
   type BatchTransferQuery,
 } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
-import { getOrAssignCurrentProperty } from "@ifarm/domain/current-property/queries";
+import { getOrAssignCurrentProperty } from "../../current-property/shared";
 import { TRANSFER_STATUS_WHERE, transferStatus } from "../rules";
 
 function buildWhere(query: BatchTransferQuery, propertyId: string) {

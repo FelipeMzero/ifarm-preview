@@ -1,6 +1,6 @@
 import { toLocalDateTime, type BatchTransferData } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
-import { getOrAssignCurrentProperty } from "@ifarm/domain/current-property/queries";
+import { getOrAssignCurrentProperty } from "../../current-property/shared";
 import { BusinessError } from "@ifarm/domain/errors";
 import { assertNoConflicts } from "../../animal/commitments";
 import { validateTransferPlan } from "../shared";

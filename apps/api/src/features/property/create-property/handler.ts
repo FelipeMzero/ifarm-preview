@@ -1,6 +1,6 @@
 import type { PropertyInput } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
-import { toAddressData } from "@ifarm/domain/address";
+import { toAddressData } from "../../address/persistence";
 import { write } from "@ifarm/domain/db-errors";
 import { assertActiveOwner, toPropertyData } from "../shared";
 

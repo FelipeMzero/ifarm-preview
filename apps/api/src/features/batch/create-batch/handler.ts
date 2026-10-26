@@ -1,6 +1,6 @@
 import type { BatchCreateData } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
-import { getOrAssignCurrentProperty } from "@ifarm/domain/current-property/queries";
+import { getOrAssignCurrentProperty } from "../../current-property/shared";
 import { write } from "@ifarm/domain/db-errors";
 import { assertAreaAvailable } from "../../area/availability";
 import { toTargetDate } from "../shared";

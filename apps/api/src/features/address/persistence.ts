@@ -1,4 +1,3 @@
-import "server-only";
 import { Prisma } from "@ifarm/db";
 
 type AddressData = Omit<Prisma.AddressCreateInput, "person" | "property">;

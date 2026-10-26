@@ -3,7 +3,7 @@ import { Hono } from "hono";
 import { contextStorage } from "hono/context-storage";
 import { cors } from "hono/cors";
 import { auth } from "./auth";
-import { addressRoutes } from "./routes/address";
+import { addressRoutes } from "./features/address/routes";
 import { animalRoutes } from "./features/animal/routes";
 import { areaRoutes, stockingPreviewRoutes } from "./features/area/routes";
 import { batchRoutes } from "./features/batch/routes";
@@ -16,7 +16,7 @@ import { personRoutes } from "./features/person/routes";
 import { propertyRoutes } from "./features/property/routes";
 import { purchaseRoutes } from "./features/purchase/routes";
 import { receptionRoutes } from "./features/reception/routes";
-import { userRoutes } from "./routes/user";
+import { currentPropertyRoutes } from "./features/current-property/routes";
 
 const app = new Hono();
 
@@ -85,7 +85,7 @@ app.route("/api/property", propertyRoutes);
 app.route("/api/purchase", purchaseRoutes);
 app.route("/api/reception", receptionRoutes);
 app.route("/api/stocking-preview", stockingPreviewRoutes);
-app.route("/api/user", userRoutes);
+app.route("/api/user", currentPropertyRoutes);
 
 // Nenhuma rota casou (caminho inexistente ou id em formato inválido): 404 no mesmo formato JSON
 // dos outros erros, que é o que os clientes leem.

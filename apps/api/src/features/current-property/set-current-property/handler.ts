@@ -1,7 +1,6 @@
-import "server-only";
 import type { CurrentProperty } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
-import { NotFoundError } from "../errors";
+import { NotFoundError } from "@ifarm/domain/errors";
 
 // Troca a propriedade em que o usuário está trabalhando.
 export async function setCurrentProperty(

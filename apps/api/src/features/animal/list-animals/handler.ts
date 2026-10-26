@@ -1,6 +1,6 @@
 import type { AnimalListResult, AnimalQuery } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
-import { getOrAssignCurrentProperty } from "@ifarm/domain/current-property/queries";
+import { getOrAssignCurrentProperty } from "../../current-property/shared";
 import { fromDbDate } from "@ifarm/domain/db-dates";
 
 // Limites de data de nascimento para cada faixa etária (idade em meses completos).
