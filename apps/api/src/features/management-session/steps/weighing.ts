@@ -1,5 +1,5 @@
 import { weighingPayloadSchema, weighingPlanSchema } from "@ifarm/shared";
-import { recomputeCurrentWeight } from "../../animal/weighings";
+import { recomputeCurrentWeight } from "../../animal/weighing/shared";
 import { defineStep, StepError, type Tx } from "./types";
 
 async function container(tx: Tx, sessionId: string) {

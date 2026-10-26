@@ -1,5 +1,7 @@
 import type { Prisma } from "@ifarm/db/client";
 import { prisma } from "@ifarm/db";
+import { NotFoundError } from "@ifarm/domain/errors";
+import { effectiveNeutering } from "../../management-session/effective";
 
 // Relações necessárias para exibir a técnica (atual e a lançada originalmente).
 export const neuteringInclude = {
@@ -42,3 +44,23 @@ export async function isValidNeuteringTechnique(
 }
 
 export const INVALID_TECHNIQUE_MESSAGE = "Técnica de castração inválida.";
+
+// Castração válida do animal (corrigir e excluir); erro 404 se não existir.
+export async function findActiveNeutering(
+  animalId: string,
+  neuteringId: string,
+) {
+  const numericId = Number(neuteringId);
+  const neutering = Number.isInteger(numericId)
+    ? await prisma.animalNeutering.findFirst({
+        where: {
+          id: numericId,
+          animalId,
+          cancelledAt: null,
+          ...effectiveNeutering,
+        },
+      })
+    : null;
+  if (!neutering) throw new NotFoundError("Castração não encontrada.");
+  return neutering;
+}

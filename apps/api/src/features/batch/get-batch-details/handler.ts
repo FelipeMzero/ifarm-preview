@@ -1,6 +1,6 @@
 import { fromLocalDateTime, type BatchFullDetails } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
-import { sortWeighings, toWeighingDto } from "../../animal/weighings";
+import { sortWeighings, toWeighingDto } from "../../animal/weighing/shared";
 import { NotFoundError } from "@ifarm/domain/errors";
 import { effectiveWeighing } from "../../management-session/effective";
 import { fromDbDate } from "@ifarm/domain/db-dates";

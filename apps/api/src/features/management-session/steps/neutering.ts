@@ -3,7 +3,7 @@ import { neuteringPayloadSchema, neuteringPlanSchema } from "@ifarm/shared";
 import {
   INVALID_TECHNIQUE_MESSAGE,
   isValidNeuteringTechnique,
-} from "../../animal/neuterings";
+} from "../../animal/neutering/shared";
 
 async function container(tx: Tx, sessionId: string) {
   return tx.neuteringManagement.findUnique({

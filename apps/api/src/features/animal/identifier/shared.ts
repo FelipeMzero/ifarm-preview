@@ -1,24 +1,17 @@
-import {
-  toLocalDateTime,
-  type AnimalIdentifierRecord,
-  type IdentifierChangeData,
-  type IdentifierCorrectionData,
-  type IdentifierKind,
-} from "@ifarm/shared";
-import { prisma, Prisma } from "@ifarm/db";
+import type { AnimalIdentifierRecord, IdentifierKind } from "@ifarm/shared";
+import { Prisma } from "@ifarm/db";
 import {
   effectiveRfidTagging,
   effectiveTagging,
-} from "../management-session/effective";
-import { assertNoConflicts } from "./commitments";
+} from "../../management-session/effective";
 import { BusinessError } from "@ifarm/domain/errors";
-import { keepsOriginal, sessionDateLock } from "./rules";
 
 type Tx = Prisma.TransactionClient;
 
 // Brinco e RFID têm a mesma regra de histórico: cada troca é um registro, o valor
 // atual do animal (currentTag/currentRfid) é o do registro válido mais recente, e as
 // correções preservam o rastro (valor original na primeira correção, exclusão lógica).
+// Usado pelas operações de identificador (listar, trocar, corrigir e excluir).
 export const isIdentifierKind = (kind: string): kind is IdentifierKind =>
   kind === "tag" || kind === "rfid";
 
@@ -66,7 +59,7 @@ type IdentifierAdapter = {
 
 const orderBy = [{ identifiedAt: "desc" as const }, { id: "desc" as const }];
 
-const ADAPTERS: Record<IdentifierKind, IdentifierAdapter> = {
+export const ADAPTERS: Record<IdentifierKind, IdentifierAdapter> = {
   tag: {
     label: "Brinco",
     animalField: "currentTag",
@@ -139,10 +132,10 @@ export function toIdentifierDto(r: IdentifierRecord): AnimalIdentifierRecord {
   };
 }
 
-class IdentifierError extends BusinessError {}
+export class IdentifierError extends BusinessError {}
 
 // O identificador atual passa a ser o do registro válido mais recente (null = removido).
-async function recomputeCurrent(
+export async function recomputeCurrent(
   tx: Tx,
   kind: IdentifierKind,
   animalId: string,
@@ -180,111 +173,8 @@ async function recomputeCurrent(
   });
 }
 
-// Histórico válido (não excluído), do mais recente para o mais antigo.
-export async function listIdentifiers(kind: IdentifierKind, animalId: string) {
-  const records = await ADAPTERS[kind].list(prisma, animalId);
-  return records.map(toIdentifierDto);
-}
-
-const recordNotFound = (kind: IdentifierKind) =>
+export const identifierNotFound = (kind: IdentifierKind) =>
   new IdentifierError(
     `Registro de ${ADAPTERS[kind].label} não encontrado.`,
     404,
   );
-
-// Corrige valor, data (só registros avulsos) e observação de um brinco/RFID.
-export async function correctIdentifier(
-  kind: IdentifierKind,
-  animalId: string,
-  recordIdParam: string,
-  data: IdentifierCorrectionData,
-) {
-  const adapter = ADAPTERS[kind];
-
-  await prisma.$transaction(async (tx) => {
-    const record = await adapter.find(tx, animalId, Number(recordIdParam));
-    if (!record) throw recordNotFound(kind);
-
-    const dateLock = sessionDateLock(record, data.date, "identificação");
-    if (dateLock) throw new IdentifierError(dateLock, 400, "date");
-
-    let identifiedAt: Date | undefined;
-    if (data.date) {
-      identifiedAt = toLocalDateTime(data.date);
-      if (identifiedAt > new Date()) {
-        throw new IdentifierError("A data não pode ser futura.", 400, "date");
-      }
-    }
-
-    const valueChanged = data.value !== record.value;
-    await adapter.update(tx, record.id, {
-      value: data.value,
-      notes: data.notes,
-      ...(identifiedAt ? { identifiedAt } : {}),
-      // Guarda o valor lançado originalmente só na primeira correção do valor.
-      ...(keepsOriginal(valueChanged, record.original)
-        ? { original: record.value }
-        : {}),
-      correctedAt: new Date(),
-    });
-
-    await recomputeCurrent(tx, kind, animalId);
-  });
-}
-
-// Troca (ou remove) o identificador na hora: cria um registro avulso com a data de
-// hoje, que passa a ser o mais recente.
-export async function addIdentifier(
-  kind: IdentifierKind,
-  animalId: string,
-  { value, notes }: IdentifierChangeData,
-) {
-  const adapter = ADAPTERS[kind];
-
-  await prisma.$transaction(async (tx) => {
-    await assertNoConflicts(tx, [animalId], { kind: "record", type: kind });
-    const animal = await tx.animal.findUnique({
-      where: { id: animalId },
-      select: { currentTag: true, currentRfid: true },
-    });
-    if (!animal) throw new IdentifierError("Animal não encontrado.", 404);
-
-    const current = animal[adapter.animalField];
-    if (value === current) {
-      throw new IdentifierError(
-        value
-          ? `Este já é o ${adapter.label.toLowerCase()} atual do animal.`
-          : `O animal já está sem ${adapter.label.toLowerCase()}.`,
-        400,
-        "value",
-      );
-    }
-
-    await adapter.create(tx, {
-      animalId,
-      value,
-      notes,
-      identifiedAt: new Date(),
-    });
-    await recomputeCurrent(tx, kind, animalId);
-  });
-}
-
-// Exclusão lógica: o registro sai do histórico e o identificador atual é recalculado.
-export async function cancelIdentifier(
-  kind: IdentifierKind,
-  animalId: string,
-  recordIdParam: string,
-) {
-  await prisma.$transaction(async (tx) => {
-    const record = await ADAPTERS[kind].find(
-      tx,
-      animalId,
-      Number(recordIdParam),
-    );
-    if (!record) throw recordNotFound(kind);
-
-    await ADAPTERS[kind].update(tx, record.id, { cancelledAt: new Date() });
-    await recomputeCurrent(tx, kind, animalId);
-  });
-}

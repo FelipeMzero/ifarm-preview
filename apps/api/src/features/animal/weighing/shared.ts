@@ -1,6 +1,7 @@
-import { Prisma } from "@ifarm/db";
+import { prisma, Prisma } from "@ifarm/db";
 import type { AnimalWeighing } from "@ifarm/db/client";
-import { effectiveWeighing } from "../management-session/effective";
+import { NotFoundError } from "@ifarm/domain/errors";
+import { effectiveWeighing } from "../../management-session/effective";
 
 type Tx = Prisma.TransactionClient;
 
@@ -34,4 +35,21 @@ export async function recomputeCurrentWeight(tx: Tx, animalId: string) {
     where: { id: animalId },
     data: { currentWeight: latest?.weight ?? null },
   });
+}
+
+// Pesagem válida do animal (corrigir e excluir); erro 404 se não existir.
+export async function findActiveWeighing(animalId: string, weighingId: string) {
+  const numericId = Number(weighingId);
+  const weighing = Number.isInteger(numericId)
+    ? await prisma.animalWeighing.findFirst({
+        where: {
+          id: numericId,
+          animalId,
+          cancelledAt: null,
+          ...effectiveWeighing,
+        },
+      })
+    : null;
+  if (!weighing) throw new NotFoundError("Pesagem não encontrada.");
+  return weighing;
 }
