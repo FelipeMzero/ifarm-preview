@@ -5,7 +5,7 @@ import { cors } from "hono/cors";
 import { auth } from "./auth";
 import { addressRoutes } from "./routes/address";
 import { animalRoutes } from "./routes/animal";
-import { areaRoutes } from "./routes/area";
+import { areaRoutes } from "./features/area/routes";
 import { batchRoutes } from "./features/batch/routes";
 import { batchTransferRoutes } from "./routes/batch-transfer";
 import { breedRoutes } from "./features/breed/routes";

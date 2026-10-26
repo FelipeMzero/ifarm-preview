@@ -1,7 +1,7 @@
 import type { BatchReopenData } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
-import { assertAreaAvailable } from "@ifarm/domain/area/queries";
 import { BusinessError } from "@ifarm/domain/errors";
+import { assertAreaAvailable } from "../../area/availability";
 
 // Reativa um lote encerrado numa área livre. Abre um novo registro de área (em vez
 // de reabrir o antigo) para o período encerrado continuar visível no histórico.
