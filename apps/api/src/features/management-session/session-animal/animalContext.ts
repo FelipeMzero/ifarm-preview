@@ -1,16 +1,16 @@
 import { fromLocalDateTime, isSessionOpen } from "@ifarm/shared";
 import { fromDbDate } from "@ifarm/domain/db-dates";
-import { effectiveNeutering, effectiveWeighing } from "./effective";
-import { loadSession } from "./shared";
+import { effectiveNeutering, effectiveWeighing } from "../effective";
+import { loadSession } from "../shared";
 import {
   countDone,
   describeSteps,
   loadStepRecords,
   NO_SESSION_VALUES,
   sessionValues,
-} from "./steps";
-import type { Tx } from "./steps/types";
-import { participantStatus } from "./session-steps";
+} from "../steps";
+import type { Tx } from "../steps/types";
+import { participantStatus } from "../session-steps";
 
 // Tudo o que as telas de etapa precisam de um animal da sessão: dados atuais do animal,
 // etapas da sessão e o que já foi registrado nele. Null = o animal não está na sessão.

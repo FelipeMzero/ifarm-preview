@@ -9,7 +9,7 @@ import type { AnimalOrigin, AnimalStatus, Sex } from "@ifarm/db/enums";
 import { consolidateSession } from "../src/features/management-session/consolidate";
 import { findCommitments } from "../src/features/animal/commitments";
 import { toDbDate } from "@ifarm/domain/db-dates";
-import { saveAnimalStep } from "../src/features/management-session/records";
+import { saveAnimalStep } from "../src/features/management-session/session-animal/records";
 import { applyPlanSteps } from "../src/features/management-session/shared";
 import { planStepSchema } from "@ifarm/shared";
 import {
