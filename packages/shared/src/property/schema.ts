@@ -3,17 +3,17 @@ import { addressFields, checkAddress } from "../address/schema";
 import { FIELD_LIMITS } from "../field-limits";
 import { optionalNumericField } from "../zod-utils";
 
-export const latitudeSchema = z.coerce
+const latitudeSchema = z.coerce
   .number()
   .min(-90, "Latitude deve estar entre -90 e 90.")
   .max(90, "Latitude deve estar entre -90 e 90.");
 
-export const longitudeSchema = z.coerce
+const longitudeSchema = z.coerce
   .number()
   .min(-180, "Longitude deve estar entre -180 e 180.")
   .max(180, "Longitude deve estar entre -180 e 180.");
 
-export const propertyAreaSchema = z.coerce
+const propertyAreaSchema = z.coerce
   .number()
   .positive("Valor inválido.")
   .max(FIELD_LIMITS.property.area, "Limite ultrapassado");

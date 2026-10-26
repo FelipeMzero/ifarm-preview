@@ -262,7 +262,7 @@ export const neuteringCreateSchema = z.object({
 });
 
 // Troca (ou remoção) de brinco/RFID feita na hora.
-export const identifierChangeSchema = z.object({
+const identifierChangeSchema = z.object({
   // Vazio/null = remover o identificador do animal.
   value: z
     .string()
@@ -293,7 +293,7 @@ const identifierValue = (kind: IdentifierKind) =>
     );
 
 // Correção de um registro de brinco/RFID.
-export const identifierCorrectionSchema = z.object({
+const identifierCorrectionSchema = z.object({
   // Vazio = o registro passa a ser de remoção do identificador.
   value: z
     .string()

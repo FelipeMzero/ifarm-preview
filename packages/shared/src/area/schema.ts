@@ -2,18 +2,18 @@ import { z } from "zod";
 import { FIELD_LIMITS } from "../field-limits";
 import { numericField, optionalNumericField } from "../zod-utils";
 
-export const hectaresSchema = z.coerce
+const hectaresSchema = z.coerce
   .number()
   .positive("Valor inválido.")
   .max(FIELD_LIMITS.area.area, "Limite ultrapassado.");
 
-export const stockingRateSchema = z.coerce
+const stockingRateSchema = z.coerce
   .number()
   .positive("Valor inválido.")
   .max(FIELD_LIMITS.area.stockingRate, "Limite ultrapassado");
 
 // Dias de referência do pastejo rotacionado (ocupação e descanso da área).
-export const daysSchema = z.coerce
+const daysSchema = z.coerce
   .number()
   .int("Informe um número inteiro de dias.")
   .positive("Valor inválido.")

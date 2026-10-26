@@ -48,9 +48,6 @@ export const managementSessionStartSchema = z.object({
   performedAt: dateTimeField.transform(toLocalDateTime),
 });
 
-export type ManagementSessionStartPayload = z.input<
-  typeof managementSessionStartSchema
->;
 export type ManagementSessionStartData = z.output<
   typeof managementSessionStartSchema
 >;
@@ -58,10 +55,6 @@ export type ManagementSessionStartData = z.output<
 export const sessionParticipantsSchema = z.object({
   animalIds: z.array(z.uuid()).min(1, "Selecione ao menos um animal."),
 });
-
-export type SessionParticipantsPayload = z.input<
-  typeof sessionParticipantsSchema
->;
 
 // Recepção de compra: o animal que desceu do caminhão.
 export const receiveAnimalSchema = z.object({
