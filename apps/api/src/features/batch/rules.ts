@@ -1,4 +1,4 @@
-import { fromDbDate } from "../db-dates";
+import { fromDbDate } from "@ifarm/domain/db-dates";
 
 // Indicadores do lote (GMD, peso médio ao longo do tempo, compras), sem banco.
 

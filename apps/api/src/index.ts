@@ -6,7 +6,7 @@ import { auth } from "./auth";
 import { addressRoutes } from "./routes/address";
 import { animalRoutes } from "./routes/animal";
 import { areaRoutes } from "./routes/area";
-import { batchRoutes } from "./routes/batch";
+import { batchRoutes } from "./features/batch/routes";
 import { batchTransferRoutes } from "./routes/batch-transfer";
 import { breedRoutes } from "./features/breed/routes";
 import { healthManagementTypeRoutes } from "./features/health-management-type/routes";
