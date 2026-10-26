@@ -4,9 +4,9 @@ import {
   type ReceptionPurchase,
 } from "@ifarm/shared";
 import type { Prisma } from "@ifarm/db";
-import { categoryLabel } from "@ifarm/domain/purchase/reception";
-import { purchaseStatus } from "@ifarm/domain/purchase/rules";
-import { sessionStatus } from "@ifarm/domain/management-session/session-steps";
+import { categoryLabel } from "../purchase/reception";
+import { purchaseStatus } from "../purchase/rules";
+import { sessionStatus } from "../management-session/session-steps";
 import { fromDbDate } from "@ifarm/domain/db-dates";
 
 // Usados por mais de uma operação de recepção.

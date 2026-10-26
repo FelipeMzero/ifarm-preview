@@ -6,18 +6,21 @@ import { prisma } from "@ifarm/db";
 import { auth } from "../src/auth";
 import type { Prisma } from "@ifarm/db/client";
 import type { AnimalOrigin, AnimalStatus, Sex } from "@ifarm/db/enums";
-import { consolidateSession } from "@ifarm/domain/management-session/consolidate";
-import { findCommitments } from "@ifarm/domain/animal/commitments";
+import { consolidateSession } from "../src/features/management-session/consolidate";
+import { findCommitments } from "../src/features/animal/commitments";
 import { toDbDate } from "@ifarm/domain/db-dates";
-import { saveAnimalStep } from "@ifarm/domain/management-session/records";
-import { applyPlanSteps } from "@ifarm/domain/management-session/shared";
+import { saveAnimalStep } from "../src/features/management-session/records";
+import { applyPlanSteps } from "../src/features/management-session/shared";
 import { planStepSchema } from "@ifarm/shared";
-import { findReception, receiveAnimal } from "@ifarm/domain/purchase/reception";
+import {
+  findReception,
+  receiveAnimal,
+} from "../src/features/purchase/reception";
 import {
   type SessionStep,
   stepKey,
   toStepRows,
-} from "@ifarm/domain/management-session/session-steps";
+} from "../src/features/management-session/session-steps";
 
 // ---------------------------------------------------------------------------
 // Datas relativas ao dia do seed

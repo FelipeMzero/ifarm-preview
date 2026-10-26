@@ -1,8 +1,8 @@
 import { fromLocalDateTime, type BatchFullDetails } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
-import { sortWeighings, toWeighingDto } from "@ifarm/domain/animal/weighings";
+import { sortWeighings, toWeighingDto } from "../../animal/weighings";
 import { NotFoundError } from "@ifarm/domain/errors";
-import { effectiveWeighing } from "@ifarm/domain/management-session/effective";
+import { effectiveWeighing } from "../../management-session/effective";
 import { fromDbDate } from "@ifarm/domain/db-dates";
 import { stockingPreview } from "../../area/stocking";
 import { averageDailyGain, groupPurchases, weightSeries } from "../rules";

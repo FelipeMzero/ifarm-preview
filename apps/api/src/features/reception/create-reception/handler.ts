@@ -1,8 +1,8 @@
 import type { CreateReceptionData } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
-import { applyPlanSteps } from "@ifarm/domain/management-session/shared";
-import { StepError } from "@ifarm/domain/management-session/steps/types";
-import { validateReceptionInput } from "@ifarm/domain/purchase/reception";
+import { applyPlanSteps } from "../../management-session/shared";
+import { StepError } from "../../management-session/steps/types";
+import { validateReceptionInput } from "../../purchase/reception";
 
 // "Receber animais": abre uma recepção (viagem) da compra. A compra incorpora uma
 // sessão de manejo, criada já iniciada com a data de hoje, para receber os animais e
