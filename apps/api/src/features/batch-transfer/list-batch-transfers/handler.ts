@@ -1,10 +1,11 @@
 import {
-  fromLocalDateTime,
+  instantToZonedIso,
   type BatchTransferListResult,
   type BatchTransferQuery,
 } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
 import { getOrAssignCurrentProperty } from "../../current-property/shared";
+import { propertyTimeZone } from "../../property/time-zone";
 import { TRANSFER_STATUS_WHERE, transferStatus } from "../rules";
 
 function buildWhere(query: BatchTransferQuery, propertyId: string) {
@@ -59,7 +60,7 @@ export async function listBatchTransfers(
   if (!propertyId) return { data: [], total: 0, pageCount: 0 };
 
   const where = buildWhere(query, propertyId);
-  const [transfers, total] = await Promise.all([
+  const [transfers, total, timeZone] = await Promise.all([
     prisma.animalBatchTransfer.findMany({
       where,
       include: {
@@ -76,12 +77,13 @@ export async function listBatchTransfers(
       take: query.pageSize,
     }),
     prisma.animalBatchTransfer.count({ where }),
+    propertyTimeZone(propertyId),
   ]);
 
   return {
     data: transfers.map((t) => ({
       id: t.id,
-      transferredAt: fromLocalDateTime(t.transferredAt),
+      transferredAt: instantToZonedIso(t.transferredAt, timeZone),
       notes: t.notes,
       originBatches: originBatchNames(t),
       destinationBatch: t.destinationBatch,

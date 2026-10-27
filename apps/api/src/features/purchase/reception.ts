@@ -1,7 +1,8 @@
 import { Prisma } from "@ifarm/db";
-import { type ReceiveAnimalData } from "@ifarm/shared";
+import { dayInZone, type ReceiveAnimalData } from "@ifarm/shared";
 import { toDbDate } from "../../lib/db-dates";
 import { BusinessError } from "../../lib/errors";
+import { propertyTimeZone } from "../property/time-zone";
 import { estimatedBirthDay } from "./rules";
 
 type Tx = Prisma.TransactionClient;
@@ -180,10 +181,18 @@ export async function receiveAnimal(
   // Entrada na fazenda: a data e hora da recepção.
   const enteredAt = session.performedAt;
 
-  // @db.Date: grava o dia (UTC 00:00) correspondente à data local.
+  // @db.Date: o dia estimado, contado a partir do dia da recepção no fuso da propriedade.
   const birthDate =
     input.ageMonths != null
-      ? toDbDate(estimatedBirthDay(session.performedAt, input.ageMonths))
+      ? toDbDate(
+          estimatedBirthDay(
+            dayInZone(
+              session.performedAt,
+              await propertyTimeZone(session.propertyId, tx),
+            ),
+            input.ageMonths,
+          ),
+        )
       : null;
 
   const animal = await tx.animal.create({

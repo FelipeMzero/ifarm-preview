@@ -14,7 +14,12 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
-import { FIELD_LIMITS, nowDateTime } from "@ifarm/shared";
+import {
+  FIELD_LIMITS,
+  nowInZone,
+  toDateTimeInput,
+  formatDateTime,
+} from "@ifarm/shared";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -95,7 +100,7 @@ type BatchTransferFormProps = {
 function toFormValues(detail: BatchTransferDetail): BatchTransferFormData {
   return {
     destinationBatchId: detail.destinationBatch.id,
-    transferredAt: detail.transferredAt,
+    transferredAt: toDateTimeInput(detail.transferredAt),
     notes: detail.notes ?? "",
   };
 }
@@ -111,8 +116,11 @@ export function BatchTransferForm({
   const isEditing = !!id;
   const queryClient = useQueryClient();
   const navigate = useNavigate();
-  const { property: currentProperty, isLoading: isPropertyLoading } =
-    useCurrentProperty();
+  const {
+    property: currentProperty,
+    isLoading: isPropertyLoading,
+    timeZone,
+  } = useCurrentProperty();
   const propertyId = currentProperty?.id;
 
   // Transferência em edição (só com id).
@@ -171,7 +179,7 @@ export function BatchTransferForm({
     resetOptions: { keepDirtyValues: true },
     defaultValues: {
       destinationBatchId: initialDestinationBatchId ?? "",
-      transferredAt: nowDateTime(),
+      transferredAt: nowInZone(timeZone),
       notes: "",
     },
   });
@@ -395,8 +403,8 @@ export function BatchTransferForm({
           <div className="flex items-start gap-2 rounded-md border border-border bg-muted/40 p-3 text-sm text-muted-foreground">
             <Info className="mt-0.5 size-4 shrink-0" />
             {detail?.status === "confirmed"
-              ? `Transferência confirmada em ${new Date(detail.confirmedAt!).toLocaleString("pt-BR")}. Não pode mais ser alterada.`
-              : `Transferência cancelada em ${new Date(detail!.cancelledAt!).toLocaleString("pt-BR")}. Nenhum animal mudou de lote.`}
+              ? `Transferência confirmada em ${formatDateTime(detail.confirmedAt)}. Não pode mais ser alterada.`
+              : `Transferência cancelada em ${formatDateTime(detail!.cancelledAt)}. Nenhum animal mudou de lote.`}
           </div>
         ) : (
           <div className="flex items-start gap-2 rounded-md border border-border bg-muted/40 p-3 text-sm text-muted-foreground">

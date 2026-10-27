@@ -1,8 +1,9 @@
-import { toLocalDateTime, type BatchTransferData } from "@ifarm/shared";
+import { zonedDateTimeToInstant, type BatchTransferData } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
 import { diffIds } from "../../../lib/diff";
 import { BusinessError, NotFoundError } from "../../../lib/errors";
 import { assertNoConflicts } from "../../animal/commitments";
+import { propertyTimeZone } from "../../property/time-zone";
 import { transferStatus } from "../rules";
 import { validateTransferPlan } from "../shared";
 
@@ -42,12 +43,18 @@ export async function updateBatchTransfer(id: string, data: BatchTransferData) {
   );
   const removedItemIds = removed.map((i) => i.id);
 
+  // A data e hora informadas valem no fuso da propriedade.
+  const transferredAt = zonedDateTimeToInstant(
+    data.transferredAt,
+    await propertyTimeZone(current.propertyId),
+  );
+
   await prisma.$transaction(async (tx) => {
     // Condicional ao status para não sobrescrever uma confirmação concorrente.
     const updated = await tx.animalBatchTransfer.updateMany({
       where: { id, confirmedAt: null, cancelledAt: null },
       data: {
-        transferredAt: toLocalDateTime(data.transferredAt),
+        transferredAt,
         notes: data.notes,
         destinationBatchId: data.destinationBatchId,
       },

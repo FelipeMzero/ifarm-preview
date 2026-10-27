@@ -1,8 +1,9 @@
-import { fromLocalDay, type PurchaseDetail } from "@ifarm/shared";
+import { dayInZone, type PurchaseDetail } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
 import { fromDbDate } from "../../../lib/db-dates";
 import { NotFoundError } from "../../../lib/errors";
 import { sessionStatus } from "../../management-session/session-steps";
+import { propertyTimeZone } from "../../property/time-zone";
 import { arrivalWeightsByCategory } from "../costs";
 import { categoryLabel } from "../reception";
 import {
@@ -12,8 +13,6 @@ import {
 } from "../rules";
 
 const num = (d: { toNumber(): number } | null) => d?.toNumber() ?? null;
-const day = (d: Date | null) => (d ? fromLocalDay(d) : null);
-
 export async function getPurchase(id: string): Promise<PurchaseDetail> {
   const event = await prisma.purchaseEvent.findUnique({
     where: { id },
@@ -40,6 +39,8 @@ export async function getPurchase(id: string): Promise<PurchaseDetail> {
   if (!event) throw new NotFoundError("Compra não encontrada.");
 
   const arrival = await arrivalWeightsByCategory(prisma, id);
+  // Os dias das recepções, no fuso da propriedade de destino.
+  const timeZone = await propertyTimeZone(event.destinationPropertyId);
 
   const categories = event.categories.map((c) => {
     const costs = c.animals.map((a) => num(a.cost));
@@ -83,7 +84,7 @@ export async function getPurchase(id: string): Promise<PurchaseDetail> {
     notes: event.notes ?? "",
     seller: event.seller,
     destinationProperty: event.destinationProperty,
-    paymentDate: event.paymentDate ? fromDbDate(event.paymentDate) : null,
+    paymentDate: fromDbDate(event.paymentDate),
     paymentReference: event.paymentReference,
     confirmedAt: event.confirmedAt?.toISOString() ?? null,
     cancelledAt: event.cancelledAt?.toISOString() ?? null,
@@ -94,8 +95,10 @@ export async function getPurchase(id: string): Promise<PurchaseDetail> {
       sessionId: r.managementSessionId,
       title: r.managementSession.title,
       status: sessionStatus(r.managementSession),
-      scheduledAt: fromLocalDay(r.managementSession.scheduledAt),
-      performedAt: day(r.managementSession.performedAt),
+      scheduledAt: dayInZone(r.managementSession.scheduledAt, timeZone),
+      performedAt: r.managementSession.performedAt
+        ? dayInZone(r.managementSession.performedAt, timeZone)
+        : null,
       entryBatch: r.entryBatch,
       gtaNumber: r.gtaNumber,
       invoiceNumber: r.invoiceNumber,

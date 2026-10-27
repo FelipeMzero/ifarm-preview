@@ -1,4 +1,4 @@
-import { toInputDateTime } from "./format";
+import { useCurrentProperty } from "@/features/shell/useCurrentProperty";
 import { useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -13,7 +13,7 @@ import { FieldRow } from "@/components/our/FieldRow";
 import { animalClient } from "@/lib/clients";
 import { applyServerErrors } from "@/lib/form-errors";
 import { useReloadAnimals } from "./queries";
-import { type AnimalWeighing, nowDateTime } from "@ifarm/shared";
+import { type AnimalWeighing, nowInZone, toDateTimeInput } from "@ifarm/shared";
 import {
   weighingCorrectionSchema,
   type WeighingCorrectionPayload as WeighingCorrectionFormData,
@@ -37,11 +37,12 @@ export function AnimalWeighingCorrectionForm({
   onCancel,
   onSaved,
 }: AnimalWeighingCorrectionFormProps) {
+  const { timeZone } = useCurrentProperty();
   const form = useForm<WeighingCorrectionFormData>({
     resolver: zodResolver(weighingCorrectionSchema, undefined, { raw: true }),
     defaultValues: {
       weightKg: String(weighing.weightKg),
-      date: toInputDateTime(weighing.date),
+      date: toDateTimeInput(weighing.date),
       notes: weighing.notes ?? "",
     },
   });
@@ -57,7 +58,7 @@ export function AnimalWeighingCorrectionForm({
     const dateChanged =
       !weighing.fromSession &&
       !!data.date &&
-      data.date !== toInputDateTime(weighing.date);
+      data.date !== toDateTimeInput(weighing.date);
 
     try {
       await correct.mutateAsync({
@@ -106,7 +107,7 @@ export function AnimalWeighingCorrectionForm({
               id={id}
               type="datetime-local"
               min={birthDate ? `${birthDate}T00:00` : undefined}
-              max={nowDateTime()}
+              max={nowInZone(timeZone)}
               disabled={weighing.fromSession}
               title={
                 weighing.fromSession

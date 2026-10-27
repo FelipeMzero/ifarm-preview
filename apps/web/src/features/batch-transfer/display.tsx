@@ -1,5 +1,5 @@
 import { Badge } from "@/components/ui/badge";
-import { type BatchTransferStatus, formatEventDateTime } from "@ifarm/shared";
+import { type BatchTransferStatus } from "@ifarm/shared";
 
 export const TRANSFER_STATUS_LABELS: Record<BatchTransferStatus, string> = {
   pending: "Pendente",
@@ -24,6 +24,3 @@ export function TransferStatusBadge({
     </Badge>
   );
 }
-
-// Data e hora programadas da transferência.
-export const formatTransferDate = formatEventDateTime;

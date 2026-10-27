@@ -9,16 +9,15 @@ import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { ConfirmDialog } from "@/components/our/ConfirmDialog";
 import { ErrorPage } from "@/components/our/ErrorPage";
-import {
-  SessionStatusBadge,
-  formatSessionDateTime,
-} from "@/features/management-session/display";
+import { SessionStatusBadge } from "@/features/management-session/display";
 import { managementSessionClient } from "@/lib/clients";
 import {
   isNotFoundError,
   isSessionOpen,
   type SessionParticipant,
-  nowDateTime,
+  formatDateTime,
+  nowInZone,
+  toDateTimeInput,
 } from "@ifarm/shared";
 import { managementSessionDetailQuery } from "@/features/management-session/queries";
 import {
@@ -32,6 +31,7 @@ import { ReceptionDocumentsDialog } from "./ReceptionDocumentsDialog";
 import { ReceptionPanel } from "./ReceptionPanel";
 import { ListSkeleton } from "@/components/our/PageSkeletons";
 import { useReloadReception } from "./queries";
+import { useCurrentProperty } from "@/features/shell/useCurrentProperty";
 
 const TAB_LABELS = {
   pending: "A manejar",
@@ -51,6 +51,7 @@ const EMPTY_MESSAGES = {
 // etapa são as mesmas do registro de manejo.
 export function ReceptionBoard({ id }: { id: string }) {
   const navigate = useNavigate();
+  const { timeZone } = useCurrentProperty();
   const boardPath = `/recepcoes/${id}`;
 
   const [search, setSearch] = useState("");
@@ -278,7 +279,7 @@ export function ReceptionBoard({ id }: { id: string }) {
           <span className="flex items-center gap-1">
             Data da recepção:{" "}
             <span className="font-medium text-foreground">
-              {formatSessionDateTime(detail.performedAt)}
+              {formatDateTime(detail.performedAt)}
             </span>
             {inProgress && (
               <Button
@@ -372,7 +373,11 @@ export function ReceptionBoard({ id }: { id: string }) {
 
       <SessionDateDialog
         open={dateDialog}
-        initial={detail.performedAt ?? nowDateTime()}
+        initial={
+          detail.performedAt
+            ? toDateTimeInput(detail.performedAt)
+            : nowInZone(timeZone)
+        }
         title="Data da recepção"
         description="Data em que os animais chegaram. Todos os registros da recepção recebem esta data."
         confirmLabel="Salvar"

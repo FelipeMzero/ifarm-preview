@@ -11,7 +11,7 @@ import type { IdentifierKind } from "./client";
 
 /** Data opcional; vazia vira null. */
 const optionalDate = dateField.transform((v) => v || null);
-/** Data e hora opcionais ("AAAA-MM-DDTHH:mm"); vazias viram null. */
+/** Data e hora opcionais ("AAAA-MM-DDTHH:mm", no fuso da propriedade); vazias viram null. */
 const optionalDateTime = z
   .union([dateTimeField, z.literal("")])
   .optional()

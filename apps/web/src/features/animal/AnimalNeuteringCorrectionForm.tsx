@@ -1,4 +1,4 @@
-import { toInputDateTime } from "./format";
+import { useCurrentProperty } from "@/features/shell/useCurrentProperty";
 import { useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -11,7 +11,11 @@ import { DialogFooter } from "@/components/ui/dialog";
 import { FormField } from "@/components/our/FormField";
 import { FieldRow } from "@/components/our/FieldRow";
 import { SelectField } from "@/components/our/SelectField";
-import { type NeuteringTechnique, nowDateTime } from "@ifarm/shared";
+import {
+  type NeuteringTechnique,
+  nowInZone,
+  toDateTimeInput,
+} from "@ifarm/shared";
 import { techniqueItems } from "@/features/neutering-technique/items";
 import { animalClient } from "@/lib/clients";
 import { applyServerErrors } from "@/lib/form-errors";
@@ -42,10 +46,11 @@ export function AnimalNeuteringCorrectionForm({
   onCancel,
   onSaved,
 }: AnimalNeuteringCorrectionFormProps) {
+  const { timeZone } = useCurrentProperty();
   const form = useForm<NeuteringCorrectionFormData>({
     resolver: zodResolver(neuteringCorrectionSchema, undefined, { raw: true }),
     defaultValues: {
-      date: toInputDateTime(neutering.date),
+      date: toDateTimeInput(neutering.date),
       techniqueId: neutering.techniqueId ?? "",
       notes: neutering.notes ?? "",
     },
@@ -62,7 +67,7 @@ export function AnimalNeuteringCorrectionForm({
     const dateChanged =
       !neutering.fromSession &&
       !!data.date &&
-      data.date !== toInputDateTime(neutering.date);
+      data.date !== toDateTimeInput(neutering.date);
 
     try {
       await correct.mutateAsync({
@@ -94,7 +99,7 @@ export function AnimalNeuteringCorrectionForm({
               id={id}
               type="datetime-local"
               min={birthDate ? `${birthDate}T00:00` : undefined}
-              max={nowDateTime()}
+              max={nowInZone(timeZone)}
               disabled={neutering.fromSession}
               title={
                 neutering.fromSession

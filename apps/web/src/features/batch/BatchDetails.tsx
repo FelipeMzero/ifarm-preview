@@ -53,20 +53,13 @@ import {
 } from "@/components/our/DetailParts";
 import { ErrorPage } from "@/components/our/ErrorPage";
 import { AnimalIdentification, SEX_ICON } from "@/features/animal/display";
-import {
-  daysBetween,
-  formatAge,
-  formatDate,
-  formatDateOnly,
-  formatDuration,
-  formatKg,
-} from "@/features/animal/format";
+import { formatAge, formatDuration, formatKg } from "@/features/animal/format";
 import { cn } from "@/lib/utils";
 import { BatchGoalChart } from "./BatchGoalChart";
-import { projectBatch } from "@ifarm/shared";
+import { projectBatch, daysBetween, formatDay } from "@ifarm/shared";
 import {
   type BatchFullDetails,
-  formatEventDateTime,
+  formatDateTime,
   isNotFoundError,
 } from "@ifarm/shared";
 import { batchFullDetailsQuery } from "./queries";
@@ -122,7 +115,8 @@ function buildRecentActivity(batch: BatchFullDetails): TimelineEvent[] {
     })),
   ];
 
-  return events.sort((a, b) => b.date.localeCompare(a.date));
+  // Pelo instante: a criação vem em UTC e os eventos, no fuso da propriedade.
+  return events.sort((a, b) => Date.parse(b.date) - Date.parse(a.date));
 }
 
 export function BatchDetails({
@@ -271,7 +265,7 @@ export function BatchDetails({
               </span>
               <span className="flex items-center gap-1.5">
                 <Calendar className="size-3.5" />
-                Criado em {formatDate(batch.createdAt)}
+                Criado em {formatDay(batch.createdAt)}
               </span>
             </div>
           </div>
@@ -358,7 +352,7 @@ export function BatchDetails({
                     {batch.currentArea?.name ?? "—"}
                   </InfoItem>
                   <InfoItem label="Na área desde">
-                    {formatDate(batch.currentArea?.enteredAt)}
+                    {formatDay(batch.currentArea?.enteredAt)}
                   </InfoItem>
                   <InfoItem label="Tamanho da área">
                     {batch.currentArea
@@ -371,10 +365,10 @@ export function BatchDetails({
                       : "—"}
                   </InfoItem>
                   <InfoItem label="Criado em">
-                    {formatDate(batch.createdAt)}
+                    {formatDay(batch.createdAt)}
                   </InfoItem>
                   <InfoItem label="Encerrado em">
-                    {formatDate(batch.closedAt)}
+                    {formatDay(batch.closedAt)}
                   </InfoItem>
                   {batch.notes && (
                     <div className="col-span-2">
@@ -402,13 +396,13 @@ export function BatchDetails({
                         : "—"}
                     </InfoItem>
                     <InfoItem label="Data alvo">
-                      {formatDateOnly(goal.targetDate)}
+                      {formatDay(goal.targetDate)}
                     </InfoItem>
                     <InfoItem label="Previsão de atingir">
                       {projection.estimatedDate
                         ? projection.reached
                           ? "Já atingida"
-                          : formatDate(projection.estimatedDate.toISOString())
+                          : formatDay(projection.estimatedDate.toISOString())
                         : "—"}
                     </InfoItem>
                     <InfoItem label="Animais na meta">
@@ -450,7 +444,7 @@ export function BatchDetails({
                           {event.title}
                         </p>
                         <time className="shrink-0 text-xs tabular-nums text-muted-foreground">
-                          {formatDate(event.date)}
+                          {formatDay(event.date)}
                         </time>
                       </div>
                       {event.description && (
@@ -503,7 +497,7 @@ export function BatchDetails({
               <CardDescription>
                 Clique em um animal para ver os detalhes.
                 {showProjectionColumn &&
-                  ` A projeção considera o peso em ${formatDateOnly(goal!.targetDate)}.`}
+                  ` A projeção considera o peso em ${formatDay(goal!.targetDate)}.`}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -561,7 +555,7 @@ export function BatchDetails({
                               </div>
                               {a.lastWeighingDate && (
                                 <div className="text-xs text-muted-foreground">
-                                  {formatDate(a.lastWeighingDate)}
+                                  {formatDay(a.lastWeighingDate)}
                                 </div>
                               )}
                             </TableCell>
@@ -638,10 +632,10 @@ export function BatchDetails({
                         <TableCell>
                           <AnimalIdentification animal={m.animal} />
                         </TableCell>
-                        <TableCell>{formatDate(m.enteredAt)}</TableCell>
+                        <TableCell>{formatDay(m.enteredAt)}</TableCell>
                         <TableCell>
                           {m.exitedAt ? (
-                            formatDate(m.exitedAt)
+                            formatDay(m.exitedAt)
                           ) : (
                             <Badge variant="secondary">No lote</Badge>
                           )}
@@ -696,8 +690,8 @@ export function BatchDetails({
                             )}
                           </div>
                         </TableCell>
-                        <TableCell>{formatDate(h.enteredAt)}</TableCell>
-                        <TableCell>{formatDate(h.exitedAt)}</TableCell>
+                        <TableCell>{formatDay(h.enteredAt)}</TableCell>
+                        <TableCell>{formatDay(h.exitedAt)}</TableCell>
                         <TableCell className="text-right tabular-nums">
                           {formatDuration(
                             daysBetween(h.enteredAt, h.exitedAt ?? undefined),
@@ -774,7 +768,7 @@ function PendingTransfersCard({
                   )}
                 </span>
                 <time className="shrink-0 text-xs tabular-nums text-muted-foreground">
-                  {formatEventDateTime(r.date)}
+                  {formatDateTime(r.date)}
                 </time>
               </button>
             </li>
@@ -889,7 +883,7 @@ function GoalProjection({
           value={formatKg(target)}
           hint={
             projection.targetDate
-              ? `até ${formatDateOnly(projection.targetDate)}${
+              ? `até ${formatDay(projection.targetDate)}${
                   projection.daysLeft != null
                     ? projection.daysLeft >= 0
                       ? ` (em ${formatDuration(projection.daysLeft)})`
@@ -922,7 +916,7 @@ function GoalProjection({
             projection.reached
               ? "Atingida"
               : projection.estimatedDate
-                ? formatDate(projection.estimatedDate.toISOString())
+                ? formatDay(projection.estimatedDate.toISOString())
                 : "—"
           }
           hint={

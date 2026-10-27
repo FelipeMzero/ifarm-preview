@@ -7,10 +7,10 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { ErrorPage } from "@/components/our/ErrorPage";
-import { ReceivedCount, formatDay } from "@/features/purchase/display";
+import { ReceivedCount } from "@/features/purchase/display";
 import { SessionStatusBadge } from "@/features/management-session/display";
 import { NewReceptionDialog } from "./NewReceptionDialog";
-import { isNotFoundError } from "@ifarm/shared";
+import { isNotFoundError, formatDay } from "@ifarm/shared";
 import { FormSkeleton } from "@/components/our/PageSkeletons";
 import { receptionPurchaseQuery } from "./queries";
 

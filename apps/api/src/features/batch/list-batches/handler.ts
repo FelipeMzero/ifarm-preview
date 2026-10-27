@@ -71,9 +71,7 @@ export async function listBatches(
       name: b.name,
       notes: b.notes,
       hasMeta: Boolean(b.saleGoal),
-      targetDate: b.saleGoal?.targetDate
-        ? fromDbDate(b.saleGoal.targetDate)
-        : null,
+      targetDate: fromDbDate(b.saleGoal?.targetDate),
       targetWeight: b.saleGoal?.targetWeight?.toNumber() ?? null,
       area: b.batchAreaHistories[0]?.area ?? null,
       animalCount: b._count.animals,

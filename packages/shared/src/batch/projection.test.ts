@@ -1,8 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { BatchDetailAnimal } from "./client";
+import { DAY_MS } from "../date";
 import { projectBatch } from "./projection";
 
-const DAY_MS = 24 * 60 * 60 * 1000;
 const today = new Date(2026, 9, 20); // meia-noite local
 const inDays = (n: number) => new Date(today.getTime() + n * DAY_MS);
 

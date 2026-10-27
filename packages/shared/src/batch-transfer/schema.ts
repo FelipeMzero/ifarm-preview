@@ -7,7 +7,7 @@ import { FIELD_LIMITS } from "../field-limits";
 // o servidor converte.
 export const batchTransferSchema = z.object({
   destinationBatchId: z.uuid("Selecione o lote de destino."),
-  // Data e hora programadas ("AAAA-MM-DDTHH:mm", no fuso local).
+  // Data e hora programadas ("AAAA-MM-DDTHH:mm", no fuso da propriedade).
   transferredAt: dateTimeField,
   notes: z
     .string()

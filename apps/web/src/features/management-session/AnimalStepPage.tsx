@@ -24,16 +24,13 @@ import {
   SEX_ICON,
 } from "@/features/animal/display";
 import { useCurrentProperty } from "@/features/shell/useCurrentProperty";
-import {
-  ParticipantStatusBadge,
-  STEP_ICONS,
-  formatSessionDateTime,
-} from "./display";
+import { ParticipantStatusBadge, STEP_ICONS } from "./display";
 import { managementSessionClient } from "@/lib/clients";
 import {
   isNotFoundError,
   type ManagementOptions,
   type SessionAnimalContext,
+  formatDateTime,
 } from "@ifarm/shared";
 import {
   managementOptionsQuery,
@@ -351,7 +348,7 @@ export function AnimalStepPage({
             ? "O registro desta sessão ainda não foi iniciado."
             : `Sessão ${context.session.status === "confirmed" ? "consolidada" : "cancelada"}${
                 context.session.performedAt
-                  ? ` (manejo de ${formatSessionDateTime(context.session.performedAt)})`
+                  ? ` (manejo de ${formatDateTime(context.session.performedAt)})`
                   : ""
               }: somente visualização.`}
         </p>

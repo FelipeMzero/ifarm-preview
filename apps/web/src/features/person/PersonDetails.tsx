@@ -33,7 +33,7 @@ import { ErrorPage } from "@/components/our/ErrorPage";
 import { personClient } from "@/lib/clients";
 import {
   PersonType,
-  formatDate,
+  formatDay,
   formatTaxId,
   isNotFoundError,
 } from "@ifarm/shared";
@@ -251,7 +251,7 @@ export function PersonDetails({
                 </div>
                 <div>
                   <p className="text-muted-foreground">Data de Nascimento</p>
-                  <p>{person.birthDate ? formatDate(person.birthDate) : "—"}</p>
+                  <p>{person.birthDate ? formatDay(person.birthDate) : "—"}</p>
                 </div>
                 <div>
                   <p className="text-muted-foreground">Estado Civil</p>
@@ -338,7 +338,7 @@ export function PersonDetails({
             <TableBody>
               {FICTITIOUS_PURCHASES.map((c, i) => (
                 <TableRow key={i}>
-                  <TableCell>{formatDate(c.date)}</TableCell>
+                  <TableCell>{formatDay(c.date)}</TableCell>
                   <TableCell>{c.product}</TableCell>
                   <TableCell>{c.quantity}</TableCell>
                   <TableCell>{c.value}</TableCell>
@@ -368,7 +368,7 @@ export function PersonDetails({
             <TableBody>
               {FICTITIOUS_SUPPLIED_PRODUCTS.map((p, i) => (
                 <TableRow key={i}>
-                  <TableCell>{formatDate(p.date)}</TableCell>
+                  <TableCell>{formatDay(p.date)}</TableCell>
                   <TableCell>{p.product}</TableCell>
                   <TableCell>{p.quantity}</TableCell>
                   <TableCell>{p.value}</TableCell>

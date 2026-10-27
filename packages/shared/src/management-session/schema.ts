@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { dateTimeField, toLocalDateTime } from "../date";
+import { dateTimeField } from "../date";
 import { FIELD_LIMITS } from "../field-limits";
 import { planStepSchema } from "./plan-steps";
 
@@ -18,8 +18,8 @@ export const managementSessionFieldsSchema = z.object({
       FIELD_LIMITS.managementSession.title,
       `Máximo de ${FIELD_LIMITS.managementSession.title} caracteres`,
     ),
-  // Data e hora previstas ("AAAA-MM-DDTHH:mm", no fuso local).
-  scheduledAt: dateTimeField.transform(toLocalDateTime),
+  // Data e hora previstas ("AAAA-MM-DDTHH:mm", no fuso da propriedade).
+  scheduledAt: dateTimeField,
   notes: z
     .string()
     .max(
@@ -44,8 +44,8 @@ export type ManagementSessionPayload = z.input<typeof managementSessionSchema>;
 export type ManagementSessionData = z.output<typeof managementSessionSchema>;
 
 export const managementSessionStartSchema = z.object({
-  // Data e hora em que o manejo acontece ("AAAA-MM-DDTHH:mm", no fuso local).
-  performedAt: dateTimeField.transform(toLocalDateTime),
+  // Data e hora em que o manejo acontece ("AAAA-MM-DDTHH:mm", no fuso da propriedade).
+  performedAt: dateTimeField,
 });
 
 export type ManagementSessionStartData = z.output<

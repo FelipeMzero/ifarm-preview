@@ -9,13 +9,13 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { type AreaOccupancyHistoryEntry, type AreaRow } from "@ifarm/shared";
+import {
+  type AreaOccupancyHistoryEntry,
+  type AreaRow,
+  formatDay,
+} from "@ifarm/shared";
 import { OccupancySummary } from "./occupancy";
 import { areaOccupancyHistoryQuery } from "./queries";
-
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString("pt-BR");
-}
 
 interface AreaDetailsProps {
   area: AreaRow | null;
@@ -144,8 +144,8 @@ export function AreaDetails({
                         {h.batch.name}
                       </span>
                       <span className="shrink-0 tabular-nums text-muted-foreground">
-                        {formatDate(h.enteredAt)} —{" "}
-                        {h.exitedAt ? formatDate(h.exitedAt) : "atual"}
+                        {formatDay(h.enteredAt)} —{" "}
+                        {h.exitedAt ? formatDay(h.exitedAt) : "atual"}
                       </span>
                     </li>
                   ))}

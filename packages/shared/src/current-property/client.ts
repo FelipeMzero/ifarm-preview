@@ -1,8 +1,13 @@
 import { jsonRequest, readJson, type ApiRequest } from "../client";
+import type { BrTimeZone } from "../property/time-zones";
 import type { CurrentPropertyPayload } from "./schema";
 
-/** Propriedade em que o usuário está trabalhando. */
-export type CurrentProperty = { id: string; name: string };
+/** A propriedade em que o usuário está trabalhando, com o fuso dela (RN-PROPRIEDADE-05). */
+export type CurrentProperty = {
+  id: string;
+  name: string;
+  timeZone: BrTimeZone;
+};
 
 export type CurrentPropertyDetails = {
   id: string;

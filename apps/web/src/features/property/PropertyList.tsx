@@ -38,7 +38,11 @@ import {
 import { Input } from "@/components/ui/input";
 import { SelectField } from "@/components/our/SelectField";
 import { propertyClient } from "@/lib/clients";
-import { type PropertyRow, type PropertyListParams } from "@ifarm/shared";
+import {
+  type PropertyRow,
+  type PropertyListParams,
+  formatDateTime,
+} from "@ifarm/shared";
 import { ErrorPage } from "@/components/our/ErrorPage";
 import { useLocalStorageState } from "@/hooks/use-local-storage-state";
 import { propertyKeys, propertyListQuery } from "./queries";
@@ -148,17 +152,7 @@ function buildColumns(
     {
       header: "Atualizado em",
       accessorKey: "updatedAt",
-      cell: ({ row }) => {
-        const iso = row.original.updatedAt;
-        if (!iso) return "—";
-        return new Date(iso).toLocaleString("pt-BR", {
-          day: "2-digit",
-          month: "2-digit",
-          year: "numeric",
-          hour: "2-digit",
-          minute: "2-digit",
-        });
-      },
+      cell: ({ row }) => formatDateTime(row.original.updatedAt),
     },
     {
       id: "actions",

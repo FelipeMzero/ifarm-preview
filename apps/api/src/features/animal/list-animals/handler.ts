@@ -1,20 +1,23 @@
-import type { AnimalListResult, AnimalQuery } from "@ifarm/shared";
+import {
+  todayInZone,
+  type AnimalListResult,
+  type AnimalQuery,
+} from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
-import { fromDbDate } from "../../../lib/db-dates";
+import { fromDbDate, toDbDate } from "../../../lib/db-dates";
 import { getOrAssignCurrentProperty } from "../../current-property/shared";
+import { propertyTimeZone } from "../../property/time-zone";
+import { birthDateBounds, type AgeRange } from "../rules";
 
-// Limites de data de nascimento para cada faixa etária (idade em meses completos).
-function birthDateFilter(range: "upTo12" | "12to24" | "over24" | "unknown") {
-  if (range === "unknown") return null;
-  const monthsAgo = (months: number) => {
-    const d = new Date();
-    d.setHours(0, 0, 0, 0);
-    d.setMonth(d.getMonth() - months);
-    return d;
+// Faixa etária → filtro da coluna birthDate (@db.Date), pela idade no dia de hoje da
+// propriedade.
+function birthDateFilter(range: AgeRange, timeZone: string) {
+  const bounds = birthDateBounds(range, todayInZone(timeZone));
+  if (!bounds) return null;
+  return {
+    ...(bounds.after ? { gt: toDbDate(bounds.after) } : {}),
+    ...(bounds.upTo ? { lte: toDbDate(bounds.upTo) } : {}),
   };
-  if (range === "upTo12") return { gt: monthsAgo(12) };
-  if (range === "12to24") return { gt: monthsAgo(24), lte: monthsAgo(12) };
-  return { lte: monthsAgo(24) };
 }
 
 // Animais da propriedade informada ou, sem ela, da propriedade atual do usuário.
@@ -67,7 +70,14 @@ export async function listAnimals(
     ...(neutered ? { neutered: neutered === "true" } : {}),
     ...(breedId ? { breedId } : {}),
     ...(origin ? { origin } : {}),
-    ...(ageRange ? { birthDate: birthDateFilter(ageRange) } : {}),
+    ...(ageRange
+      ? {
+          birthDate: birthDateFilter(
+            ageRange,
+            await propertyTimeZone(propertyId),
+          ),
+        }
+      : {}),
     // "<>" no SQL descarta NULL, então os animais sem lote precisam ser incluídos à parte.
     ...(excludeBatchId
       ? {
@@ -110,7 +120,7 @@ export async function listAnimals(
       rfid: a.currentRfid,
       name: a.name,
       sex: a.sex,
-      birthDate: a.birthDate ? fromDbDate(a.birthDate) : null,
+      birthDate: fromDbDate(a.birthDate),
       origin: a.origin,
       status: a.status,
       currentWeightKg: a.currentWeight?.toNumber() ?? null,

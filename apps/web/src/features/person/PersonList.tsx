@@ -44,7 +44,7 @@ import {
   type PersonRow,
   type PersonListParams,
 } from "@ifarm/shared";
-import { PERSON_TYPE_LABELS } from "@ifarm/shared";
+import { PERSON_TYPE_LABELS, formatDateTime } from "@ifarm/shared";
 import { ErrorPage } from "@/components/our/ErrorPage";
 import { ListSkeleton } from "@/components/our/PageSkeletons";
 import { useLocalStorageState } from "@/hooks/use-local-storage-state";
@@ -164,17 +164,7 @@ function buildColumns(
     {
       header: "Atualizado em",
       accessorKey: "updatedAt",
-      cell: ({ row }) => {
-        const iso = row.original.updatedAt;
-        if (!iso) return "—";
-        return new Date(iso).toLocaleString("pt-BR", {
-          day: "2-digit",
-          month: "2-digit",
-          year: "numeric",
-          hour: "2-digit",
-          minute: "2-digit",
-        });
-      },
+      cell: ({ row }) => formatDateTime(row.original.updatedAt),
     },
     {
       id: "actions",

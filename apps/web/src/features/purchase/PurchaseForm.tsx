@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
-import { FIELD_LIMITS } from "@ifarm/shared";
+import { FIELD_LIMITS, formatDay, formatDateTime } from "@ifarm/shared";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -35,12 +35,7 @@ import { useCurrentProperty } from "@/features/shell/useCurrentProperty";
 import { Badge } from "@/components/ui/badge";
 import { CategoriesEditor } from "./CategoriesEditor";
 import { PaymentDialog } from "./PaymentDialog";
-import {
-  PurchaseStatusBadge,
-  ReceivedCount,
-  formatBRL,
-  formatDay,
-} from "./display";
+import { PurchaseStatusBadge, ReceivedCount, formatBRL } from "./display";
 import {
   purchaseSchema,
   today,
@@ -357,9 +352,9 @@ export function PurchaseForm({ id }: { id?: string }) {
           {!detail
             ? "A compra registra o que foi negociado, por categoria, com os preços. Os animais são cadastrados nas recepções, quando chegam."
             : detail.status === "cancelled"
-              ? `Compra cancelada em ${new Date(detail.cancelledAt!).toLocaleString("pt-BR")}: desconsiderada.`
+              ? `Compra cancelada em ${formatDateTime(detail.cancelledAt)}: desconsiderada.`
               : detail.status === "confirmed"
-                ? `Compra consolidada em ${new Date(detail.confirmedAt!).toLocaleString("pt-BR")}: custos rateados entre os animais recebidos. Não pode mais ser alterada.`
+                ? `Compra consolidada em ${formatDateTime(detail.confirmedAt)}: custos rateados entre os animais recebidos. Não pode mais ser alterada.`
                 : detail.paymentDate
                   ? `Paga em ${formatDay(detail.paymentDate)}${
                       detail.paymentReference

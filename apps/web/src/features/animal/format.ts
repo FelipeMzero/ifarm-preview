@@ -1,34 +1,6 @@
-import {
-  formatDate as formatDay,
-  formatEventDateTime,
-  fromLocalDateTime,
-  toLocalDay,
-} from "@ifarm/shared";
+import { daysBetween, toLocalDay } from "@ifarm/shared";
 
-// Data e hora de um evento (instante ISO), no fuso local. Aceita também um dia ("AAAA-MM-DD"),
-// porque as linhas do tempo misturam eventos com hora e datas que são só o dia (compra).
-export function formatInstant(iso: string | null | undefined): string {
-  if (!iso) return "—";
-  if (iso.length === 10) return formatDay(iso);
-  return formatEventDateTime(fromLocalDateTime(new Date(iso)));
-}
-
-// Instante ISO → valor do <input type="datetime-local">, no fuso local.
-export const toInputDateTime = (iso: string) =>
-  fromLocalDateTime(new Date(iso));
-
-// Instante ISO ou dia ("AAAA-MM-DD", ex.: data da compra) → "DD/MM/AAAA".
-export function formatDate(iso: string | null | undefined): string {
-  if (!iso) return "—";
-  if (iso.length === 10) return formatDay(iso);
-  return new Date(iso).toLocaleDateString("pt-BR");
-}
-
-// Campos só de data (sem horário) chegam como "yyyy-mm-dd".
-export function formatDateOnly(iso: string | null | undefined): string {
-  if (!iso) return "—";
-  return formatDay(iso);
-}
+// Formatação da tela do animal. Datas: formatDay / formatDateTime, do @ifarm/shared.
 
 export function formatKg(value: number, fractionDigits = 2): string {
   return `${value.toLocaleString("pt-BR", { maximumFractionDigits: fractionDigits })} kg`;
@@ -43,19 +15,6 @@ export function formatCurrency(value: number): string {
   return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
-export const DAY_MS = 24 * 60 * 60 * 1000;
-
-export function daysBetween(
-  from: string,
-  to: string | Date = new Date(),
-): number {
-  const end = typeof to === "string" ? new Date(to) : to;
-  return Math.max(
-    0,
-    Math.round((end.getTime() - new Date(from).getTime()) / DAY_MS),
-  );
-}
-
 export function formatDuration(days: number): string {
   if (days < 1) return "menos de 1 dia";
   if (days < 60) return days === 1 ? "1 dia" : `${days} dias`;
@@ -66,13 +25,18 @@ export function formatDuration(days: number): string {
   return rest ? `${years} anos e ${rest} m` : `${years} anos`;
 }
 
+// Idade em meses completos na data (negativa se anterior ao nascimento).
+export function monthsOld(birth: Date, at: Date): number {
+  const months =
+    (at.getFullYear() - birth.getFullYear()) * 12 +
+    (at.getMonth() - birth.getMonth());
+  return at.getDate() < birth.getDate() ? months - 1 : months;
+}
+
 export function formatAge(birthDate: string): string {
   const birth = toLocalDay(birthDate);
   const now = new Date();
-  let months =
-    (now.getFullYear() - birth.getFullYear()) * 12 +
-    (now.getMonth() - birth.getMonth());
-  if (now.getDate() < birth.getDate()) months -= 1;
+  const months = monthsOld(birth, now);
 
   if (months < 1) {
     const days = daysBetween(birth.toISOString(), now);

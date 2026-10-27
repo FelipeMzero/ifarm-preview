@@ -1,9 +1,10 @@
 import {
-  toLocalDateTime,
+  zonedDateTimeToInstant,
   type IdentifierCorrectionData,
   type IdentifierKind,
 } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
+import { animalStays, timeZoneAt } from "../../../property/time-zone";
 import { keepsOriginal, sessionDateLock } from "../../rules";
 import {
   ADAPTERS,
@@ -30,7 +31,12 @@ export async function correctIdentifier(
 
     let identifiedAt: Date | undefined;
     if (data.date) {
-      identifiedAt = toLocalDateTime(data.date);
+      // A data nova vale no fuso da propriedade onde a identificação aconteceu.
+      const { stays, current } = await animalStays(animalId, tx);
+      identifiedAt = zonedDateTimeToInstant(
+        data.date,
+        timeZoneAt(stays, record.identifiedAt, current),
+      );
       if (identifiedAt > new Date()) {
         throw new IdentifierError("A data não pode ser futura.", 400, "date");
       }

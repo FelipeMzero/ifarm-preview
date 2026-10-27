@@ -1,11 +1,12 @@
 import {
-  fromLocalDateTime,
+  instantToZonedIso,
   isSessionOpen,
   type ManagementSessionDetail,
 } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
 import { NotFoundError } from "../../../lib/errors";
 import { unavailableReason } from "../../animal/rules";
+import { propertyTimeZone } from "../../property/time-zone";
 import { describeReception } from "../../purchase/reception";
 import { participantStatus } from "../session-steps";
 import { loadSession } from "../shared";
@@ -25,42 +26,45 @@ export async function getManagementSession(
   const session = await loadSession(prisma, id);
   if (!session) throw new NotFoundError("Sessão de manejo não encontrada.");
 
-  const [row, participants, steps, records, reception] = await Promise.all([
-    prisma.managementSession.findUniqueOrThrow({ where: { id } }),
-    prisma.managementParticipant.findMany({
-      where: { managementSessionId: id },
-      orderBy: { id: "asc" },
-      include: {
-        animal: {
-          select: {
-            id: true,
-            code: true,
-            currentTag: true,
-            currentRfid: true,
-            name: true,
-            sex: true,
-            status: true,
-            currentPropertyId: true,
-            neutered: true,
-            currentWeight: true,
-            currentBatch: { select: { id: true, name: true } },
+  const [row, participants, steps, records, reception, timeZone] =
+    await Promise.all([
+      prisma.managementSession.findUniqueOrThrow({ where: { id } }),
+      prisma.managementParticipant.findMany({
+        where: { managementSessionId: id },
+        orderBy: { id: "asc" },
+        include: {
+          animal: {
+            select: {
+              id: true,
+              code: true,
+              currentTag: true,
+              currentRfid: true,
+              name: true,
+              sex: true,
+              status: true,
+              currentPropertyId: true,
+              neutered: true,
+              currentWeight: true,
+              currentBatch: { select: { id: true, name: true } },
+            },
           },
         },
-      },
-    }),
-    describeSteps(prisma, session, session.steps),
-    loadStepRecords(prisma, session, session.steps),
-    describeReception(prisma, id),
-  ]);
+      }),
+      describeSteps(prisma, session, session.steps),
+      loadStepRecords(prisma, session, session.steps),
+      describeReception(prisma, id),
+      propertyTimeZone(session.propertyId),
+    ]);
 
   const open = isSessionOpen(session.status);
 
   return {
     id: session.id,
     status: session.status,
-    scheduledAt: fromLocalDateTime(session.scheduledAt),
+    // No fuso da propriedade, com o deslocamento.
+    scheduledAt: instantToZonedIso(session.scheduledAt, timeZone),
     performedAt: session.performedAt
-      ? fromLocalDateTime(session.performedAt)
+      ? instantToZonedIso(session.performedAt, timeZone)
       : null,
     title: row.title,
     notes: row.notes ?? "",

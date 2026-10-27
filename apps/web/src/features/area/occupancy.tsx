@@ -3,13 +3,12 @@ import {
   type AreaRotation,
   type AreaRow,
   type AreaStatus,
+  formatDay,
 } from "@ifarm/shared";
 
 // Apresentação da situação e do rodízio das áreas. As regras (semáforo de lotação,
 // prazos de ocupação e descanso) são do servidor: vêm prontas em `area.status` e
 // `area.rotation`.
-
-const formatDate = (iso: string) => new Date(iso).toLocaleDateString("pt-BR");
 
 // Classes aplicadas ao <path> do polígono no Leaflet. CSS tem precedência sobre os
 // atributos fill/stroke que o Leaflet grava, então as cores seguem o tema.
@@ -111,7 +110,7 @@ function RotationLine({ rotation }: { rotation: AreaRotation }) {
       {rotation.limit != null && ` (referência: ${rotation.limit})`}
       {rotation.ready
         ? " · pronta para receber"
-        : rotation.readyAt && ` · pronta em ${formatDate(rotation.readyAt)}`}
+        : rotation.readyAt && ` · pronta em ${formatDay(rotation.readyAt)}`}
     </div>
   );
 }

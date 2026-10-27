@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useCurrentProperty } from "@/features/shell/useCurrentProperty";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
@@ -44,7 +45,9 @@ import {
   ApiError,
   type AnimalNeuteringRecord,
   type NeuteringCreatePayload,
-  nowDateTime,
+  nowInZone,
+  formatDateTime,
+  formatDay,
 } from "@ifarm/shared";
 import { AnimalNeuteringCorrectionForm } from "./AnimalNeuteringCorrectionForm";
 import { neuteringTechniqueListQuery } from "@/features/neutering-technique/queries";
@@ -54,7 +57,6 @@ import { techniqueItems } from "@/features/neutering-technique/items";
 import { SelectField } from "@/components/our/SelectField";
 import type { Commitment } from "@ifarm/shared";
 import { CommitmentNotice } from "./CommitmentNotice";
-import { formatDate, formatInstant } from "./format";
 
 interface AnimalNeuteringHistoryDialogProps {
   animalId: string;
@@ -77,8 +79,8 @@ function NeuteringCorrectionNote({
 
   const was = [
     neutering.originalDate &&
-    formatInstant(neutering.originalDate) !== formatInstant(neutering.date)
-      ? formatInstant(neutering.originalDate)
+    formatDateTime(neutering.originalDate) !== formatDateTime(neutering.date)
+      ? formatDateTime(neutering.originalDate)
       : null,
     neutering.originalTechniqueId !== neutering.techniqueId
       ? (neutering.originalTechniqueName ?? "sem técnica")
@@ -88,7 +90,7 @@ function NeuteringCorrectionNote({
   return (
     <div
       className="text-xs text-muted-foreground"
-      title={`Corrigida em ${formatDate(neutering.correctedAt)}`}
+      title={`Corrigida em ${formatDay(neutering.correctedAt)}`}
     >
       {was.length ? `corrigido (era ${was.join(", ")})` : "corrigido"}
     </div>
@@ -112,8 +114,9 @@ function NeuteringRegisterPanel({
   // undefined = histórico ainda carregando (o painel já aparece; só este texto espera).
   latest: AnimalNeuteringRecord | null | undefined;
 }) {
+  const { timeZone } = useCurrentProperty();
   const reloadAnimal = useReloadAnimals();
-  const [date, setDate] = useState(nowDateTime);
+  const [date, setDate] = useState(() => nowInZone(timeZone));
   const [techniqueId, setTechniqueId] = useState("");
   const [notes, setNotes] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -145,7 +148,7 @@ function NeuteringRegisterPanel({
       toast.success(
         neutered ? "Recastração registrada." : "Castração registrada.",
       );
-      setDate(nowDateTime());
+      setDate(nowInZone(timeZone));
       setTechniqueId("");
       setNotes("");
     } catch (err) {
@@ -167,7 +170,7 @@ function NeuteringRegisterPanel({
             {!neutered
               ? "não castrado"
               : latest
-                ? `castrado em ${formatInstant(latest.date)}${latest.techniqueName ? ` (${latest.techniqueName})` : ""}`
+                ? `castrado em ${formatDateTime(latest.date)}${latest.techniqueName ? ` (${latest.techniqueName})` : ""}`
                 : "castrado (sem registro)"}
           </span>
         )}
@@ -193,7 +196,7 @@ function NeuteringRegisterPanel({
           type="datetime-local"
           value={date}
           min={birthDate ? `${birthDate}T00:00` : undefined}
-          max={nowDateTime()}
+          max={nowInZone(timeZone)}
           aria-invalid={errors.date ? true : undefined}
           onChange={(e) => {
             setDate(e.target.value);
@@ -313,7 +316,7 @@ export function AnimalNeuteringHistoryDialog({
             </DialogTitle>
             <DialogDescription>
               {editing
-                ? `Castração de ${formatInstant(editing.date)}.`
+                ? `Castração de ${formatDateTime(editing.date)}.`
                 : "Registre a castração ou corrija as lançadas com erro. As alterações são gravadas imediatamente."}
             </DialogDescription>
           </DialogHeader>
@@ -377,7 +380,7 @@ export function AnimalNeuteringHistoryDialog({
                     <TableRow key={n.id}>
                       <TableCell>
                         <div className="font-medium">
-                          {formatInstant(n.date)}
+                          {formatDateTime(n.date)}
                           {isRecastration(n) && (
                             <span className="ml-2 text-xs font-normal text-muted-foreground">
                               recastração
@@ -432,7 +435,7 @@ export function AnimalNeuteringHistoryDialog({
             <AlertDialogTitle>Excluir castração</AlertDialogTitle>
             <AlertDialogDescription>
               {cancelling
-                ? `A castração de ${formatInstant(cancelling.date)} deixará de aparecer no histórico. O registro é mantido para auditoria.`
+                ? `A castração de ${formatDateTime(cancelling.date)} deixará de aparecer no histórico. O registro é mantido para auditoria.`
                 : null}
               {isLastOne &&
                 " É a única castração registrada: o animal continua castrado (por exemplo, se já chegou castrado)?"}

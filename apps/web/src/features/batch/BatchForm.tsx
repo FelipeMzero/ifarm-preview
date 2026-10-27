@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowLeft, ArrowRightLeft, ChevronDown, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
-import { FIELD_LIMITS } from "@ifarm/shared";
+import { FIELD_LIMITS, formatDay } from "@ifarm/shared";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -283,9 +283,9 @@ export function BatchForm({ id, title, onCancel, onSuccess }: BatchFormProps) {
                         >
                           <span>{h.area.name}</span>
                           <span className="text-muted-foreground">
-                            {new Date(h.enteredAt).toLocaleDateString("pt-BR")}
+                            {formatDay(h.enteredAt)}
                             {h.exitedAt
-                              ? ` — ${new Date(h.exitedAt).toLocaleDateString("pt-BR")}`
+                              ? ` — ${formatDay(h.exitedAt)}`
                               : " — atual"}
                           </span>
                         </div>

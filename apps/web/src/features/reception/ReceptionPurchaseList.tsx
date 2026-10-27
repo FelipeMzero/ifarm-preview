@@ -11,8 +11,12 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useCurrentProperty } from "@/features/shell/useCurrentProperty";
-import { ReceivedCount, formatDay } from "@/features/purchase/display";
-import { type ReceptionFilter, type ReceptionPurchase } from "@ifarm/shared";
+import { ReceivedCount } from "@/features/purchase/display";
+import {
+  type ReceptionFilter,
+  type ReceptionPurchase,
+  formatDay,
+} from "@ifarm/shared";
 import { ListSkeleton } from "@/components/our/PageSkeletons";
 import { receptionPurchaseListQuery } from "./queries";
 

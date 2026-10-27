@@ -37,6 +37,7 @@ import {
   BatchCloseError,
   type BatchRow,
   type BatchListParams,
+  formatDateTime,
 } from "@ifarm/shared";
 import { ConfirmDialog } from "@/components/our/ConfirmDialog";
 import { ErrorPage } from "@/components/our/ErrorPage";
@@ -139,17 +140,7 @@ function buildColumns(
     {
       header: "Atualizado em",
       accessorKey: "updatedAt",
-      cell: ({ row }) => {
-        const iso = row.original.updatedAt;
-        if (!iso) return "—";
-        return new Date(iso).toLocaleString("pt-BR", {
-          day: "2-digit",
-          month: "2-digit",
-          year: "numeric",
-          hour: "2-digit",
-          minute: "2-digit",
-        });
-      },
+      cell: ({ row }) => formatDateTime(row.original.updatedAt),
     },
     {
       id: "actions",

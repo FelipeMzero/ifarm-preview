@@ -1,4 +1,4 @@
-import { toInputDateTime } from "./format";
+import { useCurrentProperty } from "@/features/shell/useCurrentProperty";
 import { useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { DialogFooter } from "@/components/ui/dialog";
 import { FormField } from "@/components/our/FormField";
 import { FieldRow } from "@/components/our/FieldRow";
-import { nowDateTime } from "@ifarm/shared";
+import { nowInZone, toDateTimeInput } from "@ifarm/shared";
 import { animalClient } from "@/lib/clients";
 import { applyServerErrors } from "@/lib/form-errors";
 import { useReloadAnimals } from "./queries";
@@ -46,6 +46,7 @@ export function AnimalIdentifierCorrectionForm({
   onCancel,
   onSaved,
 }: AnimalIdentifierCorrectionFormProps) {
+  const { timeZone } = useCurrentProperty();
   const label = IDENTIFIER_LABELS[kind];
   const form = useForm<FormData>({
     resolver: zodResolver(identifierCorrectionSchemaFor(kind), undefined, {
@@ -53,7 +54,7 @@ export function AnimalIdentifierCorrectionForm({
     }),
     defaultValues: {
       value: record.value ?? "",
-      date: toInputDateTime(record.date),
+      date: toDateTimeInput(record.date),
       notes: record.notes ?? "",
     },
   });
@@ -69,7 +70,7 @@ export function AnimalIdentifierCorrectionForm({
     const dateChanged =
       !record.fromSession &&
       !!data.date &&
-      data.date !== toInputDateTime(record.date);
+      data.date !== toDateTimeInput(record.date);
 
     try {
       await correct.mutateAsync({
@@ -117,7 +118,7 @@ export function AnimalIdentifierCorrectionForm({
               {...field}
               id={id}
               type="datetime-local"
-              max={nowDateTime()}
+              max={nowInZone(timeZone)}
               disabled={record.fromSession}
               title={
                 record.fromSession

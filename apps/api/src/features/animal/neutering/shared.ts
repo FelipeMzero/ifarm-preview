@@ -1,7 +1,9 @@
 import type { Prisma } from "@ifarm/db/client";
+import { instantToZonedIso } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
 import { NotFoundError } from "../../../lib/errors";
 import { effectiveNeutering } from "../../management-session/effective";
+import type { ZoneOf } from "../../property/time-zone";
 
 // Relações necessárias para exibir a técnica (atual e a lançada originalmente).
 export const neuteringInclude = {
@@ -13,16 +15,19 @@ type NeuteringWithTechnique = Prisma.AnimalNeuteringGetPayload<{
   include: typeof neuteringInclude;
 }>;
 
-export function toNeuteringDto(n: NeuteringWithTechnique) {
+// As datas da castração vão no fuso da propriedade onde ela aconteceu (`zoneOf`).
+export function toNeuteringDto(n: NeuteringWithTechnique, zoneOf: ZoneOf) {
   return {
     id: n.id,
-    date: n.neuteredAt.toISOString(),
+    date: instantToZonedIso(n.neuteredAt, zoneOf(n.neuteredAt)),
     techniqueId: n.techniqueId,
     techniqueName: n.technique?.name ?? null,
     notes: n.notes,
     fromSession: n.managementId != null,
     correctedAt: n.correctedAt?.toISOString() ?? null,
-    originalDate: n.originalNeuteredAt?.toISOString() ?? null,
+    originalDate: n.originalNeuteredAt
+      ? instantToZonedIso(n.originalNeuteredAt, zoneOf(n.originalNeuteredAt))
+      : null,
     originalTechniqueId: n.originalTechniqueId,
     originalTechniqueName: n.originalTechnique?.name ?? null,
   };

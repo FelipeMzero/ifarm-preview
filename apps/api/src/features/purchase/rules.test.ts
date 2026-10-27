@@ -138,25 +138,21 @@ describe("cancellationBlocker", () => {
 });
 
 describe("estimatedBirthDay", () => {
-  it("volta os meses de idade a partir da recepção, no dia local", () => {
-    expect(estimatedBirthDay(new Date(2026, 5, 15, 10, 30), 18)).toBe(
-      "2024-12-15",
-    );
-    expect(estimatedBirthDay(new Date(2026, 0, 31, 23, 0), 0)).toBe(
-      "2026-01-31",
-    );
+  it("volta os meses de idade a partir do dia da recepção", () => {
+    expect(estimatedBirthDay("2026-06-15", 18)).toBe("2024-12-15");
+    expect(estimatedBirthDay("2026-01-31", 0)).toBe("2026-01-31");
   });
 
   it("sem o dia no mês de destino, usa o último dia dele", () => {
-    expect(estimatedBirthDay(new Date(2026, 2, 31), 1)).toBe("2026-02-28");
-    expect(estimatedBirthDay(new Date(2024, 2, 31), 1)).toBe("2024-02-29");
-    expect(estimatedBirthDay(new Date(2026, 4, 31), 1)).toBe("2026-04-30");
-    expect(estimatedBirthDay(new Date(2026, 1, 28), 12)).toBe("2025-02-28");
+    expect(estimatedBirthDay("2026-03-31", 1)).toBe("2026-02-28");
+    expect(estimatedBirthDay("2024-03-31", 1)).toBe("2024-02-29");
+    expect(estimatedBirthDay("2026-05-31", 1)).toBe("2026-04-30");
+    expect(estimatedBirthDay("2026-02-28", 12)).toBe("2025-02-28");
   });
 
   it("volta anos quando a idade passa de janeiro", () => {
-    expect(estimatedBirthDay(new Date(2026, 0, 31), 1)).toBe("2025-12-31");
-    expect(estimatedBirthDay(new Date(2026, 1, 15), 26)).toBe("2023-12-15");
+    expect(estimatedBirthDay("2026-01-31", 1)).toBe("2025-12-31");
+    expect(estimatedBirthDay("2026-02-15", 26)).toBe("2023-12-15");
   });
 });
 

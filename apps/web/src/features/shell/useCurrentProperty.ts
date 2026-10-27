@@ -1,4 +1,5 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { DEFAULT_TIME_ZONE } from "@ifarm/shared";
 import { currentPropertyClient } from "@/lib/clients";
 import { propertyOptionsQuery } from "@/features/property/queries";
 import { currentPropertyKeys, currentPropertyQuery } from "./queries";
@@ -32,6 +33,9 @@ export function useCurrentProperty() {
 
   return {
     property: current.data ?? null,
+    // Fuso da propriedade (RN-PROPRIEDADE-05): o "agora" dos campos de data e hora. Antes de
+    // carregar, o padrão (horário de Brasília).
+    timeZone: current.data?.timeZone ?? DEFAULT_TIME_ZONE,
     options: options.data ?? [],
     // Só a primeira carga: sem as respostas, as telas não sabem a propriedade. Uma falha
     // encerra a carga (sem propriedade), e a tela segue com o que tem.

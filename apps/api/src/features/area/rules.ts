@@ -1,11 +1,15 @@
-import type { AreaOccupancy, AreaRotation, AreaStatus } from "@ifarm/shared";
+import {
+  DAY_MS,
+  instantToZonedIso,
+  type AreaOccupancy,
+  type AreaRotation,
+  type AreaStatus,
+} from "@ifarm/shared";
 
 // Rodízio e situação das áreas no mapa. Só informam: nenhuma operação é bloqueada.
 
 // A partir desta fração da capacidade a área ocupada fica "perto do limite".
 export const NEAR_LIMIT = 0.8;
-
-const DAY_MS = 24 * 60 * 60 * 1000;
 
 const daysSince = (iso: string, now: Date) =>
   Math.max(0, Math.floor((now.getTime() - new Date(iso).getTime()) / DAY_MS));
@@ -20,9 +24,11 @@ type AreaState = {
 
 // Ocupada: dias na área contra a ocupação de referência (vencida acima dela). Livre:
 // dias de descanso contra o descanso de referência (pronta ao cumpri-lo; nunca ocupada
-// já está pronta, se houver referência). Inativa: sem rodízio.
+// já está pronta, se houver referência). Inativa: sem rodízio. A data prevista (readyAt) vai
+// no fuso da propriedade (`timeZone`), como as datas de entrada e saída.
 export function areaRotation(
   area: AreaState,
+  timeZone: string,
   now = new Date(),
 ): AreaRotation | null {
   if (area.closedAt) return null;
@@ -60,9 +66,10 @@ export function areaRotation(
     ready: limit != null && days >= limit,
     readyAt:
       limit != null
-        ? new Date(
-            new Date(area.lastExitAt).getTime() + limit * DAY_MS,
-          ).toISOString()
+        ? instantToZonedIso(
+            new Date(Date.parse(area.lastExitAt) + limit * DAY_MS),
+            timeZone,
+          )
         : null,
   };
 }

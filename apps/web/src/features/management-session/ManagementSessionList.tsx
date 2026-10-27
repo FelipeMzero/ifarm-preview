@@ -21,13 +21,14 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useCurrentProperty } from "@/features/shell/useCurrentProperty";
-import { SessionStatusBadge, formatSessionDateTime } from "./display";
+import { SessionStatusBadge } from "./display";
 import { managementSessionClient } from "@/lib/clients";
 import {
   isSessionOpen,
   type ManagementSessionRow,
-  nowDateTime,
+  nowInZone,
   type ManagementSessionListParams,
+  formatDateTime,
 } from "@ifarm/shared";
 import { ListSkeleton } from "@/components/our/PageSkeletons";
 import { managementSessionListQuery, useReloadSessions } from "./queries";
@@ -93,11 +94,11 @@ function buildColumns(handlers: {
         const { scheduledAt, performedAt } = row.original;
         return (
           <div className="flex flex-col leading-tight">
-            <span>{formatSessionDateTime(performedAt ?? scheduledAt)}</span>
+            <span>{formatDateTime(performedAt ?? scheduledAt)}</span>
             {performedAt &&
               performedAt.slice(0, 10) !== scheduledAt.slice(0, 10) && (
                 <span className="text-xs text-muted-foreground">
-                  prevista {formatSessionDateTime(scheduledAt)}
+                  prevista {formatDateTime(scheduledAt)}
                 </span>
               )}
           </div>
@@ -220,8 +221,11 @@ function buildColumns(handlers: {
 
 export function ManagementSessionList() {
   const navigate = useNavigate();
-  const { property: currentProperty, isLoading: isPropertyLoading } =
-    useCurrentProperty();
+  const {
+    property: currentProperty,
+    isLoading: isPropertyLoading,
+    timeZone,
+  } = useCurrentProperty();
   const reloadSessions = useReloadSessions();
   const [searchParams, setSearchParams] = useSearchParams();
   const {
@@ -297,7 +301,7 @@ export function ManagementSessionList() {
   // Inicia com a data de hoje; a data pode ser corrigida no cabeçalho do registro.
   const startSession = useMutation({
     mutationFn: (id: string) =>
-      managementSessionClient.startManagementSession(id, nowDateTime()),
+      managementSessionClient.startManagementSession(id, nowInZone(timeZone)),
     onSuccess: (_, id) => {
       toast.success("Registro iniciado com a data de hoje.");
       reloadSessions();

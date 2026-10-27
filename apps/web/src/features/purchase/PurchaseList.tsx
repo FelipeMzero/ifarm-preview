@@ -11,13 +11,12 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useCurrentProperty } from "@/features/shell/useCurrentProperty";
+import { PurchaseStatusBadge, ReceivedCount, formatBRL } from "./display";
 import {
-  PurchaseStatusBadge,
-  ReceivedCount,
-  formatBRL,
+  type PurchaseRow,
+  type PurchaseListParams,
   formatDay,
-} from "./display";
-import { type PurchaseRow, type PurchaseListParams } from "@ifarm/shared";
+} from "@ifarm/shared";
 import { ListSkeleton } from "@/components/our/PageSkeletons";
 import { purchaseListQuery } from "./queries";
 

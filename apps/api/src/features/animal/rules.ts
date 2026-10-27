@@ -196,3 +196,24 @@ export function summarize(labels: string[], max = 5) {
   const shown = labels.slice(0, max).join(", ");
   return labels.length > max ? `${shown} e mais ${labels.length - max}` : shown;
 }
+
+// Faixa etária da listagem (idade em meses completos) → limites da data de nascimento, a partir
+// do dia de hoje da propriedade ("AAAA-MM-DD"): nascido depois de `after` e até `upTo`.
+// null = sem data de nascimento.
+export type AgeRange = "upTo12" | "12to24" | "over24" | "unknown";
+
+export function birthDateBounds(
+  range: AgeRange,
+  today: string,
+): { after?: string; upTo?: string } | null {
+  if (range === "unknown") return null;
+  const [year, month, day] = today.split("-").map(Number);
+  // Mesmo dia, `months` meses antes (como Date.setMonth: 31/03 − 1 mês = 03/03).
+  const monthsAgo = (months: number) =>
+    new Date(Date.UTC(year, month - 1 - months, day))
+      .toISOString()
+      .slice(0, 10);
+  if (range === "upTo12") return { after: monthsAgo(12) };
+  if (range === "12to24") return { after: monthsAgo(24), upTo: monthsAgo(12) };
+  return { upTo: monthsAgo(24) };
+}

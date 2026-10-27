@@ -1,6 +1,7 @@
-import { toLocalDateTime, type WeighingCorrectionData } from "@ifarm/shared";
+import type { WeighingCorrectionData } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
-import { assertNotBeforeBirth, assertNotFuture } from "../../eventDate";
+import { animalStays, timeZoneAt } from "../../../property/time-zone";
+import { resolveEventDateIn } from "../../eventDate";
 import { keepsOriginal, sessionDateLock } from "../../rules";
 import { fieldError } from "../../shared";
 import { findActiveWeighing, recomputeCurrentWeight } from "../shared";
@@ -16,11 +17,12 @@ export async function correctWeighing(
   const dateLock = sessionDateLock(weighing, data.date, "pesagem");
   if (dateLock) throw fieldError("date", dateLock);
 
+  // A data nova vale no fuso da propriedade onde a pesagem aconteceu.
   let weighedAt: Date | undefined;
   if (data.date) {
-    weighedAt = toLocalDateTime(data.date);
-    assertNotFuture(weighedAt);
-    await assertNotBeforeBirth(animalId, weighedAt);
+    const { stays, current } = await animalStays(animalId);
+    const timeZone = timeZoneAt(stays, weighing.weighedAt, current);
+    weighedAt = await resolveEventDateIn(animalId, data.date, timeZone);
   }
 
   const weightChanged = !weighing.weight.equals(data.weightKg);

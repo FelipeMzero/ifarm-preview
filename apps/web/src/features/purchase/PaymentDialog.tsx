@@ -19,9 +19,10 @@ import { FormField } from "@/components/our/FormField";
 import { formatBRL } from "./display";
 import {
   purchasePaymentSchema,
-  today,
+  todayInZone,
   type PurchasePaymentPayload as PaymentFormData,
 } from "@ifarm/shared";
+import { useCurrentProperty } from "@/features/shell/useCurrentProperty";
 import { purchaseClient } from "@/lib/clients";
 import { applyServerErrors } from "@/lib/form-errors";
 import { purchaseKeys } from "./queries";
@@ -78,6 +79,9 @@ function PaymentForm({
   onClose: () => void;
 }) {
   const queryClient = useQueryClient();
+  // Hoje no fuso da propriedade: a API recusa pagamento com data futura pelo dia de lá.
+  const { timeZone } = useCurrentProperty();
+  const today = todayInZone(timeZone);
   const {
     control,
     handleSubmit,
@@ -85,7 +89,7 @@ function PaymentForm({
     formState: { isSubmitting },
   } = useForm<PaymentFormData>({
     resolver: zodResolver(purchasePaymentSchema, undefined, { raw: true }),
-    defaultValues: { paymentDate: today(), paymentReference: "" },
+    defaultValues: { paymentDate: today, paymentReference: "" },
   });
 
   // A compra na tela é recarregada (cache) e passa a mostrar o pagamento.
@@ -114,7 +118,7 @@ function PaymentForm({
         label="Data do pagamento"
         required
         render={({ field, id }) => (
-          <Input {...field} id={id} type="date" max={today()} />
+          <Input {...field} id={id} type="date" max={today} />
         )}
       />
       <FormField

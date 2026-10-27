@@ -1,6 +1,6 @@
 import type { FieldValues, Path, UseFormReturn } from "react-hook-form";
 import { toast } from "sonner";
-import { ApiError, formatDate } from "@ifarm/shared";
+import { ApiError } from "@ifarm/shared";
 
 // Leva os erros da API para os campos do formulário da etapa e avisa o usuário.
 export function handleStepError<T extends FieldValues>(
@@ -22,9 +22,3 @@ export const formatKg = (value: number) =>
 
 export const formatBRL = (value: number) =>
   value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-
-// "AAAA-MM-DD" (dia) ou ISO completo (instante).
-export const formatDay = (iso: string) =>
-  iso.length === 10
-    ? formatDate(iso)
-    : new Date(iso).toLocaleDateString("pt-BR");

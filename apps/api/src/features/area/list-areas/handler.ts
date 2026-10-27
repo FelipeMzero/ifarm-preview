@@ -1,6 +1,7 @@
 import type { AreaQuery, AreaRow } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
 import { getOrAssignCurrentProperty } from "../../current-property/shared";
+import { propertyTimeZone } from "../../property/time-zone";
 import { areaRotation, areaStatus } from "../rules";
 import { areasLastExit, areasOccupancy } from "../stocking";
 
@@ -33,13 +34,18 @@ export async function listAreas(
     orderBy: { name: "asc" },
   });
 
-  const lastExit = await areasLastExit(areas.map((a) => a.id));
+  const timeZone = await propertyTimeZone(resolvedPropertyId);
+  const lastExit = await areasLastExit(
+    areas.map((a) => a.id),
+    timeZone,
+  );
   const occupancy = await areasOccupancy(
     areas.map((a) => ({
       id: a.id,
       hectares: a.hectares.toNumber(),
       stockingRate: a.stockingRate.toNumber(),
     })),
+    timeZone,
   );
 
   const now = new Date();
@@ -51,7 +57,7 @@ export async function listAreas(
       occupancy: occupancy.get(a.id) ?? null,
       lastExitAt: lastExit.get(a.id) ?? null,
     };
-    const rotation = areaRotation(state, now);
+    const rotation = areaRotation(state, timeZone, now);
     return {
       id: a.id,
       name: a.name,

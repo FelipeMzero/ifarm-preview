@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useCurrentProperty } from "@/features/shell/useCurrentProperty";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
@@ -33,15 +34,16 @@ import { animalClient } from "@/lib/clients";
 import {
   ApiError,
   type AnimalWeighing,
-  nowDateTime,
+  nowInZone,
   type WeighingCreatePayload,
+  formatDateTime,
 } from "@ifarm/shared";
 import { animalWeighingsQuery, useReloadAnimals } from "./queries";
 import { AnimalWeighingCorrectionForm } from "./AnimalWeighingCorrectionForm";
 import { WeighingCorrectionNote } from "./WeighingCorrectionNote";
 import type { Commitment } from "@ifarm/shared";
 import { CommitmentNotice } from "./CommitmentNotice";
-import { formatInstant, formatKg } from "./format";
+import { formatKg } from "./format";
 
 interface AnimalWeighingHistoryDialogProps {
   animalId: string;
@@ -65,9 +67,10 @@ function WeighingRegisterPanel({
   // undefined = histórico ainda carregando (o painel já aparece; só este texto espera).
   latest: AnimalWeighing | null | undefined;
 }) {
+  const { timeZone } = useCurrentProperty();
   const reloadAnimal = useReloadAnimals();
   const [weight, setWeight] = useState("");
-  const [date, setDate] = useState(nowDateTime);
+  const [date, setDate] = useState(() => nowInZone(timeZone));
   const [notes, setNotes] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -93,7 +96,7 @@ function WeighingRegisterPanel({
       toast.success(`Pesagem de ${formatKg(Number(weight))} registrada.`);
       setWeight("");
       setNotes("");
-      setDate(nowDateTime());
+      setDate(nowInZone(timeZone));
     } catch (err) {
       if (err instanceof ApiError && err.errors) setErrors(err.errors);
       else toast.error((err as Error).message);
@@ -114,7 +117,7 @@ function WeighingRegisterPanel({
             <span className="font-medium">{formatKg(latest.weightKg)}</span>
             <span className="text-muted-foreground">
               {" "}
-              em {formatInstant(latest.date)}
+              em {formatDateTime(latest.date)}
             </span>
           </>
         ) : (
@@ -150,7 +153,7 @@ function WeighingRegisterPanel({
           type="datetime-local"
           value={date}
           min={birthDate ? `${birthDate}T00:00` : undefined}
-          max={nowDateTime()}
+          max={nowInZone(timeZone)}
           aria-invalid={errors.date ? true : undefined}
           onChange={(e) => {
             setDate(e.target.value);
@@ -230,7 +233,7 @@ export function AnimalWeighingHistoryDialog({
             <DialogTitle>{editing ? "Corrigir Pesagem" : "Peso"}</DialogTitle>
             <DialogDescription>
               {editing
-                ? `Pesagem de ${formatInstant(editing.date)}.`
+                ? `Pesagem de ${formatDateTime(editing.date)}.`
                 : "Registre uma pesagem ou corrija as lançadas com erro. As alterações são gravadas imediatamente."}
             </DialogDescription>
           </DialogHeader>
@@ -289,7 +292,7 @@ export function AnimalWeighingHistoryDialog({
                 <TableBody>
                   {weighings.map((w) => (
                     <TableRow key={w.id}>
-                      <TableCell>{formatInstant(w.date)}</TableCell>
+                      <TableCell>{formatDateTime(w.date)}</TableCell>
                       <TableCell className="text-right tabular-nums">
                         <div className="font-medium">
                           {formatKg(w.weightKg)}
@@ -336,7 +339,7 @@ export function AnimalWeighingHistoryDialog({
         title="Excluir pesagem"
         description={
           cancelling
-            ? `A pesagem de ${formatKg(cancelling.weightKg)} em ${formatInstant(cancelling.date)} deixará de aparecer no histórico e nos cálculos. O registro é mantido para auditoria.`
+            ? `A pesagem de ${formatKg(cancelling.weightKg)} em ${formatDateTime(cancelling.date)} deixará de aparecer no histórico e nos cálculos. O registro é mantido para auditoria.`
             : ""
         }
         confirmLabel="Excluir"

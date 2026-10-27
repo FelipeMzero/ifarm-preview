@@ -1,4 +1,3 @@
-import { toLocalDay } from "@ifarm/shared";
 import {
   CartesianGrid,
   ComposedChart,
@@ -16,8 +15,14 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
-import { DAY_MS } from "@/features/animal/format";
-import { timeDomain, timeTicks } from "@/lib/time-domain";
+import { DAY_MS, today as todayDay, toLocalDay } from "@ifarm/shared";
+import {
+  formatAxisDate,
+  formatAxisDay,
+  timeDomain,
+  timeOf,
+  timeTicks,
+} from "@/lib/time-domain";
 import type { BatchProjection } from "@ifarm/shared";
 
 const chartConfig = {
@@ -27,13 +32,6 @@ const chartConfig = {
 
 // A projeção não se estende indefinidamente quando a meta está muito longe.
 const MAX_PROJECTION_DAYS = 730;
-
-const formatShortDate = (ts: number) =>
-  new Date(ts).toLocaleDateString("pt-BR", {
-    day: "2-digit",
-    month: "short",
-    year: "2-digit",
-  });
 
 type Point = {
   ts: number;
@@ -49,18 +47,15 @@ export function BatchGoalChart({
   series: { date: string; avgWeightKg: number; animalCount: number }[];
   projection: BatchProjection;
 }) {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const today = toLocalDay(todayDay());
 
   const history: Point[] = series.map((p) => ({
-    ts: toLocalDay(p.date).getTime(),
+    ts: timeOf(p.date),
     avgWeightKg: p.avgWeightKg,
     animalCount: p.animalCount,
   }));
 
-  const targetTs = projection.targetDate
-    ? toLocalDay(projection.targetDate).getTime()
-    : null;
+  const targetTs = projection.targetDate ? timeOf(projection.targetDate) : null;
 
   // Linha de projeção: de hoje até a data da meta ou a data estimada (a mais distante).
   const projected: Point[] = [];
@@ -109,7 +104,7 @@ export function BatchGoalChart({
           scale="time"
           domain={xDomain}
           ticks={timeTicks(xDomain)}
-          tickFormatter={formatShortDate}
+          tickFormatter={formatAxisDate}
           tickLine={false}
           axisLine={false}
           tickMargin={8}
@@ -159,7 +154,7 @@ export function BatchGoalChart({
             <ChartTooltipContent
               indicator="line"
               labelFormatter={(_, payload) =>
-                new Date(payload?.[0]?.payload?.ts).toLocaleDateString("pt-BR")
+                formatAxisDay(payload?.[0]?.payload?.ts)
               }
               formatter={(value, name, item) => (
                 <div className="flex w-full items-center justify-between gap-4">

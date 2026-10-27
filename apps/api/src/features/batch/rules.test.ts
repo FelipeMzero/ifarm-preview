@@ -41,11 +41,30 @@ describe("weightSeries", () => {
         { weighings: [{ date: "2026-01-01T00:00:00.000Z", weightKg: 300 }] },
         { weighings: [{ date: "2026-01-05T00:00:00.000Z", weightKg: 400 }] },
       ],
-      new Date("2026-01-01T00:00:00.000Z"),
+      "2026-01-01",
     );
     expect(series).toEqual([
       { date: "2026-01-01", avgWeightKg: 300, animalCount: 1 },
       { date: "2026-01-05", avgWeightKg: 350, animalCount: 2 },
+    ]);
+  });
+
+  it("o dia da pesagem é o do fuso da propriedade, e não o do UTC", () => {
+    // 22:00 em Cuiabá já é dia 6 em UTC.
+    const series = weightSeries(
+      [{ weighings: [{ date: "2026-01-05T22:00:00-04:00", weightKg: 300 }] }],
+      "2026-01-01",
+    );
+    expect(series.map((p) => p.date)).toEqual(["2026-01-05"]);
+  });
+
+  it("pesagens anteriores à criação entram no dia da criação", () => {
+    const series = weightSeries(
+      [{ weighings: [{ date: "2025-12-20T08:00:00-03:00", weightKg: 280 }] }],
+      "2026-01-01",
+    );
+    expect(series).toEqual([
+      { date: "2026-01-01", avgWeightKg: 280, animalCount: 1 },
     ]);
   });
 });

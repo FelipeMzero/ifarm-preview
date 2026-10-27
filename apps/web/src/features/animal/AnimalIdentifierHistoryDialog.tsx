@@ -36,6 +36,8 @@ import {
   type AnimalIdentifierRecord,
   type IdentifierChangePayload,
   type IdentifierKind,
+  formatDateTime,
+  formatDay,
 } from "@ifarm/shared";
 import { animalIdentifiersQuery, useReloadAnimals } from "./queries";
 import { IDENTIFIER_MAX_LENGTH } from "@ifarm/shared";
@@ -45,7 +47,6 @@ import {
 } from "./AnimalIdentifierCorrectionForm";
 import type { Commitment } from "@ifarm/shared";
 import { CommitmentNotice } from "./CommitmentNotice";
-import { formatDate, formatInstant } from "./format";
 
 interface AnimalIdentifierHistoryDialogProps {
   animalId: string;
@@ -249,7 +250,7 @@ export function AnimalIdentifierHistoryDialog({
             <DialogTitle>{editing ? `Corrigir ${label}` : label}</DialogTitle>
             <DialogDescription>
               {editing
-                ? `Registro de ${formatInstant(editing.date)}.`
+                ? `Registro de ${formatDateTime(editing.date)}.`
                 : `Troque o ${label.toLowerCase()} ou corrija registros lançados com erro. As alterações são gravadas imediatamente.`}
             </DialogDescription>
           </DialogHeader>
@@ -306,7 +307,7 @@ export function AnimalIdentifierHistoryDialog({
                 <TableBody>
                   {records.map((r, index) => (
                     <TableRow key={r.id}>
-                      <TableCell>{formatInstant(r.date)}</TableCell>
+                      <TableCell>{formatDateTime(r.date)}</TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
                           <span
@@ -325,7 +326,7 @@ export function AnimalIdentifierHistoryDialog({
                         {r.correctedAt && (
                           <div
                             className="text-xs text-muted-foreground"
-                            title={`Corrigido em ${formatDate(r.correctedAt)}`}
+                            title={`Corrigido em ${formatDay(r.correctedAt)}`}
                           >
                             {r.originalValue != null
                               ? `corrigido (era ${r.originalValue})`
@@ -373,7 +374,7 @@ export function AnimalIdentifierHistoryDialog({
         title={`Excluir registro de ${label}`}
         description={
           cancelling
-            ? `O registro "${displayValue(cancelling.value)}" de ${formatInstant(cancelling.date)} deixará de aparecer no histórico, e o ${label.toLowerCase()} atual passará a ser o do registro anterior. O registro é mantido para auditoria.`
+            ? `O registro "${displayValue(cancelling.value)}" de ${formatDateTime(cancelling.date)} deixará de aparecer no histórico, e o ${label.toLowerCase()} atual passará a ser o do registro anterior. O registro é mantido para auditoria.`
             : ""
         }
         confirmLabel="Excluir"

@@ -1,10 +1,10 @@
 import {
   REQUIRED_TECHNIQUE_MESSAGE,
-  toLocalDateTime,
   type NeuteringCorrectionData,
 } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
-import { assertNotBeforeBirth, assertNotFuture } from "../../eventDate";
+import { animalStays, timeZoneAt } from "../../../property/time-zone";
+import { resolveEventDateIn } from "../../eventDate";
 import { sessionDateLock } from "../../rules";
 import { fieldError } from "../../shared";
 import {
@@ -35,11 +35,12 @@ export async function correctNeutering(
   const dateLock = sessionDateLock(neutering, data.date, "castração");
   if (dateLock) throw fieldError("date", dateLock);
 
+  // A data nova vale no fuso da propriedade onde a castração aconteceu.
   let neuteredAt: Date | undefined;
   if (data.date) {
-    neuteredAt = toLocalDateTime(data.date);
-    assertNotFuture(neuteredAt);
-    await assertNotBeforeBirth(animalId, neuteredAt);
+    const { stays, current } = await animalStays(animalId);
+    const timeZone = timeZoneAt(stays, neutering.neuteredAt, current);
+    neuteredAt = await resolveEventDateIn(animalId, data.date, timeZone);
   }
 
   // Dois valores originais (data e técnica, que pode ser nula): a marca da primeira

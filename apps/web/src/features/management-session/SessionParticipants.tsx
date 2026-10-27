@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useCurrentProperty } from "@/features/shell/useCurrentProperty";
 import { ChevronRight, CircleAlert, Loader2, Trash2 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -25,7 +26,7 @@ import {
   type SessionParticipant,
   type SessionStepView,
   type SessionValues,
-  nowDateTime,
+  nowInZone,
 } from "@ifarm/shared";
 
 // Partes do registro de uma sessão compartilhadas entre o registro de manejo e a
@@ -386,6 +387,7 @@ function DateForm({
   DateDialogProps,
   "initial" | "confirmLabel" | "onOpenChange" | "onConfirm"
 >) {
+  const { timeZone } = useCurrentProperty();
   const [date, setDate] = useState(initial);
   const [saving, setSaving] = useState(false);
 
@@ -407,7 +409,7 @@ function DateForm({
       <Input
         type="datetime-local"
         value={date}
-        max={nowDateTime()}
+        max={nowInZone(timeZone)}
         required
         onChange={(e) => setDate(e.target.value)}
       />

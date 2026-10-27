@@ -1,4 +1,21 @@
-const DAY_MS = 24 * 60 * 60 * 1000;
+import {
+  DAY_MS,
+  formatDay,
+  fromLocalDay,
+  toDateTimeInput,
+  toLocalDay,
+} from "@ifarm/shared";
+
+/**
+ * Posição no eixo de tempo (ms) de uma data vinda do servidor: o dia e a hora como aparecem
+ * na tela (os de um evento da propriedade, ver toDateTimeInput), no relógio local. Assim as
+ * marcações à meia-noite local (timeTicks) e os rótulos (toLocaleDateString) mostram os dias
+ * da propriedade, e não os do fuso de quem vê. Aceita também um dia ("AAAA-MM-DD").
+ */
+export function timeOf(value: string): number {
+  if (value.length === 10) return toLocalDay(value).getTime();
+  return new Date(toDateTimeInput(value)).getTime();
+}
 
 /**
  * Domínio de um eixo de tempo (ms): do primeiro ao último ponto. Com todos os pontos no
@@ -37,3 +54,15 @@ export function timeTicks([start, end]: [number, number], maxTicks = 6) {
   }
   return ticks;
 }
+
+/** Rótulo curto de uma marcação do eixo (ex.: "26 de out. de 26"). */
+export const formatAxisDate = (ts: number) =>
+  new Date(ts).toLocaleDateString("pt-BR", {
+    day: "2-digit",
+    month: "short",
+    year: "2-digit",
+  });
+
+/** Dia de um ponto do eixo ("DD/MM/AAAA"), para o tooltip. */
+export const formatAxisDay = (ts: number) =>
+  formatDay(fromLocalDay(new Date(ts)));

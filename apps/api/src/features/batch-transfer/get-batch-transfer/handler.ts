@@ -1,4 +1,4 @@
-import { fromLocalDateTime, type BatchTransferDetail } from "@ifarm/shared";
+import { instantToZonedIso, type BatchTransferDetail } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
 import { NotFoundError } from "../../../lib/errors";
 import { unavailableReason } from "../../animal/rules";
@@ -11,6 +11,7 @@ export async function getBatchTransfer(
     where: { id },
     include: {
       destinationBatch: { select: { id: true, name: true } },
+      property: { select: { timeZone: true } },
       items: {
         orderBy: { id: "asc" },
         include: {
@@ -37,7 +38,11 @@ export async function getBatchTransfer(
 
   return {
     id: transfer.id,
-    transferredAt: fromLocalDateTime(transfer.transferredAt),
+    // No fuso da propriedade, com o deslocamento.
+    transferredAt: instantToZonedIso(
+      transfer.transferredAt,
+      transfer.property.timeZone,
+    ),
     notes: transfer.notes ?? "",
     destinationBatch: transfer.destinationBatch,
     propertyId: transfer.propertyId,

@@ -30,8 +30,9 @@ import { batchTransferClient } from "@/lib/clients";
 import {
   type BatchTransferRow,
   type BatchTransferListParams,
+  formatDateTime,
 } from "@ifarm/shared";
-import { TransferStatusBadge, formatTransferDate } from "./display";
+import { TransferStatusBadge } from "./display";
 import { describeStocking } from "@/features/area/StockingNotice";
 import { stockingPreviewQuery } from "@/features/area/queries";
 import { animalKeys } from "@/features/animal/queries";
@@ -97,7 +98,7 @@ function buildColumns(handlers: {
     {
       header: "Data",
       accessorKey: "transferredAt",
-      cell: ({ row }) => formatTransferDate(row.original.transferredAt),
+      cell: ({ row }) => formatDateTime(row.original.transferredAt),
     },
     {
       id: "route",
@@ -375,7 +376,7 @@ export function BatchTransferList() {
         title="Confirmar transferência"
         description={
           actionRow
-            ? `${actionRow.animalCount} animal(is) serão movidos para o lote "${actionRow.destinationBatch.name}" em ${formatTransferDate(actionRow.transferredAt)}. Após confirmada, a transferência não poderá mais ser alterada.${
+            ? `${actionRow.animalCount} animal(is) serão movidos para o lote "${actionRow.destinationBatch.name}" em ${formatDateTime(actionRow.transferredAt)}. Após confirmada, a transferência não poderá mais ser alterada.${
                 stockingPreview?.exceeds
                   ? ` Atenção, lotação excedida: ${describeStocking(stockingPreview)}`
                   : ""

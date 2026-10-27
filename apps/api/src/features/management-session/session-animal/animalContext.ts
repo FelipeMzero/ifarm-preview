@@ -1,7 +1,8 @@
-import { fromLocalDateTime, isSessionOpen } from "@ifarm/shared";
+import { instantToZonedIso, isSessionOpen } from "@ifarm/shared";
 import { fromDbDate } from "../../../lib/db-dates";
 import { effectiveNeutering, effectiveWeighing } from "../effective";
 import { participantStatus } from "../session-steps";
+import { propertyTimeZone } from "../../property/time-zone";
 import { loadSession } from "../shared";
 import {
   countDone,
@@ -45,12 +46,15 @@ export async function loadAnimalContext(db: Tx, id: string, animalId: string) {
       loadStepRecords(db, session, session.steps, [animalId]),
     ]);
 
+  // As datas e horas, no fuso da propriedade da sessão (onde o animal está sendo manejado).
+  const timeZone = await propertyTimeZone(session.propertyId, db);
+
   return {
     session: {
       id: session.id,
       status: session.status,
       performedAt: session.performedAt
-        ? fromLocalDateTime(session.performedAt)
+        ? instantToZonedIso(session.performedAt, timeZone)
         : null,
     },
     steps,
@@ -62,11 +66,15 @@ export async function loadAnimalContext(db: Tx, id: string, animalId: string) {
       name: animal.name,
       sex: animal.sex,
       status: animal.status,
-      birthDate: animal.birthDate ? fromDbDate(animal.birthDate) : null,
+      birthDate: fromDbDate(animal.birthDate),
       neutered: animal.neutered,
-      lastNeuteredAt: lastNeutering?.neuteredAt.toISOString() ?? null,
+      lastNeuteredAt: lastNeutering
+        ? instantToZonedIso(lastNeutering.neuteredAt, timeZone)
+        : null,
       currentWeightKg: animal.currentWeight?.toNumber() ?? null,
-      lastWeighedAt: lastWeighing?.weighedAt.toISOString() ?? null,
+      lastWeighedAt: lastWeighing
+        ? instantToZonedIso(lastWeighing.weighedAt, timeZone)
+        : null,
       currentBatch: animal.currentBatch,
     },
     records: Object.fromEntries(

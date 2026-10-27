@@ -1,4 +1,3 @@
-import { formatInstant } from "./format";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Controller, useForm } from "react-hook-form";
@@ -18,6 +17,7 @@ import {
   isNotFoundError,
   type AnimalDetail,
   type IdentifierKind,
+  formatDateTime,
 } from "@ifarm/shared";
 import { applyServerErrors } from "@/lib/form-errors";
 import { breedListQuery } from "@/features/breed/queries";
@@ -189,7 +189,7 @@ export function AnimalEditForm({
   const displayBatchName = pendingBatchName ?? animal.currentBatchName;
   const displayNeutering = animal.neutered
     ? animal.neuteredAt
-      ? `Castrado em ${formatInstant(animal.neuteredAt)}`
+      ? `Castrado em ${formatDateTime(animal.neuteredAt)}`
       : "Castrado"
     : "Não castrado";
 

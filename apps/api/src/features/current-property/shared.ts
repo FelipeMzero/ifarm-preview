@@ -1,4 +1,4 @@
-import type { CurrentProperty } from "@ifarm/shared";
+import type { BrTimeZone, CurrentProperty } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
 
 // Propriedade atual do usuário: usada pelas listagens e cadastros de quase todos os domínios
@@ -11,6 +11,12 @@ import { prisma } from "@ifarm/db";
 // reatribui sozinho: trocar de propriedade sem ação direta do usuário é arriscado
 // (pode levar a cadastros/consultas na fazenda errada). Fica sem seleção até o
 // usuário escolher manualmente entre as opções ainda disponíveis.
+// O fuso gravado é sempre um dos fusos do Brasil (propertySchema) ou o padrão do banco.
+export const withTimeZone = <T extends { timeZone: string }>(property: T) => ({
+  ...property,
+  timeZone: property.timeZone as BrTimeZone,
+});
+
 export async function getOrAssignCurrentProperty(
   userId: string,
 ): Promise<CurrentProperty | null> {
@@ -18,7 +24,7 @@ export async function getOrAssignCurrentProperty(
     where: { userId },
     select: {
       currentProperty: {
-        select: { id: true, name: true, deactivatedAt: true },
+        select: { id: true, name: true, timeZone: true, deactivatedAt: true },
       },
     },
   });
@@ -27,7 +33,7 @@ export async function getOrAssignCurrentProperty(
   // automática) em algum momento — ou seja, isto NÃO é o primeiro acesso.
   if (settings) {
     if (settings.currentProperty && !settings.currentProperty.deactivatedAt) {
-      return settings.currentProperty;
+      return withTimeZone(settings.currentProperty);
     }
 
     if (settings.currentProperty?.deactivatedAt) {
@@ -44,7 +50,7 @@ export async function getOrAssignCurrentProperty(
   // ativa mais antiga automaticamente.
   const oldest = await prisma.property.findFirst({
     where: { deactivatedAt: null },
-    select: { id: true, name: true },
+    select: { id: true, name: true, timeZone: true },
     orderBy: { createdAt: "asc" },
   });
 
@@ -54,5 +60,5 @@ export async function getOrAssignCurrentProperty(
     data: { userId, currentPropertyId: oldest.id },
   });
 
-  return oldest;
+  return withTimeZone(oldest);
 }

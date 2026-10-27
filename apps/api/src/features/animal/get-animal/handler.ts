@@ -1,13 +1,20 @@
-import type { AnimalDetail } from "@ifarm/shared";
+import { instantToZonedIso, type AnimalDetail } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
 import { fromDbDate } from "../../../lib/db-dates";
 import { NotFoundError } from "../../../lib/errors";
 import { effectiveNeutering } from "../../management-session/effective";
+import { animalStays, type ZoneOf } from "../../property/time-zone";
 
-// Com recastração há mais de um registro: vale o mais recente.
-function latestNeuteringDate(items: { neuteredAt: Date }[]): string | null {
-  const dates = items.map((item) => item.neuteredAt.toISOString());
-  return dates.sort().at(-1) ?? null;
+// Com recastração há mais de um registro: vale o mais recente (no fuso de onde aconteceu).
+function latestNeuteringDate(
+  items: { neuteredAt: Date }[],
+  zoneOf: ZoneOf,
+): string | null {
+  const latest = items
+    .map((item) => item.neuteredAt)
+    .sort((a, b) => a.getTime() - b.getTime())
+    .at(-1);
+  return latest ? instantToZonedIso(latest, zoneOf(latest)) : null;
 }
 
 // Animal para edição.
@@ -31,13 +38,18 @@ export async function getAnimal(id: string): Promise<AnimalDetail> {
     currentRfid: animal.currentRfid,
     name: animal.name,
     sex: animal.sex,
-    birthDate: animal.birthDate ? fromDbDate(animal.birthDate) : null,
+    birthDate: fromDbDate(animal.birthDate),
     breedId: animal.breedId,
     breedName: animal.breed?.name ?? null,
     origin: animal.origin,
     status: animal.status,
     neutered: animal.neutered,
-    neuteredAt: latestNeuteringDate(animal.animalNeuterings),
+    neuteredAt: animal.animalNeuterings.length
+      ? latestNeuteringDate(
+          animal.animalNeuterings,
+          (await animalStays(id)).zoneOf,
+        )
+      : null,
     currentBatchId: animal.currentBatchId,
     currentBatchName: animal.currentBatch?.name ?? null,
     currentPropertyId: animal.currentPropertyId,

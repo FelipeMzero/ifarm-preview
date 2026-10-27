@@ -1,5 +1,5 @@
 import {
-  fromLocalDay,
+  dayInZone,
   isSessionOpen,
   type ReceptionPurchase,
 } from "@ifarm/shared";
@@ -14,6 +14,8 @@ import { purchaseStatus } from "../purchase/rules";
 // Área de recepções: dados físicos da compra (quem vende, o que foi negociado em
 // quantidade, o que já chegou). Nada de preços, custos ou situação financeira.
 export const receptionPurchaseInclude = {
+  // Os dias das recepções são os do fuso da propriedade de destino.
+  destinationProperty: { select: { timeZone: true } },
   seller: { select: { id: true, name: true } },
   categories: {
     orderBy: { id: "asc" },
@@ -36,11 +38,10 @@ type ReceptionPurchaseRow = Prisma.PurchaseEventGetPayload<{
   include: typeof receptionPurchaseInclude;
 }>;
 
-const day = (d: Date | null) => (d ? fromLocalDay(d) : null);
-
 export function toReceptionPurchase(
   e: ReceptionPurchaseRow,
 ): ReceptionPurchase {
+  const timeZone = e.destinationProperty.timeZone;
   const categories = e.categories.map((c) => ({
     id: c.id,
     label: categoryLabel(c),
@@ -52,8 +53,10 @@ export function toReceptionPurchase(
     sessionId: r.managementSessionId,
     title: r.managementSession.title,
     status: sessionStatus(r.managementSession),
-    performedAt: day(r.managementSession.performedAt),
-    scheduledAt: fromLocalDay(r.managementSession.scheduledAt),
+    performedAt: r.managementSession.performedAt
+      ? dayInZone(r.managementSession.performedAt, timeZone)
+      : null,
+    scheduledAt: dayInZone(r.managementSession.scheduledAt, timeZone),
     entryBatch: r.entryBatch,
     gtaNumber: r.gtaNumber,
     invoiceNumber: r.invoiceNumber,

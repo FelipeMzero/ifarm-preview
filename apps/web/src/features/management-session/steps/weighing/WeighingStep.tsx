@@ -8,9 +8,10 @@ import {
   FIELD_LIMITS,
   weighingPayloadSchema,
   type WeighingPayload,
+  formatDay,
 } from "@ifarm/shared";
 import type { StepScreenProps } from "../types";
-import { formatDay, formatKg, handleStepError } from "../formHelpers";
+import { formatKg, handleStepError } from "../formHelpers";
 
 type WeighingRecord = { weightKg: number; notes: string | null };
 

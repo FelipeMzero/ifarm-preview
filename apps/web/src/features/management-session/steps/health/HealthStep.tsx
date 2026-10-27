@@ -8,9 +8,10 @@ import {
   FIELD_LIMITS,
   healthPayloadSchemaFor,
   type HealthPayload,
+  formatDay,
 } from "@ifarm/shared";
 import type { StepScreenProps } from "../types";
-import { formatDay, handleStepError } from "../formHelpers";
+import { handleStepError } from "../formHelpers";
 import { describeDose, doseFor, type HealthConfig } from "./config";
 
 type HealthRecord = { doseMl: number | null; notes: string | null };

@@ -1,8 +1,9 @@
-import { toLocalDateTime, type AnimalUpdateData } from "@ifarm/shared";
+import { zonedDateTimeToInstant, type AnimalUpdateData } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
 import { toDbDate } from "../../../lib/db-dates";
 import { write } from "../../../lib/db-errors";
 import { NotFoundError } from "../../../lib/errors";
+import { propertyTimeZone } from "../../property/time-zone";
 import { assertNoConflicts } from "../commitments";
 import {
   INVALID_TECHNIQUE_MESSAGE,
@@ -46,6 +47,9 @@ export async function updateAnimal(id: string, data: AnimalUpdateData) {
   }
 
   const now = new Date();
+
+  // A data e hora informadas valem no fuso da propriedade do animal.
+  const timeZone = await propertyTimeZone(current.currentPropertyId);
 
   const intents = updateCommitmentIntents(data);
 
@@ -119,7 +123,7 @@ export async function updateAnimal(id: string, data: AnimalUpdateData) {
         await tx.animalNeutering.create({
           data: {
             animalId: id,
-            neuteredAt: toLocalDateTime(data.neuteredAt),
+            neuteredAt: zonedDateTimeToInstant(data.neuteredAt, timeZone),
             techniqueId: data.neuteringTechniqueId,
             notes: data.neuteringNotes,
           },

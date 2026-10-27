@@ -1,6 +1,7 @@
 import type { CurrentProperty } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
 import { NotFoundError } from "../../../lib/errors";
+import { withTimeZone } from "../shared";
 
 // Troca a propriedade em que o usuário está trabalhando.
 export async function setCurrentProperty(
@@ -9,7 +10,7 @@ export async function setCurrentProperty(
 ): Promise<CurrentProperty> {
   const property = await prisma.property.findUnique({
     where: { id: propertyId },
-    select: { id: true, name: true },
+    select: { id: true, name: true, timeZone: true },
   });
   if (!property) throw new NotFoundError("Propriedade não encontrada.");
 
@@ -19,5 +20,5 @@ export async function setCurrentProperty(
     update: { currentPropertyId: propertyId },
   });
 
-  return property;
+  return withTimeZone(property);
 }

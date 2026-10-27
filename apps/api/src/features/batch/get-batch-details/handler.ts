@@ -1,9 +1,14 @@
-import { fromLocalDateTime, type BatchFullDetails } from "@ifarm/shared";
+import {
+  dayInZone,
+  instantToZonedIso,
+  type BatchFullDetails,
+} from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
 import { fromDbDate } from "../../../lib/db-dates";
 import { NotFoundError } from "../../../lib/errors";
 import { sortWeighings, toWeighingDto } from "../../animal/weighing/shared";
 import { stockingPreview } from "../../area/stocking";
+import { propertyTimeZone } from "../../property/time-zone";
 import { effectiveWeighing } from "../../management-session/effective";
 import { averageDailyGain, groupPurchases, weightSeries } from "../rules";
 
@@ -32,6 +37,8 @@ export async function getBatchDetails(id: string): Promise<BatchFullDetails> {
   });
 
   if (!batch) throw new NotFoundError("Lote não encontrado.");
+  // As datas e horas dos eventos do lote, no fuso da propriedade.
+  const timeZone = await propertyTimeZone(batch.propertyId);
 
   // Transferências de sessão de manejo ainda não consolidada ficam de fora.
   const pendingWhere = {
@@ -131,7 +138,9 @@ export async function getBatchDetails(id: string): Promise<BatchFullDetails> {
   ]);
 
   const weighingsByAnimal = animals.map((a) => ({
-    weighings: sortWeighings(a.animalWeighings.map(toWeighingDto)).map((w) => ({
+    weighings: sortWeighings(
+      a.animalWeighings.map((w) => toWeighingDto(w, () => timeZone)),
+    ).map((w) => ({
       date: w.date,
       weightKg: w.weightKg,
     })),
@@ -147,12 +156,14 @@ export async function getBatchDetails(id: string): Promise<BatchFullDetails> {
       name: a.name,
       sex: a.sex,
       neutered: a.neutered,
-      birthDate: a.birthDate ? fromDbDate(a.birthDate) : null,
+      birthDate: fromDbDate(a.birthDate),
       breedName: a.breed?.name ?? null,
       currentWeightKg: a.currentWeight?.toNumber() ?? null,
       lastWeighingDate: weighings.at(-1)?.date ?? null,
       adgKgPerDay: averageDailyGain(weighings),
-      enteredAt: a.animalBatchHistories[0]?.enteredAt.toISOString() ?? null,
+      enteredAt: a.animalBatchHistories[0]
+        ? instantToZonedIso(a.animalBatchHistories[0].enteredAt, timeZone)
+        : null,
     };
   });
 
@@ -168,9 +179,7 @@ export async function getBatchDetails(id: string): Promise<BatchFullDetails> {
     property: batch.property,
     saleGoal: batch.saleGoal
       ? {
-          targetDate: batch.saleGoal.targetDate
-            ? fromDbDate(batch.saleGoal.targetDate)
-            : null,
+          targetDate: fromDbDate(batch.saleGoal.targetDate),
           targetWeightKg: batch.saleGoal.targetWeight?.toNumber() ?? null,
         }
       : null,
@@ -180,14 +189,14 @@ export async function getBatchDetails(id: string): Promise<BatchFullDetails> {
           name: currentArea.area.name,
           hectares: currentArea.area.hectares.toNumber(),
           stockingRate: currentArea.area.stockingRate.toNumber(),
-          enteredAt: currentArea.enteredAt.toISOString(),
+          enteredAt: instantToZonedIso(currentArea.enteredAt, timeZone),
         }
       : null,
     areaHistory: batch.batchAreaHistories.map((h) => ({
       id: h.id,
       area: { id: h.area.id, name: h.area.name },
-      enteredAt: h.enteredAt.toISOString(),
-      exitedAt: h.exitedAt?.toISOString() ?? null,
+      enteredAt: instantToZonedIso(h.enteredAt, timeZone),
+      exitedAt: h.exitedAt ? instantToZonedIso(h.exitedAt, timeZone) : null,
       notes: h.notes,
     })),
     stocking: stocking
@@ -198,7 +207,10 @@ export async function getBatchDetails(id: string): Promise<BatchFullDetails> {
         }
       : null,
     animals: animalDtos,
-    weightSeries: weightSeries(weighingsByAnimal, batch.createdAt),
+    weightSeries: weightSeries(
+      weighingsByAnimal,
+      dayInZone(batch.createdAt, timeZone),
+    ),
     movements: movements.map((m) => ({
       id: m.id,
       animal: {
@@ -207,20 +219,20 @@ export async function getBatchDetails(id: string): Promise<BatchFullDetails> {
         earTag: m.animal.currentTag,
         rfid: m.animal.currentRfid,
       },
-      enteredAt: m.enteredAt.toISOString(),
-      exitedAt: m.exitedAt?.toISOString() ?? null,
+      enteredAt: instantToZonedIso(m.enteredAt, timeZone),
+      exitedAt: m.exitedAt ? instantToZonedIso(m.exitedAt, timeZone) : null,
       notes: m.notes,
     })),
     pendingTransfers: {
       incoming: incomingPending.map((t) => ({
         id: t.id,
-        transferredAt: fromLocalDateTime(t.transferredAt),
+        transferredAt: instantToZonedIso(t.transferredAt, timeZone),
         animalCount: t._count.items,
         notes: t.notes,
       })),
       outgoing: outgoingPending.map((t) => ({
         id: t.id,
-        transferredAt: fromLocalDateTime(t.transferredAt),
+        transferredAt: instantToZonedIso(t.transferredAt, timeZone),
         destinationBatch: t.destinationBatch,
         animalCount: t.items.length,
         notes: t.notes,
@@ -230,14 +242,14 @@ export async function getBatchDetails(id: string): Promise<BatchFullDetails> {
       ...confirmedIncoming.map((t) => ({
         id: t.id,
         direction: "in" as const,
-        date: t.confirmedAt!.toISOString(),
+        date: instantToZonedIso(t.confirmedAt!, timeZone),
         animalCount: t._count.items,
         otherBatchName: null,
       })),
       ...confirmedOutgoing.map((t) => ({
         id: t.id,
         direction: "out" as const,
-        date: t.confirmedAt!.toISOString(),
+        date: instantToZonedIso(t.confirmedAt!, timeZone),
         animalCount: t.items.length,
         otherBatchName: t.destinationBatch.name,
       })),

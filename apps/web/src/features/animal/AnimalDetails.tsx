@@ -48,6 +48,9 @@ import {
   ANIMAL_ORIGIN_LABELS,
   ANIMAL_STATUS_LABELS,
   SEX_LABELS,
+  daysBetween,
+  formatDateTime,
+  formatDay,
 } from "@ifarm/shared";
 import { cn } from "@/lib/utils";
 import { animalClient } from "@/lib/clients";
@@ -56,15 +59,11 @@ import { animalFullDetailsQuery, animalKeys } from "./queries";
 import { ORIGIN_VARIANT, SEX_ICON, STATUS_VARIANT } from "./display";
 import { AnimalWeightChart } from "./AnimalWeightChart";
 import {
-  daysBetween,
   formatAge,
   formatCurrency,
-  formatDate,
-  formatDateOnly,
   formatDuration,
   formatKg,
   formatSignedKg,
-  formatInstant,
 } from "./format";
 import {
   CountBadge,
@@ -149,7 +148,9 @@ function buildRecentActivity(animal: AnimalFullDetails): TimelineEvent[] {
     });
   }
 
-  return events.sort((a, b) => b.date.localeCompare(a.date));
+  // Pelo instante: as datas vêm em formatos diferentes (no fuso de cada propriedade, em UTC
+  // ou só o dia), e a ordem do texto não seria a do tempo.
+  return events.sort((a, b) => Date.parse(b.date) - Date.parse(a.date));
 }
 
 export function AnimalDetails({
@@ -348,7 +349,7 @@ export function AnimalDetails({
                 {formatSignedKg(weightDelta)} desde a pesagem anterior
               </span>
             ) : lastWeighing ? (
-              `Pesado em ${formatInstant(lastWeighing.date)}`
+              `Pesado em ${formatDateTime(lastWeighing.date)}`
             ) : (
               "Sem pesagens"
             )
@@ -360,7 +361,7 @@ export function AnimalDetails({
           value={animal.birthDate ? formatAge(animal.birthDate) : "—"}
           hint={
             animal.birthDate
-              ? `Nascido em ${formatDateOnly(animal.birthDate)}`
+              ? `Nascido em ${formatDay(animal.birthDate)}`
               : "Data de nascimento não informada"
           }
         />
@@ -431,17 +432,17 @@ export function AnimalDetails({
                   <InfoItem label="Sexo">{sexLabel}</InfoItem>
                   <InfoItem label="Raça">{animal.breedName ?? "—"}</InfoItem>
                   <InfoItem label="Nascimento">
-                    {formatDateOnly(animal.birthDate)}
+                    {formatDay(animal.birthDate)}
                   </InfoItem>
                   <InfoItem label="Origem">{originLabel}</InfoItem>
                   <InfoItem label="Castrado">
                     {animal.neutered ? "Sim" : "Não"}
                   </InfoItem>
                   <InfoItem label="Na propriedade desde">
-                    {formatDate(currentPropertyEntry?.enteredAt)}
+                    {formatDay(currentPropertyEntry?.enteredAt)}
                   </InfoItem>
                   <InfoItem label="Cadastrado em">
-                    {formatDate(animal.createdAt)}
+                    {formatDay(animal.createdAt)}
                   </InfoItem>
                 </dl>
               </CardContent>
@@ -473,7 +474,7 @@ export function AnimalDetails({
                       </button>
                     </InfoItem>
                     <InfoItem label="Data da compra">
-                      {formatDate(purchase.date)}
+                      {formatDay(purchase.date)}
                     </InfoItem>
                     <InfoItem label="Valor">
                       {purchaseValue != null
@@ -537,7 +538,7 @@ export function AnimalDetails({
                             {event.title}
                           </p>
                           <time className="shrink-0 text-xs tabular-nums text-muted-foreground">
-                            {formatInstant(event.date)}
+                            {formatDateTime(event.date)}
                           </time>
                         </div>
                         {event.description && (
@@ -561,7 +562,7 @@ export function AnimalDetails({
               <CardTitle>Evolução do peso</CardTitle>
               <CardDescription>
                 {weighings.length > 1
-                  ? `${weighings.length} pesagens entre ${formatDate(firstWeighing!.date)} e ${formatDate(lastWeighing!.date)}`
+                  ? `${weighings.length} pesagens entre ${formatDay(firstWeighing!.date)} e ${formatDay(lastWeighing!.date)}`
                   : "Registre ao menos duas pesagens para visualizar a evolução."}
               </CardDescription>
             </CardHeader>
@@ -577,7 +578,7 @@ export function AnimalDetails({
                   icon={<LineChart />}
                   message={
                     lastWeighing
-                      ? `Única pesagem: ${formatKg(lastWeighing.weightKg)} em ${formatDate(lastWeighing.date)}`
+                      ? `Única pesagem: ${formatKg(lastWeighing.weightKg)} em ${formatDay(lastWeighing.date)}`
                       : "Nenhuma pesagem registrada."
                   }
                 />
@@ -610,7 +611,7 @@ export function AnimalDetails({
                       const gmd = diff != null && days ? diff / days : null;
                       return (
                         <TableRow key={w.id}>
-                          <TableCell>{formatInstant(w.date)}</TableCell>
+                          <TableCell>{formatDateTime(w.date)}</TableCell>
                           <TableCell className="text-right tabular-nums">
                             <div className="font-medium">
                               {formatKg(w.weightKg)}
@@ -681,9 +682,9 @@ export function AnimalDetails({
                         </div>
                         <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
                           <Calendar className="size-3" />
-                          {formatDate(b.enteredAt)}
+                          {formatDay(b.enteredAt)}
                           {" → "}
-                          {b.exitedAt ? formatDate(b.exitedAt) : "hoje"}
+                          {b.exitedAt ? formatDay(b.exitedAt) : "hoje"}
                           <span aria-hidden>·</span>
                           {formatDuration(
                             daysBetween(b.enteredAt, b.exitedAt ?? undefined),
@@ -748,7 +749,7 @@ export function AnimalDetails({
                       <TableBody>
                         {section.rows.map((row, i) => (
                           <TableRow key={row.id}>
-                            <TableCell>{formatInstant(row.date)}</TableCell>
+                            <TableCell>{formatDateTime(row.date)}</TableCell>
                             <TableCell>
                               <div className="flex items-center gap-2">
                                 <span className="font-medium">
@@ -804,7 +805,7 @@ export function AnimalDetails({
                   <TableBody>
                     {animal.health.map((h) => (
                       <TableRow key={h.id}>
-                        <TableCell>{formatInstant(h.date)}</TableCell>
+                        <TableCell>{formatDateTime(h.date)}</TableCell>
                         <TableCell>
                           <div className="font-medium">{h.typeName}</div>
                           {(h.title || h.notes) && (
@@ -814,10 +815,8 @@ export function AnimalDetails({
                           )}
                         </TableCell>
                         <TableCell>{h.veterinarianName ?? "—"}</TableCell>
-                        <TableCell>
-                          {formatDateOnly(h.withdrawalEndDate)}
-                        </TableCell>
-                        <TableCell>{formatDateOnly(h.nextDueDate)}</TableCell>
+                        <TableCell>{formatDay(h.withdrawalEndDate)}</TableCell>
+                        <TableCell>{formatDay(h.nextDueDate)}</TableCell>
                         <TableCell className="text-right tabular-nums">
                           {h.doseMl != null
                             ? `${h.doseMl.toLocaleString("pt-BR")} ml`
@@ -861,7 +860,7 @@ export function AnimalDetails({
                       <TableRow key={n.id}>
                         <TableCell>
                           <div className="flex items-center gap-2">
-                            {formatInstant(n.date)}
+                            {formatDateTime(n.date)}
                             {i < animal.neutering.length - 1 && (
                               <Badge variant="secondary">Recastração</Badge>
                             )}
@@ -869,7 +868,7 @@ export function AnimalDetails({
                           {n.correctedAt && (
                             <div
                               className="text-xs text-muted-foreground"
-                              title={`Corrigida em ${formatDate(n.correctedAt)}`}
+                              title={`Corrigida em ${formatDay(n.correctedAt)}`}
                             >
                               corrigido
                             </div>
@@ -926,8 +925,8 @@ export function AnimalDetails({
                             )}
                           </div>
                         </TableCell>
-                        <TableCell>{formatDate(p.enteredAt)}</TableCell>
-                        <TableCell>{formatDate(p.exitedAt)}</TableCell>
+                        <TableCell>{formatDay(p.enteredAt)}</TableCell>
+                        <TableCell>{formatDay(p.exitedAt)}</TableCell>
                         <TableCell className="text-right tabular-nums">
                           {formatDuration(
                             daysBetween(p.enteredAt, p.exitedAt ?? undefined),

@@ -5,7 +5,7 @@
 import { prisma } from "@ifarm/db";
 import type { Prisma } from "@ifarm/db/client";
 import type { AnimalOrigin, AnimalStatus, Sex } from "@ifarm/db/enums";
-import { planStepSchema, type BrTimeZone } from "@ifarm/shared";
+import { DAY_MS, planStepSchema, type BrTimeZone } from "@ifarm/shared";
 import { auth } from "../src/auth";
 import { findCommitments } from "../src/features/animal/commitments";
 import { consolidateSession } from "../src/features/management-session/consolidate";
@@ -26,7 +26,6 @@ import { toDbDate } from "../src/lib/db-dates";
 // Datas relativas ao dia do seed
 // ---------------------------------------------------------------------------
 
-const DAY_MS = 24 * 60 * 60 * 1000;
 const TODAY = new Date();
 TODAY.setHours(0, 0, 0, 0);
 

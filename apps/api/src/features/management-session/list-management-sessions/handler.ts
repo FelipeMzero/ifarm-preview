@@ -1,11 +1,12 @@
 import {
-  fromLocalDateTime,
+  instantToZonedIso,
   STEP_TYPE_LABELS,
   type ManagementSessionListResult,
   type ManagementSessionQuery,
 } from "@ifarm/shared";
 import { prisma, type Prisma } from "@ifarm/db";
 import { getOrAssignCurrentProperty } from "../../current-property/shared";
+import { propertyTimeZone } from "../../property/time-zone";
 import { SESSION_STATUS_WHERE } from "../rules";
 import {
   sessionStatus,
@@ -41,7 +42,7 @@ export async function listManagementSessions(
 
   const where = buildWhere(query, propertyId);
 
-  const [sessions, total] = await Promise.all([
+  const [sessions, total, timeZone] = await Promise.all([
     prisma.managementSession.findMany({
       where,
       include: {
@@ -64,6 +65,7 @@ export async function listManagementSessions(
       take: query.pageSize,
     }),
     prisma.managementSession.count({ where }),
+    propertyTimeZone(propertyId),
   ]);
 
   return {
@@ -71,8 +73,10 @@ export async function listManagementSessions(
       const health = new Map(s.healthManagements.map((h) => [h.id, h]));
       return {
         id: s.id,
-        scheduledAt: fromLocalDateTime(s.scheduledAt),
-        performedAt: s.performedAt ? fromLocalDateTime(s.performedAt) : null,
+        scheduledAt: instantToZonedIso(s.scheduledAt, timeZone),
+        performedAt: s.performedAt
+          ? instantToZonedIso(s.performedAt, timeZone)
+          : null,
         title: s.title,
         notes: s.notes,
         steps: toSessionSteps(s.steps).map((step) => {

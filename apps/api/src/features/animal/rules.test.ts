@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   animalDeletionBlocker,
+  birthDateBounds,
   blockingConflicts,
   isStandalonePurchase,
   keepsOriginal,
@@ -205,5 +206,30 @@ describe("laterRecordsBlocker", () => {
     expect(laterRecordsBlocker([[{ managementId: "m1" }]])).toMatch(
       /manejos registrados/,
     );
+  });
+});
+
+describe("birthDateBounds", () => {
+  it("conta os meses a partir do dia de hoje da propriedade", () => {
+    expect(birthDateBounds("upTo12", "2026-10-26")).toEqual({
+      after: "2025-10-26",
+    });
+    expect(birthDateBounds("12to24", "2026-10-26")).toEqual({
+      after: "2024-10-26",
+      upTo: "2025-10-26",
+    });
+    expect(birthDateBounds("over24", "2026-10-26")).toEqual({
+      upTo: "2024-10-26",
+    });
+    expect(birthDateBounds("unknown", "2026-10-26")).toBeNull();
+  });
+
+  it("vira o ano e segue o calendário", () => {
+    expect(birthDateBounds("upTo12", "2026-01-15")).toEqual({
+      after: "2025-01-15",
+    });
+    expect(birthDateBounds("upTo12", "2028-02-29")).toEqual({
+      after: "2027-03-01",
+    });
   });
 });

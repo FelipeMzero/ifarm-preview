@@ -1,4 +1,9 @@
-import type { AreaOccupancy, Sex, StockingPreview } from "@ifarm/shared";
+import {
+  instantToZonedIso,
+  type AreaOccupancy,
+  type Sex,
+  type StockingPreview,
+} from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
 import { capacityCheck, sumUnits, type UaAnimal } from "./stocking-rules";
 
@@ -112,9 +117,11 @@ export async function stockingPreview(params: {
 }
 
 // Ocupação atual de várias áreas de uma vez (para o mapa): lote aberto em cada área,
-// quantidade de animais e UA. Áreas livres ficam fora do mapa retornado.
+// quantidade de animais e UA (o início da ocupação no fuso da propriedade). Áreas livres ficam
+// fora do mapa retornado.
 export async function areasOccupancy(
   areas: { id: string; hectares: number; stockingRate: number }[],
+  timeZone: string,
 ): Promise<Map<string, AreaOccupancy>> {
   const result = new Map<string, AreaOccupancy>();
   if (!areas.length) return result;
@@ -155,7 +162,7 @@ export async function areasOccupancy(
     const total = sumUnits(byBatch.get(h.batch.id) ?? [], now);
     result.set(h.areaId, {
       batch: h.batch,
-      occupiedSince: h.enteredAt.toISOString(),
+      occupiedSince: instantToZonedIso(h.enteredAt, timeZone),
       animalCount: total.count,
       currentUa: total.ua,
       estimatedCount: total.estimatedCount,
@@ -166,10 +173,11 @@ export async function areasOccupancy(
   return result;
 }
 
-// Última saída de lote de cada área (início do período de descanso). Áreas que
-// nunca foram ocupadas ficam fora do mapa retornado.
+// Última saída de lote de cada área (início do período de descanso), no fuso da propriedade.
+// Áreas que nunca foram ocupadas ficam fora do mapa retornado.
 export async function areasLastExit(
   areaIds: string[],
+  timeZone: string,
 ): Promise<Map<string, string>> {
   if (!areaIds.length) return new Map();
   const rows = await prisma.batchAreaHistory.groupBy({
@@ -180,6 +188,6 @@ export async function areasLastExit(
   return new Map(
     rows
       .filter((r) => r._max.exitedAt)
-      .map((r) => [r.areaId, r._max.exitedAt!.toISOString()]),
+      .map((r) => [r.areaId, instantToZonedIso(r._max.exitedAt!, timeZone)]),
   );
 }

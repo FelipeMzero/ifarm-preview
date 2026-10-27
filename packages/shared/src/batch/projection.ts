@@ -1,7 +1,5 @@
-import { toLocalDay } from "../date";
+import { DAY_MS, today as todayDay, toLocalDay } from "../date";
 import type { BatchDetailAnimal } from "./client";
-
-const DAY_MS = 24 * 60 * 60 * 1000;
 
 // Projeção linear da meta de peso do lote. Cada animal cresce a partir da sua última
 // pesagem no próprio GMD (ou, sem histórico, no GMD médio do lote); o peso médio do lote
@@ -39,12 +37,6 @@ export type BatchProjection = {
   projectAnimal: (animal: BatchDetailAnimal) => number | null;
 };
 
-function startOfToday() {
-  const d = new Date();
-  d.setHours(0, 0, 0, 0);
-  return d;
-}
-
 const mean = (values: number[]) =>
   values.length ? values.reduce((s, v) => s + v, 0) / values.length : null;
 
@@ -53,7 +45,7 @@ export function projectBatch(
   goal: { targetDate: string | null; targetWeightKg: number | null } | null,
   simulatedAdg?: number | null,
 ): BatchProjection {
-  const today = startOfToday();
+  const today = toLocalDay(todayDay());
   const weighed = animals.filter(
     (a) => a.currentWeightKg != null && a.lastWeighingDate != null,
   );

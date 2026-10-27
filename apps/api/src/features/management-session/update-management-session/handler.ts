@@ -1,11 +1,13 @@
 import {
   OPEN_SESSION_STATUSES,
+  zonedDateTimeToInstant,
   type ManagementSessionData,
 } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
 import { diffIds } from "../../../lib/diff";
 import { assertNoConflicts } from "../../animal/commitments";
 import { animalLabel, summarize } from "../../animal/rules";
+import { propertyTimeZone } from "../../property/time-zone";
 import { findReception } from "../../purchase/reception";
 import { stepKey } from "../session-steps";
 import {
@@ -71,7 +73,11 @@ export async function updateManagementSession(
       where: { id },
       data: {
         title: data.title,
-        scheduledAt: data.scheduledAt,
+        // A data e hora previstas valem no fuso da propriedade.
+        scheduledAt: zonedDateTimeToInstant(
+          data.scheduledAt,
+          await propertyTimeZone(session.propertyId, tx),
+        ),
         notes: data.notes,
       },
     });

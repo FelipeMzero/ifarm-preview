@@ -1,8 +1,4 @@
-import {
-  fromLocalDay,
-  type PurchaseCategoryData,
-  type PurchaseStatus,
-} from "@ifarm/shared";
+import type { PurchaseCategoryData, PurchaseStatus } from "@ifarm/shared";
 import type { Prisma } from "@ifarm/db";
 import { BusinessError } from "../../lib/errors";
 
@@ -243,13 +239,15 @@ export function cancellationBlocker(
   return null;
 }
 
-// Data de nascimento estimada ("AAAA-MM-DD", dia local) de um animal com `ageMonths`
-// meses no instante `at` (ex.: idade pela arcada dentária na recepção). Sem o dia no mês
-// de destino (31/03 menos 1 mês), vale o último dia dele (28 ou 29/02), sem transbordar
-// para o mês seguinte como o setMonth faria.
-export function estimatedBirthDay(at: Date, ageMonths: number): string {
-  const year = at.getFullYear();
-  const month = at.getMonth() - ageMonths; // negativo volta anos (normalizado pelo Date)
-  const lastDay = new Date(year, month + 1, 0).getDate();
-  return fromLocalDay(new Date(year, month, Math.min(at.getDate(), lastDay)));
+// Data de nascimento estimada ("AAAA-MM-DD") de um animal com `ageMonths` meses no dia `day`
+// (ex.: idade pela arcada dentária no dia da recepção, no fuso da propriedade). Só conta de
+// calendário: sem o dia no mês de destino (31/03 menos 1 mês), vale o último dia dele (28 ou
+// 29/02), sem transbordar para o mês seguinte como o setMonth faria.
+export function estimatedBirthDay(day: string, ageMonths: number): string {
+  const [year, month, date] = day.split("-").map(Number);
+  const target = month - 1 - ageMonths; // negativo volta anos (normalizado pelo Date)
+  const lastDay = new Date(Date.UTC(year, target + 1, 0)).getUTCDate();
+  return new Date(Date.UTC(year, target, Math.min(date, lastDay)))
+    .toISOString()
+    .slice(0, 10);
 }

@@ -10,9 +10,10 @@ import {
   FIELD_LIMITS,
   neuteringPayloadSchema,
   type NeuteringPayload,
+  formatDay,
 } from "@ifarm/shared";
 import type { StepScreenProps } from "../types";
-import { formatDay, handleStepError } from "../formHelpers";
+import { handleStepError } from "../formHelpers";
 
 type NeuteringRecord = {
   techniqueId: string | null;

@@ -1,6 +1,6 @@
 import {
-  fromLocalDay,
-  toLocalDateTime,
+  dayInZone,
+  zonedDateTimeToInstant,
   type AnimalCreateData,
 } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
@@ -8,6 +8,7 @@ import { toDbDate } from "../../../lib/db-dates";
 import { write } from "../../../lib/db-errors";
 import { BusinessError } from "../../../lib/errors";
 import { getOrAssignCurrentProperty } from "../../current-property/shared";
+import { propertyTimeZone } from "../../property/time-zone";
 import {
   INVALID_TECHNIQUE_MESSAGE,
   isValidNeuteringTechnique,
@@ -42,8 +43,10 @@ export async function createAnimal(data: AnimalCreateData, userId: string) {
     );
   }
 
+  // As datas e horas informadas valem no fuso da propriedade.
+  const timeZone = await propertyTimeZone(propertyId);
   const entryDate = data.propertyEntryDate
-    ? toLocalDateTime(data.propertyEntryDate)
+    ? zonedDateTimeToInstant(data.propertyEntryDate, timeZone)
     : new Date();
 
   const animal = await write(() =>
@@ -113,7 +116,7 @@ export async function createAnimal(data: AnimalCreateData, userId: string) {
             animalId: created.id,
             techniqueId: data.neuteringTechniqueId,
             neuteredAt: data.neuteringDate
-              ? toLocalDateTime(data.neuteringDate)
+              ? zonedDateTimeToInstant(data.neuteringDate, timeZone)
               : entryDate,
           },
         });
@@ -128,9 +131,9 @@ export async function createAnimal(data: AnimalCreateData, userId: string) {
           select: { name: true },
         });
 
-        // Dia da compra (@db.Date): o da aquisição ou o da entrada na fazenda.
+        // Dia da compra (@db.Date): o da aquisição ou o da entrada na fazenda (no fuso dela).
         const purchaseDate = toDbDate(
-          data.acquisitionDate ?? fromLocalDay(entryDate),
+          data.acquisitionDate ?? dayInZone(entryDate, timeZone),
         );
         const purchaseEvent = await tx.purchaseEvent.create({
           data: {

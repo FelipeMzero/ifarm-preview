@@ -9,7 +9,6 @@ import { defineStep, StepError } from "./types";
 
 // Datas do procedimento chegam como "AAAA-MM-DD" (ou null); no banco são @db.Date.
 const toDbDay = (v: string | null) => (v ? toDbDate(v) : null);
-const toDateOnly = (d: Date | null) => (d ? fromDbDate(d) : null);
 
 export const healthStep = defineStep({
   type: "health",
@@ -114,8 +113,8 @@ export const healthStep = defineStep({
         doseType: hm.doseType,
         doseMl: hm.doseMl?.toNumber() ?? null,
         doseWeightKg: hm.doseWeightKg?.toNumber() ?? null,
-        withdrawalEndDate: toDateOnly(hm.withdrawalEndDate),
-        nextDueDate: toDateOnly(hm.nextDueDate),
+        withdrawalEndDate: fromDbDate(hm.withdrawalEndDate),
+        nextDueDate: fromDbDate(hm.nextDueDate),
       },
     };
   },

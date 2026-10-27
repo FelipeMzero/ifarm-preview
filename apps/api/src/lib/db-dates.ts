@@ -7,7 +7,9 @@ export function toDbDate(value: string): Date {
   return new Date(`${value}T00:00:00Z`);
 }
 
-/** Date lido de uma coluna @db.Date → "AAAA-MM-DD". */
-export function fromDbDate(value: Date): string {
-  return value.toISOString().slice(0, 10);
+/** Date lido de uma coluna @db.Date → "AAAA-MM-DD" (coluna vazia → null). */
+export function fromDbDate(value: Date): string;
+export function fromDbDate(value: Date | null | undefined): string | null;
+export function fromDbDate(value: Date | null | undefined): string | null {
+  return value ? value.toISOString().slice(0, 10) : null;
 }

@@ -27,19 +27,21 @@ const free: Area = {
   lastExitAt: null,
 };
 
-const statusOf = (area: Area) => areaStatus(area, areaRotation(area, now));
+const TZ = "America/Cuiaba";
+const rotationOf = (area: Area) => areaRotation(area, TZ, now);
+const statusOf = (area: Area) => areaStatus(area, rotationOf(area));
 
 describe("areaRotation", () => {
   it("inativa não tem rodízio", () => {
-    expect(areaRotation({ ...free, closedAt: daysAgo(1) }, now)).toBeNull();
+    expect(rotationOf({ ...free, closedAt: daysAgo(1) })).toBeNull();
   });
 
   it("ocupada: vence só depois dos dias de referência", () => {
     const at = (days: number) =>
-      areaRotation(
-        { ...free, occupancy: occupancy({ occupiedSince: daysAgo(days) }) },
-        now,
-      );
+      rotationOf({
+        ...free,
+        occupancy: occupancy({ occupiedSince: daysAgo(days) }),
+      });
     expect(at(30)).toMatchObject({
       kind: "occupation",
       days: 30,
@@ -50,36 +52,39 @@ describe("areaRotation", () => {
 
   it("ocupada sem referência nunca vence", () => {
     expect(
-      areaRotation(
-        { ...free, defaultOccupationDays: null, occupancy: occupancy() },
-        now,
-      ),
+      rotationOf({
+        ...free,
+        defaultOccupationDays: null,
+        occupancy: occupancy(),
+      }),
     ).toMatchObject({ limit: null, overdue: false });
   });
 
   it("em descanso: pronta ao cumprir os dias, com a data prevista", () => {
-    expect(areaRotation({ ...free, lastExitAt: daysAgo(19) }, now)).toEqual({
+    expect(rotationOf({ ...free, lastExitAt: daysAgo(19) })).toEqual({
       kind: "rest",
       days: 19,
       since: daysAgo(19),
       limit: 20,
       ready: false,
-      readyAt: daysAgo(-1),
+      // Um dia depois de agora (12:00Z), na hora de Cuiabá.
+      readyAt: "2026-10-21T08:00:00-04:00",
     });
-    expect(
-      areaRotation({ ...free, lastExitAt: daysAgo(20) }, now),
-    ).toMatchObject({ ready: true });
+    expect(rotationOf({ ...free, lastExitAt: daysAgo(20) })).toMatchObject({
+      ready: true,
+    });
   });
 
   it("nunca ocupada: pronta se houver referência de descanso", () => {
-    expect(areaRotation(free, now)).toMatchObject({
+    expect(rotationOf(free)).toMatchObject({
       kind: "rest",
       days: null,
       ready: true,
     });
-    expect(areaRotation({ ...free, defaultRestDays: null }, now)).toMatchObject(
-      { ready: false, readyAt: null },
-    );
+    expect(rotationOf({ ...free, defaultRestDays: null })).toMatchObject({
+      ready: false,
+      readyAt: null,
+    });
   });
 });
 

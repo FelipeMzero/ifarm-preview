@@ -1,14 +1,17 @@
+import { instantToZonedIso } from "@ifarm/shared";
 import { prisma, Prisma } from "@ifarm/db";
 import type { AnimalWeighing } from "@ifarm/db/client";
 import { NotFoundError } from "../../../lib/errors";
 import { effectiveWeighing } from "../../management-session/effective";
+import type { ZoneOf } from "../../property/time-zone";
 
 type Tx = Prisma.TransactionClient;
 
-export function toWeighingDto(w: AnimalWeighing) {
+// A data da pesagem vai no fuso da propriedade onde ela aconteceu (`zoneOf`).
+export function toWeighingDto(w: AnimalWeighing, zoneOf: ZoneOf) {
   return {
     id: w.id,
-    date: w.weighedAt.toISOString(),
+    date: instantToZonedIso(w.weighedAt, zoneOf(w.weighedAt)),
     weightKg: w.weight.toNumber(),
     notes: w.notes,
     fromSession: w.managementId != null,
@@ -21,7 +24,10 @@ export function toWeighingDto(w: AnimalWeighing) {
 export function sortWeighings<T extends { date: string; id: number }>(
   list: T[],
 ): T[] {
-  return list.sort((a, b) => a.date.localeCompare(b.date) || a.id - b.id);
+  // Pelo instante: as datas podem vir com deslocamentos diferentes.
+  return list.sort(
+    (a, b) => Date.parse(a.date) - Date.parse(b.date) || a.id - b.id,
+  );
 }
 
 // Recalcula o peso atual (campo desnormalizado) a partir da pesagem válida mais recente.

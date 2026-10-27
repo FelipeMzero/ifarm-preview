@@ -1,6 +1,11 @@
-import type { AnimalIdentifierRecord, IdentifierKind } from "@ifarm/shared";
+import {
+  instantToZonedIso,
+  type AnimalIdentifierRecord,
+  type IdentifierKind,
+} from "@ifarm/shared";
 import { Prisma } from "@ifarm/db";
 import { BusinessError } from "../../../lib/errors";
+import type { ZoneOf } from "../../property/time-zone";
 import {
   effectiveRfidTagging,
   effectiveTagging,
@@ -120,10 +125,14 @@ export const ADAPTERS: Record<IdentifierKind, IdentifierAdapter> = {
   },
 };
 
-export function toIdentifierDto(r: IdentifierRecord): AnimalIdentifierRecord {
+// A data vai no fuso da propriedade onde a identificação aconteceu (`zoneOf`).
+export function toIdentifierDto(
+  r: IdentifierRecord,
+  zoneOf: ZoneOf,
+): AnimalIdentifierRecord {
   return {
     id: r.id,
-    date: r.identifiedAt.toISOString(),
+    date: instantToZonedIso(r.identifiedAt, zoneOf(r.identifiedAt)),
     value: r.value,
     notes: r.notes,
     fromSession: r.managementId != null,

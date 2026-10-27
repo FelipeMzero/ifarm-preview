@@ -7,32 +7,21 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart";
 import { toLocalDay, type AnimalWeighing } from "@ifarm/shared";
-import { timeDomain, timeTicks } from "@/lib/time-domain";
+import {
+  formatAxisDate,
+  formatAxisDay,
+  timeDomain,
+  timeOf,
+  timeTicks,
+} from "@/lib/time-domain";
+import { monthsOld } from "./format";
 
 const chartConfig = {
   weightKg: { label: "Peso", color: "var(--primary)" },
 } satisfies ChartConfig;
 
-const formatShortDate = (ts: number) =>
-  new Date(ts).toLocaleDateString("pt-BR", {
-    day: "2-digit",
-    month: "short",
-    year: "2-digit",
-  });
-
-const formatFullDate = (ts: number) => new Date(ts).toLocaleDateString("pt-BR");
-
-// Idade em meses completos na data (null se anterior ao nascimento).
-function ageInMonths(birth: Date, ts: number) {
-  const d = new Date(ts);
-  let months =
-    (d.getFullYear() - birth.getFullYear()) * 12 +
-    (d.getMonth() - birth.getMonth());
-  if (d.getDate() < birth.getDate()) months--;
-  return months < 0 ? null : months;
-}
-
-function formatAge(months: number, estimated: boolean) {
+// Idade no eixo: meses completos ("< 1 mês" no primeiro).
+function ageLabelOf(months: number, estimated: boolean) {
   const label =
     months === 0 ? "< 1 mês" : `${months} ${months === 1 ? "mês" : "meses"}`;
   // Nascimento estimado (ex.: idade informada na compra): idade aproximada.
@@ -56,7 +45,7 @@ function DateAgeTick({
   return (
     <g transform={`translate(${x},${y})`}>
       <text dy={10} textAnchor="middle" className="fill-muted-foreground">
-        {formatShortDate(payload.value)}
+        {formatAxisDate(payload.value)}
       </text>
       {age && (
         <text
@@ -82,14 +71,16 @@ export function AnimalWeightChart({
   birthDateEstimated?: boolean;
 }) {
   const data = weighings.map((w) => ({
-    ts: new Date(w.date).getTime(),
+    ts: timeOf(w.date),
     weightKg: w.weightKg,
   }));
 
   const birth = birthDate ? toLocalDay(birthDate) : null;
   const ageLabel = (ts: number) => {
-    const months = birth ? ageInMonths(birth, ts) : null;
-    return months == null ? null : formatAge(months, birthDateEstimated);
+    const months = birth ? monthsOld(birth, new Date(ts)) : null;
+    return months == null || months < 0
+      ? null
+      : ageLabelOf(months, birthDateEstimated);
   };
 
   const xDomain = timeDomain(data.map((d) => d.ts));
@@ -134,7 +125,7 @@ export function AnimalWeightChart({
               { className: "fill-muted-foreground" }
             )
           }
-          tickFormatter={formatShortDate}
+          tickFormatter={formatAxisDate}
           tickLine={false}
           axisLine={false}
           tickMargin={8}
@@ -161,8 +152,8 @@ export function AnimalWeightChart({
                 const ts = payload?.[0]?.payload?.ts;
                 const age = ts != null ? ageLabel(ts) : null;
                 return age
-                  ? `${formatFullDate(ts)} · ${age}`
-                  : formatFullDate(ts);
+                  ? `${formatAxisDay(ts)} · ${age}`
+                  : formatAxisDay(ts);
               }}
               formatter={(value) => (
                 <div className="flex w-full items-center justify-between gap-4">

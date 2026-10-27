@@ -1,4 +1,8 @@
-import type { AnimalFullDetails } from "@ifarm/shared";
+import {
+  dayInZone,
+  instantToZonedIso,
+  type AnimalFullDetails,
+} from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
 import { fromDbDate } from "../../../lib/db-dates";
 import { NotFoundError } from "../../../lib/errors";
@@ -9,12 +13,12 @@ import {
   effectiveTagging,
   effectiveWeighing,
 } from "../../management-session/effective";
+import { asTimeZone, timeZoneAt, type ZoneOf } from "../../property/time-zone";
 import { sortWeighings, toWeighingDto } from "../weighing/shared";
 
-const toDateOnly = (d: Date | null | undefined) => (d ? fromDbDate(d) : null);
-
+// Pelo instante: as datas dos eventos podem vir com deslocamentos diferentes.
 const byDateDesc = <T extends { date: string }>(a: T, b: T) =>
-  b.date.localeCompare(a.date);
+  Date.parse(b.date) - Date.parse(a.date);
 
 // Ficha completa do animal: históricos de pesagem, identificação, castração, sanidade,
 // lotes e propriedades, e a compra de origem.
@@ -24,7 +28,7 @@ export async function getAnimalDetails(id: string): Promise<AnimalFullDetails> {
     include: {
       breed: { select: { name: true } },
       currentBatch: { select: { id: true, name: true } },
-      currentProperty: { select: { id: true, name: true } },
+      currentProperty: { select: { id: true, name: true, timeZone: true } },
       animalWeighings: { where: { cancelledAt: null, ...effectiveWeighing } },
       animalTaggings: { where: { cancelledAt: null, ...effectiveTagging } },
       animalRfidTaggings: {
@@ -46,10 +50,20 @@ export async function getAnimalDetails(id: string): Promise<AnimalFullDetails> {
         },
       },
       animalBatchHistories: {
-        include: { batch: { select: { id: true, name: true } } },
+        include: {
+          batch: {
+            select: {
+              id: true,
+              name: true,
+              property: { select: { timeZone: true } },
+            },
+          },
+        },
       },
       animalPropertyHistories: {
-        include: { property: { select: { id: true, name: true } } },
+        include: {
+          property: { select: { id: true, name: true, timeZone: true } },
+        },
       },
       purchasedAnimals: {
         include: {
@@ -73,12 +87,20 @@ export async function getAnimalDetails(id: string): Promise<AnimalFullDetails> {
 
   if (!animal) throw new NotFoundError("Animal não encontrado.");
 
-  const weighings = sortWeighings(animal.animalWeighings.map(toWeighingDto));
+  // Cada evento vai no fuso da propriedade onde aconteceu (pelo histórico de propriedades).
+  const stays = animal.animalPropertyHistories;
+  const currentZone = asTimeZone(animal.currentProperty.timeZone);
+  const zoneOf: ZoneOf = (instant) => timeZoneAt(stays, instant, currentZone);
+  const zoned = (instant: Date) => instantToZonedIso(instant, zoneOf(instant));
+
+  const weighings = sortWeighings(
+    animal.animalWeighings.map((w) => toWeighingDto(w, zoneOf)),
+  );
 
   const tagHistory = animal.animalTaggings
     .map((t) => ({
       id: t.id,
-      date: t.identifiedAt.toISOString(),
+      date: zoned(t.identifiedAt),
       value: t.tag,
       notes: t.notes,
     }))
@@ -87,7 +109,7 @@ export async function getAnimalDetails(id: string): Promise<AnimalFullDetails> {
   const rfidHistory = animal.animalRfidTaggings
     .map((r) => ({
       id: r.id,
-      date: r.identifiedAt.toISOString(),
+      date: zoned(r.identifiedAt),
       value: r.rfid,
       notes: r.notes,
     }))
@@ -96,7 +118,7 @@ export async function getAnimalDetails(id: string): Promise<AnimalFullDetails> {
   const neutering = animal.animalNeuterings
     .map((n) => ({
       id: n.id,
-      date: n.neuteredAt.toISOString(),
+      date: zoned(n.neuteredAt),
       techniqueName: n.technique?.name ?? null,
       notes: n.notes,
       correctedAt: n.correctedAt?.toISOString() ?? null,
@@ -106,39 +128,50 @@ export async function getAnimalDetails(id: string): Promise<AnimalFullDetails> {
   const health = animal.healthManagementItems
     .map((h) => ({
       id: h.id,
-      date: h.management.performedAt.toISOString(),
+      date: zoned(h.management.performedAt),
       typeName: h.management.type.name,
       title: h.management.title,
       veterinarianName: h.management.veterinarian?.name ?? null,
-      withdrawalEndDate: toDateOnly(h.management.withdrawalEndDate),
-      nextDueDate: toDateOnly(h.management.nextDueDate),
+      withdrawalEndDate: fromDbDate(h.management.withdrawalEndDate),
+      nextDueDate: fromDbDate(h.management.nextDueDate),
       doseMl: h.doseMl?.toNumber() ?? null,
       notes: h.notes,
     }))
     .sort(byDateDesc);
 
+  // Entrada e saída de um lote no fuso da propriedade do lote; de uma propriedade, no dela.
   const batchHistory = animal.animalBatchHistories
-    .map((b) => ({
-      id: b.id,
-      date: b.enteredAt.toISOString(),
-      batchId: b.batch?.id ?? null,
-      batchName: b.batch?.name ?? null,
-      enteredAt: b.enteredAt.toISOString(),
-      exitedAt: b.exitedAt?.toISOString() ?? null,
-      notes: b.notes,
-    }))
+    .map((b) => {
+      const inZone = (instant: Date) =>
+        instantToZonedIso(
+          instant,
+          b.batch ? asTimeZone(b.batch.property.timeZone) : zoneOf(instant),
+        );
+      return {
+        id: b.id,
+        date: inZone(b.enteredAt),
+        batchId: b.batch?.id ?? null,
+        batchName: b.batch?.name ?? null,
+        enteredAt: inZone(b.enteredAt),
+        exitedAt: b.exitedAt ? inZone(b.exitedAt) : null,
+        notes: b.notes,
+      };
+    })
     .sort(byDateDesc);
 
   const propertyHistory = animal.animalPropertyHistories
-    .map((p) => ({
-      id: p.id,
-      date: p.enteredAt.toISOString(),
-      propertyId: p.property.id,
-      propertyName: p.property.name,
-      enteredAt: p.enteredAt.toISOString(),
-      exitedAt: p.exitedAt?.toISOString() ?? null,
-      notes: p.notes,
-    }))
+    .map((p) => {
+      const timeZone = asTimeZone(p.property.timeZone);
+      return {
+        id: p.id,
+        date: instantToZonedIso(p.enteredAt, timeZone),
+        propertyId: p.property.id,
+        propertyName: p.property.name,
+        enteredAt: instantToZonedIso(p.enteredAt, timeZone),
+        exitedAt: p.exitedAt ? instantToZonedIso(p.exitedAt, timeZone) : null,
+        notes: p.notes,
+      };
+    })
     .sort(byDateDesc);
 
   const purchased = animal.purchasedAnimals.find(
@@ -150,9 +183,10 @@ export async function getAnimalDetails(id: string): Promise<AnimalFullDetails> {
         const { event } = category;
         const unitPrice = category.unitPrice?.toNumber() ?? null;
         // Peso de entrada = pesagem feita no dia da recepção, se houver.
-        const receptionDay = toDateOnly(
-          purchased.reception.managementSession.performedAt,
-        );
+        const receivedAt = purchased.reception.managementSession.performedAt;
+        const receptionDay = receivedAt
+          ? dayInZone(receivedAt, zoneOf(receivedAt))
+          : null;
         const entryWeighing = weighings.find(
           (w) => w.date.slice(0, 10) === receptionDay,
         );
@@ -187,14 +221,17 @@ export async function getAnimalDetails(id: string): Promise<AnimalFullDetails> {
     currentRfid: animal.currentRfid,
     name: animal.name,
     sex: animal.sex,
-    birthDate: toDateOnly(animal.birthDate),
+    birthDate: fromDbDate(animal.birthDate),
     birthDateEstimated: animal.birthDateEstimated,
     breedName: animal.breed?.name ?? null,
     origin: animal.origin,
     status: animal.status,
     neutered: animal.neutered,
     currentBatch: animal.currentBatch,
-    currentProperty: animal.currentProperty,
+    currentProperty: {
+      id: animal.currentProperty.id,
+      name: animal.currentProperty.name,
+    },
     currentWeightKg: animal.currentWeight?.toNumber() ?? null,
     createdAt: animal.createdAt.toISOString(),
     updatedAt: animal.updatedAt.toISOString(),

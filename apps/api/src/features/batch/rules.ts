@@ -1,8 +1,8 @@
+import { DAY_MS } from "@ifarm/shared";
 import { fromDbDate } from "../../lib/db-dates";
 
 // Indicadores do lote (GMD, peso médio ao longo do tempo, compras), sem banco.
 
-const DAY_MS = 24 * 60 * 60 * 1000;
 // Janela usada no GMD de cada animal: reflete o ritmo recente, não a vida toda.
 const ADG_WINDOW_DAYS = 180;
 // Intervalo mínimo entre a primeira e a última pesagem da janela para o GMD valer.
@@ -29,13 +29,14 @@ export function averageDailyGain(weighings: Weighing[]): number | null {
 const dayKey = (iso: string) => iso.slice(0, 10);
 
 // Peso médio do rebanho atual ao longo do tempo: em cada dia com pesagem, a média
-// do último peso conhecido de cada animal até aquele dia. Começa na criação do lote
-// (pesos anteriores entram como ponto de partida).
+// do último peso conhecido de cada animal até aquele dia. Começa no dia da criação do lote
+// (`since`, "AAAA-MM-DD"; pesos anteriores entram como ponto de partida). O dia de cada
+// pesagem é o do fuso em que a data dela vem (o da propriedade).
 export function weightSeries(
   animals: { weighings: Weighing[] }[],
-  since: Date,
+  since: string,
 ): { date: string; avgWeightKg: number; animalCount: number }[] {
-  const sinceKey = dayKey(since.toISOString());
+  const sinceKey = since;
   const days = new Set<string>();
   let hasEarlier = false;
   for (const a of animals) {

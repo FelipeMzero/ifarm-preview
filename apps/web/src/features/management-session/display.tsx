@@ -1,4 +1,3 @@
-import { formatEventDateTime } from "@ifarm/shared";
 import {
   Boxes,
   Nfc,
@@ -74,6 +73,3 @@ export const STEP_ICONS: Record<StepType, LucideIcon> = {
   health: Syringe,
   batch: Boxes,
 };
-
-// Datas da sessão (prevista e de realização): data e hora.
-export const formatSessionDateTime = formatEventDateTime;

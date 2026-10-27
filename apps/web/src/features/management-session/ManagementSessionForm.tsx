@@ -14,7 +14,12 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
-import { FIELD_LIMITS, nowDateTime } from "@ifarm/shared";
+import {
+  FIELD_LIMITS,
+  nowInZone,
+  toDateTimeInput,
+  formatDateTime,
+} from "@ifarm/shared";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -39,7 +44,7 @@ import {
 } from "@/features/batch-transfer/SelectedAnimals";
 import { type TransferAnimal } from "@ifarm/shared";
 import { useCurrentProperty } from "@/features/shell/useCurrentProperty";
-import { SessionStatusBadge, formatSessionDateTime } from "./display";
+import { SessionStatusBadge } from "./display";
 import { planFormSchema, toStepPayload, type PlanFormData } from "./schema";
 import { managementSessionClient } from "@/lib/clients";
 import {
@@ -75,7 +80,7 @@ type ManagementSessionFormProps = {
 function toFormValues(detail: ManagementSessionDetail): PlanFormData {
   return {
     title: detail.title,
-    scheduledAt: detail.scheduledAt,
+    scheduledAt: toDateTimeInput(detail.scheduledAt),
     notes: detail.notes ?? "",
     steps: detail.steps.map((step) => ({
       type: step.type,
@@ -99,8 +104,11 @@ export function ManagementSessionForm({
 }: ManagementSessionFormProps) {
   const isEditing = !!id;
   const navigate = useNavigate();
-  const { property: currentProperty, isLoading: isPropertyLoading } =
-    useCurrentProperty();
+  const {
+    property: currentProperty,
+    isLoading: isPropertyLoading,
+    timeZone,
+  } = useCurrentProperty();
   const propertyId = currentProperty?.id;
   const reloadSessions = useReloadSessions();
 
@@ -145,7 +153,7 @@ export function ManagementSessionForm({
     resetOptions: { keepDirtyValues: true },
     defaultValues: {
       title: "",
-      scheduledAt: nowDateTime(),
+      scheduledAt: nowInZone(timeZone),
       notes: "",
       steps: [],
     },
@@ -313,13 +321,13 @@ export function ManagementSessionForm({
       <div className="flex items-start gap-2 rounded-md border border-border bg-muted/40 p-3 text-sm text-muted-foreground">
         <Info className="mt-0.5 size-4 shrink-0" />
         {detail?.status === "confirmed"
-          ? `Manejo consolidado em ${new Date(detail.confirmedAt!).toLocaleString("pt-BR")}${
+          ? `Manejo consolidado em ${formatDateTime(detail.confirmedAt)}${
               detail.performedAt
-                ? ` (realizado em ${formatSessionDateTime(detail.performedAt)})`
+                ? ` (realizado em ${formatDateTime(detail.performedAt)})`
                 : ""
             }. Não pode mais ser alterado.`
           : detail?.status === "cancelled"
-            ? `Sessão cancelada em ${new Date(detail.cancelledAt!).toLocaleString("pt-BR")}. Nenhum registro passou a valer.`
+            ? `Sessão cancelada em ${formatDateTime(detail.cancelledAt)}. Nenhum registro passou a valer.`
             : "O planejamento define a data prevista, os manejos (na ordem em que serão feitos em cada animal) e os animais. Os registros só passam a valer quando a sessão for consolidada."}
       </div>
 

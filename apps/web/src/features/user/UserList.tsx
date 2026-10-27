@@ -17,7 +17,7 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { authClient, useSession } from "@/lib/auth-client";
 import { ResetPasswordDialog } from "./ResetPasswordDialog";
-import { FIELD_LIMITS } from "@ifarm/shared";
+import { FIELD_LIMITS, formatDateTime } from "@ifarm/shared";
 import { ListSkeleton } from "@/components/our/PageSkeletons";
 
 const DEFAULT_PAGE_SIZE = 10;
@@ -92,13 +92,7 @@ function buildColumns(
       header: "Criado em",
       accessorKey: "createdAt",
       cell: ({ row }) =>
-        new Date(row.original.createdAt).toLocaleString("pt-BR", {
-          day: "2-digit",
-          month: "2-digit",
-          year: "numeric",
-          hour: "2-digit",
-          minute: "2-digit",
-        }),
+        formatDateTime(new Date(row.original.createdAt).toISOString()),
     },
     {
       id: "actions",
