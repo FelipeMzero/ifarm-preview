@@ -29,7 +29,7 @@ model Property {
   latitude       Float
   longitude      Float
   timeZone       String    @default("America/Sao_Paulo") @map("time_zone") // Fuso horário IANA
-  deactivatedAt  DateTime? @map("deactivated_at")
+  deactivatedAt  DateTime? @map("deactivated_at") @db.Timestamptz(3)
 
   addressId Int?     @unique @map("address_id")
   address   Address? @relation(fields: [addressId], references: [id])
@@ -37,8 +37,8 @@ model Property {
   ownerId String @map("owner_id") @db.Uuid // Titular
   owner   Person @relation(fields: [ownerId], references: [id], onDelete: Restrict)
 
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   selectedByUserSettings UserSettings[]
   areas                  Area[]
@@ -68,13 +68,13 @@ model Area {
   defaultOccupationDays Int?      @map("default_occupation_days") // referência geral, usada quando não há plano ativo
   defaultRestDays       Int?      @map("default_rest_days") // idem
   notes                 String? // Observação
-  closedAt              DateTime? @map("closed_at") // No caso da Área e Fazenda acho que vai se tornar closedAt (fechar uma área não é o mesmo que desativar uma pessoa)
+  closedAt              DateTime? @map("closed_at") @db.Timestamptz(3) // No caso da Área e Fazenda acho que vai se tornar closedAt (fechar uma área não é o mesmo que desativar uma pessoa)
 
   propertyId String   @map("property_id") @db.Uuid
   property   Property @relation(fields: [propertyId], references: [id], onDelete: Restrict)
 
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   batchAreaHistories BatchAreaHistory[]
 
@@ -87,10 +87,10 @@ model Batch {
   name     String
   notes    String?
   saleGoal BatchSaleGoal?
-  closedAt DateTime?      @map("closed_at")
+  closedAt DateTime?      @map("closed_at") @db.Timestamptz(3)
 
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   propertyId String   @map("property_id") @db.Uuid
   property   Property @relation(fields: [propertyId], references: [id], onDelete: Restrict)
@@ -123,20 +123,20 @@ model BatchSaleGoal {
   batchId String @unique @map("batch_id") @db.Uuid
   batch   Batch  @relation(fields: [batchId], references: [id], onDelete: Restrict)
 
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   @@map("batch_sale_goal")
 }
 
 model BatchAreaHistory {
   id        Int       @id @default(autoincrement())
-  enteredAt DateTime  @map("entered_at")
-  exitedAt  DateTime? @map("exited_at")
+  enteredAt DateTime  @map("entered_at") @db.Timestamptz(3)
+  exitedAt  DateTime? @map("exited_at") @db.Timestamptz(3)
   notes     String?
 
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   batchId String @map("batch_id") @db.Uuid
   batch   Batch  @relation(fields: [batchId], references: [id], onDelete: Restrict)
@@ -160,8 +160,8 @@ model Animal {
   sex                Sex          @default(MALE)
   status             AnimalStatus @default(ACTIVE)
 
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   breedId String? @map("breed_id") @db.Uuid
   breed   Breed?  @relation(fields: [breedId], references: [id], onDelete: Restrict)
@@ -230,8 +230,8 @@ model UserSettings {
   currentPropertyId String?   @map("current_property_id") @db.Uuid
   currentProperty   Property? @relation(fields: [currentPropertyId], references: [id], onDelete: Cascade)
 
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   @@index([currentPropertyId])
   @@map("user_settings")
@@ -245,7 +245,7 @@ model Person {
   stateRegistration String?    @unique @map("state_registration") // Inscrição Estadual
   phone             String?
   email             String?    @unique
-  deactivatedAt     DateTime?  @map("deactivated_at")
+  deactivatedAt     DateTime?  @map("deactivated_at") @db.Timestamptz(3)
 
   // Exclusivo de Pessoa Jurídica
   tradeName String? @map("trade_name") // Nome Fantasia
@@ -258,8 +258,8 @@ model Person {
   addressId Int?     @unique @map("address_id")
   address   Address? @relation(fields: [addressId], references: [id])
 
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   properties        Property[]
   healthManagements HealthManagement[]
@@ -291,10 +291,10 @@ model Address {
 model Breed {
   id            String    @id @default(uuid()) @db.Uuid
   name          String    @unique
-  deactivatedAt DateTime? @map("deactivated_at")
+  deactivatedAt DateTime? @map("deactivated_at") @db.Timestamptz(3)
 
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   animals            Animal[]
   purchaseCategories PurchaseCategory[]
@@ -311,13 +311,13 @@ model Brand {
   registrationCity   String?   @map("registration_city")
   registrationState  String?   @map("registration_state") // UF
   registrationDate   DateTime? @map("registration_date") @db.Date
-  deactivatedAt      DateTime? @map("deactivated_at")
+  deactivatedAt      DateTime? @map("deactivated_at") @db.Timestamptz(3)
 
   ownerId String @map("owner_id") @db.Uuid
   owner   Person @relation(fields: [ownerId], references: [id], onDelete: Restrict)
 
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   brandings         AnimalBranding[]  @relation("AnimalBrandingBrand")
   originalBrandings AnimalBranding[]  @relation("AnimalBrandingOriginalBrand")
@@ -332,10 +332,10 @@ model ManagementSession {
   id          String    @id @default(uuid()) @db.Uuid
   title       String // identifica a sessão na listagem (ex.: "Pesagem mensal da recria")
   notes       String?
-  scheduledAt DateTime  @map("scheduled_at") // data e hora previstas, usadas para lembretes/agendamento
-  performedAt DateTime? @map("performed_at") // data e hora em que o manejo de fato ocorreu
-  confirmedAt DateTime? @map("confirmed_at")
-  cancelledAt DateTime? @map("cancelled_at")
+  scheduledAt DateTime  @map("scheduled_at") @db.Timestamptz(3) // data e hora previstas, usadas para lembretes/agendamento
+  performedAt DateTime? @map("performed_at") @db.Timestamptz(3) // data e hora em que o manejo de fato ocorreu
+  confirmedAt DateTime? @map("confirmed_at") @db.Timestamptz(3)
+  cancelledAt DateTime? @map("cancelled_at") @db.Timestamptz(3)
 
   propertyId String   @map("property_id") @db.Uuid
   property   Property @relation(fields: [propertyId], references: [id], onDelete: Restrict)
@@ -358,8 +358,8 @@ model ManagementSession {
   animalBatchTransfers    AnimalBatchTransfer[]
   animalPropertyTransfers AnimalPropertyTransfer[]
 
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   @@index([propertyId, scheduledAt])
   // Sessões abertas são sempre poucas: a checagem de compromissos dos animais parte
@@ -405,9 +405,9 @@ model ManagementParticipant {
   batchKept Boolean @default(false) @map("batch_kept")
 
   // Último registro de etapa feito no animal (ordena a lista de manejados).
-  lastHandledAt DateTime? @map("last_handled_at")
+  lastHandledAt DateTime? @map("last_handled_at") @db.Timestamptz(3)
 
-  createdAt DateTime @default(now()) @map("created_at")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
 
   @@unique([managementSessionId, animalId])
   @@index([animalId])
@@ -421,7 +421,7 @@ model TagManagement {
   managementSessionId String            @unique @map("management_session_id") @db.Uuid
   managementSession   ManagementSession @relation(fields: [managementSessionId], references: [id], onDelete: Restrict)
 
-  createdAt DateTime @default(now()) @map("created_at")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
 
   @@map("tag_management")
 }
@@ -431,13 +431,13 @@ model AnimalTagging {
   tag   String? // null = tag removida
   notes String?
 
-  identifiedAt DateTime @map("identified_at") // data do manejo; em sessão, copiada da data da sessão
+  identifiedAt DateTime @map("identified_at") @db.Timestamptz(3) // data do manejo; em sessão, copiada da data da sessão
 
   // Correções preservam o rastro: o valor lançado originalmente é guardado na primeira
   // correção e a exclusão é lógica (cancelada = ignorada no histórico e nos cálculos).
   originalTag String?   @map("original_tag")
-  correctedAt DateTime? @map("corrected_at")
-  cancelledAt DateTime? @map("cancelled_at")
+  correctedAt DateTime? @map("corrected_at") @db.Timestamptz(3)
+  cancelledAt DateTime? @map("cancelled_at") @db.Timestamptz(3)
 
   managementId String?        @map("management_id") @db.Uuid // null = avulso
   management   TagManagement? @relation(fields: [managementId], references: [id], onDelete: Restrict)
@@ -445,7 +445,7 @@ model AnimalTagging {
   animalId String @map("animal_id") @db.Uuid
   animal   Animal @relation(fields: [animalId], references: [id], onDelete: Restrict)
 
-  createdAt DateTime @default(now()) @map("created_at")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
 
   @@index([animalId])
   @@index([managementId])
@@ -459,7 +459,7 @@ model RfidManagement {
   managementSessionId String            @unique @map("management_session_id") @db.Uuid
   managementSession   ManagementSession @relation(fields: [managementSessionId], references: [id], onDelete: Restrict)
 
-  createdAt DateTime @default(now()) @map("created_at")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
 
   @@map("rfid_management")
 }
@@ -469,11 +469,11 @@ model AnimalRfidTagging {
   rfid  String? // null = rfid removido
   notes String?
 
-  identifiedAt DateTime @map("identified_at") // data do manejo; em sessão, copiada da data da sessão
+  identifiedAt DateTime @map("identified_at") @db.Timestamptz(3) // data do manejo; em sessão, copiada da data da sessão
 
   originalRfid String?   @map("original_rfid")
-  correctedAt  DateTime? @map("corrected_at")
-  cancelledAt  DateTime? @map("cancelled_at")
+  correctedAt  DateTime? @map("corrected_at") @db.Timestamptz(3)
+  cancelledAt  DateTime? @map("cancelled_at") @db.Timestamptz(3)
 
   managementId String?         @map("management_id") @db.Uuid // null = avulso
   management   RfidManagement? @relation(fields: [managementId], references: [id], onDelete: Restrict)
@@ -481,7 +481,7 @@ model AnimalRfidTagging {
   animalId String @map("animal_id") @db.Uuid
   animal   Animal @relation(fields: [animalId], references: [id], onDelete: Restrict)
 
-  createdAt DateTime @default(now()) @map("created_at")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
 
   @@index([animalId])
   @@index([managementId])
@@ -500,7 +500,7 @@ model NeuteringManagement {
   managementSessionId String            @unique @map("management_session_id") @db.Uuid
   managementSession   ManagementSession @relation(fields: [managementSessionId], references: [id], onDelete: Restrict)
 
-  createdAt DateTime @default(now()) @map("created_at")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
 
   @@index([suggestedTechniqueId])
   @@map("neutering_management")
@@ -514,15 +514,15 @@ model AnimalNeutering {
   techniqueId String?             @map("technique_id") @db.Uuid
   technique   NeuteringTechnique? @relation("NeuteringTechnique", fields: [techniqueId], references: [id], onDelete: Restrict)
 
-  neuteredAt DateTime @map("neutered_at") // data do manejo; em sessão, copiada da data da sessão
+  neuteredAt DateTime @map("neutered_at") @db.Timestamptz(3) // data do manejo; em sessão, copiada da data da sessão
 
   // Correções preservam o rastro: os valores lançados originalmente são guardados na primeira
   // correção e a exclusão é lógica (cancelada = ignorada no histórico e nos cálculos).
-  originalNeuteredAt  DateTime?           @map("original_neutered_at")
+  originalNeuteredAt  DateTime?           @map("original_neutered_at") @db.Timestamptz(3)
   originalTechniqueId String?             @map("original_technique_id") @db.Uuid
   originalTechnique   NeuteringTechnique? @relation("NeuteringOriginalTechnique", fields: [originalTechniqueId], references: [id], onDelete: Restrict)
-  correctedAt         DateTime?           @map("corrected_at")
-  cancelledAt         DateTime?           @map("cancelled_at")
+  correctedAt         DateTime?           @map("corrected_at") @db.Timestamptz(3)
+  cancelledAt         DateTime?           @map("cancelled_at") @db.Timestamptz(3)
 
   managementId String?              @map("management_id") @db.Uuid // null = avulso
   management   NeuteringManagement? @relation(fields: [managementId], references: [id], onDelete: Restrict)
@@ -530,7 +530,7 @@ model AnimalNeutering {
   animalId String @map("animal_id") @db.Uuid
   animal   Animal @relation(fields: [animalId], references: [id], onDelete: Restrict)
 
-  createdAt DateTime @default(now()) @map("created_at")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
 
   @@index([animalId])
   @@index([managementId])
@@ -541,10 +541,10 @@ model AnimalNeutering {
 model NeuteringTechnique {
   id            String    @id @default(uuid()) @db.Uuid
   name          String    @unique
-  deactivatedAt DateTime? @map("deactivated_at")
+  deactivatedAt DateTime? @map("deactivated_at") @db.Timestamptz(3)
 
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   neuterings         AnimalNeutering[]     @relation("NeuteringTechnique")
   originalNeuterings AnimalNeutering[]     @relation("NeuteringOriginalTechnique")
@@ -560,7 +560,7 @@ model WeighingManagement {
   managementSessionId String            @unique @map("management_session_id") @db.Uuid
   managementSession   ManagementSession @relation(fields: [managementSessionId], references: [id], onDelete: Restrict)
 
-  createdAt DateTime @default(now()) @map("created_at")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
 
   @@map("weighing_management")
 }
@@ -569,13 +569,13 @@ model AnimalWeighing {
   id        Int      @id @default(autoincrement())
   weight    Decimal  @db.Decimal(10, 2) // valor da pesagem (kg), sempre individual
   notes     String?
-  weighedAt DateTime @map("weighed_at") // data do manejo; em sessão, copiada da data da sessão
+  weighedAt DateTime @map("weighed_at") @db.Timestamptz(3) // data do manejo; em sessão, copiada da data da sessão
 
   // Correções preservam o rastro: o peso lançado originalmente é guardado na primeira correção
   // e a exclusão é lógica (cancelada = ignorada no histórico, gráficos e peso atual).
   originalWeight Decimal?  @map("original_weight") @db.Decimal(10, 2)
-  correctedAt    DateTime? @map("corrected_at")
-  cancelledAt    DateTime? @map("cancelled_at")
+  correctedAt    DateTime? @map("corrected_at") @db.Timestamptz(3)
+  cancelledAt    DateTime? @map("cancelled_at") @db.Timestamptz(3)
 
   managementId String?             @map("management_id") @db.Uuid // null = avulso
   management   WeighingManagement? @relation(fields: [managementId], references: [id], onDelete: Restrict)
@@ -583,7 +583,7 @@ model AnimalWeighing {
   animalId String @map("animal_id") @db.Uuid
   animal   Animal @relation(fields: [animalId], references: [id], onDelete: Restrict)
 
-  createdAt DateTime @default(now()) @map("created_at")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
 
   @@index([animalId])
   @@index([managementId])
@@ -602,7 +602,7 @@ model BrandManagement {
   managementSessionId String            @unique @map("management_session_id") @db.Uuid
   managementSession   ManagementSession @relation(fields: [managementSessionId], references: [id], onDelete: Restrict)
 
-  createdAt DateTime @default(now()) @map("created_at")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
 
   @@index([suggestedBrandId])
   @@map("brand_management")
@@ -612,7 +612,7 @@ model AnimalBranding {
   id    Int     @id @default(autoincrement())
   notes String?
 
-  brandedAt DateTime @map("branded_at") // data do manejo; em sessão, copiada da data da sessão
+  brandedAt DateTime @map("branded_at") @db.Timestamptz(3) // data do manejo; em sessão, copiada da data da sessão
 
   // marca aplicada neste animal; em sessão, pré-selecionada com a sugerida no manejo
   brandId String @map("brand_id") @db.Uuid
@@ -620,11 +620,11 @@ model AnimalBranding {
 
   // Correções preservam o rastro: os valores lançados originalmente são guardados na primeira
   // correção e a exclusão é lógica (cancelada = ignorada no histórico).
-  originalBrandedAt DateTime? @map("original_branded_at")
+  originalBrandedAt DateTime? @map("original_branded_at") @db.Timestamptz(3)
   originalBrandId   String?   @map("original_brand_id") @db.Uuid
   originalBrand     Brand?    @relation("AnimalBrandingOriginalBrand", fields: [originalBrandId], references: [id], onDelete: Restrict)
-  correctedAt       DateTime? @map("corrected_at")
-  cancelledAt       DateTime? @map("cancelled_at")
+  correctedAt       DateTime? @map("corrected_at") @db.Timestamptz(3)
+  cancelledAt       DateTime? @map("cancelled_at") @db.Timestamptz(3)
 
   managementId String?          @map("management_id") @db.Uuid // null = avulso
   management   BrandManagement? @relation(fields: [managementId], references: [id], onDelete: Restrict)
@@ -632,7 +632,7 @@ model AnimalBranding {
   animalId String @map("animal_id") @db.Uuid
   animal   Animal @relation(fields: [animalId], references: [id], onDelete: Restrict)
 
-  createdAt DateTime @default(now()) @map("created_at")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
 
   @@index([animalId])
   @@index([managementId])
@@ -647,7 +647,7 @@ model BatchManagement {
   managementSessionId String            @unique @map("management_session_id") @db.Uuid
   managementSession   ManagementSession @relation(fields: [managementSessionId], references: [id], onDelete: Restrict)
 
-  createdAt DateTime @default(now()) @map("created_at")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
 
   @@map("batch_management")
 }
@@ -675,7 +675,7 @@ model HealthManagement {
   doseMl            Decimal?                 @map("dose_ml") @db.Decimal(10, 2) // FIXED: ml por animal; PER_WEIGHT: ml a cada doseWeightKg
   doseWeightKg      Decimal?                 @map("dose_weight_kg") @db.Decimal(10, 2) // PER_WEIGHT: peso de referência (ex.: 1 ml a cada 50 kg)
 
-  performedAt DateTime @map("performed_at") // data e hora do procedimento; em sessão, copiada da data da sessão
+  performedAt DateTime @map("performed_at") @db.Timestamptz(3) // data e hora do procedimento; em sessão, copiada da data da sessão
 
   items HealthManagementItem[]
   step  ManagementStep? // etapa da sessão que aplica este procedimento (null = avulso), uma vez que a mesma sessão pode ter vários manejos sanitários.
@@ -689,8 +689,8 @@ model HealthManagement {
   veterinarianId String? @map("veterinarian_id") @db.Uuid
   veterinarian   Person? @relation(fields: [veterinarianId], references: [id], onDelete: Restrict)
 
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   @@index([managementSessionId])
   @@index([nextDueDate])
@@ -708,7 +708,7 @@ model HealthManagementItem {
   animalId String @map("animal_id") @db.Uuid
   animal   Animal @relation(fields: [animalId], references: [id], onDelete: Restrict)
 
-  createdAt DateTime @default(now()) @map("created_at")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
 
   @@index([animalId])
   @@index([managementId])
@@ -718,10 +718,10 @@ model HealthManagementItem {
 model HealthManagementType {
   id            String    @id @default(uuid()) @db.Uuid
   name          String    @unique
-  deactivatedAt DateTime? @map("deactivated_at")
+  deactivatedAt DateTime? @map("deactivated_at") @db.Timestamptz(3)
 
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   managements HealthManagement[]
 
@@ -738,13 +738,13 @@ enum HealthManagementDoseType {
 
 model AnimalPropertyTransfer {
   id            String   @id @default(uuid()) @db.Uuid
-  transferredAt DateTime @map("transferred_at")
+  transferredAt DateTime @map("transferred_at") @db.Timestamptz(3)
   notes         String?
   gtaNumber     String?  @map("gta_number")
 
-  confirmedAt DateTime? @map("confirmed_at") // origem confirma o envio
-  receivedAt  DateTime? @map("received_at") // destino confirma o recebimento
-  cancelledAt DateTime? @map("cancelled_at")
+  confirmedAt DateTime? @map("confirmed_at") @db.Timestamptz(3) // origem confirma o envio
+  receivedAt  DateTime? @map("received_at") @db.Timestamptz(3) // destino confirma o recebimento
+  cancelledAt DateTime? @map("cancelled_at") @db.Timestamptz(3)
 
   items AnimalPropertyTransferItem[]
 
@@ -763,8 +763,8 @@ model AnimalPropertyTransfer {
   managementSessionId String?            @map("management_session_id") @db.Uuid // null = transferência isolada
   managementSession   ManagementSession? @relation(fields: [managementSessionId], references: [id], onDelete: Restrict)
 
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   @@index([originPropertyId])
   @@index([destinationPropertyId])
@@ -783,7 +783,7 @@ model AnimalPropertyTransferItem {
   animalId String @map("animal_id") @db.Uuid
   animal   Animal @relation(fields: [animalId], references: [id], onDelete: Restrict)
 
-  createdAt DateTime @default(now()) @map("created_at")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
 
   @@index([animalId])
   @@index([transferId])
@@ -792,12 +792,12 @@ model AnimalPropertyTransferItem {
 
 model AnimalPropertyHistory {
   id        Int       @id @default(autoincrement())
-  enteredAt DateTime  @map("entered_at")
-  exitedAt  DateTime? @map("exited_at")
+  enteredAt DateTime  @map("entered_at") @db.Timestamptz(3)
+  exitedAt  DateTime? @map("exited_at") @db.Timestamptz(3)
   notes     String?
 
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   animalId String @map("animal_id") @db.Uuid
   animal   Animal @relation(fields: [animalId], references: [id], onDelete: Restrict)
@@ -813,10 +813,10 @@ model AnimalPropertyHistory {
 
 model AnimalBatchTransfer {
   id            String    @id @default(uuid()) @db.Uuid
-  transferredAt DateTime  @map("transferred_at")
+  transferredAt DateTime  @map("transferred_at") @db.Timestamptz(3)
   notes         String?
-  confirmedAt   DateTime? @map("confirmed_at")
-  cancelledAt   DateTime? @map("cancelled_at")
+  confirmedAt   DateTime? @map("confirmed_at") @db.Timestamptz(3)
+  cancelledAt   DateTime? @map("cancelled_at") @db.Timestamptz(3)
 
   items AnimalBatchTransferItem[]
 
@@ -829,8 +829,8 @@ model AnimalBatchTransfer {
   managementSessionId String?            @map("management_session_id") @db.Uuid // null = transferência isolada
   managementSession   ManagementSession? @relation(fields: [managementSessionId], references: [id], onDelete: Restrict)
 
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   @@index([destinationBatchId])
   @@index([propertyId])
@@ -854,7 +854,7 @@ model AnimalBatchTransferItem {
   originBatchId String? @map("origin_batch_id") @db.Uuid
   originBatch   Batch?  @relation("AnimalBatchTransferItemOrigin", fields: [originBatchId], references: [id], onDelete: Restrict)
 
-  createdAt DateTime @default(now()) @map("created_at")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
 
   @@index([animalId])
   @@index([transferId])
@@ -864,12 +864,12 @@ model AnimalBatchTransferItem {
 
 model AnimalBatchHistory {
   id        Int       @id @default(autoincrement())
-  enteredAt DateTime  @map("entered_at")
-  exitedAt  DateTime? @map("exited_at")
+  enteredAt DateTime  @map("entered_at") @db.Timestamptz(3)
+  exitedAt  DateTime? @map("exited_at") @db.Timestamptz(3)
   notes     String?
 
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   animalId String @map("animal_id") @db.Uuid
   animal   Animal @relation(fields: [animalId], references: [id], onDelete: Restrict)
@@ -893,8 +893,8 @@ model PurchaseEvent {
   // O pagamento é um fato registrado durante o andamento; bloqueia os valores.
   paymentDate      DateTime? @map("payment_date") @db.Date
   paymentReference String?   @map("payment_reference") // comprovante (PIX, TED...)
-  confirmedAt      DateTime? @map("confirmed_at") // consolidada: custos rateados, nada mais muda
-  cancelledAt      DateTime? @map("cancelled_at")
+  confirmedAt      DateTime? @map("confirmed_at") @db.Timestamptz(3) // consolidada: custos rateados, nada mais muda
+  cancelledAt      DateTime? @map("cancelled_at") @db.Timestamptz(3)
 
   sellerId              String   @map("seller_id") @db.Uuid
   seller                Person   @relation(fields: [sellerId], references: [id], onDelete: Restrict)
@@ -905,8 +905,8 @@ model PurchaseEvent {
   receptions       PurchaseReception[] // uma compra pode ter várias recepções (viagens)
   purchasedAnimals PurchasedAnimal[]
 
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   @@index([sellerId])
   @@index([destinationPropertyId])
@@ -963,7 +963,7 @@ model PurchaseReception {
 
   purchasedAnimals PurchasedAnimal[]
 
-  createdAt DateTime @default(now()) @map("created_at")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
 
   @@unique([id, purchaseEventId]) // alvo da FK composta de PurchasedAnimal (mesma compra)
   @@index([purchaseEventId])
@@ -990,7 +990,7 @@ model PurchasedAnimal {
   animalId String @unique @map("animal_id") @db.Uuid
   animal   Animal @relation(fields: [animalId], references: [id], onDelete: Restrict)
 
-  createdAt DateTime @default(now()) @map("created_at")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
 
   @@index([purchaseEventId])
   @@index([categoryId])
@@ -1002,18 +1002,18 @@ model LossEvent {
   id          String   @id @default(uuid()) @db.Uuid
   title       String
   description String?
-  occurredAt  DateTime @map("occurred_at")
+  occurredAt  DateTime @map("occurred_at") @db.Timestamptz(3)
 
-  confirmedAt DateTime? @map("confirmed_at")
-  cancelledAt DateTime? @map("cancelled_at")
+  confirmedAt DateTime? @map("confirmed_at") @db.Timestamptz(3)
+  cancelledAt DateTime? @map("cancelled_at") @db.Timestamptz(3)
 
   propertyId String   @map("property_id") @db.Uuid
   property   Property @relation(fields: [propertyId], references: [id], onDelete: Restrict)
 
   items LossEventItem[]
 
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   @@index([propertyId])
   @@map("loss_event")
@@ -1034,7 +1034,7 @@ model LossEventItem {
   originBatchId String? @map("origin_batch_id") @db.Uuid
   originBatch   Batch?  @relation("LossEventItemOrigin", fields: [originBatchId], references: [id], onDelete: Restrict)
 
-  createdAt DateTime @default(now()) @map("created_at")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
 
   @@index([animalId])
   @@index([eventId])
@@ -1048,19 +1048,19 @@ model SlaughterEvent {
   id            String    @id @default(uuid()) @db.Uuid
   title         String
   description   String?
-  scheduledAt   DateTime  @map("scheduled_at") // data e hora previstas no planejamento
-  slaughteredAt DateTime? @map("slaughtered_at") // data e hora em que o abate de fato ocorreu; informadas na consolidação
+  scheduledAt   DateTime  @map("scheduled_at") @db.Timestamptz(3) // data e hora previstas no planejamento
+  slaughteredAt DateTime? @map("slaughtered_at") @db.Timestamptz(3) // data e hora em que o abate de fato ocorreu; informadas na consolidação
 
-  confirmedAt DateTime? @map("confirmed_at") // consolidado: aplica o status final nos animais
-  cancelledAt DateTime? @map("cancelled_at")
+  confirmedAt DateTime? @map("confirmed_at") @db.Timestamptz(3) // consolidado: aplica o status final nos animais
+  cancelledAt DateTime? @map("cancelled_at") @db.Timestamptz(3)
 
   propertyId String   @map("property_id") @db.Uuid
   property   Property @relation(fields: [propertyId], references: [id], onDelete: Restrict)
 
   items SlaughterEventItem[]
 
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   @@index([propertyId])
   @@map("slaughter_event")
@@ -1080,7 +1080,7 @@ model SlaughterEventItem {
   originBatchId String? @map("origin_batch_id") @db.Uuid
   originBatch   Batch?  @relation("SlaughterEventItemOrigin", fields: [originBatchId], references: [id], onDelete: Restrict)
 
-  createdAt DateTime @default(now()) @map("created_at")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
 
   @@index([animalId])
   @@index([eventId])
@@ -1184,14 +1184,14 @@ model User {
   role       String?
   banned     Boolean?  @default(false)
   banReason  String?   @map("ban_reason")
-  banExpires DateTime? @map("ban_expires")
+  banExpires DateTime? @map("ban_expires") @db.Timestamptz(3)
 
   sessions Session[]
   accounts Account[]
   settings UserSettings?
 
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   @@map("user")
 }
@@ -1199,7 +1199,7 @@ model User {
 model Session {
   id        String   @id
   token     String   @unique
-  expiresAt DateTime @map("expires_at")
+  expiresAt DateTime @map("expires_at") @db.Timestamptz(3)
   ipAddress String?  @map("ip_address")
   userAgent String?  @map("user_agent")
 
@@ -1209,8 +1209,8 @@ model Session {
   userId String @map("user_id")
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   @@map("session")
 }
@@ -1225,14 +1225,14 @@ model Account {
   scope        String?
   password     String?
 
-  accessTokenExpiresAt  DateTime? @map("access_token_expires_at")
-  refreshTokenExpiresAt DateTime? @map("refresh_token_expires_at")
+  accessTokenExpiresAt  DateTime? @map("access_token_expires_at") @db.Timestamptz(3)
+  refreshTokenExpiresAt DateTime? @map("refresh_token_expires_at") @db.Timestamptz(3)
 
   userId String @map("user_id")
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   @@map("account")
 }
@@ -1241,10 +1241,10 @@ model Verification {
   id         String   @id
   identifier String
   value      String
-  expiresAt  DateTime @map("expires_at")
+  expiresAt  DateTime @map("expires_at") @db.Timestamptz(3)
 
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   @@map("verification")
 }
