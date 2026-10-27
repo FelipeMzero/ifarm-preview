@@ -8,7 +8,7 @@ import { fromDbDate } from "../../../lib/db-dates";
 import { NotFoundError } from "../../../lib/errors";
 import { sortWeighings, toWeighingDto } from "../../animal/weighing/shared";
 import { stockingPreview } from "../../area/stocking";
-import { propertyTimeZone } from "../../property/time-zone";
+import { propertyTimeZone, toZonedIso } from "../../property/time-zone";
 import { effectiveWeighing } from "../../management-session/effective";
 import { averageDailyGain, groupPurchases, weightSeries } from "../rules";
 
@@ -108,6 +108,7 @@ export async function getBatchDetails(id: string): Promise<BatchFullDetails> {
     }),
     prisma.animalBatchTransfer.findMany({
       where: { destinationBatchId: id, confirmedAt: { not: null } },
+      orderBy: { confirmedAt: "desc" },
       include: { _count: { select: { items: true } } },
     }),
     prisma.animalBatchTransfer.findMany({
@@ -115,6 +116,7 @@ export async function getBatchDetails(id: string): Promise<BatchFullDetails> {
         confirmedAt: { not: null },
         items: { some: { originBatchId: id } },
       },
+      orderBy: { confirmedAt: "desc" },
       include: {
         destinationBatch: { select: { name: true } },
         items: { where: { originBatchId: id }, select: { id: true } },
@@ -173,9 +175,9 @@ export async function getBatchDetails(id: string): Promise<BatchFullDetails> {
     id: batch.id,
     name: batch.name,
     notes: batch.notes,
-    closedAt: batch.closedAt?.toISOString() ?? null,
-    createdAt: batch.createdAt.toISOString(),
-    updatedAt: batch.updatedAt.toISOString(),
+    closedAt: toZonedIso(batch.closedAt, timeZone),
+    createdAt: toZonedIso(batch.createdAt, timeZone),
+    updatedAt: toZonedIso(batch.updatedAt, timeZone),
     property: batch.property,
     saleGoal: batch.saleGoal
       ? {
@@ -196,7 +198,7 @@ export async function getBatchDetails(id: string): Promise<BatchFullDetails> {
       id: h.id,
       area: { id: h.area.id, name: h.area.name },
       enteredAt: instantToZonedIso(h.enteredAt, timeZone),
-      exitedAt: h.exitedAt ? instantToZonedIso(h.exitedAt, timeZone) : null,
+      exitedAt: toZonedIso(h.exitedAt, timeZone),
       notes: h.notes,
     })),
     stocking: stocking
@@ -220,7 +222,7 @@ export async function getBatchDetails(id: string): Promise<BatchFullDetails> {
         rfid: m.animal.currentRfid,
       },
       enteredAt: instantToZonedIso(m.enteredAt, timeZone),
-      exitedAt: m.exitedAt ? instantToZonedIso(m.exitedAt, timeZone) : null,
+      exitedAt: toZonedIso(m.exitedAt, timeZone),
       notes: m.notes,
     })),
     pendingTransfers: {

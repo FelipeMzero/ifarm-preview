@@ -1,9 +1,15 @@
-import { instantToZonedIso, type AnimalDetail } from "@ifarm/shared";
+import type { AnimalDetail } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
 import { fromDbDate } from "../../../lib/db-dates";
 import { NotFoundError } from "../../../lib/errors";
 import { effectiveNeutering } from "../../management-session/effective";
-import { animalStays, type ZoneOf } from "../../property/time-zone";
+import {
+  animalStays,
+  propertyRefSelect,
+  toPropertyRef,
+  type ZoneOf,
+  toZonedIso,
+} from "../../property/time-zone";
 
 // Com recastração há mais de um registro: vale o mais recente (no fuso de onde aconteceu).
 function latestNeuteringDate(
@@ -14,7 +20,7 @@ function latestNeuteringDate(
     .map((item) => item.neuteredAt)
     .sort((a, b) => a.getTime() - b.getTime())
     .at(-1);
-  return latest ? instantToZonedIso(latest, zoneOf(latest)) : null;
+  return latest ? toZonedIso(latest, zoneOf(latest)) : null;
 }
 
 // Animal para edição.
@@ -24,6 +30,7 @@ export async function getAnimal(id: string): Promise<AnimalDetail> {
     include: {
       breed: { select: { id: true, name: true } },
       currentBatch: { select: { id: true, name: true } },
+      currentProperty: { select: propertyRefSelect },
       animalNeuterings: {
         where: { cancelledAt: null, ...effectiveNeutering },
         select: { neuteredAt: true },
@@ -52,8 +59,9 @@ export async function getAnimal(id: string): Promise<AnimalDetail> {
       : null,
     currentBatchId: animal.currentBatchId,
     currentBatchName: animal.currentBatch?.name ?? null,
-    currentPropertyId: animal.currentPropertyId,
+    // Com o fuso, para a tela sugerir o "agora" de lá (pesagem, castração, correções).
+    currentProperty: toPropertyRef(animal.currentProperty),
     currentWeightKg: animal.currentWeight?.toNumber() ?? null,
-    updatedAt: animal.updatedAt.toISOString(),
+    updatedAt: toZonedIso(animal.updatedAt, animal.currentProperty.timeZone),
   };
 }

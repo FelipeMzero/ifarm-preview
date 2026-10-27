@@ -34,6 +34,16 @@ export const BR_TIME_ZONES = BR_TIME_ZONE_ITEMS.map((item) => item.value) as [
   ...BrTimeZone[],
 ];
 
+/**
+ * A propriedade de um registro, com o fuso: a tela sugere o "agora" e o "hoje" no fuso da
+ * propriedade do registro, que pode não ser a propriedade atual do usuário.
+ */
+export type PropertyZoneRef = {
+  id: string;
+  name: string;
+  timeZone: BrTimeZone;
+};
+
 /** Horário de Brasília: o fuso padrão das propriedades (o mesmo padrão do banco). */
 export const DEFAULT_TIME_ZONE: BrTimeZone = "America/Sao_Paulo";
 

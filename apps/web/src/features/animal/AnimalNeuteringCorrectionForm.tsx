@@ -1,4 +1,3 @@
-import { useCurrentProperty } from "@/features/shell/useCurrentProperty";
 import { useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -15,6 +14,7 @@ import {
   type NeuteringTechnique,
   nowInZone,
   toDateTimeInput,
+  type BrTimeZone,
 } from "@ifarm/shared";
 import { techniqueItems } from "@/features/neutering-technique/items";
 import { animalClient } from "@/lib/clients";
@@ -28,6 +28,8 @@ import {
 
 interface AnimalNeuteringCorrectionFormProps {
   animalId: string;
+  /** Fuso da propriedade do animal: o "agora" sugerido e o limite das datas. */
+  timeZone: BrTimeZone;
   neutering: AnimalNeuteringRecord;
   techniques: NeuteringTechnique[];
   // yyyy-mm-dd; a castração não pode ser anterior ao nascimento
@@ -40,13 +42,13 @@ interface AnimalNeuteringCorrectionFormProps {
 
 export function AnimalNeuteringCorrectionForm({
   animalId,
+  timeZone,
   neutering,
   techniques,
   birthDate,
   onCancel,
   onSaved,
 }: AnimalNeuteringCorrectionFormProps) {
-  const { timeZone } = useCurrentProperty();
   const form = useForm<NeuteringCorrectionFormData>({
     resolver: zodResolver(neuteringCorrectionSchema, undefined, { raw: true }),
     defaultValues: {

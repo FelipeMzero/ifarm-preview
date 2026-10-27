@@ -462,7 +462,7 @@ export function AnimalEditForm({
         onOpenChange={setBatchDialogOpen}
         currentBatchId={animal.currentBatchId}
         animalId={animal.id}
-        propertyId={animal.currentPropertyId}
+        propertyId={animal.currentProperty.id}
         onConfirm={(batchId, batchName, notes) => {
           setPendingBatchId(batchId);
           setPendingBatchName(batchName ?? "Lote selecionado");
@@ -474,6 +474,7 @@ export function AnimalEditForm({
           castração exibidos aqui se atualizam, e as alterações pendentes do formulário ficam. */}
       <AnimalIdentifierHistoryDialog
         animalId={animal.id}
+        timeZone={animal.currentProperty.timeZone}
         commitments={commitments}
         kind={identifierHistory ?? "tag"}
         current={
@@ -485,6 +486,7 @@ export function AnimalEditForm({
 
       <AnimalWeighingHistoryDialog
         animalId={animal.id}
+        timeZone={animal.currentProperty.timeZone}
         commitments={commitments}
         birthDate={animal.birthDate}
         open={weighingHistoryOpen}
@@ -493,6 +495,7 @@ export function AnimalEditForm({
 
       <AnimalNeuteringHistoryDialog
         animalId={animal.id}
+        timeZone={animal.currentProperty.timeZone}
         commitments={commitments}
         birthDate={animal.birthDate}
         neutered={animal.neutered}

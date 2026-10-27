@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useCurrentProperty } from "@/features/shell/useCurrentProperty";
 import { ChevronRight, CircleAlert, Loader2, Trash2 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -27,6 +26,7 @@ import {
   type SessionStepView,
   type SessionValues,
   nowInZone,
+  type BrTimeZone,
 } from "@ifarm/shared";
 
 // Partes do registro de uma sessão compartilhadas entre o registro de manejo e a
@@ -355,6 +355,8 @@ type DateDialogProps = {
   confirmLabel: string;
   onOpenChange: (open: boolean) => void;
   onConfirm: (date: string) => Promise<void>;
+  /** Fuso da propriedade da sessão: limite do campo (não pode ser no futuro). */
+  timeZone: BrTimeZone;
 };
 
 export function SessionDateDialog({
@@ -383,11 +385,11 @@ function DateForm({
   confirmLabel,
   onOpenChange,
   onConfirm,
+  timeZone,
 }: Pick<
   DateDialogProps,
-  "initial" | "confirmLabel" | "onOpenChange" | "onConfirm"
+  "initial" | "confirmLabel" | "onOpenChange" | "onConfirm" | "timeZone"
 >) {
-  const { timeZone } = useCurrentProperty();
   const [date, setDate] = useState(initial);
   const [saving, setSaving] = useState(false);
 

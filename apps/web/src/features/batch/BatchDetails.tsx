@@ -115,7 +115,7 @@ function buildRecentActivity(batch: BatchFullDetails): TimelineEvent[] {
     })),
   ];
 
-  // Pelo instante: a criação vem em UTC e os eventos, no fuso da propriedade.
+  // Pelo instante: as compras vêm só com o dia; o resto, com data e hora.
   return events.sort((a, b) => Date.parse(b.date) - Date.parse(a.date));
 }
 

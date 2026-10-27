@@ -6,7 +6,7 @@ import {
 import { prisma } from "@ifarm/db";
 import { fromDbDate, toDbDate } from "../../../lib/db-dates";
 import { getOrAssignCurrentProperty } from "../../current-property/shared";
-import { propertyTimeZone } from "../../property/time-zone";
+import { propertyTimeZone, toZonedIso } from "../../property/time-zone";
 import { birthDateBounds, type AgeRange } from "../rules";
 
 // Faixa etária → filtro da coluna birthDate (@db.Date), pela idade no dia de hoje da
@@ -45,6 +45,7 @@ export async function listAnimals(
     query.propertyId ?? (await getOrAssignCurrentProperty(userId))?.id;
   if (!propertyId) return { data: [], total: 0, pageCount: 0 };
 
+  const timeZone = await propertyTimeZone(propertyId);
   const codeMatch = search.match(/^#?(\d{1,9})$/);
   const searchCode = codeMatch ? Number(codeMatch[1]) : null;
 
@@ -72,10 +73,7 @@ export async function listAnimals(
     ...(origin ? { origin } : {}),
     ...(ageRange
       ? {
-          birthDate: birthDateFilter(
-            ageRange,
-            await propertyTimeZone(propertyId),
-          ),
+          birthDate: birthDateFilter(ageRange, timeZone),
         }
       : {}),
     // "<>" no SQL descarta NULL, então os animais sem lote precisam ser incluídos à parte.
@@ -125,7 +123,7 @@ export async function listAnimals(
       status: a.status,
       currentWeightKg: a.currentWeight?.toNumber() ?? null,
       currentBatch: a.currentBatch,
-      updatedAt: a.updatedAt.toISOString(),
+      updatedAt: toZonedIso(a.updatedAt, timeZone),
     })) as AnimalListResult["data"],
     total,
     pageCount: Math.ceil(total / pageSize),

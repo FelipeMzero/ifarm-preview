@@ -1,4 +1,3 @@
-import { useCurrentProperty } from "@/features/shell/useCurrentProperty";
 import { useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -13,7 +12,12 @@ import { FieldRow } from "@/components/our/FieldRow";
 import { animalClient } from "@/lib/clients";
 import { applyServerErrors } from "@/lib/form-errors";
 import { useReloadAnimals } from "./queries";
-import { type AnimalWeighing, nowInZone, toDateTimeInput } from "@ifarm/shared";
+import {
+  type AnimalWeighing,
+  nowInZone,
+  toDateTimeInput,
+  type BrTimeZone,
+} from "@ifarm/shared";
 import {
   weighingCorrectionSchema,
   type WeighingCorrectionPayload as WeighingCorrectionFormData,
@@ -21,6 +25,8 @@ import {
 
 interface AnimalWeighingCorrectionFormProps {
   animalId: string;
+  /** Fuso da propriedade do animal: o "agora" sugerido e o limite das datas. */
+  timeZone: BrTimeZone;
   weighing: AnimalWeighing;
   // yyyy-mm-dd; a pesagem não pode ser anterior ao nascimento
   birthDate?: string | null;
@@ -32,12 +38,12 @@ interface AnimalWeighingCorrectionFormProps {
 
 export function AnimalWeighingCorrectionForm({
   animalId,
+  timeZone,
   weighing,
   birthDate,
   onCancel,
   onSaved,
 }: AnimalWeighingCorrectionFormProps) {
-  const { timeZone } = useCurrentProperty();
   const form = useForm<WeighingCorrectionFormData>({
     resolver: zodResolver(weighingCorrectionSchema, undefined, { raw: true }),
     defaultValues: {

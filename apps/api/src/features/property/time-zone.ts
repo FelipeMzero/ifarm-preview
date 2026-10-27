@@ -1,4 +1,8 @@
-import type { BrTimeZone } from "@ifarm/shared";
+import {
+  instantToZonedIso,
+  type BrTimeZone,
+  type PropertyZoneRef,
+} from "@ifarm/shared";
 import { prisma, type Prisma } from "@ifarm/db";
 import { NotFoundError } from "../../lib/errors";
 
@@ -21,6 +25,39 @@ export async function propertyTimeZone(
   });
   if (!property) throw new NotFoundError("Propriedade não encontrada.");
   return asTimeZone(property.timeZone);
+}
+
+// A propriedade de um registro nas respostas de detalhe, com o fuso (PropertyZoneRef).
+export const propertyRefSelect = {
+  id: true,
+  name: true,
+  timeZone: true,
+} satisfies Prisma.PropertySelect;
+
+export const toPropertyRef = (property: {
+  id: string;
+  name: string;
+  timeZone: string;
+}): PropertyZoneRef => ({
+  ...property,
+  timeZone: asTimeZone(property.timeZone),
+});
+
+/**
+ * Instante → ISO com o deslocamento do fuso (vazio → null). Toda data e hora de um registro da
+ * propriedade sai assim, inclusive as gravadas pelo sistema (createdAt, confirmedAt...): na tela,
+ * todas ficam na hora da fazenda e comparáveis entre si.
+ */
+export function toZonedIso(instant: Date, timeZone: string): string;
+export function toZonedIso(
+  instant: Date | null | undefined,
+  timeZone: string,
+): string | null;
+export function toZonedIso(
+  instant: Date | null | undefined,
+  timeZone: string,
+): string | null {
+  return instant ? instantToZonedIso(instant, timeZone) : null;
 }
 
 /** Passagens do animal pelas propriedades, com o fuso de cada uma. */

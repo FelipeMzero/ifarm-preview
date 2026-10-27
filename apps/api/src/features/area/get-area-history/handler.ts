@@ -3,7 +3,7 @@ import {
   type AreaOccupancyHistoryEntry,
 } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
-import { asTimeZone } from "../../property/time-zone";
+import { asTimeZone, toZonedIso } from "../../property/time-zone";
 
 // Lotes que ocuparam a área, do mais recente para o mais antigo; entradas e saídas no fuso da
 // propriedade.
@@ -25,7 +25,7 @@ export async function getAreaOccupancyHistory(
       id: h.id,
       batch: h.batch,
       enteredAt: instantToZonedIso(h.enteredAt, timeZone),
-      exitedAt: h.exitedAt ? instantToZonedIso(h.exitedAt, timeZone) : null,
+      exitedAt: toZonedIso(h.exitedAt, timeZone),
       notes: h.notes,
     };
   });

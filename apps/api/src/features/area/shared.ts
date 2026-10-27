@@ -21,7 +21,7 @@ export function toAreaData(input: AreaInput) {
 export async function findAreaOrThrow(id: string) {
   const area = await prisma.area.findUnique({
     where: { id },
-    select: { closedAt: true },
+    select: { closedAt: true, propertyId: true },
   });
   if (!area) throw new NotFoundError("Área não encontrada.");
   return area;

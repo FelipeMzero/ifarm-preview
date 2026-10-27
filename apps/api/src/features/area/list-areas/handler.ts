@@ -1,7 +1,7 @@
 import type { AreaQuery, AreaRow } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
 import { getOrAssignCurrentProperty } from "../../current-property/shared";
-import { propertyTimeZone } from "../../property/time-zone";
+import { propertyTimeZone, toZonedIso } from "../../property/time-zone";
 import { areaRotation, areaStatus } from "../rules";
 import { areasLastExit, areasOccupancy } from "../stocking";
 
@@ -51,7 +51,7 @@ export async function listAreas(
   const now = new Date();
   return areas.map((a) => {
     const state = {
-      closedAt: a.closedAt?.toISOString() ?? null,
+      closedAt: toZonedIso(a.closedAt, timeZone),
       defaultOccupationDays: a.defaultOccupationDays,
       defaultRestDays: a.defaultRestDays,
       occupancy: occupancy.get(a.id) ?? null,
@@ -66,7 +66,7 @@ export async function listAreas(
       stockingRate: a.stockingRate.toNumber(),
       notes: a.notes,
       propertyId: a.propertyId,
-      updatedAt: a.updatedAt.toISOString(),
+      updatedAt: toZonedIso(a.updatedAt, timeZone),
       ...state,
       status: areaStatus(state, rotation),
       rotation,

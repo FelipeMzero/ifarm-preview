@@ -10,6 +10,7 @@ import {
   effectiveRfidTagging,
   effectiveTagging,
 } from "../../management-session/effective";
+import { toZonedIso } from "../../property/time-zone";
 
 type Tx = Prisma.TransactionClient;
 
@@ -136,7 +137,9 @@ export function toIdentifierDto(
     value: r.value,
     notes: r.notes,
     fromSession: r.managementId != null,
-    correctedAt: r.correctedAt?.toISOString() ?? null,
+    correctedAt: r.correctedAt
+      ? toZonedIso(r.correctedAt, zoneOf(r.correctedAt))
+      : null,
     originalValue: r.original,
   };
 }

@@ -20,20 +20,23 @@ import { formatBRL } from "./display";
 import {
   purchasePaymentSchema,
   todayInZone,
+  type BrTimeZone,
   type PurchasePaymentPayload as PaymentFormData,
 } from "@ifarm/shared";
-import { useCurrentProperty } from "@/features/shell/useCurrentProperty";
 import { purchaseClient } from "@/lib/clients";
 import { applyServerErrors } from "@/lib/form-errors";
 import { purchaseKeys } from "./queries";
 
 export function PaymentDialog({
   purchaseId,
+  timeZone,
   value,
   open,
   onOpenChange,
 }: {
   purchaseId: string;
+  /** Fuso da propriedade de destino da compra: o "hoje" sugerido e o limite da data. */
+  timeZone: BrTimeZone;
   /** Valor da compra (estimado enquanto por cabeça depende dos recebidos). */
   value: number | null;
   open: boolean;
@@ -63,6 +66,7 @@ export function PaymentDialog({
         {open && (
           <PaymentForm
             purchaseId={purchaseId}
+            timeZone={timeZone}
             onClose={() => onOpenChange(false)}
           />
         )}
@@ -73,14 +77,15 @@ export function PaymentDialog({
 
 function PaymentForm({
   purchaseId,
+  timeZone,
   onClose,
 }: {
   purchaseId: string;
+  timeZone: BrTimeZone;
   onClose: () => void;
 }) {
   const queryClient = useQueryClient();
   // Hoje no fuso da propriedade: a API recusa pagamento com data futura pelo dia de lá.
-  const { timeZone } = useCurrentProperty();
   const today = todayInZone(timeZone);
   const {
     control,

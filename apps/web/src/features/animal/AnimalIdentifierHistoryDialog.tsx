@@ -38,6 +38,7 @@ import {
   type IdentifierKind,
   formatDateTime,
   formatDay,
+  type BrTimeZone,
 } from "@ifarm/shared";
 import { animalIdentifiersQuery, useReloadAnimals } from "./queries";
 import { IDENTIFIER_MAX_LENGTH } from "@ifarm/shared";
@@ -50,6 +51,8 @@ import { CommitmentNotice } from "./CommitmentNotice";
 
 interface AnimalIdentifierHistoryDialogProps {
   animalId: string;
+  /** Fuso da propriedade do animal: o "agora" sugerido e o limite das datas. */
+  timeZone: BrTimeZone;
   /** Operações em aberto do animal, para o aviso de conflito (CommitmentNotice). */
   commitments: Commitment[];
   /**
@@ -196,6 +199,7 @@ function IdentifierChangePanel({
 
 export function AnimalIdentifierHistoryDialog({
   animalId,
+  timeZone,
   commitments,
   current,
   kind,
@@ -273,6 +277,7 @@ export function AnimalIdentifierHistoryDialog({
             <AnimalIdentifierCorrectionForm
               key={editing.id}
               animalId={animalId}
+              timeZone={timeZone}
               kind={kind}
               record={editing}
               onCancel={() => setEditing(null)}

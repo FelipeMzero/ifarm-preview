@@ -2,7 +2,7 @@ import { instantToZonedIso, isSessionOpen } from "@ifarm/shared";
 import { fromDbDate } from "../../../lib/db-dates";
 import { effectiveNeutering, effectiveWeighing } from "../effective";
 import { participantStatus } from "../session-steps";
-import { propertyTimeZone } from "../../property/time-zone";
+import { propertyTimeZone, toZonedIso } from "../../property/time-zone";
 import { loadSession } from "../shared";
 import {
   countDone,
@@ -53,9 +53,7 @@ export async function loadAnimalContext(db: Tx, id: string, animalId: string) {
     session: {
       id: session.id,
       status: session.status,
-      performedAt: session.performedAt
-        ? instantToZonedIso(session.performedAt, timeZone)
-        : null,
+      performedAt: toZonedIso(session.performedAt, timeZone),
     },
     steps,
     animal: {

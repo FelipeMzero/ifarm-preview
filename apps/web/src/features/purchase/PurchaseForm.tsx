@@ -522,6 +522,7 @@ export function PurchaseForm({ id }: { id?: string }) {
       {detail && (
         <PaymentDialog
           purchaseId={detail.id}
+          timeZone={detail.destinationProperty.timeZone}
           value={totalValue}
           open={action === "pay"}
           onOpenChange={(open) => !open && setAction(null)}

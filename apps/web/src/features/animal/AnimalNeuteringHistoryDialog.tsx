@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useCurrentProperty } from "@/features/shell/useCurrentProperty";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
@@ -48,6 +47,7 @@ import {
   nowInZone,
   formatDateTime,
   formatDay,
+  type BrTimeZone,
 } from "@ifarm/shared";
 import { AnimalNeuteringCorrectionForm } from "./AnimalNeuteringCorrectionForm";
 import { neuteringTechniqueListQuery } from "@/features/neutering-technique/queries";
@@ -60,6 +60,8 @@ import { CommitmentNotice } from "./CommitmentNotice";
 
 interface AnimalNeuteringHistoryDialogProps {
   animalId: string;
+  /** Fuso da propriedade do animal: o "agora" sugerido e o limite das datas. */
+  timeZone: BrTimeZone;
   /** Operações em aberto do animal, para o aviso de conflito (CommitmentNotice). */
   commitments: Commitment[];
   birthDate?: string | null;
@@ -100,6 +102,7 @@ function NeuteringCorrectionNote({
 // Registro na hora. Se o animal já é castrado, é uma recastração (motivo obrigatório).
 function NeuteringRegisterPanel({
   animalId,
+  timeZone,
   commitments,
   birthDate,
   neutered,
@@ -107,6 +110,7 @@ function NeuteringRegisterPanel({
   techniques,
 }: {
   animalId: string;
+  timeZone: BrTimeZone;
   commitments: Commitment[];
   birthDate?: string | null;
   neutered: boolean;
@@ -114,7 +118,6 @@ function NeuteringRegisterPanel({
   // undefined = histórico ainda carregando (o painel já aparece; só este texto espera).
   latest: AnimalNeuteringRecord | null | undefined;
 }) {
-  const { timeZone } = useCurrentProperty();
   const reloadAnimal = useReloadAnimals();
   const [date, setDate] = useState(() => nowInZone(timeZone));
   const [techniqueId, setTechniqueId] = useState("");
@@ -247,6 +250,7 @@ function NeuteringRegisterPanel({
 
 export function AnimalNeuteringHistoryDialog({
   animalId,
+  timeZone,
   commitments,
   birthDate,
   neutered,
@@ -325,6 +329,7 @@ export function AnimalNeuteringHistoryDialog({
             <>
               <NeuteringRegisterPanel
                 animalId={animalId}
+                timeZone={timeZone}
                 commitments={commitments}
                 birthDate={birthDate}
                 neutered={neutered}
@@ -343,6 +348,7 @@ export function AnimalNeuteringHistoryDialog({
             <AnimalNeuteringCorrectionForm
               key={editing.id}
               animalId={animalId}
+              timeZone={timeZone}
               neutering={editing}
               techniques={techniques}
               birthDate={birthDate}

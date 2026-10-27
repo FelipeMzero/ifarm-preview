@@ -10,8 +10,10 @@ import { z } from "zod";
 //   type="datetime-local">), e o servidor a interpreta no fuso da propriedade; nas respostas,
 //   o servidor manda ISO com o deslocamento da propriedade ("2026-10-26T08:00:00-04:00"), e o
 //   cliente mostra a data e a hora como vêm, sem converter para o fuso do navegador.
-// - Instantes gravados pelo sistema (createdAt, confirmedAt...): ISO em UTC; mostrados no fuso
-//   de quem vê.
+// - Instantes gravados pelo sistema (createdAt, confirmedAt...): de um registro da propriedade,
+//   também com o deslocamento dela (assim todas as horas de uma tela são da fazenda e
+//   comparáveis entre si); dos registros sem propriedade (usuários, pessoas, cadastros gerais e
+//   a própria lista de propriedades), ISO em UTC ("...Z"), mostrado no fuso de quem vê.
 //
 // toLocalDay/fromLocalDay/today tratam um dia no fuso de quem executa (cálculos de tela: idade,
 // gráficos). Regras do servidor que dependem do dia usam o fuso da propriedade (dayInZone).

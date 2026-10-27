@@ -4,6 +4,7 @@ import { prisma } from "@ifarm/db";
 import { NotFoundError } from "../../../lib/errors";
 import { effectiveNeutering } from "../../management-session/effective";
 import type { ZoneOf } from "../../property/time-zone";
+import { toZonedIso } from "../../property/time-zone";
 
 // Relações necessárias para exibir a técnica (atual e a lançada originalmente).
 export const neuteringInclude = {
@@ -24,9 +25,11 @@ export function toNeuteringDto(n: NeuteringWithTechnique, zoneOf: ZoneOf) {
     techniqueName: n.technique?.name ?? null,
     notes: n.notes,
     fromSession: n.managementId != null,
-    correctedAt: n.correctedAt?.toISOString() ?? null,
+    correctedAt: n.correctedAt
+      ? toZonedIso(n.correctedAt, zoneOf(n.correctedAt))
+      : null,
     originalDate: n.originalNeuteredAt
-      ? instantToZonedIso(n.originalNeuteredAt, zoneOf(n.originalNeuteredAt))
+      ? toZonedIso(n.originalNeuteredAt, zoneOf(n.originalNeuteredAt))
       : null,
     originalTechniqueId: n.originalTechniqueId,
     originalTechniqueName: n.originalTechnique?.name ?? null,

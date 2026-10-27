@@ -2,6 +2,7 @@ import type { BatchListResult, BatchQuery } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
 import { fromDbDate } from "../../../lib/db-dates";
 import { getOrAssignCurrentProperty } from "../../current-property/shared";
+import { propertyTimeZone, toZonedIso } from "../../property/time-zone";
 
 function buildWhere(query: BatchQuery, propertyId: string) {
   const where: Record<string, unknown> = { propertyId };
@@ -29,6 +30,7 @@ export async function listBatches(
   if (!propertyId) return { data: [] };
 
   const where = buildWhere(query, propertyId);
+  const timeZone = await propertyTimeZone(propertyId);
   const [batches, total] = await Promise.all([
     prisma.batch.findMany({
       where,
@@ -76,8 +78,8 @@ export async function listBatches(
       area: b.batchAreaHistories[0]?.area ?? null,
       animalCount: b._count.animals,
       avgWeightKg: avgByBatch.get(b.id)?.toNumber() ?? null,
-      closedAt: b.closedAt?.toISOString() ?? null,
-      updatedAt: b.updatedAt.toISOString(),
+      closedAt: toZonedIso(b.closedAt, timeZone),
+      updatedAt: toZonedIso(b.updatedAt, timeZone),
     })),
     total,
     page: query.page,

@@ -1,3 +1,4 @@
+import type { PropertyZoneRef } from "../property/time-zones";
 import {
   ApiError,
   jsonRequest,
@@ -51,7 +52,7 @@ export type AnimalDetail = {
   neuteredAt: string | null;
   currentBatchId: string | null;
   currentBatchName: string | null;
-  currentPropertyId: string;
+  currentProperty: PropertyZoneRef;
   currentWeightKg: number | null;
   updatedAt: string;
 };

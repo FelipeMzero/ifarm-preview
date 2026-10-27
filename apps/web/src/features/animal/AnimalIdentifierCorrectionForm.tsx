@@ -1,4 +1,3 @@
-import { useCurrentProperty } from "@/features/shell/useCurrentProperty";
 import { useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -10,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { DialogFooter } from "@/components/ui/dialog";
 import { FormField } from "@/components/our/FormField";
 import { FieldRow } from "@/components/our/FieldRow";
-import { nowInZone, toDateTimeInput } from "@ifarm/shared";
+import { nowInZone, toDateTimeInput, type BrTimeZone } from "@ifarm/shared";
 import { animalClient } from "@/lib/clients";
 import { applyServerErrors } from "@/lib/form-errors";
 import { useReloadAnimals } from "./queries";
@@ -33,6 +32,8 @@ type FormData = IdentifierCorrectionPayload;
 
 interface AnimalIdentifierCorrectionFormProps {
   animalId: string;
+  /** Fuso da propriedade do animal: o "agora" sugerido e o limite das datas. */
+  timeZone: BrTimeZone;
   kind: IdentifierKind;
   record: AnimalIdentifierRecord;
   onCancel: () => void;
@@ -41,12 +42,12 @@ interface AnimalIdentifierCorrectionFormProps {
 
 export function AnimalIdentifierCorrectionForm({
   animalId,
+  timeZone,
   kind,
   record,
   onCancel,
   onSaved,
 }: AnimalIdentifierCorrectionFormProps) {
-  const { timeZone } = useCurrentProperty();
   const label = IDENTIFIER_LABELS[kind];
   const form = useForm<FormData>({
     resolver: zodResolver(identifierCorrectionSchemaFor(kind), undefined, {

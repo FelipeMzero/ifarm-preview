@@ -6,7 +6,12 @@ import {
 import { prisma } from "@ifarm/db";
 import { NotFoundError } from "../../../lib/errors";
 import { unavailableReason } from "../../animal/rules";
-import { propertyTimeZone } from "../../property/time-zone";
+import {
+  asTimeZone,
+  propertyRefSelect,
+  toPropertyRef,
+  toZonedIso,
+} from "../../property/time-zone";
 import { describeReception } from "../../purchase/reception";
 import { participantStatus } from "../session-steps";
 import { loadSession } from "../shared";
@@ -26,35 +31,37 @@ export async function getManagementSession(
   const session = await loadSession(prisma, id);
   if (!session) throw new NotFoundError("Sessão de manejo não encontrada.");
 
-  const [row, participants, steps, records, reception, timeZone] =
-    await Promise.all([
-      prisma.managementSession.findUniqueOrThrow({ where: { id } }),
-      prisma.managementParticipant.findMany({
-        where: { managementSessionId: id },
-        orderBy: { id: "asc" },
-        include: {
-          animal: {
-            select: {
-              id: true,
-              code: true,
-              currentTag: true,
-              currentRfid: true,
-              name: true,
-              sex: true,
-              status: true,
-              currentPropertyId: true,
-              neutered: true,
-              currentWeight: true,
-              currentBatch: { select: { id: true, name: true } },
-            },
+  const [row, participants, steps, records, reception] = await Promise.all([
+    prisma.managementSession.findUniqueOrThrow({
+      where: { id },
+      include: { property: { select: propertyRefSelect } },
+    }),
+    prisma.managementParticipant.findMany({
+      where: { managementSessionId: id },
+      orderBy: { id: "asc" },
+      include: {
+        animal: {
+          select: {
+            id: true,
+            code: true,
+            currentTag: true,
+            currentRfid: true,
+            name: true,
+            sex: true,
+            status: true,
+            currentPropertyId: true,
+            neutered: true,
+            currentWeight: true,
+            currentBatch: { select: { id: true, name: true } },
           },
         },
-      }),
-      describeSteps(prisma, session, session.steps),
-      loadStepRecords(prisma, session, session.steps),
-      describeReception(prisma, id),
-      propertyTimeZone(session.propertyId),
-    ]);
+      },
+    }),
+    describeSteps(prisma, session, session.steps),
+    loadStepRecords(prisma, session, session.steps),
+    describeReception(prisma, id),
+  ]);
+  const timeZone = asTimeZone(row.property.timeZone);
 
   const open = isSessionOpen(session.status);
 
@@ -63,15 +70,14 @@ export async function getManagementSession(
     status: session.status,
     // No fuso da propriedade, com o deslocamento.
     scheduledAt: instantToZonedIso(session.scheduledAt, timeZone),
-    performedAt: session.performedAt
-      ? instantToZonedIso(session.performedAt, timeZone)
-      : null,
+    performedAt: toZonedIso(session.performedAt, timeZone),
     title: row.title,
     notes: row.notes ?? "",
-    propertyId: session.propertyId,
-    confirmedAt: row.confirmedAt?.toISOString() ?? null,
-    cancelledAt: row.cancelledAt?.toISOString() ?? null,
-    updatedAt: row.updatedAt.toISOString(),
+    // Com o fuso, para a tela sugerir o "agora" de lá.
+    property: toPropertyRef(row.property),
+    confirmedAt: toZonedIso(row.confirmedAt, timeZone),
+    cancelledAt: toZonedIso(row.cancelledAt, timeZone),
+    updatedAt: toZonedIso(row.updatedAt, timeZone),
     steps,
     // Preenchido = sessão de recepção de compra (categorias e contagens, sem valores).
     reception,
@@ -104,7 +110,7 @@ export async function getManagementSession(
           ? sessionValues(records, animal.id)
           : NO_SESSION_VALUES,
         doneKeys,
-        lastHandledAt: lastHandledAt?.toISOString() ?? null,
+        lastHandledAt: toZonedIso(lastHandledAt, timeZone),
         categoryId: reception?.categoryOfAnimal[animal.id] ?? null,
       };
     }),

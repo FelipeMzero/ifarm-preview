@@ -3,6 +3,7 @@ import { prisma } from "@ifarm/db";
 import { NotFoundError } from "../../../lib/errors";
 import { unavailableReason } from "../../animal/rules";
 import { transferStatus } from "../rules";
+import { toZonedIso } from "../../property/time-zone";
 
 export async function getBatchTransfer(
   id: string,
@@ -47,9 +48,9 @@ export async function getBatchTransfer(
     destinationBatch: transfer.destinationBatch,
     propertyId: transfer.propertyId,
     status: transferStatus(transfer),
-    confirmedAt: transfer.confirmedAt?.toISOString() ?? null,
-    cancelledAt: transfer.cancelledAt?.toISOString() ?? null,
-    updatedAt: transfer.updatedAt.toISOString(),
+    confirmedAt: toZonedIso(transfer.confirmedAt, transfer.property.timeZone),
+    cancelledAt: toZonedIso(transfer.cancelledAt, transfer.property.timeZone),
+    updatedAt: toZonedIso(transfer.updatedAt, transfer.property.timeZone),
     animals: transfer.items.map(({ animal, originBatch }) => ({
       id: animal.id,
       code: animal.code,

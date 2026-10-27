@@ -13,7 +13,12 @@ import {
   effectiveTagging,
   effectiveWeighing,
 } from "../../management-session/effective";
-import { asTimeZone, timeZoneAt, type ZoneOf } from "../../property/time-zone";
+import {
+  asTimeZone,
+  timeZoneAt,
+  type ZoneOf,
+  toZonedIso,
+} from "../../property/time-zone";
 import { sortWeighings, toWeighingDto } from "../weighing/shared";
 
 // Pelo instante: as datas dos eventos podem vir com deslocamentos diferentes.
@@ -121,7 +126,9 @@ export async function getAnimalDetails(id: string): Promise<AnimalFullDetails> {
       date: zoned(n.neuteredAt),
       techniqueName: n.technique?.name ?? null,
       notes: n.notes,
-      correctedAt: n.correctedAt?.toISOString() ?? null,
+      correctedAt: n.correctedAt
+        ? toZonedIso(n.correctedAt, zoneOf(n.correctedAt))
+        : null,
     }))
     .sort(byDateDesc);
 
@@ -168,7 +175,7 @@ export async function getAnimalDetails(id: string): Promise<AnimalFullDetails> {
         propertyId: p.property.id,
         propertyName: p.property.name,
         enteredAt: instantToZonedIso(p.enteredAt, timeZone),
-        exitedAt: p.exitedAt ? instantToZonedIso(p.exitedAt, timeZone) : null,
+        exitedAt: toZonedIso(p.exitedAt, timeZone),
         notes: p.notes,
       };
     })
@@ -233,8 +240,8 @@ export async function getAnimalDetails(id: string): Promise<AnimalFullDetails> {
       name: animal.currentProperty.name,
     },
     currentWeightKg: animal.currentWeight?.toNumber() ?? null,
-    createdAt: animal.createdAt.toISOString(),
-    updatedAt: animal.updatedAt.toISOString(),
+    createdAt: toZonedIso(animal.createdAt, currentZone),
+    updatedAt: toZonedIso(animal.updatedAt, currentZone),
     weighings,
     tagHistory,
     rfidHistory,

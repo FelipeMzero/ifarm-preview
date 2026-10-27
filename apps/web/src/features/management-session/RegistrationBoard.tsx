@@ -64,7 +64,7 @@ const EMPTY_MESSAGES = {
 
 export function RegistrationBoard({ id }: { id: string }) {
   const navigate = useNavigate();
-  const { property: currentProperty, timeZone } = useCurrentProperty();
+  const { property: currentProperty } = useCurrentProperty();
 
   const [search, setSearch] = useState("");
   const [dateDialog, setDateDialog] = useState(false);
@@ -148,6 +148,8 @@ export function RegistrationBoard({ id }: { id: string }) {
   }
 
   const { status, steps } = detail;
+  // O "agora" sugerido é o da propriedade da sessão, que pode não ser a atual do usuário.
+  const { timeZone } = detail.property;
   const inProgress = status === "in_progress";
   const editable = isSessionOpen(status);
 
@@ -407,6 +409,7 @@ export function RegistrationBoard({ id }: { id: string }) {
 
       <SessionDateDialog
         open={dateDialog}
+        timeZone={timeZone}
         initial={
           detail.performedAt
             ? toDateTimeInput(detail.performedAt)

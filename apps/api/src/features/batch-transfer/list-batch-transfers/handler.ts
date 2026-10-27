@@ -5,7 +5,7 @@ import {
 } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
 import { getOrAssignCurrentProperty } from "../../current-property/shared";
-import { propertyTimeZone } from "../../property/time-zone";
+import { propertyTimeZone, toZonedIso } from "../../property/time-zone";
 import { TRANSFER_STATUS_WHERE, transferStatus } from "../rules";
 
 function buildWhere(query: BatchTransferQuery, propertyId: string) {
@@ -89,9 +89,9 @@ export async function listBatchTransfers(
       destinationBatch: t.destinationBatch,
       animalCount: t.items.length,
       status: transferStatus(t),
-      confirmedAt: t.confirmedAt?.toISOString() ?? null,
-      cancelledAt: t.cancelledAt?.toISOString() ?? null,
-      updatedAt: t.updatedAt.toISOString(),
+      confirmedAt: toZonedIso(t.confirmedAt, timeZone),
+      cancelledAt: toZonedIso(t.cancelledAt, timeZone),
+      updatedAt: toZonedIso(t.updatedAt, timeZone),
     })),
     total,
     page: query.page,

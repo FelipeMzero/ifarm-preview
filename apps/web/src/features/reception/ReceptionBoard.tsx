@@ -31,7 +31,6 @@ import { ReceptionDocumentsDialog } from "./ReceptionDocumentsDialog";
 import { ReceptionPanel } from "./ReceptionPanel";
 import { ListSkeleton } from "@/components/our/PageSkeletons";
 import { useReloadReception } from "./queries";
-import { useCurrentProperty } from "@/features/shell/useCurrentProperty";
 
 const TAB_LABELS = {
   pending: "A manejar",
@@ -51,7 +50,6 @@ const EMPTY_MESSAGES = {
 // etapa são as mesmas do registro de manejo.
 export function ReceptionBoard({ id }: { id: string }) {
   const navigate = useNavigate();
-  const { timeZone } = useCurrentProperty();
   const boardPath = `/recepcoes/${id}`;
 
   const [search, setSearch] = useState("");
@@ -136,6 +134,8 @@ export function ReceptionBoard({ id }: { id: string }) {
   }
 
   const { status, steps } = detail;
+  // O "agora" sugerido é o da propriedade da sessão, que pode não ser a atual do usuário.
+  const { timeZone } = detail.property;
   const inProgress = status === "in_progress";
   const editable = isSessionOpen(status);
   const hasSteps = steps.length > 0;
@@ -373,6 +373,7 @@ export function ReceptionBoard({ id }: { id: string }) {
 
       <SessionDateDialog
         open={dateDialog}
+        timeZone={timeZone}
         initial={
           detail.performedAt
             ? toDateTimeInput(detail.performedAt)

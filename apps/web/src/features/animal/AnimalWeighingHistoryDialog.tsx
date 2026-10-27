@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useCurrentProperty } from "@/features/shell/useCurrentProperty";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
@@ -37,6 +36,7 @@ import {
   nowInZone,
   type WeighingCreatePayload,
   formatDateTime,
+  type BrTimeZone,
 } from "@ifarm/shared";
 import { animalWeighingsQuery, useReloadAnimals } from "./queries";
 import { AnimalWeighingCorrectionForm } from "./AnimalWeighingCorrectionForm";
@@ -47,6 +47,8 @@ import { formatKg } from "./format";
 
 interface AnimalWeighingHistoryDialogProps {
   animalId: string;
+  /** Fuso da propriedade do animal: o "agora" sugerido e o limite das datas. */
+  timeZone: BrTimeZone;
   /** Operações em aberto do animal, para o aviso de conflito (CommitmentNotice). */
   commitments: Commitment[];
   birthDate?: string | null;
@@ -57,17 +59,18 @@ interface AnimalWeighingHistoryDialogProps {
 // Registro na hora: a nova pesagem entra no histórico e o peso atual é recalculado.
 function WeighingRegisterPanel({
   animalId,
+  timeZone,
   commitments,
   birthDate,
   latest,
 }: {
   animalId: string;
+  timeZone: BrTimeZone;
   commitments: Commitment[];
   birthDate?: string | null;
   // undefined = histórico ainda carregando (o painel já aparece; só este texto espera).
   latest: AnimalWeighing | null | undefined;
 }) {
-  const { timeZone } = useCurrentProperty();
   const reloadAnimal = useReloadAnimals();
   const [weight, setWeight] = useState("");
   const [date, setDate] = useState(() => nowInZone(timeZone));
@@ -186,6 +189,7 @@ function WeighingRegisterPanel({
 
 export function AnimalWeighingHistoryDialog({
   animalId,
+  timeZone,
   commitments,
   birthDate,
   open,
@@ -242,6 +246,7 @@ export function AnimalWeighingHistoryDialog({
             <>
               <WeighingRegisterPanel
                 animalId={animalId}
+                timeZone={timeZone}
                 commitments={commitments}
                 birthDate={birthDate}
                 latest={weighings === null ? undefined : (weighings[0] ?? null)}
@@ -256,6 +261,7 @@ export function AnimalWeighingHistoryDialog({
             <AnimalWeighingCorrectionForm
               key={editing.id}
               animalId={animalId}
+              timeZone={timeZone}
               weighing={editing}
               birthDate={birthDate}
               onCancel={() => setEditing(null)}

@@ -6,7 +6,7 @@ import {
 } from "@ifarm/shared";
 import { prisma, type Prisma } from "@ifarm/db";
 import { getOrAssignCurrentProperty } from "../../current-property/shared";
-import { propertyTimeZone } from "../../property/time-zone";
+import { propertyTimeZone, toZonedIso } from "../../property/time-zone";
 import { SESSION_STATUS_WHERE } from "../rules";
 import {
   sessionStatus,
@@ -74,9 +74,7 @@ export async function listManagementSessions(
       return {
         id: s.id,
         scheduledAt: instantToZonedIso(s.scheduledAt, timeZone),
-        performedAt: s.performedAt
-          ? instantToZonedIso(s.performedAt, timeZone)
-          : null,
+        performedAt: toZonedIso(s.performedAt, timeZone),
         title: s.title,
         notes: s.notes,
         steps: toSessionSteps(s.steps).map((step) => {
@@ -87,7 +85,7 @@ export async function listManagementSessions(
         animalCount: s._count.participants,
         handledCount: s.participants.length,
         status: sessionStatus(s),
-        updatedAt: s.updatedAt.toISOString(),
+        updatedAt: toZonedIso(s.updatedAt, timeZone),
       };
     }),
     total,

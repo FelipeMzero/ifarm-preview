@@ -1,3 +1,4 @@
+import type { PropertyZoneRef } from "../property/time-zones";
 import {
   jsonRequest,
   readJson,
@@ -81,7 +82,7 @@ export type PurchaseDetail = {
   purchaseDate: string;
   notes: string;
   seller: Ref;
-  destinationProperty: Ref;
+  destinationProperty: PropertyZoneRef;
   paymentDate: string | null;
   paymentReference: string | null;
   confirmedAt: string | null;

@@ -1,3 +1,4 @@
+import type { PropertyZoneRef } from "../property/time-zones";
 import {
   jsonRequest,
   readJson,
@@ -104,7 +105,7 @@ export type ManagementSessionDetail = {
   performedAt: string | null;
   title: string;
   notes: string;
-  propertyId: string;
+  property: PropertyZoneRef;
   confirmedAt: string | null;
   cancelledAt: string | null;
   updatedAt: string;

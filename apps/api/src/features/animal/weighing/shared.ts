@@ -4,6 +4,7 @@ import type { AnimalWeighing } from "@ifarm/db/client";
 import { NotFoundError } from "../../../lib/errors";
 import { effectiveWeighing } from "../../management-session/effective";
 import type { ZoneOf } from "../../property/time-zone";
+import { toZonedIso } from "../../property/time-zone";
 
 type Tx = Prisma.TransactionClient;
 
@@ -15,7 +16,9 @@ export function toWeighingDto(w: AnimalWeighing, zoneOf: ZoneOf) {
     weightKg: w.weight.toNumber(),
     notes: w.notes,
     fromSession: w.managementId != null,
-    correctedAt: w.correctedAt?.toISOString() ?? null,
+    correctedAt: w.correctedAt
+      ? toZonedIso(w.correctedAt, zoneOf(w.correctedAt))
+      : null,
     originalWeightKg: w.originalWeight?.toNumber() ?? null,
   };
 }

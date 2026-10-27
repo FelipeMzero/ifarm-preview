@@ -3,7 +3,12 @@ import { prisma } from "@ifarm/db";
 import { fromDbDate } from "../../../lib/db-dates";
 import { NotFoundError } from "../../../lib/errors";
 import { sessionStatus } from "../../management-session/session-steps";
-import { propertyTimeZone } from "../../property/time-zone";
+import {
+  asTimeZone,
+  propertyRefSelect,
+  toPropertyRef,
+  toZonedIso,
+} from "../../property/time-zone";
 import { arrivalWeightsByCategory } from "../costs";
 import { categoryLabel } from "../reception";
 import {
@@ -18,7 +23,7 @@ export async function getPurchase(id: string): Promise<PurchaseDetail> {
     where: { id },
     include: {
       seller: { select: { id: true, name: true } },
-      destinationProperty: { select: { id: true, name: true } },
+      destinationProperty: { select: propertyRefSelect },
       categories: {
         orderBy: { id: "asc" },
         include: {
@@ -40,7 +45,7 @@ export async function getPurchase(id: string): Promise<PurchaseDetail> {
 
   const arrival = await arrivalWeightsByCategory(prisma, id);
   // Os dias das recepções, no fuso da propriedade de destino.
-  const timeZone = await propertyTimeZone(event.destinationPropertyId);
+  const timeZone = asTimeZone(event.destinationProperty.timeZone);
 
   const categories = event.categories.map((c) => {
     const costs = c.animals.map((a) => num(a.cost));
@@ -83,12 +88,13 @@ export async function getPurchase(id: string): Promise<PurchaseDetail> {
     purchaseDate: fromDbDate(event.purchaseDate),
     notes: event.notes ?? "",
     seller: event.seller,
-    destinationProperty: event.destinationProperty,
+    // Com o fuso, para a tela sugerir o "hoje" de lá (pagamento).
+    destinationProperty: toPropertyRef(event.destinationProperty),
     paymentDate: fromDbDate(event.paymentDate),
     paymentReference: event.paymentReference,
-    confirmedAt: event.confirmedAt?.toISOString() ?? null,
-    cancelledAt: event.cancelledAt?.toISOString() ?? null,
-    updatedAt: event.updatedAt.toISOString(),
+    confirmedAt: toZonedIso(event.confirmedAt, timeZone),
+    cancelledAt: toZonedIso(event.cancelledAt, timeZone),
+    updatedAt: toZonedIso(event.updatedAt, timeZone),
     categories,
     receptions: event.receptions.map((r) => ({
       id: r.id,
