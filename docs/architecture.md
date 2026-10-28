@@ -1,113 +1,151 @@
 # Arquitetura
 
-A arquitetura da plataforma segue o modelo de Arquitetura em Camadas (Layered Architecture), priorizando desacoplamento entre interfaces, manutenibilidade e centralização das regras de negócio.
-
-O sistema adota uma API centralizada, responsável por autenticação, autorização, processamento das regras de negócio e acesso aos dados. A plataforma web e os aplicativos móveis são clientes dessa mesma API.
-
-A estrutura é dividida em quatro camadas. Cada camada depende apenas da camada abaixo dela: a apresentação nunca acessa diretamente as regras de negócio nem o banco de dados. Entre a apresentação e a API há um contrato compartilhado (`packages/shared`), usado pelos dois lados para que ambos falem a mesma língua.
+O projeto segue uma arquitetura em três camadas físicas (_three-tier architecture_): os clientes (web e mobile) na apresentação, a API na aplicação e o PostgreSQL nos dados. A API concentra as regras de negócio e o acesso aos dados; a plataforma web e o aplicativo móvel só exibem e enviam dados, falando com a API por um contrato compartilhado.
 
 ```mermaid
-flowchart TB
-  subgraph L1["1 · Apresentação"]
-    direction LR
-    Web["🌐 Web<br/>apps/web: páginas e features"]
+flowchart LR
+  subgraph Apresentacao["Apresentação"]
+    direction TB
+    Web["🌐 Web<br/>apps/web"]
     App["📱 Mobile<br/>apps/mobile"]
   end
 
-  Contract["Contrato da API · packages/shared<br/>schemas, tipos e clientes HTTP"]
+  Contract["📜 Contrato<br/>packages/shared"]
 
-  subgraph L2["2 · API HTTP/JSON · apps/api"]
-    Api["sessão, permissão, validação da entrada<br/>e tradução de erros para HTTP"]
-  end
-
-  subgraph L3["3 · Domínio · packages/domain"]
-    Domain["consultas, escritas e regras de negócio<br/>(não conhece HTTP)"]
-  end
-
-  subgraph L4["4 · Persistência"]
+  subgraph Aplicacao["Aplicação"]
     direction LR
-    Prisma["Prisma ORM<br/>modelo em packages/db"]
-    DB[("PostgreSQL")]
+    Api["⚙️ API<br/>apps/api"]
+    Prisma["🛆 Prisma<br/>packages/db"]
+  end
+
+  subgraph Dados
+    DB[("🛢️ PostgreSQL")]
   end
 
   Web --> Contract
   App --> Contract
-  Contract -- "HTTP" --> Api
+  Contract -- "HTTP/JSON" --> Api
   Api -. "valida com os schemas" .-> Contract
-  Api --> Domain
-  Domain --> Prisma
+  Api --> Prisma
   Prisma --> DB
 ```
 
-## 1 - Camada de Apresentação
+O monorepo do projeto está organizado como abaixo:
 
-Responsável pela interação direta com os usuários. É composta por aplicações independentes que consomem a API central por meio dos clientes HTTP do contrato. Esta camada não contém regras de negócio: ela exibe o que a API decide (situações, bloqueios e motivos) e, no máximo, antecipa validações para orientar o usuário antes do envio.
+| Pacote            | Papel                                                      |
+| ----------------- | ---------------------------------------------------------- |
+| `apps/api`        | API HTTP/JSON (Hono): regras de negócio e acesso aos dados |
+| `apps/web`        | plataforma web (React)                                     |
+| `apps/mobile`     | aplicativo móvel (Expo / React Native)                     |
+| `packages/shared` | contrato entre os clientes e a API                         |
+| `packages/db`     | modelo de dados (Prisma) e acesso ao PostgreSQL            |
 
-- (i) Plataforma Web (`apps/web`: páginas em `src/app/(protected)`, componentes em `src/features` e `src/components`): aplicação utilizada para operações administrativas, monitoramento, visualização de indicadores, relatórios e gerenciamento geral do sistema. O `src/proxy.ts` faz uma verificação prévia de sessão e de perfil antes de exibir cada página; a autorização definitiva é feita pela API. As chamadas a `/api` feitas pelo navegador são repassadas à API pelo próprio web (`next.config.ts`), de modo que as duas aplicações ficam na mesma origem.
+## Clientes
 
-- (ii) Aplicativos Móveis (`apps/mobile`, Android/iOS): aplicações destinadas às operações em campo, projetadas para a estratégia offline-first, permitindo registros locais e sincronização posterior dos dados com a API quando houver conectividade.
+A plataforma web e o aplicativo móvel são clientes da mesma API. Eles não contêm regras de
+decisão: exibem o que a API decide (situações, bloqueios, motivos) e, no máximo, antecipam
+validações para orientar o usuário antes do envio.
 
-## 2 - Camada de API (HTTP/JSON)
+No web, cada domínio tem as suas telas em `src/features/<domínio>`; as páginas (`src/pages`) só
+montam essas telas.
 
-Porta de entrada do sistema (`apps/api`, construída com o framework Hono e executada separadamente da plataforma web). Cada rota recebe a requisição, verifica a sessão do usuário, aplica o controle de acesso, valida os dados de entrada com os schemas do contrato e delega a operação à camada de domínio. Ao final, converte o resultado, ou o erro, na resposta HTTP correspondente.
+## Contrato (`packages/shared`)
 
-A autenticação é feita pelo better-auth, que gerencia sessões baseadas em cookie; o servidor de autenticação fica na API (`apps/api/src/auth.ts`), e cada aplicação cliente usa o cliente do better-auth para entrar e sair. A autorização segue o controle de acesso baseado em funções (RBAC): a tabela `RESOURCE_ACCESS` (`packages/shared/src/permissions.ts`) define, para cada recurso, os perfis sem acesso, garantindo que cada perfil acesse apenas os recursos autorizados. A API aplica essa tabela em cada requisição; as aplicações clientes a usam apenas para não exibir o que o perfil não pode acessar.
+O contrato é a língua comum entre os clientes e a API. Para cada domínio:
 
-Esta camada não contém regras de negócio nem acessa o banco de dados, com uma exceção: o better-auth grava usuários e sessões diretamente no banco, por meio do adaptador do Prisma.
+| Arquivo     | Conteúdo                                                                     |
+| ----------- | ---------------------------------------------------------------------------- |
+| `schema.ts` | o que o cliente envia: schemas de validação (Zod) e os tipos derivados deles |
+| `types.ts`  | o que a API responde: os tipos das respostas                                 |
+| `client.ts` | as funções que chamam a API                                                  |
 
-## 3 - Camada de Domínio (Regras de Negócio)
+Os clientes validam os formulários com os mesmos schemas que a API usa para validar as
+requisições, e a API tipa as respostas com os mesmos tipos que os clientes usam para exibi-las.
+Assim, os dois lados não divergem.
 
-Centraliza as regras de negócio do sistema (`packages/domain`). Cada domínio (pessoas, lotes, compras, manejos...) é organizado em consultas (`queries`), operações de escrita (`mutations`) e regras puras (`rules`), estas últimas cobertas por testes automatizados.
+Tudo no contrato é executado também nos clientes, então é público: ele não depende do banco nem
+do servidor, e contém só o que o cliente precisa (validação, tipos e as poucas regras que as
+telas executam). Decisões de negócio, cálculos de valores e detalhes de persistência ficam na
+API.
 
-O código desta camada é executado exclusivamente no servidor e não conhece HTTP: comunica falhas por meio de erros do próprio domínio (registro não encontrado, validação, conflito, regra de negócio violada), que a camada de API traduz em respostas. Por isso, as mesmas regras podem ser reutilizadas fora das rotas, como na carga inicial de dados e em scripts de manutenção.
+## API (`apps/api`)
 
-## 4 - Camada de Persistência
+A API é organizada em **fatias verticais** (Vertical Slice Architecture): cada operação do
+sistema tem a própria pasta, que reúne tudo de que ela precisa. As fatias são agrupadas por
+domínio (pessoas, áreas, lotes, animais, compras, sessões de manejo...).
 
-Banco de dados relacional (PostgreSQL) encarregado do armazenamento seguro e persistente de todas as entidades do sistema.
+```
+src/features/
+  <domínio>/
+    <operação>/
+      route.ts      o endpoint HTTP
+      handler.ts    a operação
+    routes.ts       monta as fatias do domínio em /api/<domínio>
+    rules.ts        decisões de negócio puras
+    shared.ts       código comum às fatias do domínio
+    <assunto>.ts    módulos internos com nome próprio
+    *.public.ts     o que outros domínios podem usar
+```
 
-O Prisma ORM atua como intermediário entre a camada de domínio e o banco de dados, abstraindo as operações SQL por meio de uma interface tipada e segura. O modelo de dados é definido em `packages/db/prisma/schema.prisma`, e apenas a camada de domínio acessa o banco. Detalhes de armazenamento, como o formato das datas gravadas, também ficam restritos a essa camada.
+### Dentro de uma fatia
 
-## Contrato da API
+| Arquivo      | Camada       | Responsabilidade                                                                                      |
+| ------------ | ------------ | ----------------------------------------------------------------------------------------------------- |
+| `route.ts`   | apresentação | recebe a requisição, confere o acesso, valida a entrada com o schema do contrato e devolve a resposta |
+| `handler.ts` | aplicação    | executa a operação inteira: lê os dados, decide e grava, numa transação quando grava                  |
+| `rules.ts`   | domínio      | decisões com lógica de negócio, em funções puras e testadas                                           |
+| Prisma       | persistência | acesso ao banco, usado diretamente pelo handler                                                       |
 
-O pacote `packages/shared` define o contrato entre a apresentação e a API: os schemas de validação dos dados enviados, os tipos das respostas e os clientes HTTP de cada recurso. A plataforma web e os aplicativos móveis usam os mesmos clientes, e a API valida as requisições com os mesmos schemas. Assim, as duas pontas permanecem sempre consistentes.
+O handler segue o formato **ler → decidir → gravar**: busca os dados, entrega às regras e grava
+conforme a resposta. As regras não acessam o banco, por isso podem ser testadas sem ele (é o
+padrão _functional core, imperative shell_). Nem toda fatia tem regras: uma operação simples vai
+direto do handler ao banco.
 
-Como todo o conteúdo do contrato é incluído nas aplicações cliente, ele contém apenas o que o cliente precisa executar e que pode ser exposto: validações de formulário, simulações interativas e o vocabulário de situações exibido nas telas. As regras de decisão, os cálculos de valores e os detalhes de persistência permanecem no servidor. O contrato não depende do banco de dados nem de recursos exclusivos do servidor.
+```mermaid
+flowchart LR
+  R[route.ts] --> H[handler.ts]
+  H --> N["rules.ts<br/>"]
+  H --> P[Prisma]
+```
 
-## 5 - Fluxo de Autenticação
+Numa requisição, com o exemplo de pagar uma compra:
 
 ```mermaid
 sequenceDiagram
-    participant User
-    participant Frontend
-    participant Backend
-    participant Database
+  participant R as route.ts
+  participant H as handler.ts
+  participant D as Prisma
+  participant N as rules.ts
 
-    User->>Frontend: Preenche email e senha
-    Frontend->>Backend: POST /login
-
-    Backend->>Database: Buscar usuário por email
-    Database-->>Backend: Dados do usuário
-
-    Backend->>Backend: Validar senha
-
-    alt Credenciais inválidas
-        Backend-->>Frontend: 401 Unauthorized
-        Frontend-->>User: Exibir erro de login
-    else Credenciais válidas
-        Backend->>Database: Criar sessão/token
-        Database-->>Backend: Sessão criada
-
-        Backend-->>Frontend: Set-Cookie / JWT
-        Frontend-->>User: Login realizado
-    end
-
-    User->>Frontend: Acessa rota protegida
-    Frontend->>Backend: GET /profile + token
-
-    Backend->>Database: Validar sessão/token
-    Database-->>Backend: Sessão válida
-
-    Backend-->>Frontend: Dados protegidos
-    Frontend-->>User: Exibir perfil
-
+  R->>H: chama (sessão e entrada já conferidas)
+  H->>D: lê a compra
+  D-->>H: compra
+  H->>N: paymentBlocker(compra)
+  N-->>H: null (pode) ou o motivo
+  alt bloqueado
+    H-->>R: erro de negócio
+  else permitido
+    H->>D: grava o pagamento
+    D-->>H: ok
+    H-->>R: resposta
+  end
 ```
+
+### Fronteiras
+
+| Onde fica o código                                              | Quem pode usar       |
+| --------------------------------------------------------------- | -------------------- |
+| dentro da pasta de uma fatia                                    | só aquela fatia      |
+| no nível do domínio (`rules.ts`, `shared.ts`, módulos com nome) | as fatias do domínio |
+| `*.public.ts`                                                   | qualquer domínio     |
+
+Duas regras de lint (`ifarm/slice-boundary` e `ifarm/domain-boundary`, em
+`apps/api/eslint.config.mjs`) garantem essas fronteiras. Fora dos domínios ficam só a montagem do
+servidor (`src/index.ts`), o que é comum a todos os `route.ts` (`src/http.ts`, `src/session.ts`) e
+utilitários sem HTTP (`src/lib`).
+
+## Persistência (`packages/db`)
+
+O banco é o PostgreSQL, acessado pelo Prisma. O modelo de dados fica em
+`packages/db/prisma/schema.prisma`, e o pacote exporta o cliente e a instância do banco. Só a API
+acessa o banco.
