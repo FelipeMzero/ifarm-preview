@@ -89,6 +89,11 @@ src/features/
 
 ### Dentro de uma fatia
 
+Cada fatia segue o padrão **Transaction Script** (Martin Fowler, _Patterns of Enterprise
+Application Architecture_): a operação inteira fica num único procedimento, o handler, que lê,
+decide e grava. As decisões com lógica de negócio são extraídas para funções puras.
+<!-- no formato **functional core, imperative shell** (Gary Bernhardt), também chamado de _impureim sandwich_ (Mark Seemann). -->
+
 | Arquivo      | Camada       | Responsabilidade                                                                                      |
 | ------------ | ------------ | ----------------------------------------------------------------------------------------------------- |
 | `route.ts`   | apresentação | recebe a requisição, confere o acesso, valida a entrada com o schema do contrato e devolve a resposta |
@@ -97,9 +102,8 @@ src/features/
 | Prisma       | persistência | acesso ao banco, usado diretamente pelo handler                                                       |
 
 O handler segue o formato **ler → decidir → gravar**: busca os dados, entrega às regras e grava
-conforme a resposta. As regras não acessam o banco, por isso podem ser testadas sem ele (é o
-padrão _functional core, imperative shell_). Nem toda fatia tem regras: uma operação simples vai
-direto do handler ao banco.
+conforme a resposta. As regras não acessam o banco, por isso podem ser testadas sem ele. Nem toda
+fatia tem regras: uma operação simples vai direto do handler ao banco.
 
 ```mermaid
 flowchart LR
