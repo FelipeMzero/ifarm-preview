@@ -8,7 +8,7 @@ import { updateBatchTransferRoute } from "./update-batch-transfer/route";
 
 // As operações de transferência entre lotes, cada uma na própria pasta (endpoint em
 // route.ts, o que ela faz em handler.ts), montadas em /api/batch-transfer. A efetivação
-// (confirmTransfer.ts) também é usada pela consolidação das sessões de manejo.
+// (confirm-transfer.ts) também é usada pela consolidação das sessões de manejo.
 export const batchTransferRoutes = new Hono();
 
 batchTransferRoutes.route("/", listBatchTransfersRoute);

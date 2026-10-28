@@ -4,7 +4,7 @@ import {
 } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
 import { animalStays, timeZoneAt } from "../../../property/time-zone";
-import { resolveEventDateIn } from "../../eventDate";
+import { resolveEventDateIn } from "../../event-date";
 import { sessionDateLock } from "../../rules";
 import { fieldError } from "../../shared";
 import {

@@ -1,7 +1,7 @@
 import type { WeighingCreateData } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
 import { assertNoConflicts } from "../../commitments";
-import { resolveEventDate } from "../../eventDate";
+import { resolveEventDate } from "../../event-date";
 import { recomputeCurrentWeight } from "../shared";
 
 // Pesagem avulsa registrada na hora (o peso atual passa a ser o da mais recente).

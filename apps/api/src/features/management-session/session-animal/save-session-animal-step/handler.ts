@@ -1,5 +1,5 @@
 import { prisma } from "@ifarm/db";
-import { loadAnimalContext } from "../animalContext";
+import { loadAnimalContext } from "../animal-context";
 import { saveAnimalStep } from "../records";
 
 // Registra (ou corrige) uma etapa do manejo no animal. Devolve o contexto atualizado do

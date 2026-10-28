@@ -1,7 +1,7 @@
 import type { WeighingCorrectionData } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
 import { animalStays, timeZoneAt } from "../../../property/time-zone";
-import { resolveEventDateIn } from "../../eventDate";
+import { resolveEventDateIn } from "../../event-date";
 import { keepsOriginal, sessionDateLock } from "../../rules";
 import { fieldError } from "../../shared";
 import { findActiveWeighing, recomputeCurrentWeight } from "../shared";

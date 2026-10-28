@@ -1,5 +1,5 @@
 import { prisma } from "@ifarm/db";
-import { loadAnimalContext } from "../animalContext";
+import { loadAnimalContext } from "../animal-context";
 import { clearAnimalStep } from "../records";
 
 // Desfaz o registro da etapa no animal. Devolve o contexto atualizado, como o anterior.

@@ -1,5 +1,5 @@
 import { batchPayloadSchema, batchPlanSchema } from "@ifarm/shared";
-import { confirmTransferInTx } from "../../batch-transfer/confirmTransfer";
+import { confirmTransferInTx } from "../../batch-transfer/confirm-transfer";
 import { defineStep, StepError, type SessionCtx, type Tx } from "./types";
 
 // Transferências da sessão ainda abertas (uma por lote de destino).

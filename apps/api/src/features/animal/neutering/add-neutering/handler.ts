@@ -2,7 +2,7 @@ import type { NeuteringCreateData } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
 import { NotFoundError } from "../../../../lib/errors";
 import { assertNoConflicts } from "../../commitments";
-import { resolveEventDate } from "../../eventDate";
+import { resolveEventDate } from "../../event-date";
 import { fieldError } from "../../shared";
 import {
   INVALID_TECHNIQUE_MESSAGE,
