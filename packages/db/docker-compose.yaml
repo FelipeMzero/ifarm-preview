@@ -6,6 +6,7 @@ services:
     image: postgres:15
     container_name: container_postgres_ifarm
     restart: always
+    command: ["postgres", "-c", "timezone=UTC"]
     ports:
       - "${DB_PORT}:5432"
     environment:

@@ -59,7 +59,9 @@ O seed (usuário admin e dados de exemplo) fica na API, porque também cria os u
 
 ## 📂 Estrutura do Banco de Dados
 
-O esquema de dados é definido em `prisma/schema.prisma`. Sempre que alterar este arquivo, rode na raiz:
+O esquema de dados é definido em `prisma/schema.prisma`. As datas e horas são `timestamptz` e o banco trabalha em UTC: o container sobe com `timezone=UTC` (`docker-compose.yaml`). Num banco fora deste compose (ex.: um serviço gerenciado em produção), configure o mesmo fuso no servidor.
+
+Sempre que alterar o schema, rode na raiz:
 
 ```bash
 pnpm db:generate

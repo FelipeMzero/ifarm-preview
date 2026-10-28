@@ -6,12 +6,11 @@ Plataforma para gestão do ciclo produtivo de fazendas de pecuária de corte (cr
 
 ```
 apps/
-  api/      → Hono (API REST e autenticação). Ver apps/api/README.md
+  api/      → Hono (API REST): regras de negócio, acesso ao banco e autenticação. Ver apps/api/README.md
   web/      → React + Vite (telas). Ver apps/web/README.md
   mobile/   → Expo / React Native. Ver apps/mobile/README.md
 packages/
   shared/   → contrato da API (schemas, tipos e clientes) e permissões, usado pela API, pelo web e pelo mobile
-  domain/   → regras de negócio e acesso ao banco do servidor (usado pela API)
   db/       → banco de dados: schema e CLI do Prisma, container do PostgreSQL. Ver packages/db/README.md
 docs/       → requisitos, arquitetura e visão do produto
 ```

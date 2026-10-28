@@ -2,7 +2,7 @@
 
 > Parte do monorepo iFarm — veja o [README da raiz](../../README.md) para a visão geral.
 
-API REST do iFarm, em [Hono](https://hono.dev/), consumida pelo `apps/web` e pelo `apps/mobile`. Também é o servidor da autenticação (better-auth: login, sessões e usuários). As regras de negócio ficam em `packages/domain`, e o banco de dados em [`packages/db`](../../packages/db/README.md).
+API REST em [Hono](https://hono.dev/) consumida pelo `apps/web` e pelo `apps/mobile`. Concentra as regras de negócio e o acesso ao banco de dados ([`packages/db`](../../packages/db/README.md)), e também é o servidor da autenticação (better-auth: login, sessões e usuários). A organização do código está descrita em [docs/architecture.md](../../docs/architecture.md).
 
 ## 🚀 Pré-requisitos
 
@@ -78,11 +78,12 @@ API_DELAY_MS=2000 pnpm dev
 
 ## 📂 Estrutura
 
-| Caminho           | O que fica ali                                                             |
-| :---------------- | :------------------------------------------------------------------------- |
-| `src/index.ts`    | O app do Hono: CORS de desenvolvimento, autenticação e os routers montados |
-| `src/routes/`     | Um router por domínio, montado em `/api/<domínio>`                         |
-| `src/auth.ts`     | O servidor do better-auth                                                  |
-| `src/session.ts`  | `requireSession`: sessão e permissão de cada rota                          |
-| `src/http.ts`     | Conversão dos erros do domínio em respostas HTTP                           |
-| `scripts/seed.ts` | Os dados de exemplo                                                        |
+| Caminho           | O que fica ali                                                                                 |
+| :---------------- | :--------------------------------------------------------------------------------------------- |
+| `src/index.ts`    | O app do Hono: CORS de desenvolvimento, autenticação e os routers dos domínios                 |
+| `src/features/`   | Um domínio por pasta, montado em `/api/<domínio>`; dentro dele, uma pasta por operação (fatia) |
+| `src/lib/`        | Utilitários sem HTTP: erros de negócio, datas do banco, exclusão, situação                     |
+| `src/auth.ts`     | O servidor do better-auth                                                                      |
+| `src/session.ts`  | `requireSession`: sessão e permissão de cada rota                                              |
+| `src/http.ts`     | Conversão dos erros de negócio em respostas HTTP                                               |
+| `scripts/seed.ts` | Os dados de exemplo                                                                            |
