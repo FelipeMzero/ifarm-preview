@@ -1,25 +1,26 @@
 import { z } from "zod";
 import { FIELD_LIMITS } from "../field-limits";
-import { numericField, optionalNumericField } from "../zod-utils";
+import { numberField, optionalNumberField } from "../zod-utils";
 
-const hectaresSchema = z.coerce
-  .number()
+const hectaresSchema = z
+  .number("Valor inválido.")
   .positive("Valor inválido.")
   .max(FIELD_LIMITS.area.area, "Limite ultrapassado.");
 
-const stockingRateSchema = z.coerce
-  .number()
+const stockingRateSchema = z
+  .number("Valor inválido.")
   .positive("Valor inválido.")
   .max(FIELD_LIMITS.area.stockingRate, "Limite ultrapassado");
 
 // Dias de referência do pastejo rotacionado (ocupação e descanso da área).
-const daysSchema = z.coerce
-  .number()
+const daysSchema = z
+  .number("Valor inválido.")
   .int("Informe um número inteiro de dias.")
   .positive("Valor inválido.")
   .max(FIELD_LIMITS.area.days, `Máximo de ${FIELD_LIMITS.area.days} dias.`);
 
-// Dados de uma área como o usuário os informa: números como texto, "" para vazio.
+// Dados de uma área: o formulário envia os números como texto e "" para vazio; o schema
+// valida e converte (números, null para vazio).
 export const areaSchema = z.object({
   name: z
     .string()
@@ -32,21 +33,25 @@ export const areaSchema = z.object({
   polygon: z
     .any()
     .refine((val) => val != null, "Você deve desenhar o contorno no mapa."),
-  hectares: numericField(hectaresSchema, "Este campo é obrigatório"),
-  stockingRate: numericField(stockingRateSchema, "Este campo é obrigatório"),
-  defaultOccupationDays: optionalNumericField(daysSchema),
-  defaultRestDays: optionalNumericField(daysSchema),
+  hectares: numberField(hectaresSchema, "Este campo é obrigatório"),
+  stockingRate: numberField(stockingRateSchema, "Este campo é obrigatório"),
+  defaultOccupationDays: optionalNumberField(daysSchema),
+  defaultRestDays: optionalNumberField(daysSchema),
   notes: z
     .string()
     .max(
       FIELD_LIMITS.area.notes,
       `Máximo de ${FIELD_LIMITS.area.notes} caracteres`,
     )
-    .optional(),
+    .optional()
+    .transform((v) => v || null),
   propertyId: z.uuid("Propriedade inválida."),
 });
 
-export type AreaInput = z.infer<typeof areaSchema>;
+/** O que o formulário envia (números como texto, "" para vazio). */
+export type AreaPayload = z.input<typeof areaSchema>;
+/** O que a API recebe depois da validação: números convertidos, vazios como null. */
+export type AreaData = z.output<typeof areaSchema>;
 
 // Filtros e paginação da listagem (parâmetros da URL: chegam como texto e são convertidos).
 export const areaQuerySchema = z.object({

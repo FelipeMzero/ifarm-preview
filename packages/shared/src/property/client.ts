@@ -4,7 +4,7 @@ import {
   toQueryString,
   type ApiRequest,
 } from "../client";
-import type { PropertyInput, PropertyListParams } from "./schema";
+import type { PropertyPayload, PropertyListParams } from "./schema";
 import type { PropertyListResult, PropertyOption } from "./types";
 
 const PROPERTIES = "/api/property";
@@ -28,7 +28,7 @@ export function createPropertyClient(request: ApiRequest) {
 
     async getProperty(id: string) {
       const response = await request(PROPERTY_BY_ID(id));
-      return readJson<PropertyInput>(
+      return readJson<PropertyPayload>(
         response,
         "Não foi possível carregar a propriedade.",
       );
@@ -43,7 +43,7 @@ export function createPropertyClient(request: ApiRequest) {
       return result.data;
     },
 
-    async createProperty(data: PropertyInput) {
+    async createProperty(data: PropertyPayload) {
       const response = await request(PROPERTIES, jsonRequest("POST", data));
       return readJson<{ success: true; data: { id: string } }>(
         response,
@@ -51,7 +51,7 @@ export function createPropertyClient(request: ApiRequest) {
       );
     },
 
-    async updateProperty(id: string, data: PropertyInput) {
+    async updateProperty(id: string, data: PropertyPayload) {
       const response = await request(
         PROPERTY_BY_ID(id),
         jsonRequest("PUT", data),

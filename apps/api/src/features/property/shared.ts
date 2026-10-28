@@ -1,4 +1,4 @@
-import type { PropertyInput } from "@ifarm/shared";
+import type { PropertyData } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
 import { NotFoundError, ValidationError } from "../../lib/errors";
 
@@ -12,20 +12,20 @@ import { NotFoundError, ValidationError } from "../../lib/errors";
 //   obrigatórios no propertySchema; o fuso é um dos fusos do Brasil (BR_TIME_ZONES).
 // - Exclusão bloqueada por áreas ou usuários vinculados: FKs com onDelete: Restrict.
 
-// Converte o que veio do formulário (números como texto, "" para vazio) para o formato do banco.
-export function toPropertyData(input: PropertyInput) {
-  const number = (v?: string) => (v ? parseFloat(v) : null);
+// Os campos da propriedade (já convertidos pelo propertySchema); o endereço vai para a tabela
+// própria (toAddressData) e o nome do titular é só da tela.
+export function toPropertyData(data: PropertyData) {
   return {
-    name: input.name,
-    totalArea: number(input.totalArea),
-    productiveArea: number(input.productiveArea),
-    cib: input.cib || null,
-    ccir: input.ccir || null,
-    car: input.car || null,
-    latitude: parseFloat(input.latitude),
-    longitude: parseFloat(input.longitude),
-    timeZone: input.timeZone,
-    owner: { connect: { id: input.ownerId } },
+    name: data.name,
+    totalArea: data.totalArea,
+    productiveArea: data.productiveArea,
+    cib: data.cib,
+    ccir: data.ccir,
+    car: data.car,
+    latitude: data.latitude,
+    longitude: data.longitude,
+    timeZone: data.timeZone,
+    owner: { connect: { id: data.ownerId } },
   };
 }
 

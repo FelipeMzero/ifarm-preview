@@ -1,9 +1,9 @@
-import type { PropertyInput } from "@ifarm/shared";
+import type { PropertyPayload } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
 import { NotFoundError } from "../../../lib/errors";
 
 // Devolve a propriedade no mesmo formato do formulário, para edição e detalhes.
-export async function getProperty(id: string): Promise<PropertyInput> {
+export async function getProperty(id: string): Promise<PropertyPayload> {
   const property = await prisma.property.findUnique({
     where: { id },
     include: { address: true, owner: true },
@@ -22,7 +22,7 @@ export async function getProperty(id: string): Promise<PropertyInput> {
     latitude: property.latitude.toString(),
     longitude: property.longitude.toString(),
     // Gravado sempre a partir do propertySchema (um dos fusos do Brasil) ou do padrão do banco.
-    timeZone: property.timeZone as PropertyInput["timeZone"],
+    timeZone: property.timeZone as PropertyPayload["timeZone"],
     zipCode: property.address?.zipCode ?? "",
     street: property.address?.street ?? "",
     number: property.address?.number ?? "",

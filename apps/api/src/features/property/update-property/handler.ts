@@ -1,4 +1,4 @@
-import type { PropertyInput } from "@ifarm/shared";
+import type { PropertyData } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
 import { write } from "../../../lib/db-errors";
 import {
@@ -11,15 +11,15 @@ import {
   toPropertyData,
 } from "../shared";
 
-export async function updateProperty(id: string, input: PropertyInput) {
+export async function updateProperty(id: string, data: PropertyData) {
   const current = await findPropertyOrThrow(id);
-  await assertActiveOwner(input.ownerId);
+  await assertActiveOwner(data.ownerId);
   await write(() =>
     prisma.property.update({
       where: { id },
       data: {
-        ...toPropertyData(input),
-        ...buildAddressWrite(toAddressData(input), current.addressId),
+        ...toPropertyData(data),
+        ...buildAddressWrite(toAddressData(data), current.addressId),
       },
     }),
   );

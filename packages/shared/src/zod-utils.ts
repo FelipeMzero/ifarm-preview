@@ -1,35 +1,26 @@
 import { z } from "zod";
 
-export function optionalNumericField<T extends z.ZodType>(schema: T) {
-  return z
-    .string()
-    .optional()
-    .superRefine((v, ctx) => {
-      if (!v) return;
-      const result = schema.safeParse(v);
-      if (!result.success) {
-        ctx.addIssue({
-          code: "custom",
-          message: result.error.issues[0]?.message ?? "Valor inválido.",
-        });
-      }
-    });
-}
+// Campos numéricos de formulário: chegam como texto (o <input>) ou número e saem como número.
+// Não usam z.coerce, que tornaria o tipo de entrada `unknown` (ver AGENTS.md). A mensagem de
+// valor inválido vem do `schema` (ex.: z.number("Valor inválido.")).
 
-export function numericField<T extends z.ZodType>(
-  schema: T,
+/** Número obrigatório: vazio é recusado com `requiredMessage`. */
+export function numberField(
+  schema: z.ZodNumber,
   requiredMessage = "Este campo não pode ser vazio",
 ) {
   return z
-    .string()
-    .min(1, requiredMessage)
-    .superRefine((v, ctx) => {
-      const result = schema.safeParse(v);
-      if (!result.success) {
-        ctx.addIssue({
-          code: "custom",
-          message: result.error.issues[0]?.message ?? "Valor inválido.",
-        });
-      }
-    });
+    .union([z.string(), z.number()])
+    .refine((v) => v !== "", requiredMessage)
+    .transform(Number)
+    .pipe(schema);
+}
+
+/** Número opcional: vazio ou ausente vira null. */
+export function optionalNumberField(schema: z.ZodNumber) {
+  return z
+    .union([z.string(), z.number(), z.null()])
+    .optional()
+    .transform((v) => (v === "" || v == null ? null : Number(v)))
+    .pipe(schema.nullable());
 }

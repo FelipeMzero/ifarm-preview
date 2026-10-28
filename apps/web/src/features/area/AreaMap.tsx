@@ -66,7 +66,7 @@ import { batchKeys } from "@/features/batch/queries";
 import { propertyDetailQuery } from "@/features/property/queries";
 import { ErrorPage } from "@/components/our/ErrorPage";
 import { applyServerErrors } from "@/lib/form-errors";
-import { areaSchema, type AreaInput } from "@ifarm/shared";
+import { areaSchema, type AreaPayload } from "@ifarm/shared";
 import { areaClient } from "@/lib/clients";
 import {
   AreaOccupiedError,
@@ -665,8 +665,8 @@ export function AreaMap() {
     batch: { id: string; name: string };
   } | null>(null);
 
-  const form = useForm<AreaInput>({
-    resolver: zodResolver(areaSchema),
+  const form = useForm<AreaPayload>({
+    resolver: zodResolver(areaSchema, undefined, { raw: true }),
     defaultValues: {
       name: "",
       polygon: null,
@@ -789,14 +789,14 @@ export function AreaMap() {
     ]);
 
   const save = useMutation({
-    mutationFn: (data: AreaInput) =>
+    mutationFn: (data: AreaPayload) =>
       editingArea
         ? areaClient.updateArea(editingArea.id, data)
         : areaClient.createArea(data),
     onSuccess: reloadAreas,
   });
 
-  const onSubmit = async (data: AreaInput) => {
+  const onSubmit = async (data: AreaPayload) => {
     try {
       await save.mutateAsync(data);
       toast.success(
@@ -870,7 +870,7 @@ export function AreaMap() {
 
   const calculatedHectares = calculateAreaHectares(polygonPoints);
   const hectaresInput = useWatch({ control: form.control, name: "hectares" });
-  const parsedHectaresInput = parseFloat(hectaresInput);
+  const parsedHectaresInput = parseFloat(String(hectaresInput));
 
   let hectaresWarning: string | null = null;
   if (!isNaN(parsedHectaresInput) && calculatedHectares > 0) {

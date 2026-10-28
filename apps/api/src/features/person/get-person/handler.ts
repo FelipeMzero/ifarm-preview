@@ -1,10 +1,10 @@
-import type { PersonInput } from "@ifarm/shared";
+import type { PersonPayload } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
 import { fromDbDate } from "../../../lib/db-dates";
 import { NotFoundError } from "../../../lib/errors";
 
 // Devolve a pessoa no mesmo formato do formulário, para edição e detalhes.
-export async function getPerson(id: string): Promise<PersonInput> {
+export async function getPerson(id: string): Promise<PersonPayload> {
   const person = await prisma.person.findUnique({
     where: { id },
     include: { address: true },

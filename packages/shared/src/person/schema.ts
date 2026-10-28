@@ -5,8 +5,8 @@ import { MaritalStatus, PersonType } from "../enums";
 import { FIELD_LIMITS } from "../field-limits";
 import { isValidTaxId } from "./tax-id";
 
-// Dados de uma pessoa como o usuário os informa: textos, com "" para campo vazio. Validado no
-// formulário e de novo na API; a conversão para o formato do banco fica no servidor.
+// Dados de uma pessoa: o formulário envia textos, com "" para campo vazio; o schema valida (no
+// formulário e de novo na API) e converte o vazio em null. A data vai para o banco pelo servidor.
 export const personSchema = z
   .object({
     type: z.enum(PersonType, "Este campo não pode ser vazio"),
@@ -24,15 +24,20 @@ export const personSchema = z
         FIELD_LIMITS.person.stateRegistration,
         `Máximo de ${FIELD_LIMITS.person.stateRegistration} caracteres`,
       )
-      .optional(),
-    phone: z.string().optional(),
+      .optional()
+      .transform((v) => v || null),
+    phone: z
+      .string()
+      .optional()
+      .transform((v) => v || null),
     email: z
       .string()
       .max(
         FIELD_LIMITS.person.email,
         `Máximo de ${FIELD_LIMITS.person.email} caracteres`,
       )
-      .optional(),
+      .optional()
+      .transform((v) => v || null),
 
     // Exclusivo de Pessoa Jurídica
     tradeName: z
@@ -41,7 +46,8 @@ export const personSchema = z
         FIELD_LIMITS.person.tradeName,
         `Máximo de ${FIELD_LIMITS.person.tradeName} caracteres`,
       )
-      .optional(),
+      .optional()
+      .transform((v) => v || null),
 
     // Exclusivos de Pessoa Física
     rg: z
@@ -50,9 +56,13 @@ export const personSchema = z
         FIELD_LIMITS.person.rg,
         `Máximo de ${FIELD_LIMITS.person.rg} caracteres`,
       )
-      .optional(),
-    birthDate: dateField,
-    maritalStatus: z.union([z.enum(MaritalStatus), z.literal("")]).optional(),
+      .optional()
+      .transform((v) => v || null),
+    birthDate: dateField.transform((v) => v || null),
+    maritalStatus: z
+      .union([z.enum(MaritalStatus), z.literal("")])
+      .optional()
+      .transform((v) => v || null),
 
     ...addressFields,
   })
@@ -82,7 +92,10 @@ export const personSchema = z
     checkAddress(ctx.value, ctx.issues);
   });
 
-export type PersonInput = z.infer<typeof personSchema>;
+/** O que o formulário envia (textos, "" para vazio). */
+export type PersonPayload = z.input<typeof personSchema>;
+/** O que a API recebe depois da validação: vazios como null. */
+export type PersonData = z.output<typeof personSchema>;
 
 // Filtros e paginação da listagem (parâmetros da URL: chegam como texto e são convertidos).
 export const personQuerySchema = z.object({

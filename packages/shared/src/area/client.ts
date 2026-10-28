@@ -5,7 +5,7 @@ import {
   toQueryString,
   type ApiRequest,
 } from "../client";
-import type { AreaInput, AreaListParams } from "./schema";
+import type { AreaPayload, AreaListParams } from "./schema";
 import type { AreaRow, AreaOccupancyHistoryEntry } from "./types";
 
 // Recusa de desativação por haver um lote na área.
@@ -45,13 +45,13 @@ export function createAreaClient(request: ApiRequest) {
 
     async getArea(id: string) {
       const response = await request(AREA_BY_ID(id));
-      return readJson<AreaInput>(
+      return readJson<AreaPayload>(
         response,
         "Não foi possível buscar os dados da área.",
       );
     },
 
-    async createArea(data: AreaInput) {
+    async createArea(data: AreaPayload) {
       const response = await request(AREAS, jsonRequest("POST", data));
       return readJson<{ success: true; data: { id: string } }>(
         response,
@@ -59,7 +59,7 @@ export function createAreaClient(request: ApiRequest) {
       );
     },
 
-    async updateArea(id: string, data: AreaInput) {
+    async updateArea(id: string, data: AreaPayload) {
       const response = await request(AREA_BY_ID(id), jsonRequest("PUT", data));
       return readJson<{ success: true; data: { id: string } }>(
         response,

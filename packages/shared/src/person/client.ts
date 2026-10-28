@@ -4,7 +4,7 @@ import {
   toQueryString,
   type ApiRequest,
 } from "../client";
-import type { PersonInput, PersonListParams } from "./schema";
+import type { PersonPayload, PersonListParams } from "./schema";
 import type { PersonListResult } from "./types";
 
 const PEOPLE = "/api/person";
@@ -29,13 +29,13 @@ export function createPersonClient(request: ApiRequest) {
 
     async getPerson(id: string) {
       const response = await request(PERSON_BY_ID(id));
-      return readJson<PersonInput>(
+      return readJson<PersonPayload>(
         response,
         "Não foi possível carregar a pessoa.",
       );
     },
 
-    async createPerson(data: PersonInput) {
+    async createPerson(data: PersonPayload) {
       const response = await request(PEOPLE, jsonRequest("POST", data));
       return readJson<{ success: true; data: { id: string } }>(
         response,
@@ -43,7 +43,7 @@ export function createPersonClient(request: ApiRequest) {
       );
     },
 
-    async updatePerson(id: string, data: PersonInput) {
+    async updatePerson(id: string, data: PersonPayload) {
       const response = await request(
         PERSON_BY_ID(id),
         jsonRequest("PUT", data),

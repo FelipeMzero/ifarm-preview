@@ -1,23 +1,24 @@
-import { type PersonInput } from "@ifarm/shared";
+import { type PersonData } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
 import { toDbDate } from "../../lib/db-dates";
 import { NotFoundError } from "../../lib/errors";
 
 // Usados por mais de uma operação de pessoa.
 
-// Converte o que veio do formulário (textos, "" para vazio) para o formato do banco.
-export function toPersonData(input: PersonInput) {
+// Os campos da pessoa (já convertidos pelo personSchema), com a data no formato do banco; o
+// endereço vai para a tabela própria (toAddressData).
+export function toPersonData(data: PersonData) {
   return {
-    type: input.type,
-    taxId: input.taxId,
-    name: input.name,
-    stateRegistration: input.stateRegistration || null,
-    phone: input.phone || null,
-    email: input.email || null,
-    tradeName: input.tradeName || null,
-    rg: input.rg || null,
-    birthDate: input.birthDate ? toDbDate(input.birthDate) : null,
-    maritalStatus: input.maritalStatus || null,
+    type: data.type,
+    taxId: data.taxId,
+    name: data.name,
+    stateRegistration: data.stateRegistration,
+    phone: data.phone,
+    email: data.email,
+    tradeName: data.tradeName,
+    rg: data.rg,
+    birthDate: data.birthDate ? toDbDate(data.birthDate) : null,
+    maritalStatus: data.maritalStatus,
   };
 }
 

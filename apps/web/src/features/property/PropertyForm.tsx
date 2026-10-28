@@ -14,7 +14,7 @@ import {
   isNotFoundError,
   propertySchema,
   type BrTimeZone,
-  type PropertyInput,
+  type PropertyPayload,
 } from "@ifarm/shared";
 import { propertyClient } from "@/lib/clients";
 import { ErrorPage } from "@/components/our/ErrorPage";
@@ -95,7 +95,7 @@ export function PropertyForm({
   });
 
   const save = useMutation({
-    mutationFn: (data: PropertyInput) =>
+    mutationFn: (data: PropertyPayload) =>
       id
         ? propertyClient.updateProperty(id, data)
         : propertyClient.createProperty(data),
@@ -112,8 +112,8 @@ export function PropertyForm({
     getValues,
     setError,
     formState: { isSubmitting },
-  } = useForm<PropertyInput>({
-    resolver: zodResolver(propertySchema),
+  } = useForm<PropertyPayload>({
+    resolver: zodResolver(propertySchema, undefined, { raw: true }),
     // Dados da propriedade em edição. Se forem buscados de novo em segundo plano, só os campos
     // que o usuário não alterou são atualizados (keepDirtyValues).
     values: property,
@@ -147,13 +147,13 @@ export function PropertyForm({
   // Trocá-lo não altera os registros, só a exibição dos horários; por isso, sem confirmação.
   const [timeZoneChosen, setTimeZoneChosen] = useState(false);
 
-  async function suggestTimeZone(lat?: string, lon?: string) {
-    // Só com as duas coordenadas válidas (as mesmas regras do formulário).
+  async function suggestTimeZone(lat?: string | number, lon?: string | number) {
+    // Só com as duas coordenadas válidas (as mesmas regras do formulário, que as convertem).
     const { latitude: latField, longitude: lonField } = propertySchema.shape;
-    if (!latField.safeParse(lat).success || !lonField.safeParse(lon).success) {
-      return;
-    }
-    const coordinates = { latitude: Number(lat), longitude: Number(lon) };
+    const latitude = latField.safeParse(lat);
+    const longitude = lonField.safeParse(lon);
+    if (!latitude.success || !longitude.success) return;
+    const coordinates = { latitude: latitude.data, longitude: longitude.data };
 
     // Sem sugestão (fora do Brasil, falha) não é erro: o usuário escolhe o fuso.
     const suggested = await queryClient
@@ -178,7 +178,7 @@ export function PropertyForm({
     },
   });
 
-  async function onSubmit(data: PropertyInput) {
+  async function onSubmit(data: PropertyPayload) {
     try {
       if (id) {
         await save.mutateAsync(data);
@@ -286,6 +286,7 @@ export function PropertyForm({
               render={({ field, id: fieldId }) => (
                 <Input
                   {...field}
+                  value={field.value ?? ""}
                   id={fieldId}
                   type="number"
                   step="0.0001"
@@ -301,6 +302,7 @@ export function PropertyForm({
               render={({ field, id: fieldId }) => (
                 <Input
                   {...field}
+                  value={field.value ?? ""}
                   id={fieldId}
                   type="number"
                   step="0.0001"
@@ -547,8 +549,8 @@ export function PropertyForm({
             </FieldRow>
 
             <LocationPreview
-              latitude={latitude ?? ""}
-              longitude={longitude ?? ""}
+              latitude={String(latitude ?? "")}
+              longitude={String(longitude ?? "")}
               onDoubleClick={() => setIsPickerOpen(true)}
               className="min-h-0 flex-1"
             />

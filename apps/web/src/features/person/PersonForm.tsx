@@ -3,7 +3,7 @@ import {
   PersonType,
   isNotFoundError,
   personSchema,
-  type PersonInput,
+  type PersonPayload,
 } from "@ifarm/shared";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm, useWatch } from "react-hook-form";
@@ -62,7 +62,7 @@ export function PersonForm({
   });
 
   const save = useMutation({
-    mutationFn: (data: PersonInput) =>
+    mutationFn: (data: PersonPayload) =>
       id
         ? personClient.updatePerson(id, data)
         : personClient.createPerson(data),
@@ -78,8 +78,8 @@ export function PersonForm({
     setValue,
     setError,
     formState: { isSubmitting },
-  } = useForm<PersonInput>({
-    resolver: zodResolver(personSchema),
+  } = useForm<PersonPayload>({
+    resolver: zodResolver(personSchema, undefined, { raw: true }),
     // Dados da pessoa em edição. Se forem buscados de novo em segundo plano, só os campos que o
     // usuário não alterou são atualizados (keepDirtyValues).
     values: person,
@@ -114,7 +114,7 @@ export function PersonForm({
       setValue(field, value, { shouldValidate: true }),
   });
 
-  async function onSubmit(data: PersonInput) {
+  async function onSubmit(data: PersonPayload) {
     try {
       if (id) {
         await save.mutateAsync(data);

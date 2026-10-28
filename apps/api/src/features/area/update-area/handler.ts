@@ -1,13 +1,16 @@
-import type { AreaInput } from "@ifarm/shared";
+import type { AreaData } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
 import { write } from "../../../lib/db-errors";
-import { findAreaOrThrow, toAreaData } from "../shared";
+import { findAreaOrThrow } from "../shared";
 
-// A propriedade da área não muda na edição.
-export async function updateArea(id: string, input: AreaInput) {
+// A propriedade da área não muda na edição (propertyId: undefined = mantém).
+export async function updateArea(id: string, data: AreaData) {
   await findAreaOrThrow(id);
   await write(() =>
-    prisma.area.update({ where: { id }, data: toAreaData(input) }),
+    prisma.area.update({
+      where: { id },
+      data: { ...data, propertyId: undefined },
+    }),
   );
   return { id };
 }

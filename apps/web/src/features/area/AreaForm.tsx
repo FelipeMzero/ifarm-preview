@@ -12,7 +12,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import type { AreaInput } from "@ifarm/shared";
+import type { AreaPayload } from "@ifarm/shared";
 import { type AreaRow } from "@ifarm/shared";
 import { FieldRow } from "@/components/our/FieldRow";
 import { FormActionBar } from "@/components/our/FormActionBar";
@@ -22,8 +22,8 @@ interface AreaFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   editingArea: AreaRow | null;
-  form: UseFormReturn<AreaInput>;
-  onSubmit: (data: AreaInput) => Promise<void>;
+  form: UseFormReturn<AreaPayload>;
+  onSubmit: (data: AreaPayload) => Promise<void>;
   onCancel: () => void;
   hectaresWarning: string | null;
   polygonPointsCount?: number;
@@ -146,6 +146,7 @@ export function AreaForm({
                 render={({ field }) => (
                   <Input
                     {...field}
+                    value={field.value ?? ""}
                     type="number"
                     step="1"
                     min="1"
@@ -163,6 +164,7 @@ export function AreaForm({
                 render={({ field }) => (
                   <Input
                     {...field}
+                    value={field.value ?? ""}
                     type="number"
                     step="1"
                     min="1"
