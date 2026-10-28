@@ -1,10 +1,5 @@
 import { jsonRequest, readJson, type ApiRequest } from "../client";
-
-export type HealthManagementType = {
-  id: string;
-  name: string;
-  deactivatedAt: string | null;
-};
+import type { HealthManagementType } from "./types";
 
 const HEALTH_MANAGEMENT_TYPES = "/api/health-management-type";
 const HEALTH_MANAGEMENT_TYPE_BY_ID = (id: string) =>

@@ -4,25 +4,8 @@ import {
   toQueryString,
   type ApiRequest,
 } from "../client";
-import type { PersonType } from "../enums";
 import type { PersonInput, PersonListParams } from "./schema";
-
-export type PersonRow = {
-  id: string;
-  type: PersonType;
-  taxId: string;
-  name: string;
-  phone: string | null;
-  email: string | null;
-  deactivatedAt: string | null;
-  updatedAt: string;
-};
-
-export type PersonListResult = {
-  data: PersonRow[];
-  total: number;
-  pageCount: number;
-};
+import type { PersonListResult } from "./types";
 
 const PEOPLE = "/api/person";
 const PERSON_BY_ID = (id: string) => `${PEOPLE}/${id}`;

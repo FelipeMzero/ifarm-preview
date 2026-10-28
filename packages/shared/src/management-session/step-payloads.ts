@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { IdentifierKind } from "../animal/client";
+import type { IdentifierKind } from "../animal/types";
 import { IDENTIFIER_MAX_LENGTH } from "../animal/schema";
 import { FIELD_LIMITS } from "../field-limits";
 

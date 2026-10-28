@@ -1,5 +1,5 @@
 import { DAY_MS, today as todayDay, toLocalDay } from "../date";
-import type { BatchDetailAnimal } from "./client";
+import type { BatchDetailAnimal } from "./types";
 
 // Projeção linear da meta de peso do lote. Cada animal cresce a partir da sua última
 // pesagem no próprio GMD (ou, sem histórico, no GMD médio do lote); o peso médio do lote

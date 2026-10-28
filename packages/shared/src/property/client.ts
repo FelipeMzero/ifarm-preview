@@ -5,25 +5,7 @@ import {
   type ApiRequest,
 } from "../client";
 import type { PropertyInput, PropertyListParams } from "./schema";
-
-export type PropertyRow = {
-  id: string;
-  name: string;
-  totalArea: number | null;
-  city: string | null;
-  state: string | null;
-  ownerName: string;
-  deactivatedAt: string | null;
-  updatedAt: string;
-};
-
-export type PropertyListResult = {
-  data: PropertyRow[];
-  total: number;
-  pageCount: number;
-};
-
-export type PropertyOption = { id: string; name: string };
+import type { PropertyListResult, PropertyOption } from "./types";
 
 const PROPERTIES = "/api/property";
 const PROPERTY_BY_ID = (id: string) => `${PROPERTIES}/${id}`;

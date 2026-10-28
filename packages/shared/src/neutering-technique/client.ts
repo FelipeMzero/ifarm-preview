@@ -1,10 +1,5 @@
 import { jsonRequest, readJson, type ApiRequest } from "../client";
-
-export type NeuteringTechnique = {
-  id: string;
-  name: string;
-  deactivatedAt: string | null;
-};
+import type { NeuteringTechnique } from "./types";
 
 const NEUTERING_TECHNIQUES = "/api/neutering-technique";
 const NEUTERING_TECHNIQUE_BY_ID = (id: string) =>

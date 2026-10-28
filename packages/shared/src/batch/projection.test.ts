@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { BatchDetailAnimal } from "./client";
+import type { BatchDetailAnimal } from "./types";
 import { DAY_MS } from "../date";
 import { projectBatch } from "./projection";
 

@@ -1,17 +1,7 @@
 import { readJson, toQueryString, type ApiRequest } from "../client";
 import type { BrTimeZone } from "../property/time-zones";
 import type { GeocodeParams } from "./schema";
-
-/** Endereço encontrado pelo CEP. */
-export type ZipCodeAddress = {
-  zipCode: string;
-  street: string;
-  neighborhood: string;
-  city: string;
-  state: string;
-};
-
-export type Coordinates = { latitude: number; longitude: number };
+import type { ZipCodeAddress, Coordinates } from "./types";
 
 const ADDRESS = "/api/address";
 

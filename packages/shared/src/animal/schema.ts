@@ -2,7 +2,7 @@ import { z } from "zod";
 import { dateField, dateTimeField } from "../date";
 import { AnimalOrigin, AnimalStatus, Sex } from "../enums";
 import { FIELD_LIMITS } from "../field-limits";
-import type { IdentifierKind } from "./client";
+import type { IdentifierKind } from "./types";
 
 // Contratos da API de animais. Os formulários de animal validam com estes mesmos schemas
 // (zodResolver em modo raw: a tela valida e envia os valores do formulário; a API converte).

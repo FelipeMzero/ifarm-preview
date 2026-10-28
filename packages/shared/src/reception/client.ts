@@ -4,65 +4,17 @@ import {
   toQueryString,
   type ApiRequest,
 } from "../client";
-import type { ManagementSessionStatus } from "../management-session/steps";
 import type {
   CreateReceptionPayload,
   ReceptionPurchaseListParams,
 } from "./schema";
+import type {
+  ReceptionPurchase,
+  ReceptionPurchaseListResult,
+  ReceptionDocuments,
+} from "./types";
 
 // Área de recepções: a compra vista por quem recebe os animais (sem valores).
-
-type Ref = { id: string; name: string };
-
-export type ReceptionPurchaseCategory = {
-  id: number;
-  label: string;
-  expectedQuantity: number;
-  receivedQuantity: number;
-};
-
-export type ReceptionSummary = {
-  id: string;
-  sessionId: string;
-  title: string;
-  status: ManagementSessionStatus;
-  performedAt: string | null;
-  scheduledAt: string;
-  entryBatch: Ref;
-  gtaNumber: string | null;
-  invoiceNumber: string | null;
-  animalCount: number;
-};
-
-export type ReceptionPurchase = {
-  id: string;
-  title: string;
-  purchaseDate: string;
-  notes: string | null;
-  seller: Ref;
-  /** Recepções só em compras em andamento. */
-  status: "open" | "confirmed" | "cancelled";
-  categories: ReceptionPurchaseCategory[];
-  receptions: ReceptionSummary[];
-  expectedQuantity: number;
-  receivedQuantity: number;
-  hasOpenReception: boolean;
-};
-
-export type ReceptionPurchaseListResult = {
-  data: ReceptionPurchase[];
-  total: number;
-  page?: number;
-  pageSize?: number;
-  pageCount: number;
-};
-
-export type ReceptionFilter = "pending" | "all";
-
-export type ReceptionDocuments = {
-  gtaNumber?: string | null;
-  invoiceNumber?: string | null;
-};
 
 const RECEPTION_PURCHASES = "/api/reception/purchases";
 

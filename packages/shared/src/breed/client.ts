@@ -1,10 +1,5 @@
 import { jsonRequest, readJson, type ApiRequest } from "../client";
-
-export type Breed = {
-  id: string;
-  name: string;
-  deactivatedAt: string | null;
-};
+import type { Breed } from "./types";
 
 const BREEDS = "/api/breed";
 const BREED_BY_ID = (id: string) => `${BREEDS}/${id}`;
