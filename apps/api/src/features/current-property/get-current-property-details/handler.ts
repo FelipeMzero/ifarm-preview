@@ -1,6 +1,6 @@
 import type { CurrentPropertyDetails } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
-import { getOrAssignCurrentProperty } from "../resolve";
+import { getOrAssignCurrentProperty } from "../resolve.public";
 
 // Detalhes da propriedade atual, para o painel.
 export async function getCurrentPropertyDetails(

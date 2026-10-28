@@ -10,7 +10,7 @@ import { updatePurchaseRoute } from "./update-purchase/route";
 
 // As operações de compra, cada uma na própria pasta (endpoint em route.ts, o que ela faz em
 // handler.ts), montadas em /api/purchase. O rateio de custos (costs.ts) é usado por mais de
-// uma operação; a recepção dos animais (reception.ts), também pelas sessões de manejo, pela
+// uma operação; a recepção dos animais (reception.public.ts), também pelas sessões de manejo, pela
 // área de recepções e pelo seed.
 export const purchaseRoutes = new Hono();
 

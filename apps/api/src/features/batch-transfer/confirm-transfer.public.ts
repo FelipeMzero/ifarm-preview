@@ -4,7 +4,7 @@ import {
   animalLabel,
   summarize,
   unavailableAnimalsMessage,
-} from "../animal/rules";
+} from "../animal/availability.public";
 import { blockedTransferAnimals, enteredAfter, transferStatus } from "./rules";
 
 type Tx = Prisma.TransactionClient;

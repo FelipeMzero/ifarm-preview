@@ -3,7 +3,7 @@ import {
   type NeuteringCorrectionData,
 } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
-import { animalStays, timeZoneAt } from "../../../property/time-zone";
+import { animalStays, timeZoneAt } from "../../../property/time-zone.public";
 import { resolveEventDateIn } from "../../event-date";
 import { sessionDateLock } from "../../rules";
 import { fieldError } from "../../shared";
@@ -11,7 +11,7 @@ import { findActiveNeutering } from "../shared";
 import {
   INVALID_TECHNIQUE_MESSAGE,
   isValidNeuteringTechnique,
-} from "../technique";
+} from "../technique.public";
 
 // Corrige técnica, data (só castrações avulsas) e observação; guarda os valores originais.
 export async function correctNeutering(

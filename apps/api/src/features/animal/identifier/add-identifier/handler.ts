@@ -1,6 +1,6 @@
 import type { IdentifierChangeData, IdentifierKind } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
-import { assertNoConflicts } from "../../commitments";
+import { assertNoConflicts } from "../../commitments.public";
 import { ADAPTERS, IdentifierError, recomputeCurrent } from "../shared";
 
 // Troca (ou remove) o identificador na hora: cria um registro avulso com a data de

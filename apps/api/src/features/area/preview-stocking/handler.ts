@@ -3,7 +3,7 @@ import type { z } from "zod";
 import { prisma } from "@ifarm/db";
 import { toDbDate } from "../../../lib/db-dates";
 import { NotFoundError } from "../../../lib/errors";
-import { stockingPreview } from "../stocking";
+import { stockingPreview } from "../stocking.public";
 
 // Prévia da lotação da área que vai receber animais: de uma transferência já salva ou do que
 // o formulário descreve (área ou lote, animais, lotes inteiros e animais novos).

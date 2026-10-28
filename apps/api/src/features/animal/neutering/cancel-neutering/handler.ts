@@ -1,6 +1,6 @@
 import type { NeuteringCancelData } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
-import { effectiveNeutering } from "../../../management-session/effective";
+import { effectiveNeutering } from "../../../management-session/effective.public";
 import { findActiveNeutering } from "../shared";
 
 // Exclusão lógica da castração. Sem nenhuma castração restante, o usuário decide se o

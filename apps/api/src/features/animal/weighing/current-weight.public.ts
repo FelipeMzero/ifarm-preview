@@ -1,5 +1,5 @@
 import { Prisma } from "@ifarm/db";
-import { effectiveWeighing } from "../../management-session/effective";
+import { effectiveWeighing } from "../../management-session/effective.public";
 
 // Peso atual do animal: recalculado por toda mudança nas pesagens, inclusive as feitas pelas
 // sessões de manejo.

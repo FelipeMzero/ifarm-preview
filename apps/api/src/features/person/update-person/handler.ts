@@ -1,7 +1,10 @@
 import { type PersonInput } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
 import { write } from "../../../lib/db-errors";
-import { buildAddressWrite, toAddressData } from "../../address/persistence";
+import {
+  buildAddressWrite,
+  toAddressData,
+} from "../../address/persistence.public";
 import { withoutImmutableFields } from "../rules";
 import { findPersonOrThrow, toPersonData } from "../shared";
 

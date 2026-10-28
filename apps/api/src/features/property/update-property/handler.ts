@@ -1,7 +1,10 @@
 import type { PropertyInput } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
 import { write } from "../../../lib/db-errors";
-import { buildAddressWrite, toAddressData } from "../../address/persistence";
+import {
+  buildAddressWrite,
+  toAddressData,
+} from "../../address/persistence.public";
 import {
   assertActiveOwner,
   findPropertyOrThrow,

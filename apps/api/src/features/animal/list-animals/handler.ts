@@ -5,8 +5,8 @@ import {
 } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
 import { fromDbDate, toDbDate } from "../../../lib/db-dates";
-import { getOrAssignCurrentProperty } from "../../current-property/resolve";
-import { propertyTimeZone, toZonedIso } from "../../property/time-zone";
+import { getOrAssignCurrentProperty } from "../../current-property/resolve.public";
+import { propertyTimeZone, toZonedIso } from "../../property/time-zone.public";
 import { birthDateBounds, type AgeRange } from "../rules";
 
 // Faixa etária → filtro da coluna birthDate (@db.Date), pela idade no dia de hoje da

@@ -6,7 +6,7 @@ import {
   normalizeStepOrder,
   type SessionStep,
   toStepRows,
-} from "./session-steps";
+} from "./session-steps.public";
 
 // Planejamento de uma sessão: aplica as etapas ao criar e alterar sessões e ao abrir uma
 // recepção de compra.

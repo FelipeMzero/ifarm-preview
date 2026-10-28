@@ -2,14 +2,14 @@ import type { AnimalDetail } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
 import { fromDbDate } from "../../../lib/db-dates";
 import { NotFoundError } from "../../../lib/errors";
-import { effectiveNeutering } from "../../management-session/effective";
+import { effectiveNeutering } from "../../management-session/effective.public";
 import {
   animalStays,
   propertyRefSelect,
   toPropertyRef,
   type ZoneOf,
   toZonedIso,
-} from "../../property/time-zone";
+} from "../../property/time-zone.public";
 
 // Com recastração há mais de um registro: vale o mais recente (no fuso de onde aconteceu).
 function latestNeuteringDate(

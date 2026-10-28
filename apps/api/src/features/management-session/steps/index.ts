@@ -1,5 +1,5 @@
 import { type StepType } from "@ifarm/shared";
-import { type SessionStep, stepKey } from "../session-steps";
+import { type SessionStep, stepKey } from "../session-steps.public";
 import { batchStep } from "./batch";
 import { healthStep } from "./health";
 import { rfidStep, tagStep } from "./identifier";

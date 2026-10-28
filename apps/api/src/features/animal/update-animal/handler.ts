@@ -3,12 +3,12 @@ import { prisma } from "@ifarm/db";
 import { toDbDate } from "../../../lib/db-dates";
 import { write } from "../../../lib/db-errors";
 import { NotFoundError } from "../../../lib/errors";
-import { propertyTimeZone } from "../../property/time-zone";
-import { assertNoConflicts } from "../commitments";
+import { propertyTimeZone } from "../../property/time-zone.public";
+import { assertNoConflicts } from "../commitments.public";
 import {
   INVALID_TECHNIQUE_MESSAGE,
   isValidNeuteringTechnique,
-} from "../neutering/technique";
+} from "../neutering/technique.public";
 import { updateCommitmentIntents } from "../rules";
 import { fieldError } from "../shared";
 

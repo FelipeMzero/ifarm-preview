@@ -4,7 +4,7 @@ import {
   type IdentifierKind,
 } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
-import { animalStays, timeZoneAt } from "../../../property/time-zone";
+import { animalStays, timeZoneAt } from "../../../property/time-zone.public";
 import { keepsOriginal, sessionDateLock } from "../../rules";
 import {
   ADAPTERS,

@@ -4,8 +4,8 @@ import {
   type BatchTransferQuery,
 } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
-import { getOrAssignCurrentProperty } from "../../current-property/resolve";
-import { propertyTimeZone, toZonedIso } from "../../property/time-zone";
+import { getOrAssignCurrentProperty } from "../../current-property/resolve.public";
+import { propertyTimeZone, toZonedIso } from "../../property/time-zone.public";
 import { TRANSFER_STATUS_WHERE, transferStatus } from "../rules";
 
 function buildWhere(query: BatchTransferQuery, propertyId: string) {

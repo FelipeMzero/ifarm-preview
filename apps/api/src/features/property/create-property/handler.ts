@@ -1,7 +1,7 @@
 import type { PropertyInput } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
 import { write } from "../../../lib/db-errors";
-import { toAddressData } from "../../address/persistence";
+import { toAddressData } from "../../address/persistence.public";
 import { assertActiveOwner, toPropertyData } from "../shared";
 
 export async function createProperty(input: PropertyInput) {

@@ -3,7 +3,7 @@ import { prisma } from "@ifarm/db";
 import {
   findReception,
   removeReceivedAnimal,
-} from "../../../purchase/reception";
+} from "../../../purchase/reception.public";
 import { requireSessionIn, StepError } from "../../shared";
 import { stepModule } from "../../steps";
 

@@ -4,7 +4,7 @@ import {
   rfidPlanSchema,
   tagPlanSchema,
 } from "@ifarm/shared";
-import { animalLabel, summarize } from "../../animal/rules";
+import { animalLabel, summarize } from "../../animal/availability.public";
 import { takenInSession } from "../rules";
 import { defineStep, StepError, type StepAnimal, type Tx } from "./types";
 

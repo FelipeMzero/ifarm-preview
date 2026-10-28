@@ -1,6 +1,6 @@
 import { prisma } from "@ifarm/db";
-import { assertNoConflicts } from "../../animal/commitments";
-import { confirmTransferInTx, ConfirmError } from "../confirm-transfer";
+import { assertNoConflicts } from "../../animal/commitments.public";
+import { confirmTransferInTx, ConfirmError } from "../confirm-transfer.public";
 
 // Efetiva o plano (ver confirmTransferInTx). Transferências geradas por uma sessão de
 // manejo só são efetivadas pela consolidação da sessão.

@@ -1,9 +1,9 @@
 import type { AreaQuery, AreaRow } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
-import { getOrAssignCurrentProperty } from "../../current-property/resolve";
-import { propertyTimeZone, toZonedIso } from "../../property/time-zone";
+import { getOrAssignCurrentProperty } from "../../current-property/resolve.public";
+import { propertyTimeZone, toZonedIso } from "../../property/time-zone.public";
 import { areaRotation, areaStatus } from "../rules";
-import { areasLastExit, areasOccupancy } from "../stocking";
+import { areasLastExit, areasOccupancy } from "../stocking.public";
 
 // Áreas da propriedade informada ou, sem ela, da propriedade atual do usuário; cada uma com a
 // ocupação de hoje e a última saída de lote.

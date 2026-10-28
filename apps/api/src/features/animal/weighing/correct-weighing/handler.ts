@@ -1,11 +1,11 @@
 import type { WeighingCorrectionData } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
-import { animalStays, timeZoneAt } from "../../../property/time-zone";
+import { animalStays, timeZoneAt } from "../../../property/time-zone.public";
 import { resolveEventDateIn } from "../../event-date";
 import { keepsOriginal, sessionDateLock } from "../../rules";
 import { fieldError } from "../../shared";
 import { findActiveWeighing } from "../shared";
-import { recomputeCurrentWeight } from "../current-weight";
+import { recomputeCurrentWeight } from "../current-weight.public";
 
 // Corrige peso, data (só pesagens avulsas) e observação; guarda o peso original.
 export async function correctWeighing(

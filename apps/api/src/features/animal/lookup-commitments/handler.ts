@@ -1,6 +1,6 @@
 import type { Commitment, CommitmentExclusion } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
-import { findCommitments } from "../commitments";
+import { findCommitments } from "../commitments.public";
 
 // Compromissos em aberto de vários animais; `exclude` é a operação sendo editada, que não
 // conta como conflito.

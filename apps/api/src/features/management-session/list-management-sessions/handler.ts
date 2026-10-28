@@ -5,14 +5,14 @@ import {
   type ManagementSessionQuery,
 } from "@ifarm/shared";
 import { prisma, type Prisma } from "@ifarm/db";
-import { getOrAssignCurrentProperty } from "../../current-property/resolve";
-import { propertyTimeZone, toZonedIso } from "../../property/time-zone";
+import { getOrAssignCurrentProperty } from "../../current-property/resolve.public";
+import { propertyTimeZone, toZonedIso } from "../../property/time-zone.public";
 import { SESSION_STATUS_WHERE } from "../rules";
 import {
   sessionStatus,
   sessionStepsSelect,
   toSessionSteps,
-} from "../session-steps";
+} from "../session-steps.public";
 
 function buildWhere(query: ManagementSessionQuery, propertyId: string) {
   // Recepções de compra ficam na área de recepções, não na lista de manejos.

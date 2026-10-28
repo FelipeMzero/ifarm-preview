@@ -7,19 +7,19 @@ import type { Prisma } from "@ifarm/db/client";
 import type { AnimalOrigin, AnimalStatus, Sex } from "@ifarm/db/enums";
 import { DAY_MS, planStepSchema, type BrTimeZone } from "@ifarm/shared";
 import { auth } from "../src/auth";
-import { findCommitments } from "../src/features/animal/commitments";
-import { consolidateSession } from "../src/features/management-session/consolidate";
+import { findCommitments } from "../src/features/animal/commitments.public";
+import { consolidateSession } from "../src/features/management-session/confirm-management-session/consolidate";
 import { saveAnimalStep } from "../src/features/management-session/session-animal/records";
 import {
   type SessionStep,
   stepKey,
   toStepRows,
-} from "../src/features/management-session/session-steps";
-import { applyPlanSteps } from "../src/features/management-session/plan";
+} from "../src/features/management-session/session-steps.public";
+import { applyPlanSteps } from "../src/features/management-session/plan.public";
 import {
   findReception,
   receiveAnimal,
-} from "../src/features/purchase/reception";
+} from "../src/features/purchase/reception.public";
 import { toDbDate } from "../src/lib/db-dates";
 
 // ---------------------------------------------------------------------------

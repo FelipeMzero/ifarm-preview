@@ -1,9 +1,9 @@
 import { prisma } from "@ifarm/db";
 import { ConflictError } from "../../../lib/errors";
 import { toggledDeactivatedAt } from "../../../lib/status";
-import { findOccupyingBatch } from "../availability";
+import { findOccupyingBatch } from "../availability.public";
 import { findAreaOrThrow } from "../shared";
-import { propertyTimeZone, toZonedIso } from "../../property/time-zone";
+import { propertyTimeZone, toZonedIso } from "../../property/time-zone.public";
 
 // Desativar uma área ocupada deixaria o lote "dentro" de uma área inativa (some do mapa,
 // mas continua como área atual do lote): é preciso mover o lote antes.

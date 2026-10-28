@@ -1,10 +1,10 @@
 import type { Prisma } from "@ifarm/db";
-import type { DeletionPolicy } from "../../lib/deletion";
+import type { DeletionPolicy } from "../../../lib/deletion";
 import {
   animalDeletionBlocker,
   isStandalonePurchase,
   laterRecordsBlocker,
-} from "./rules";
+} from "../rules";
 
 type Tx = Prisma.TransactionClient;
 

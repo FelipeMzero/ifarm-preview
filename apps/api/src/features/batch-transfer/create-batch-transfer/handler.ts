@@ -1,9 +1,9 @@
 import { zonedDateTimeToInstant, type BatchTransferData } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
 import { BusinessError } from "../../../lib/errors";
-import { assertNoConflicts } from "../../animal/commitments";
-import { propertyTimeZone } from "../../property/time-zone";
-import { getOrAssignCurrentProperty } from "../../current-property/resolve";
+import { assertNoConflicts } from "../../animal/commitments.public";
+import { propertyTimeZone } from "../../property/time-zone.public";
+import { getOrAssignCurrentProperty } from "../../current-property/resolve.public";
 import { validateTransferPlan } from "../shared";
 
 // Planeja uma transferência (pendente) para a propriedade informada ou a atual do usuário.

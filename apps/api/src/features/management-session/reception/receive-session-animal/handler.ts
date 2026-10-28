@@ -1,6 +1,9 @@
 import type { ReceiveAnimalData } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
-import { findReception, receiveAnimal } from "../../../purchase/reception";
+import {
+  findReception,
+  receiveAnimal,
+} from "../../../purchase/reception.public";
 import {
   requireManagementDate,
   requireSessionIn,

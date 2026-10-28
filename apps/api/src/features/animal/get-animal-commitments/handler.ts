@@ -1,6 +1,6 @@
 import type { Commitment } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
-import { findCommitments } from "../commitments";
+import { findCommitments } from "../commitments.public";
 
 // Operações abertas que já contam com o animal, para as telas avisarem antes de salvar.
 export async function getAnimalCommitments(id: string): Promise<Commitment[]> {

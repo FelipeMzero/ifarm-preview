@@ -2,7 +2,7 @@ import type { ZodType } from "zod";
 import type { Prisma } from "@ifarm/db";
 import type { StepType } from "@ifarm/shared";
 import { BusinessError } from "../../../lib/errors";
-import { type SessionStep } from "../session-steps";
+import { type SessionStep } from "../session-steps.public";
 
 export type Tx = Prisma.TransactionClient;
 
@@ -35,7 +35,7 @@ export class StepError extends BusinessError {}
  * só conversa com os módulos por aqui.
  *
  * Registros feitos durante a sessão são gravados nas tabelas definitivas, ligados à
- * sessão, mas só passam a valer na consolidação (ver ../effective.ts).
+ * sessão, mas só passam a valer na consolidação (ver ../effective.public.ts).
  */
 export interface StepModule<
   S extends SessionStep = SessionStep,

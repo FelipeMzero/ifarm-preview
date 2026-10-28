@@ -2,7 +2,7 @@ import { neuteringPayloadSchema, neuteringPlanSchema } from "@ifarm/shared";
 import {
   INVALID_TECHNIQUE_MESSAGE,
   isValidNeuteringTechnique,
-} from "../../animal/neutering/technique";
+} from "../../animal/neutering/technique.public";
 import { defineStep, StepError, type Tx } from "./types";
 
 async function container(tx: Tx, sessionId: string) {

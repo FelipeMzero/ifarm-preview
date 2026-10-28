@@ -2,7 +2,7 @@ import { Prisma } from "@ifarm/db";
 import { dayInZone, type ReceiveAnimalData } from "@ifarm/shared";
 import { toDbDate } from "../../lib/db-dates";
 import { BusinessError } from "../../lib/errors";
-import { propertyTimeZone } from "../property/time-zone";
+import { propertyTimeZone } from "../property/time-zone.public";
 import { estimatedBirthDay } from "./rules";
 
 type Tx = Prisma.TransactionClient;

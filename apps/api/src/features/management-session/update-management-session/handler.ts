@@ -5,11 +5,11 @@ import {
 } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
 import { diffIds } from "../../../lib/diff";
-import { assertNoConflicts } from "../../animal/commitments";
-import { animalLabel, summarize } from "../../animal/rules";
-import { propertyTimeZone } from "../../property/time-zone";
-import { findReception } from "../../purchase/reception";
-import { stepKey } from "../session-steps";
+import { assertNoConflicts } from "../../animal/commitments.public";
+import { animalLabel, summarize } from "../../animal/availability.public";
+import { propertyTimeZone } from "../../property/time-zone.public";
+import { findReception } from "../../purchase/reception.public";
+import { stepKey } from "../session-steps.public";
 import {
   invalidAnimals,
   invalidAnimalsMessage,
@@ -18,7 +18,7 @@ import {
   StepError,
   type LoadedSession,
 } from "../shared";
-import { applyPlanSteps } from "../plan";
+import { applyPlanSteps } from "../plan.public";
 import { countDone, loadStepRecords } from "../steps";
 import type { Tx } from "../steps/types";
 

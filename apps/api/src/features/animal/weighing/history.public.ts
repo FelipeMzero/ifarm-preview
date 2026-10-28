@@ -1,6 +1,6 @@
 import { instantToZonedIso } from "@ifarm/shared";
 import type { AnimalWeighing } from "@ifarm/db/client";
-import { toZonedIso, type ZoneOf } from "../../property/time-zone";
+import { toZonedIso, type ZoneOf } from "../../property/time-zone.public";
 
 // Histórico de pesagens do animal no formato da API: usado pelas operações de pesagem, pela
 // ficha do animal e pelo painel do lote.

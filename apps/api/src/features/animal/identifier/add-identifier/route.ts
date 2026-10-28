@@ -6,7 +6,7 @@ import {
   validationErrorResponse,
 } from "../../../../http";
 import { requireSession } from "../../../../session";
-import { CommitmentError } from "../../commitments";
+import { CommitmentError } from "../../commitments.public";
 import { isIdentifierKind } from "../shared";
 import { addIdentifier } from "./handler";
 

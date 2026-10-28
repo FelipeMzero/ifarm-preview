@@ -2,8 +2,11 @@ import { describe, expect, it } from "vitest";
 import { isSessionOpen } from "@ifarm/shared";
 import { TRANSFER_STATUS_WHERE, transferStatus } from "./batch-transfer/rules";
 import { SESSION_STATUS_WHERE } from "./management-session/rules";
-import { PURCHASE_STATUS_WHERE, purchaseStatus } from "./purchase/rules";
-import { sessionStatus } from "./management-session/session-steps";
+import {
+  PURCHASE_STATUS_WHERE,
+  purchaseStatus,
+} from "./purchase/status.public";
+import { sessionStatus } from "./management-session/session-steps.public";
 
 // Os filtros de situação das listagens (`*_STATUS_WHERE`) repetem, em forma de consulta,
 // as funções que dão a situação de um registro. Este teste garante que as duas formas

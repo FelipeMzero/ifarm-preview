@@ -1,20 +1,20 @@
-import { assertNoConflicts } from "../animal/commitments";
+import { assertNoConflicts } from "../../animal/commitments.public";
 import {
   animalLabel,
   summarize,
   unavailableAnimalsMessage,
   unavailableReason,
-} from "../animal/rules";
-import { findReception } from "../purchase/reception";
-import { splitHandled } from "./rules";
+} from "../../animal/availability.public";
+import { findReception } from "../../purchase/reception.public";
+import { splitHandled } from "../rules";
 import {
   requireManagementDate,
   requireSessionIn,
   sessionIntent,
   StepError,
-} from "./shared";
-import { countDone, loadStepRecords, stepModule } from "./steps";
-import type { Tx } from "./steps/types";
+} from "../shared";
+import { countDone, loadStepRecords, stepModule } from "../steps";
+import type { Tx } from "../steps/types";
 
 /**
  * Consolida a sessão: os animais sem nenhum registro saem da sessão e os registros

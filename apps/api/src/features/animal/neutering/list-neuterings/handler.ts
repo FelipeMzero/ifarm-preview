@@ -1,7 +1,7 @@
 import type { AnimalNeuteringRecord } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
-import { effectiveNeutering } from "../../../management-session/effective";
-import { animalStays } from "../../../property/time-zone";
+import { effectiveNeutering } from "../../../management-session/effective.public";
+import { animalStays } from "../../../property/time-zone.public";
 import { neuteringInclude, toNeuteringDto } from "../shared";
 
 // Castrações válidas (não canceladas), da mais recente para a mais antiga.

@@ -1,6 +1,6 @@
 import { prisma } from "@ifarm/db";
 import { findActiveWeighing } from "../shared";
-import { recomputeCurrentWeight } from "../current-weight";
+import { recomputeCurrentWeight } from "../current-weight.public";
 
 // Exclusão lógica da pesagem; o peso atual é recalculado.
 export async function cancelWeighing(animalId: string, weighingId: string) {

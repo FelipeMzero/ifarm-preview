@@ -2,7 +2,7 @@ import type { BatchUpdateData } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
 import { write } from "../../../lib/db-errors";
 import { NotFoundError } from "../../../lib/errors";
-import { assertAreaAvailable } from "../../area/availability";
+import { assertAreaAvailable } from "../../area/availability.public";
 import { toTargetDate } from "../shared";
 
 // Altera nome, observações e meta; com `newAreaId`, move o lote para outra área livre.

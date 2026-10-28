@@ -2,7 +2,7 @@ import { instantToZonedIso, type BatchDetail } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
 import { fromDbDate } from "../../../lib/db-dates";
 import { NotFoundError } from "../../../lib/errors";
-import { propertyTimeZone, toZonedIso } from "../../property/time-zone";
+import { propertyTimeZone, toZonedIso } from "../../property/time-zone.public";
 
 // Lote para edição: meta de venda, área atual e histórico de áreas.
 export async function getBatch(id: string): Promise<BatchDetail> {

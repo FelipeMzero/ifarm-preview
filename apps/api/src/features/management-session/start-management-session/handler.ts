@@ -4,7 +4,7 @@ import {
   type ManagementSessionStartData,
 } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
-import { propertyTimeZone } from "../../property/time-zone";
+import { propertyTimeZone } from "../../property/time-zone.public";
 import { requireSessionIn, StepError } from "../shared";
 
 // Inicia o registro informando a data em que o manejo acontece. Também serve para

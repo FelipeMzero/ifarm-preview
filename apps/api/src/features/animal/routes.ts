@@ -13,8 +13,8 @@ import { weighingRoutes } from "./weighing/routes";
 
 // As operações de animal, cada uma na própria pasta (endpoint em route.ts, o que ela faz em
 // handler.ts), montadas em /api/animal; pesagens, castrações e identificadores ficam nas
-// próprias pastas. Os compromissos (commitments.ts) e as regras (rules.ts) também são usados
-// por transferências e sessões de manejo.
+// próprias pastas. Os compromissos (commitments.public.ts) e a disponibilidade do animal
+// (availability.public.ts) também são usados por transferências e sessões de manejo.
 export const animalRoutes = new Hono();
 
 animalRoutes.route("/", lookupCommitmentsRoute);

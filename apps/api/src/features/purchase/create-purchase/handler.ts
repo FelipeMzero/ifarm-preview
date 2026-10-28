@@ -1,7 +1,7 @@
 import type { PurchaseData } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
 import { toDbDate } from "../../../lib/db-dates";
-import { getOrAssignCurrentProperty } from "../../current-property/resolve";
+import { getOrAssignCurrentProperty } from "../../current-property/resolve.public";
 import { PurchaseError } from "../rules";
 
 // Registra a negociação: título, vendedor e as categorias negociadas (com preços). Nenhum animal

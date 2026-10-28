@@ -2,8 +2,8 @@ import { zonedDateTimeToInstant, type BatchTransferData } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
 import { diffIds } from "../../../lib/diff";
 import { BusinessError, NotFoundError } from "../../../lib/errors";
-import { assertNoConflicts } from "../../animal/commitments";
-import { propertyTimeZone } from "../../property/time-zone";
+import { assertNoConflicts } from "../../animal/commitments.public";
+import { propertyTimeZone } from "../../property/time-zone.public";
 import { transferStatus } from "../rules";
 import { validateTransferPlan } from "../shared";
 

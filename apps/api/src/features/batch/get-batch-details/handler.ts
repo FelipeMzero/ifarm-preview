@@ -6,10 +6,13 @@ import {
 import { prisma } from "@ifarm/db";
 import { fromDbDate } from "../../../lib/db-dates";
 import { NotFoundError } from "../../../lib/errors";
-import { sortWeighings, toWeighingDto } from "../../animal/weighing/history";
-import { stockingPreview } from "../../area/stocking";
-import { propertyTimeZone, toZonedIso } from "../../property/time-zone";
-import { effectiveWeighing } from "../../management-session/effective";
+import {
+  sortWeighings,
+  toWeighingDto,
+} from "../../animal/weighing/history.public";
+import { stockingPreview } from "../../area/stocking.public";
+import { propertyTimeZone, toZonedIso } from "../../property/time-zone.public";
+import { effectiveWeighing } from "../../management-session/effective.public";
 import { averageDailyGain, groupPurchases, weightSeries } from "../rules";
 
 // Painel do lote: animais com GMD, peso médio ao longo do tempo, movimentações,

@@ -7,7 +7,7 @@ import {
 import { prisma } from "@ifarm/db";
 import { fromDbDate } from "../../lib/db-dates";
 import { ValidationError } from "../../lib/errors";
-import { animalStays } from "../property/time-zone";
+import { animalStays } from "../property/time-zone.public";
 
 // Data e hora de manejos avulsos e de correções (pesagem, castração, identificação),
 // recebidas como "AAAA-MM-DDTHH:mm" no fuso da propriedade onde o evento aconteceu.

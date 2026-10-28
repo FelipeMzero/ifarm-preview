@@ -2,20 +2,17 @@ import { dayInZone, type PurchaseDetail } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
 import { fromDbDate } from "../../../lib/db-dates";
 import { NotFoundError } from "../../../lib/errors";
-import { sessionStatus } from "../../management-session/session-steps";
+import { sessionStatus } from "../../management-session/session-steps.public";
 import {
   asTimeZone,
   propertyRefSelect,
   toPropertyRef,
   toZonedIso,
-} from "../../property/time-zone";
+} from "../../property/time-zone.public";
 import { arrivalWeightsByCategory } from "../costs";
-import { categoryLabel } from "../reception";
-import {
-  estimatedCategoryValue,
-  purchaseStatus,
-  sumIfAllKnown,
-} from "../rules";
+import { categoryLabel } from "../reception.public";
+import { estimatedCategoryValue, sumIfAllKnown } from "../rules";
+import { purchaseStatus } from "../status.public";
 
 const num = (d: { toNumber(): number } | null) => d?.toNumber() ?? null;
 export async function getPurchase(id: string): Promise<PurchaseDetail> {

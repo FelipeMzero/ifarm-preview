@@ -1,9 +1,9 @@
 import { Prisma } from "@ifarm/db";
 import { deleteRecord } from "../../../lib/deletion";
 import { ConflictError, NotFoundError } from "../../../lib/errors";
-import { animalDeletionPolicy } from "../deletion-policy";
+import { animalDeletionPolicy } from "./policy";
 
-// Exclusão pela política de animal (ver deletion-policy.ts).
+// Exclusão pela política de animal (ver policy.ts).
 export async function deleteAnimal(id: string) {
   try {
     await deleteRecord(animalDeletionPolicy, id);

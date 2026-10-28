@@ -13,10 +13,10 @@ import { updateManagementSessionRoute } from "./update-management-session/route"
 
 // As operações das sessões de manejo, cada uma na própria pasta (endpoint em route.ts, o que
 // ela faz em handler.ts), montadas em /api/management-session; participantes, recepção e o
-// registro por animal ficam nas próprias pastas. As etapas (steps/), a consolidação
-// (consolidate.ts), as situações (session-steps.ts) e os filtros de registros válidos
-// (effective.ts) também são usados por animais, compras e recepções. Caminhos fixos
-// (/options) antes dos com :id.
+// registro por animal ficam nas próprias pastas. O que outros domínios usam fica nos
+// arquivos *.public.ts: o modelo e as situações das etapas (session-steps.public.ts), os
+// filtros de registros válidos (effective.public.ts) e o planejamento (plan.public.ts).
+// Caminhos fixos (/options) antes dos com :id.
 export const managementSessionRoutes = new Hono();
 
 managementSessionRoutes.route("/", getManagementOptionsRoute);

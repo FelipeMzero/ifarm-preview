@@ -1,6 +1,6 @@
 import { isSessionOpen } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
-import { sessionStatus } from "../../management-session/session-steps";
+import { sessionStatus } from "../../management-session/session-steps.public";
 import { allocatePurchaseCosts } from "../costs";
 import { consolidationBlocker, PurchaseError } from "../rules";
 

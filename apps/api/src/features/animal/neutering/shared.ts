@@ -2,9 +2,9 @@ import type { Prisma } from "@ifarm/db/client";
 import { instantToZonedIso } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
 import { NotFoundError } from "../../../lib/errors";
-import { effectiveNeutering } from "../../management-session/effective";
-import type { ZoneOf } from "../../property/time-zone";
-import { toZonedIso } from "../../property/time-zone";
+import { effectiveNeutering } from "../../management-session/effective.public";
+import type { ZoneOf } from "../../property/time-zone.public";
+import { toZonedIso } from "../../property/time-zone.public";
 
 // Relações necessárias para exibir a técnica (atual e a lançada originalmente).
 export const neuteringInclude = {

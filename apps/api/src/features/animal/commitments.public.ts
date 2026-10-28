@@ -10,8 +10,9 @@ import {
   sessionStepsSelect,
   stepKey,
   toSessionSteps,
-} from "../management-session/session-steps";
-import { animalLabel, blockingConflicts, summarize } from "./rules";
+} from "../management-session/session-steps.public";
+import { blockingConflicts } from "./rules";
+import { animalLabel, summarize } from "./availability.public";
 
 // Compromissos pendentes dos animais (regras em packages/shared/src/animal/commitments.ts e em
 // docs/data-dictionary.md, seção 2.9).

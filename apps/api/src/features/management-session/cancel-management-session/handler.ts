@@ -1,5 +1,5 @@
 import { prisma } from "@ifarm/db";
-import { findReception } from "../../purchase/reception";
+import { findReception } from "../../purchase/reception.public";
 import { StepError } from "../shared";
 
 // Cancela a sessão. Os registros feitos continuam gravados (para auditoria), mas como a

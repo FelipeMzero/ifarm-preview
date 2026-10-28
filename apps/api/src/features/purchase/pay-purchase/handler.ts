@@ -1,8 +1,8 @@
 import { todayInZone, type PurchasePaymentData } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
 import { toDbDate } from "../../../lib/db-dates";
-import { propertyTimeZone } from "../../property/time-zone";
-import { categoryLabel } from "../reception";
+import { propertyTimeZone } from "../../property/time-zone.public";
+import { categoryLabel } from "../reception.public";
 import { missingValue, paymentBlocker, PurchaseError } from "../rules";
 
 // Registra o pagamento de uma compra em andamento (data informada ou hoje, no fuso da

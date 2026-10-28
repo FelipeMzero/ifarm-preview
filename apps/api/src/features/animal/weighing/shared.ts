@@ -1,6 +1,6 @@
 import { prisma } from "@ifarm/db";
 import { NotFoundError } from "../../../lib/errors";
-import { effectiveWeighing } from "../../management-session/effective";
+import { effectiveWeighing } from "../../management-session/effective.public";
 
 // Pesagem válida do animal (corrigir e excluir); erro 404 se não existir.
 export async function findActiveWeighing(animalId: string, weighingId: string) {

@@ -1,9 +1,9 @@
 import { instantToZonedIso, type BatchTransferDetail } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
 import { NotFoundError } from "../../../lib/errors";
-import { unavailableReason } from "../../animal/rules";
+import { unavailableReason } from "../../animal/availability.public";
 import { transferStatus } from "../rules";
-import { toZonedIso } from "../../property/time-zone";
+import { toZonedIso } from "../../property/time-zone.public";
 
 export async function getBatchTransfer(
   id: string,

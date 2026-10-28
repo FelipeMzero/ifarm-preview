@@ -12,14 +12,14 @@ import {
   effectiveRfidTagging,
   effectiveTagging,
   effectiveWeighing,
-} from "../../management-session/effective";
+} from "../../management-session/effective.public";
 import {
   asTimeZone,
   timeZoneAt,
   type ZoneOf,
   toZonedIso,
-} from "../../property/time-zone";
-import { sortWeighings, toWeighingDto } from "../weighing/history";
+} from "../../property/time-zone.public";
+import { sortWeighings, toWeighingDto } from "../weighing/history.public";
 
 // Pelo instante: as datas dos eventos podem vir com deslocamentos diferentes.
 const byDateDesc = <T extends { date: string }>(a: T, b: T) =>

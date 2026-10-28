@@ -3,16 +3,16 @@ import {
   type ManagementSessionData,
 } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
-import { assertNoConflicts } from "../../animal/commitments";
-import { getOrAssignCurrentProperty } from "../../current-property/resolve";
-import { propertyTimeZone } from "../../property/time-zone";
+import { assertNoConflicts } from "../../animal/commitments.public";
+import { getOrAssignCurrentProperty } from "../../current-property/resolve.public";
+import { propertyTimeZone } from "../../property/time-zone.public";
 import {
   invalidAnimals,
   invalidAnimalsMessage,
   sessionIntent,
   StepError,
 } from "../shared";
-import { applyPlanSteps } from "../plan";
+import { applyPlanSteps } from "../plan.public";
 
 // Planeja uma sessão: data prevista, etapas e animais participantes.
 export async function createManagementSession(

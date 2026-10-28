@@ -1,8 +1,8 @@
 import type { CreateReceptionData } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
-import { applyPlanSteps } from "../../management-session/plan";
-import { StepError } from "../../management-session/steps/types";
-import { validateReceptionInput } from "../../purchase/reception";
+import { applyPlanSteps } from "../../management-session/plan.public";
+import { NotFoundError } from "../../../lib/errors";
+import { validateReceptionInput } from "../../purchase/reception.public";
 
 // "Receber animais": abre uma recepção (viagem) da compra. A compra incorpora uma
 // sessão de manejo, criada já iniciada com a data de hoje, para receber os animais e
@@ -20,7 +20,7 @@ export async function createReception(
         _count: { select: { receptions: true } },
       },
     });
-    if (!event) throw new StepError("Compra não encontrada.", 404);
+    if (!event) throw new NotFoundError("Compra não encontrada.");
 
     const propertyId = event.destinationPropertyId;
     await validateReceptionInput(tx, propertyId, {

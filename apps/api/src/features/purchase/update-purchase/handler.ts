@@ -1,7 +1,8 @@
 import type { PurchaseData } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
 import { toDbDate } from "../../../lib/db-dates";
-import { planCategoryChanges, PurchaseError, purchaseStatus } from "../rules";
+import { planCategoryChanges, PurchaseError } from "../rules";
+import { purchaseStatus } from "../status.public";
 
 // Altera a negociação enquanto a compra está em andamento. Categorias com animais
 // recebidos não podem ser removidas. Depois do pagamento, o que define o valor (vendedor,
