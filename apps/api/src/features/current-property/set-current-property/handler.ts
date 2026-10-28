@@ -1,7 +1,7 @@
 import type { CurrentProperty } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
 import { NotFoundError } from "../../../lib/errors";
-import { withTimeZone } from "../shared";
+import { withTimeZone } from "../resolve";
 
 // Troca a propriedade em que o usuário está trabalhando.
 export async function setCurrentProperty(

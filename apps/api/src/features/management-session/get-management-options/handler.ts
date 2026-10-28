@@ -1,6 +1,6 @@
 import type { ManagementOptions } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
-import { getOrAssignCurrentProperty } from "../../current-property/shared";
+import { getOrAssignCurrentProperty } from "../../current-property/resolve";
 
 // Opções usadas no planejamento e no registro: tipos de procedimento sanitário,
 // técnicas de castração, pessoas (veterinário responsável) e lotes ativos da

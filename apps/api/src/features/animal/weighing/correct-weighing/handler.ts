@@ -4,7 +4,8 @@ import { animalStays, timeZoneAt } from "../../../property/time-zone";
 import { resolveEventDateIn } from "../../event-date";
 import { keepsOriginal, sessionDateLock } from "../../rules";
 import { fieldError } from "../../shared";
-import { findActiveWeighing, recomputeCurrentWeight } from "../shared";
+import { findActiveWeighing } from "../shared";
+import { recomputeCurrentWeight } from "../current-weight";
 
 // Corrige peso, data (só pesagens avulsas) e observação; guarda o peso original.
 export async function correctWeighing(

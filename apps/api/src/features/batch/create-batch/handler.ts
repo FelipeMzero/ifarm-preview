@@ -2,7 +2,7 @@ import type { BatchCreateData } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
 import { write } from "../../../lib/db-errors";
 import { assertAreaAvailable } from "../../area/availability";
-import { getOrAssignCurrentProperty } from "../../current-property/shared";
+import { getOrAssignCurrentProperty } from "../../current-property/resolve";
 import { toTargetDate } from "../shared";
 
 // Cria o lote já numa área livre (o lote sempre ocupa uma área) e, se houver, a meta de venda.

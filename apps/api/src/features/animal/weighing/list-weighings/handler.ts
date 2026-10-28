@@ -2,7 +2,7 @@ import type { AnimalWeighing } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
 import { effectiveWeighing } from "../../../management-session/effective";
 import { animalStays } from "../../../property/time-zone";
-import { sortWeighings, toWeighingDto } from "../shared";
+import { sortWeighings, toWeighingDto } from "../history";
 
 // Pesagens válidas, da mais antiga para a mais recente.
 export async function listWeighings(

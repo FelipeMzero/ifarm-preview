@@ -15,7 +15,7 @@ import {
   stepKey,
   toStepRows,
 } from "../src/features/management-session/session-steps";
-import { applyPlanSteps } from "../src/features/management-session/shared";
+import { applyPlanSteps } from "../src/features/management-session/plan";
 import {
   findReception,
   receiveAnimal,

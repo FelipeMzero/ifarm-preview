@@ -4,15 +4,15 @@ import {
 } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
 import { assertNoConflicts } from "../../animal/commitments";
-import { getOrAssignCurrentProperty } from "../../current-property/shared";
+import { getOrAssignCurrentProperty } from "../../current-property/resolve";
 import { propertyTimeZone } from "../../property/time-zone";
 import {
-  applyPlanSteps,
   invalidAnimals,
   invalidAnimalsMessage,
   sessionIntent,
   StepError,
 } from "../shared";
+import { applyPlanSteps } from "../plan";
 
 // Planeja uma sessão: data prevista, etapas e animais participantes.
 export async function createManagementSession(

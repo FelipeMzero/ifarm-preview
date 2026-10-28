@@ -4,7 +4,7 @@ import {
   type BatchTransferQuery,
 } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
-import { getOrAssignCurrentProperty } from "../../current-property/shared";
+import { getOrAssignCurrentProperty } from "../../current-property/resolve";
 import { propertyTimeZone, toZonedIso } from "../../property/time-zone";
 import { TRANSFER_STATUS_WHERE, transferStatus } from "../rules";
 

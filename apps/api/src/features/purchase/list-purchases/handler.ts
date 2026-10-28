@@ -1,7 +1,7 @@
 import type { PurchaseListResult, PurchaseQuery } from "@ifarm/shared";
 import { prisma, type Prisma } from "@ifarm/db";
 import { fromDbDate } from "../../../lib/db-dates";
-import { getOrAssignCurrentProperty } from "../../current-property/shared";
+import { getOrAssignCurrentProperty } from "../../current-property/resolve";
 import { categoryLabel } from "../reception";
 import {
   estimatedCategoryValue,

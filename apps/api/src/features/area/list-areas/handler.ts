@@ -1,6 +1,6 @@
 import type { AreaQuery, AreaRow } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
-import { getOrAssignCurrentProperty } from "../../current-property/shared";
+import { getOrAssignCurrentProperty } from "../../current-property/resolve";
 import { propertyTimeZone, toZonedIso } from "../../property/time-zone";
 import { areaRotation, areaStatus } from "../rules";
 import { areasLastExit, areasOccupancy } from "../stocking";

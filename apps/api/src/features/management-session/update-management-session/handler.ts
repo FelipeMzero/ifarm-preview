@@ -11,7 +11,6 @@ import { propertyTimeZone } from "../../property/time-zone";
 import { findReception } from "../../purchase/reception";
 import { stepKey } from "../session-steps";
 import {
-  applyPlanSteps,
   invalidAnimals,
   invalidAnimalsMessage,
   requireSessionIn,
@@ -19,6 +18,7 @@ import {
   StepError,
   type LoadedSession,
 } from "../shared";
+import { applyPlanSteps } from "../plan";
 import { countDone, loadStepRecords } from "../steps";
 import type { Tx } from "../steps/types";
 

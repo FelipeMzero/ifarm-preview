@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { errorResponse } from "../../../http";
 import { requireSession } from "../../../session";
-import { getOrAssignCurrentProperty } from "../shared";
+import { getOrAssignCurrentProperty } from "../resolve";
 
 export const getCurrentPropertyRoute = new Hono();
 

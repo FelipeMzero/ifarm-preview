@@ -7,12 +7,12 @@ import { prisma } from "@ifarm/db";
 import { toDbDate } from "../../../lib/db-dates";
 import { write } from "../../../lib/db-errors";
 import { BusinessError } from "../../../lib/errors";
-import { getOrAssignCurrentProperty } from "../../current-property/shared";
+import { getOrAssignCurrentProperty } from "../../current-property/resolve";
 import { propertyTimeZone } from "../../property/time-zone";
 import {
   INVALID_TECHNIQUE_MESSAGE,
   isValidNeuteringTechnique,
-} from "../neutering/shared";
+} from "../neutering/technique";
 import { fieldError } from "../shared";
 
 // Cadastro avulso de um animal, com os registros iniciais (lote, propriedade, pesagem,

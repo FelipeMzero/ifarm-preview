@@ -8,7 +8,7 @@ import { assertNoConflicts } from "../commitments";
 import {
   INVALID_TECHNIQUE_MESSAGE,
   isValidNeuteringTechnique,
-} from "../neutering/shared";
+} from "../neutering/technique";
 import { updateCommitmentIntents } from "../rules";
 import { fieldError } from "../shared";
 

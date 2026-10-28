@@ -7,11 +7,11 @@ import { animalStays, timeZoneAt } from "../../../property/time-zone";
 import { resolveEventDateIn } from "../../event-date";
 import { sessionDateLock } from "../../rules";
 import { fieldError } from "../../shared";
+import { findActiveNeutering } from "../shared";
 import {
-  findActiveNeutering,
   INVALID_TECHNIQUE_MESSAGE,
   isValidNeuteringTechnique,
-} from "../shared";
+} from "../technique";
 
 // Corrige técnica, data (só castrações avulsas) e observação; guarda os valores originais.
 export async function correctNeutering(

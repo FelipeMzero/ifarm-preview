@@ -3,7 +3,7 @@ import { prisma } from "@ifarm/db";
 import { BusinessError } from "../../../lib/errors";
 import { assertNoConflicts } from "../../animal/commitments";
 import { propertyTimeZone } from "../../property/time-zone";
-import { getOrAssignCurrentProperty } from "../../current-property/shared";
+import { getOrAssignCurrentProperty } from "../../current-property/resolve";
 import { validateTransferPlan } from "../shared";
 
 // Planeja uma transferência (pendente) para a propriedade informada ou a atual do usuário.

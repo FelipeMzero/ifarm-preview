@@ -1,7 +1,7 @@
 import type { BatchListResult, BatchQuery } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
 import { fromDbDate } from "../../../lib/db-dates";
-import { getOrAssignCurrentProperty } from "../../current-property/shared";
+import { getOrAssignCurrentProperty } from "../../current-property/resolve";
 import { propertyTimeZone, toZonedIso } from "../../property/time-zone";
 
 function buildWhere(query: BatchQuery, propertyId: string) {

@@ -7,7 +7,7 @@ import { fieldError } from "../../shared";
 import {
   INVALID_TECHNIQUE_MESSAGE,
   isValidNeuteringTechnique,
-} from "../shared";
+} from "../technique";
 
 // Castração avulsa registrada na hora. Se o animal já é castrado, é uma recastração
 // (não é rotineira): o motivo é obrigatório.

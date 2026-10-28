@@ -19,7 +19,7 @@ import {
   type ZoneOf,
   toZonedIso,
 } from "../../property/time-zone";
-import { sortWeighings, toWeighingDto } from "../weighing/shared";
+import { sortWeighings, toWeighingDto } from "../weighing/history";
 
 // Pelo instante: as datas dos eventos podem vir com deslocamentos diferentes.
 const byDateDesc = <T extends { date: string }>(a: T, b: T) =>
