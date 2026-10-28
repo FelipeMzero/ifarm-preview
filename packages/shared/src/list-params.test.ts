@@ -10,8 +10,14 @@ import {
 // Os parâmetros de listagem que o cliente monta vão pela URL (toQueryString) e o servidor
 // os lê com o mesmo schema: a ida e a volta devem dar os mesmos valores.
 
+// Lê a query string como o servidor (sem URLSearchParams, que não está nos tipos deste pacote).
 const viaUrl = (params: Record<string, string | number | undefined>) =>
-  Object.fromEntries(new URLSearchParams(toQueryString(params)));
+  Object.fromEntries(
+    toQueryString(params)
+      .split("&")
+      .filter(Boolean)
+      .map((pair) => pair.split("=").map(decodeURIComponent)),
+  );
 
 describe("parâmetros de listagem: cliente → URL → servidor", () => {
   it("pessoas", () => {

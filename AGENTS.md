@@ -142,7 +142,8 @@ Na raiz, `pnpm test` (roda os testes de cada app/pacote). Em cada app/pacote alt
 (api, web, shared, domain, db), `pnpm exec eslint <arquivos alterados>`, olhando **erros e avisos**
 (imports sem uso aparecem como aviso). O lint do projeto tem problemas antigos: não introduza
 novos. Typecheck com `pnpm exec tsc --noEmit -p .` em `apps/api` e em `apps/web` (no web,
-também `pnpm build`); se mexeu no shared, também `pnpm exec tsc --noEmit` em `apps/mobile`.
+também `pnpm build`); se mexeu no shared, também `pnpm exec tsc --noEmit` em `packages/shared`
+(sozinho, sem os tipos do navegador e do Node que os apps trazem) e em `apps/mobile`.
 
 Teste o fluxo no app: não há testes com banco, então a ligação entre a mutation e a regra só é
 verificada no uso.

@@ -1,4 +1,4 @@
-import { readJson, type ApiRequest } from "../client";
+import { readJson, toQueryString, type ApiRequest } from "../client";
 import type { BrTimeZone } from "../property/time-zones";
 import type { GeocodeParams } from "./schema";
 
@@ -31,10 +31,9 @@ export function createAddressClient(request: ApiRequest) {
 
     /** Coordenadas aproximadas do endereço; null se nada foi encontrado. */
     async geocode(params: GeocodeParams) {
-      const query = new URLSearchParams(
-        Object.entries(params).filter((e): e is [string, string] => !!e[1]),
+      const response = await request(
+        `${ADDRESS}/geocode?${toQueryString(params)}`,
       );
-      const response = await request(`${ADDRESS}/geocode?${query}`);
       const result = await readJson<{ data: Coordinates | null }>(
         response,
         "Não foi possível localizar o endereço.",
@@ -44,11 +43,9 @@ export function createAddressClient(request: ApiRequest) {
 
     /** Fuso horário do Brasil em que fica o ponto; null se o ponto fica fora do Brasil. */
     async lookupTimeZone({ latitude, longitude }: Coordinates) {
-      const query = new URLSearchParams({
-        latitude: String(latitude),
-        longitude: String(longitude),
-      });
-      const response = await request(`${ADDRESS}/time-zone?${query}`);
+      const response = await request(
+        `${ADDRESS}/time-zone?${toQueryString({ latitude, longitude })}`,
+      );
       const result = await readJson<{ data: BrTimeZone | null }>(
         response,
         "Não foi possível obter o fuso horário da localização.",

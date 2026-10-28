@@ -1,6 +1,15 @@
 import { describe, expect, it } from "vitest";
 import { ApiError, isClientError, isNotFoundError, readJson } from "./client";
 
+// O erro com que a promessa falha (o teste confere que é um ApiError).
+const rejection = (promise: Promise<unknown>) =>
+  promise.then(
+    () => {
+      throw new Error("A promessa deveria ter falhado.");
+    },
+    (e: ApiError) => e,
+  );
+
 const response = (status: number, body: unknown) => ({
   ok: status >= 200 && status < 300,
   status,
@@ -15,13 +24,15 @@ describe("readJson", () => {
   });
 
   it("lança ApiError com a mensagem, os erros por campo e o status", async () => {
-    const error = await readJson(
-      response(400, {
-        message: "Dados inválidos.",
-        errors: { name: "Obrigatório" },
-      }),
-      "falhou",
-    ).catch((e) => e);
+    const error = await rejection(
+      readJson(
+        response(400, {
+          message: "Dados inválidos.",
+          errors: { name: "Obrigatório" },
+        }),
+        "falhou",
+      ),
+    );
     expect(error).toBeInstanceOf(ApiError);
     expect(error.message).toBe("Dados inválidos.");
     expect(error.errors).toEqual({ name: "Obrigatório" });
@@ -29,7 +40,7 @@ describe("readJson", () => {
   });
 
   it("usa a mensagem padrão quando a API não manda uma", async () => {
-    const error = await readJson(response(500, null), "falhou").catch((e) => e);
+    const error = await rejection(readJson(response(500, null), "falhou"));
     expect(error.message).toBe("falhou");
     expect(error.status).toBe(500);
   });
