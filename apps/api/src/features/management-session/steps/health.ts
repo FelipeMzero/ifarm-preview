@@ -67,12 +67,7 @@ export const healthStep = defineStep({
     }
 
     const created = await tx.healthManagement.create({
-      data: {
-        ...data,
-        managementSessionId: session.id,
-        // Provisória: a data definitiva é a do manejo, gravada na consolidação.
-        performedAt: session.performedAt ?? session.scheduledAt,
-      },
+      data: { ...data, managementSessionId: session.id },
     });
     return { type: "health" as const, healthManagementId: created.id };
   },
@@ -178,16 +173,6 @@ export const healthStep = defineStep({
     });
   },
 
-  // Cada animal tem a hora da sua aplicação; o procedimento fica com a da primeira.
-  async consolidate(tx, _session, step) {
-    const first = await tx.healthManagementItem.aggregate({
-      where: { managementId: step.healthManagementId },
-      _min: { appliedAt: true },
-    });
-    if (!first._min.appliedAt) return;
-    await tx.healthManagement.update({
-      where: { id: step.healthManagementId },
-      data: { performedAt: first._min.appliedAt },
-    });
-  },
+  // Nada a gravar: cada aplicação já tem a sua hora e passa a valer com a sessão consolidada.
+  async consolidate() {},
 });

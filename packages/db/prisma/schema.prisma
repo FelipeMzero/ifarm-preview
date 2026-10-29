@@ -511,20 +511,18 @@ model TagManagement {
 /// numa sessão de manejo (nesse caso, só vale depois que a sessão é consolidada). O brinco atual do
 /// animal (Animal.currentTag) é o do registro válido mais recente.
 model AnimalTagging {
-  id    Int     @id @default(autoincrement())
-  notes String?
+  id           Int       @id @default(autoincrement())
+  notes        String?
   /// Brinco colocado (vazio = brinco retirado).
-  tag   String?
-
-  /// Data e hora em que o brinco foi colocado. Em sessão, a hora do registro no animal.
-  identifiedAt DateTime @map("identified_at") @db.Timestamptz(3)
-
+  tag          String?
+  /// Data e hora em que o brinco foi colocado ou retirado.
+  identifiedAt DateTime  @map("identified_at") @db.Timestamptz(3)
   /// Brinco lançado originalmente, guardado na primeira correção do valor (a correção preserva o rastro).
-  originalTag String?   @map("original_tag")
+  originalTag  String?   @map("original_tag")
   /// Quando o registro foi corrigido (vazio = nunca corrigido).
-  correctedAt DateTime? @map("corrected_at") @db.Timestamptz(3)
+  correctedAt  DateTime? @map("corrected_at") @db.Timestamptz(3)
   /// Quando o registro foi excluído (vazio = válido). Excluído = ignorado no histórico e nos cálculos.
-  cancelledAt DateTime? @map("cancelled_at") @db.Timestamptz(3)
+  cancelledAt  DateTime? @map("cancelled_at") @db.Timestamptz(3)
 
   /// Etapa de brinco da sessão em que o registro foi feito (vazio = registro avulso).
   managementId String?        @map("management_id") @db.Uuid
@@ -541,32 +539,44 @@ model AnimalTagging {
   @@map("animal_tagging")
 }
 
+/// Etapa de RFID de uma sessão de manejo: agrupa os RFIDs colocados, trocados ou retirados nos
+/// animais da sessão. Uma por sessão.
 model RfidManagement {
-  id    String              @id @default(uuid()) @db.Uuid
-  items AnimalRfidTagging[]
+  id String @id @default(uuid()) @db.Uuid
 
+  /// Sessão da etapa (no máximo uma etapa de RFID por sessão).
   managementSessionId String            @unique @map("management_session_id") @db.Uuid
   managementSession   ManagementSession @relation(fields: [managementSessionId], references: [id], onDelete: Restrict)
 
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
 
+  items AnimalRfidTagging[]
+
   @@map("rfid_management")
 }
 
+/// Colocação, troca ou retirada de RFID num animal: o histórico de RFIDs dele. Feita avulsa ou
+/// numa sessão de manejo (nesse caso, só vale depois que a sessão é consolidada). O RFID atual do
+/// animal (Animal.currentRfid) é o do registro válido mais recente.
 model AnimalRfidTagging {
-  id    Int     @id @default(autoincrement())
-  rfid  String? // null = rfid removido
-  notes String?
-
-  identifiedAt DateTime @map("identified_at") @db.Timestamptz(3) // data e hora do manejo; em sessão, a hora do registro no animal
-
+  id           Int       @id @default(autoincrement())
+  notes        String?
+  /// RFID colocado (vazio = RFID retirado).
+  rfid         String?
+  /// Data e hora em que o RFID foi colocado ou retirado.
+  identifiedAt DateTime  @map("identified_at") @db.Timestamptz(3)
+  /// RFID lançado originalmente, guardado na primeira correção do valor (a correção preserva o rastro).
   originalRfid String?   @map("original_rfid")
+  /// Quando o registro foi corrigido (vazio = nunca corrigido).
   correctedAt  DateTime? @map("corrected_at") @db.Timestamptz(3)
+  /// Quando o registro foi excluído (vazio = válido). Excluído = ignorado no histórico e nos cálculos.
   cancelledAt  DateTime? @map("cancelled_at") @db.Timestamptz(3)
 
-  managementId String?         @map("management_id") @db.Uuid // null = avulso
+  /// Etapa de RFID da sessão em que o registro foi feito (vazio = registro avulso).
+  managementId String?         @map("management_id") @db.Uuid
   management   RfidManagement? @relation(fields: [managementId], references: [id], onDelete: Restrict)
 
+  /// Animal que recebeu (ou perdeu) o RFID.
   animalId String @map("animal_id") @db.Uuid
   animal   Animal @relation(fields: [animalId], references: [id], onDelete: Restrict)
 
@@ -577,45 +587,56 @@ model AnimalRfidTagging {
   @@map("animal_rfid_tagging")
 }
 
+/// Etapa de castração de uma sessão de manejo: agrupa as castrações feitas nos animais da sessão.
+/// Uma por sessão.
 model NeuteringManagement {
-  id    String            @id @default(uuid()) @db.Uuid
-  items AnimalNeutering[]
+  id String @id @default(uuid()) @db.Uuid
 
-  // técnica prevista no planejamento: vem pré-selecionada no registro de cada animal,
-  // que pode escolher outra; null = não informada
-  suggestedTechniqueId String?             @map("suggested_technique_id") @db.Uuid
-  suggestedTechnique   NeuteringTechnique? @relation("NeuteringSuggestedTechnique", fields: [suggestedTechniqueId], references: [id], onDelete: Restrict)
-
+  /// Sessão da etapa (no máximo uma etapa de castração por sessão).
   managementSessionId String            @unique @map("management_session_id") @db.Uuid
   managementSession   ManagementSession @relation(fields: [managementSessionId], references: [id], onDelete: Restrict)
 
+  /// Técnica prevista no planejamento (vazio = não informada). Vem pré-selecionada no registro de
+  /// cada animal, que pode usar outra.
+  suggestedTechniqueId String?             @map("suggested_technique_id") @db.Uuid
+  suggestedTechnique   NeuteringTechnique? @relation("NeuteringSuggestedTechnique", fields: [suggestedTechniqueId], references: [id], onDelete: Restrict)
+
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  items AnimalNeutering[]
 
   @@index([suggestedTechniqueId])
   @@map("neutering_management")
 }
 
+/// Castração de um animal (inclusive recastração): o histórico de castrações dele. Feita avulsa ou
+/// numa sessão de manejo (nesse caso, só vale depois que a sessão é consolidada). Ao valer, o
+/// animal passa a constar como castrado (Animal.neutered).
 model AnimalNeutering {
-  id    Int     @id @default(autoincrement())
-  notes String? // observação específica desse animal (ex.: complicação, sangramento, recastração)
+  id                 Int       @id @default(autoincrement())
+  notes              String?
+  /// Data e hora da castração.
+  neuteredAt         DateTime  @map("neutered_at") @db.Timestamptz(3)
+  /// Data lançada originalmente, guardada na primeira correção (a correção preserva o rastro).
+  originalNeuteredAt DateTime? @map("original_neutered_at") @db.Timestamptz(3)
+  /// Quando o registro foi corrigido (vazio = nunca corrigido).
+  correctedAt        DateTime? @map("corrected_at") @db.Timestamptz(3)
+  /// Quando o registro foi excluído (vazio = válido). Excluído = ignorado no histórico e nos cálculos.
+  cancelledAt        DateTime? @map("cancelled_at") @db.Timestamptz(3)
 
-  // técnica usada neste animal (ex.: burdizzo, cirúrgica, elástico); null = não informada
+  /// Técnica usada neste animal (vazio = não informada).
   techniqueId String?             @map("technique_id") @db.Uuid
   technique   NeuteringTechnique? @relation("NeuteringTechnique", fields: [techniqueId], references: [id], onDelete: Restrict)
 
-  neuteredAt DateTime @map("neutered_at") @db.Timestamptz(3) // data e hora do manejo; em sessão, a hora do registro no animal
-
-  // Correções preservam o rastro: os valores lançados originalmente são guardados na primeira
-  // correção e a exclusão é lógica (cancelada = ignorada no histórico e nos cálculos).
-  originalNeuteredAt  DateTime?           @map("original_neutered_at") @db.Timestamptz(3)
+  /// Técnica lançada originalmente, guardada na primeira correção (vazio = não informada).
   originalTechniqueId String?             @map("original_technique_id") @db.Uuid
   originalTechnique   NeuteringTechnique? @relation("NeuteringOriginalTechnique", fields: [originalTechniqueId], references: [id], onDelete: Restrict)
-  correctedAt         DateTime?           @map("corrected_at") @db.Timestamptz(3)
-  cancelledAt         DateTime?           @map("cancelled_at") @db.Timestamptz(3)
 
-  managementId String?              @map("management_id") @db.Uuid // null = avulso
+  /// Etapa de castração da sessão em que o registro foi feito (vazio = registro avulso).
+  managementId String?              @map("management_id") @db.Uuid
   management   NeuteringManagement? @relation(fields: [managementId], references: [id], onDelete: Restrict)
 
+  /// Animal castrado.
   animalId String @map("animal_id") @db.Uuid
   animal   Animal @relation(fields: [animalId], references: [id], onDelete: Restrict)
 
@@ -627,9 +648,12 @@ model AnimalNeutering {
   @@map("animal_neutering")
 }
 
+/// Técnica de castração (ex.: "Burdizzo", "Cirúrgica", "Elástico"), usada nas castrações e no
+/// planejamento das sessões. Cadastro geral, comum a todas as propriedades.
 model NeuteringTechnique {
   id            String    @id @default(uuid()) @db.Uuid
   name          String    @unique
+  /// Quando a técnica foi desativada (vazio = ativa). Técnica inativa não aparece em registros novos.
   deactivatedAt DateTime? @map("deactivated_at") @db.Timestamptz(3)
 
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
@@ -642,33 +666,44 @@ model NeuteringTechnique {
   @@map("neutering_technique")
 }
 
+/// Etapa de pesagem de uma sessão de manejo: agrupa as pesagens feitas nos animais da sessão. Uma
+/// por sessão.
 model WeighingManagement {
-  id    String           @id @default(uuid()) @db.Uuid
-  items AnimalWeighing[]
+  id String @id @default(uuid()) @db.Uuid
 
+  /// Sessão da etapa (no máximo uma etapa de pesagem por sessão).
   managementSessionId String            @unique @map("management_session_id") @db.Uuid
   managementSession   ManagementSession @relation(fields: [managementSessionId], references: [id], onDelete: Restrict)
 
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
 
+  items AnimalWeighing[]
+
   @@map("weighing_management")
 }
 
+/// Pesagem individual de um animal: o histórico de pesos dele. Feita avulsa ou numa sessão de
+/// manejo (nesse caso, só vale depois que a sessão é consolidada). O peso atual do animal
+/// (Animal.currentWeight) é o da pesagem válida mais recente.
 model AnimalWeighing {
-  id        Int      @id @default(autoincrement())
-  weight    Decimal  @db.Decimal(10, 2) // valor da pesagem (kg), sempre individual
-  notes     String?
-  weighedAt DateTime @map("weighed_at") @db.Timestamptz(3) // data e hora do manejo; em sessão, a hora do registro no animal
-
-  // Correções preservam o rastro: o peso lançado originalmente é guardado na primeira correção
-  // e a exclusão é lógica (cancelada = ignorada no histórico, gráficos e peso atual).
+  id             Int       @id @default(autoincrement())
+  notes          String?
+  /// Peso do animal (kg).
+  weight         Decimal   @db.Decimal(10, 2)
+  /// Data e hora da pesagem.
+  weighedAt      DateTime  @map("weighed_at") @db.Timestamptz(3)
+  /// Peso lançado originalmente, guardado na primeira correção do valor (a correção preserva o rastro).
   originalWeight Decimal?  @map("original_weight") @db.Decimal(10, 2)
+  /// Quando o registro foi corrigido (vazio = nunca corrigido).
   correctedAt    DateTime? @map("corrected_at") @db.Timestamptz(3)
+  /// Quando o registro foi excluído (vazio = válido). Excluído = ignorado no histórico, nos gráficos e no peso atual.
   cancelledAt    DateTime? @map("cancelled_at") @db.Timestamptz(3)
 
-  managementId String?             @map("management_id") @db.Uuid // null = avulso
+  /// Etapa de pesagem da sessão em que o registro foi feito (vazio = registro avulso).
+  managementId String?             @map("management_id") @db.Uuid
   management   WeighingManagement? @relation(fields: [managementId], references: [id], onDelete: Restrict)
 
+  /// Animal pesado.
   animalId String @map("animal_id") @db.Uuid
   animal   Animal @relation(fields: [animalId], references: [id], onDelete: Restrict)
 
@@ -679,45 +714,56 @@ model AnimalWeighing {
   @@map("animal_weighing")
 }
 
+/// Etapa de marcação de uma sessão de manejo: agrupa as marcações feitas nos animais da sessão.
+/// Uma por sessão.
 model BrandManagement {
-  id    String           @id @default(uuid()) @db.Uuid
-  items AnimalBranding[]
+  id String @id @default(uuid()) @db.Uuid
 
-  // marca prevista no planejamento: vem pré-selecionada no registro de cada animal,
-  // que pode escolher outra; null = não informada
-  suggestedBrandId String? @map("suggested_brand_id") @db.Uuid
-  suggestedBrand   Brand?  @relation("BrandSuggestedBrand", fields: [suggestedBrandId], references: [id], onDelete: Restrict)
-
+  /// Sessão da etapa (no máximo uma etapa de marcação por sessão).
   managementSessionId String            @unique @map("management_session_id") @db.Uuid
   managementSession   ManagementSession @relation(fields: [managementSessionId], references: [id], onDelete: Restrict)
 
+  /// Marca prevista no planejamento (vazio = não informada). Vem pré-selecionada no registro de
+  /// cada animal, que pode usar outra.
+  suggestedBrandId String? @map("suggested_brand_id") @db.Uuid
+  suggestedBrand   Brand?  @relation("BrandSuggestedBrand", fields: [suggestedBrandId], references: [id], onDelete: Restrict)
+
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  items AnimalBranding[]
 
   @@index([suggestedBrandId])
   @@map("brand_management")
 }
 
+/// Marcação de um animal com uma marca de ferro: o histórico de marcas dele. Feita avulsa ou numa
+/// sessão de manejo (nesse caso, só vale depois que a sessão é consolidada). Um animal pode ter
+/// várias marcas (ex.: uma por dono por que passou).
 model AnimalBranding {
-  id    Int     @id @default(autoincrement())
-  notes String?
+  id                Int       @id @default(autoincrement())
+  notes             String?
+  /// Data e hora da marcação.
+  brandedAt         DateTime  @map("branded_at") @db.Timestamptz(3)
+  /// Data lançada originalmente, guardada na primeira correção (a correção preserva o rastro).
+  originalBrandedAt DateTime? @map("original_branded_at") @db.Timestamptz(3)
+  /// Quando o registro foi corrigido (vazio = nunca corrigido).
+  correctedAt       DateTime? @map("corrected_at") @db.Timestamptz(3)
+  /// Quando o registro foi excluído (vazio = válido). Excluído = ignorado no histórico.
+  cancelledAt       DateTime? @map("cancelled_at") @db.Timestamptz(3)
 
-  brandedAt DateTime @map("branded_at") @db.Timestamptz(3) // data e hora do manejo; em sessão, a hora do registro no animal
+  /// Etapa de marcação da sessão em que o registro foi feito (vazio = registro avulso).
+  managementId String?          @map("management_id") @db.Uuid
+  management   BrandManagement? @relation(fields: [managementId], references: [id], onDelete: Restrict)
 
-  // marca aplicada neste animal; em sessão, pré-selecionada com a sugerida no manejo
+  /// Marca aplicada neste animal.
   brandId String @map("brand_id") @db.Uuid
   brand   Brand  @relation("AnimalBrandingBrand", fields: [brandId], references: [id], onDelete: Restrict)
 
-  // Correções preservam o rastro: os valores lançados originalmente são guardados na primeira
-  // correção e a exclusão é lógica (cancelada = ignorada no histórico).
-  originalBrandedAt DateTime? @map("original_branded_at") @db.Timestamptz(3)
-  originalBrandId   String?   @map("original_brand_id") @db.Uuid
-  originalBrand     Brand?    @relation("AnimalBrandingOriginalBrand", fields: [originalBrandId], references: [id], onDelete: Restrict)
-  correctedAt       DateTime? @map("corrected_at") @db.Timestamptz(3)
-  cancelledAt       DateTime? @map("cancelled_at") @db.Timestamptz(3)
+  /// Marca lançada originalmente, guardada na primeira correção.
+  originalBrandId String? @map("original_brand_id") @db.Uuid
+  originalBrand   Brand?  @relation("AnimalBrandingOriginalBrand", fields: [originalBrandId], references: [id], onDelete: Restrict)
 
-  managementId String?          @map("management_id") @db.Uuid // null = avulso
-  management   BrandManagement? @relation(fields: [managementId], references: [id], onDelete: Restrict)
-
+  /// Animal marcado.
   animalId String @map("animal_id") @db.Uuid
   animal   Animal @relation(fields: [animalId], references: [id], onDelete: Restrict)
 
@@ -729,57 +775,79 @@ model AnimalBranding {
   @@map("animal_branding")
 }
 
+/// Etapa de apartação de uma sessão de manejo: guarda os lotes sugeridos no planejamento. Uma por
+/// sessão. A apartação de cada animal vira um item das transferências de lote da sessão
+/// (AnimalBatchTransfer), uma por lote de destino.
 model BatchManagement {
-  id               String                      @id @default(uuid()) @db.Uuid
-  suggestedBatches BatchManagementSuggestion[]
+  id String @id @default(uuid()) @db.Uuid
 
+  /// Sessão da etapa (no máximo uma etapa de apartação por sessão).
   managementSessionId String            @unique @map("management_session_id") @db.Uuid
   managementSession   ManagementSession @relation(fields: [managementSessionId], references: [id], onDelete: Restrict)
 
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
 
+  suggestedBatches BatchManagementSuggestion[]
+
   @@map("batch_management")
 }
 
+/// Lote sugerido no planejamento de uma apartação: aparece como opção rápida no registro de cada
+/// animal, que pode ir para outro lote.
 model BatchManagementSuggestion {
+  /// Ordem em que o lote aparece no registro.
+  position Int
+
+  /// Etapa de apartação que sugere o lote.
   managementId String          @map("management_id") @db.Uuid
   management   BatchManagement @relation(fields: [managementId], references: [id], onDelete: Cascade)
 
+  /// Lote sugerido.
   batchId String @map("batch_id") @db.Uuid
   batch   Batch  @relation(fields: [batchId], references: [id], onDelete: Restrict)
-
-  position Int // ordem em que os lotes aparecem no registro
 
   @@id([managementId, batchId])
   @@index([batchId])
   @@map("batch_management_suggestion")
 }
 
+/// Procedimento sanitário (vacina, vermífugo, tratamento, exame...) aplicado num grupo de animais,
+/// com os dados comuns a todos: produto, dose, carência e próxima dose. Feito avulso ou numa sessão
+/// de manejo, que pode ter vários (um por etapa sanitária); em sessão, só vale depois que ela é
+/// consolidada. Cada animal tratado é um item, com a data e a hora da sua aplicação.
 model HealthManagement {
   id                String                   @id @default(uuid()) @db.Uuid
+  /// Produto ou descrição do procedimento (ex.: "Febre aftosa", "Ivermectina 1%").
   title             String?
+  /// Último dia de carência (vazio = sem carência): até ele, os animais tratados não podem ser abatidos.
   withdrawalEndDate DateTime?                @map("withdrawal_end_date") @db.Date
+  /// Dia previsto para a próxima dose ou reforço (vazio = sem próxima dose).
   nextDueDate       DateTime?                @map("next_due_date") @db.Date
+  /// Como a dose de cada animal é definida: sem dose, fixa ou proporcional ao peso.
   doseType          HealthManagementDoseType @default(NONE) @map("dose_type")
-  doseMl            Decimal?                 @map("dose_ml") @db.Decimal(10, 2) // FIXED: ml por animal; PER_WEIGHT: ml a cada doseWeightKg
-  doseWeightKg      Decimal?                 @map("dose_weight_kg") @db.Decimal(10, 2) // PER_WEIGHT: peso de referência (ex.: 1 ml a cada 50 kg)
+  /// Dose de referência (ml): na fixa, a de cada animal; na proporcional, a de cada doseWeightKg.
+  doseMl            Decimal?                 @map("dose_ml") @db.Decimal(10, 2)
+  /// Na dose proporcional, o peso de referência (kg) (ex.: 1 ml a cada 50 kg).
+  doseWeightKg      Decimal?                 @map("dose_weight_kg") @db.Decimal(10, 2)
 
-  performedAt DateTime @map("performed_at") @db.Timestamptz(3) // data e hora do procedimento; em sessão, a da primeira aplicação
-
-  items HealthManagementItem[]
-  step  ManagementStep? // etapa da sessão que aplica este procedimento (null = avulso), uma vez que a mesma sessão pode ter vários manejos sanitários.
-
+  /// Tipo do procedimento (ex.: "Vacinação", "Vermifugação").
   typeId String               @map("type_id") @db.Uuid
   type   HealthManagementType @relation(fields: [typeId], references: [id], onDelete: Restrict)
 
-  managementSessionId String?            @map("management_session_id") @db.Uuid // null = avulso; sem @unique — múltiplos procedimentos sanitários podem existir na mesma sessão
+  /// Sessão de manejo em que foi feito (vazio = avulso). Uma sessão pode ter vários.
+  managementSessionId String?            @map("management_session_id") @db.Uuid
   managementSession   ManagementSession? @relation(fields: [managementSessionId], references: [id], onDelete: Restrict)
 
+  /// Veterinário responsável (vazio = não informado).
   veterinarianId String? @map("veterinarian_id") @db.Uuid
   veterinarian   Person? @relation(fields: [veterinarianId], references: [id], onDelete: Restrict)
 
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  items HealthManagementItem[]
+  /// Etapa da sessão que aplica este procedimento (vazio = avulso).
+  step  ManagementStep?
 
   @@index([managementSessionId])
   @@index([nextDueDate])
@@ -790,8 +858,9 @@ model HealthManagementItem {
   id        Int      @id @default(autoincrement())
   notes     String? // observação específica desse animal nesse procedimento (reação adversa, etc.)
   doseMl    Decimal? @map("dose_ml") @db.Decimal(10, 2) // dose aplicada neste animal (ml)
-  /// Data e hora da aplicação neste animal. Em sessão, a hora do registro; avulso, a do procedimento.
-  appliedAt DateTime @default(now()) @map("applied_at") @db.Timestamptz(3)
+  /// Data e hora da aplicação neste animal. Em sessão, a hora do registro; avulso num grupo, a
+  /// mesma para todos.
+  appliedAt DateTime @map("applied_at") @db.Timestamptz(3)
 
   managementId String           @map("management_id") @db.Uuid
   management   HealthManagement @relation(fields: [managementId], references: [id], onDelete: Restrict)

@@ -219,8 +219,8 @@ erDiagram
 
   "animal_rfid_tagging" {
     Int original_rfid "🗝️"
-    String rfid "❓"
     String notes "❓"
+    String rfid "❓"
     DateTime identified_at 
     String original_rfid "❓"
     DateTime corrected_at "❓"
@@ -233,21 +233,21 @@ erDiagram
 
   "neutering_management" {
     String id "🗝️"
-    String suggested_technique_id "❓"
     String management_session_id 
+    String suggested_technique_id "❓"
     DateTime created_at 
     }
   
 
   "animal_neutering" {
-    Int management_id "🗝️"
+    Int id "🗝️"
     String notes "❓"
-    String technique_id "❓"
     DateTime neutered_at 
     DateTime original_neutered_at "❓"
-    String original_technique_id "❓"
     DateTime corrected_at "❓"
     DateTime cancelled_at "❓"
+    String technique_id "❓"
+    String original_technique_id "❓"
     String management_id "❓"
     String animal_id 
     DateTime created_at 
@@ -271,9 +271,9 @@ erDiagram
   
 
   "animal_weighing" {
-    Int management_id "🗝️"
-    Decimal weight 
+    Int id "🗝️"
     String notes "❓"
+    Decimal weight 
     DateTime weighed_at 
     Decimal original_weight "❓"
     DateTime corrected_at "❓"
@@ -286,22 +286,22 @@ erDiagram
 
   "brand_management" {
     String id "🗝️"
-    String suggested_brand_id "❓"
     String management_session_id 
+    String suggested_brand_id "❓"
     DateTime created_at 
     }
   
 
   "animal_branding" {
-    Int management_id "🗝️"
+    Int id "🗝️"
     String notes "❓"
     DateTime branded_at 
-    String brand_id 
     DateTime original_branded_at "❓"
-    String original_brand_id "❓"
     DateTime corrected_at "❓"
     DateTime cancelled_at "❓"
     String management_id "❓"
+    String brand_id 
+    String original_brand_id "❓"
     String animal_id 
     DateTime created_at 
     }
@@ -315,21 +315,20 @@ erDiagram
   
 
   "batch_management_suggestion" {
+    Int position 
     String management_id 
     String batch_id 
-    Int position 
     }
   
 
   "health_management" {
-    String management_session_id "🗝️"
+    String id "🗝️"
     String title "❓"
     DateTime withdrawal_end_date "❓"
     DateTime next_due_date "❓"
     HealthManagementDoseType dose_type 
     Decimal dose_ml "❓"
     Decimal dose_weight_kg "❓"
-    DateTime performed_at 
     String type_id 
     String management_session_id "❓"
     String veterinarian_id "❓"
@@ -563,8 +562,8 @@ erDiagram
     "rfid_management" |o--|| management_session : "managementSession"
     "animal_rfid_tagging" }o--|o rfid_management : "management"
     "animal_rfid_tagging" }o--|| animal : "animal"
-    "neutering_management" }o--|o neutering_technique : "suggestedTechnique"
     "neutering_management" |o--|| management_session : "managementSession"
+    "neutering_management" }o--|o neutering_technique : "suggestedTechnique"
     "animal_neutering" }o--|o neutering_technique : "technique"
     "animal_neutering" }o--|o neutering_technique : "originalTechnique"
     "animal_neutering" }o--|o neutering_management : "management"
@@ -572,11 +571,11 @@ erDiagram
     "weighing_management" |o--|| management_session : "managementSession"
     "animal_weighing" }o--|o weighing_management : "management"
     "animal_weighing" }o--|| animal : "animal"
-    "brand_management" }o--|o brand : "suggestedBrand"
     "brand_management" |o--|| management_session : "managementSession"
+    "brand_management" }o--|o brand : "suggestedBrand"
+    "animal_branding" }o--|o brand_management : "management"
     "animal_branding" }o--|| brand : "brand"
     "animal_branding" }o--|o brand : "originalBrand"
-    "animal_branding" }o--|o brand_management : "management"
     "animal_branding" }o--|| animal : "animal"
     "batch_management" |o--|| management_session : "managementSession"
     "batch_management_suggestion" }o--|| batch_management : "management"

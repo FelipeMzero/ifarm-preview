@@ -1402,9 +1402,6 @@ async function seedSessions(ctx: Ctx, animals: SeededAnimal[]) {
       const atOf = new Map(
         present.map((a, i) => [a.id, recordAt(sessionDate, i)]),
       );
-      // O procedimento sanitário vale a partir da primeira aplicação.
-      const firstAt = (list: SeededAnimal[]) =>
-        list.length ? atOf.get(list[0].id)! : sessionDate;
 
       // Etapas na ordem em que foram feitas; gravadas no fim, com os ids dos sanitários.
       const steps: SessionStep[] = [{ type: "weighing" }];
@@ -1478,7 +1475,6 @@ async function seedSessions(ctx: Ctx, animals: SeededAnimal[]) {
             title: "Febre aftosa",
             veterinarianId: ctx.people.vet,
             managementSessionId: session.id,
-            performedAt: firstAt(present),
             doseType: "FIXED",
             doseMl: 2,
             nextDueDate: dateAgo(daysAgo - 180),
@@ -1500,7 +1496,6 @@ async function seedSessions(ctx: Ctx, animals: SeededAnimal[]) {
             typeId: ctx.healthTypes["Vermifugação"],
             title: "Ivermectina 1%",
             managementSessionId: session.id,
-            performedAt: firstAt(weighed),
             doseType: "PER_WEIGHT",
             doseMl: 1,
             doseWeightKg: 50,
@@ -1523,7 +1518,6 @@ async function seedSessions(ctx: Ctx, animals: SeededAnimal[]) {
             typeId: ctx.healthTypes["Controle de ectoparasitas"],
             title: "Carrapaticida pour-on",
             managementSessionId: session.id,
-            performedAt: firstAt(weighed),
             doseType: "PER_WEIGHT",
             doseMl: 1,
             doseWeightKg: 10,
@@ -1571,7 +1565,6 @@ async function seedSessions(ctx: Ctx, animals: SeededAnimal[]) {
       typeId: ctx.healthTypes["Vermifugação"],
       title: "Ivermectina 1%",
       managementSessionId: planned.id,
-      performedAt: ago(-18),
       doseType: "PER_WEIGHT",
       doseMl: 1,
       doseWeightKg: 50,
@@ -1660,7 +1653,6 @@ async function seedSpecialCases(ctx: Ctx, animals: SeededAnimal[]) {
       typeId: ctx.healthTypes["Tratamento"],
       title: "Pneumonia — antibiótico",
       veterinarianId: ctx.people.vet,
-      performedAt: ago(9),
       withdrawalEndDate: dateAgo(-19),
       doseType: "PER_WEIGHT",
       doseMl: 1,
@@ -1690,7 +1682,6 @@ async function seedSpecialCases(ctx: Ctx, animals: SeededAnimal[]) {
       typeId: ctx.healthTypes["Exame"],
       title: "Exame andrológico",
       veterinarianId: ctx.people.vet,
-      performedAt: ago(140),
       items: {
         create: [
           {
@@ -1714,7 +1705,6 @@ async function seedSpecialCases(ctx: Ctx, animals: SeededAnimal[]) {
       typeId: ctx.healthTypes["Vacinação"],
       title: "Brucelose (B19)",
       veterinarianId: ctx.people.vet,
-      performedAt: ago(130),
       doseType: "FIXED",
       doseMl: 2,
       items: {

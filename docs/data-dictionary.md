@@ -181,7 +181,7 @@ O valor intermediário (312 kg) não fica guardado: o banco mantém só o **prim
 - **Recálculo dos campos atuais.** Toda correção ou exclusão recalcula, na mesma transação, o campo desnormalizado do animal (ver 2.4): `current_weight`, `current_tag` ou `current_rfid`. Excluir a pesagem mais recente faz o peso atual voltar ao da pesagem anterior; excluir o brinco atual faz o animal voltar ao brinco anterior.
 - **Unicidade na correção.** Se o recálculo levar o animal a um brinco ou RFID que outro animal ativo da propriedade já usa, a correção ou exclusão é recusada.
 - **Exclusão da última castração.** Se não sobrar nenhuma castração, o usuário decide se o animal continua castrado (pode ter chegado castrado, sem registro). A resposta define `animal.neutered`.
-- **Registros de sessão.** O valor pode ser corrigido, mas a data não: ela segue a data da sessão. Só registros de sessão **consolidada** podem ser corrigidos ou excluídos pelo cadastro do animal; enquanto a sessão está em andamento, o registro é desfeito pela própria sessão (e aí é apagado de fato, porque ainda não era efetivo).
+- **Registros de sessão.** O valor pode ser corrigido, mas a data não: ela é a hora em que o registro foi feito na sessão. Só registros de sessão **consolidada** podem ser corrigidos ou excluídos pelo cadastro do animal; enquanto a sessão está em andamento, o registro é desfeito pela própria sessão (e aí é apagado de fato, porque ainda não era efetivo).
 - **Datas corrigidas.** Seguem as mesmas regras de um lançamento: não podem ser futuras nem anteriores ao nascimento. Ao trocar só o dia, o horário original é mantido, para não alterar a ordem entre registros do mesmo dia.
 - **Interface.** Registros corrigidos aparecem no histórico com a indicação "corrigido (era …)" e a data da correção na dica de tela.
 
@@ -197,7 +197,7 @@ Se for necessária auditoria completa (quem, quando, cada valor), o caminho é u
 
 - Registro avulso lançado com a data de hoje: grava o instante atual.
 - Registro avulso em dia passado: grava a meia-noite local do dia.
-- Registro de sessão: recebe a data e hora do manejo (`performed_at` da sessão), também na consolidação. Sessões antigas, gravadas só com o dia (meia-noite), seguem a regra anterior: o instante da consolidação se o manejo for de hoje, ou a meia-noite do dia do manejo.
+- Registro de sessão: recebe a data e hora em que foi feito no animal; a consolidação não a altera. A sessão pode atravessar a meia-noite.
 - Registro avulso e correção: recebem a data e hora informadas (registro avulso: padrão agora).
 - A data e hora de um manejo não podem ser futuras nem anteriores ao dia do nascimento do animal.
 
@@ -538,7 +538,7 @@ Uma **sessão de manejo** reúne o trabalho feito num grupo de animais no curral
 | `title` | text | | | | Título exibido nas listagens (ex.: "Pesagem mensal da recria"). Até 100 caracteres. |
 | `notes` | text | N | | | Observação. Até 500 caracteres. |
 | `scheduled_at` | timestamp | | | | Data e hora previstas (planejamento, lembretes). |
-| `performed_at` | timestamp | N | | | Data e hora em que o manejo acontece de fato. Preenchida ao **iniciar o registro** (padrão: agora). Não pode ser futura. Todos os registros da sessão recebem essa data e hora. |
+| `performed_at` | timestamp | N | | | Data e hora em que o registro da sessão começou. Preenchida automaticamente ao **iniciar o registro**; não pode ser alterada. Cada registro guarda a própria data e hora (ver 2.8). |
 | `confirmed_at` | timestamp | N | | | Consolidação: os registros passam a valer (ver 2.6). A sessão não pode mais ser alterada. |
 | `cancelled_at` | timestamp | N | | | Cancelamento: nenhum registro da sessão passa a valer. |
 | `property_id` | uuid | | | FK → `property` | Propriedade. |
@@ -549,7 +549,7 @@ Uma **sessão de manejo** reúne o trabalho feito num grupo de animais no curral
 | Estado | Condição | O que é permitido |
 |---|---|---|
 | Planejada | sem `performed_at`, `confirmed_at` e `cancelled_at` | Editar planejamento, incluir animais, iniciar, cancelar |
-| Em andamento | `performed_at` preenchido, sem `confirmed_at`/`cancelled_at` | Registrar etapas, corrigir registros, incluir/remover animais, alterar a data, consolidar, cancelar |
+| Em andamento | `performed_at` preenchido, sem `confirmed_at`/`cancelled_at` | Registrar etapas, corrigir registros, incluir/remover animais, consolidar, cancelar |
 | Consolidada | `confirmed_at` preenchido | Só leitura |
 | Cancelada | `cancelled_at` preenchido | Só leitura |
 
@@ -557,9 +557,9 @@ As etapas da sessão ficam em `management_step` (ver 7.2).
 
 **Consolidação** (em uma transação):
 1. Remove da sessão os participantes sem nenhum registro.
-2. Exige ao menos um animal manejado, todos ativos na propriedade e sem compromisso conflitante em outra operação aberta (ver 2.9), e `performed_at` que não seja futura.
+2. Exige ao menos um animal manejado, todos ativos na propriedade e sem compromisso conflitante em outra operação aberta (ver 2.9).
 3. Marca `confirmed_at`.
-4. Efetiva as etapas na ordem pesagem → castração → brinco → RFID → sanitário → apartação: normaliza as datas dos registros, recalcula `current_weight`, marca `neutered`, atualiza `current_tag`/`current_rfid` e confirma as transferências de lote da apartação.
+4. Efetiva as etapas na ordem pesagem → castração → brinco → RFID → sanitário → apartação: recalcula `current_weight`, marca `neutered`, atualiza `current_tag`/`current_rfid` e confirma as transferências de lote da apartação.
 
 Etapas puladas num animal simplesmente não têm efeito sobre ele.
 
@@ -748,7 +748,7 @@ Mesma estrutura e regras de `animal_tagging`, para o identificador eletrônico.
 
 ### 8.7 `health_management` — Procedimento sanitário
 
-Um procedimento (vacina, vermífugo, tratamento, exame…) aplicado a um grupo de animais. Os dados comuns a todos os animais ficam aqui; os de cada animal ficam em `health_management_item`.
+Um procedimento (vacina, vermífugo, tratamento, exame…) aplicado a um grupo de animais. Os dados comuns a todos os animais ficam aqui; os de cada animal, inclusive a data e a hora da aplicação, ficam em `health_management_item`.
 
 | Coluna | Tipo | Nulo | Padrão | Chave | Descrição e regras |
 |---|---|---|---|---|---|
@@ -759,7 +759,6 @@ Um procedimento (vacina, vermífugo, tratamento, exame…) aplicado a um grupo d
 | `dose_type` | `health_management_dose_type` | | `NONE` | | Regra de dose. Com animais já registrados, não pode passar de `NONE` para uma regra com dose, nem o contrário. |
 | `dose_ml` | numeric(10,2) | N | | | Dose em ml: por animal (`FIXED`) ou a cada `dose_weight_kg` (`PER_WEIGHT`). Obrigatória e maior que 0 nesses casos; nula em `NONE`. |
 | `dose_weight_kg` | numeric(10,2) | N | | | Peso de referência da dose por peso (ex.: 1 ml a cada **50** kg). Obrigatório e maior que 0 em `PER_WEIGHT`; nulo nos demais. |
-| `performed_at` | timestamp | | | | Data do procedimento. Em sessão, é provisória até a consolidação, quando recebe a data do manejo. |
 | `type_id` | uuid | | | FK → `health_management_type` | Tipo (deve estar ativo). |
 | `management_session_id` | uuid | N | | FK → `management_session` | Sessão. Nulo = avulso. Sem restrição de unicidade: uma sessão pode ter vários procedimentos. |
 | `veterinarian_id` | uuid | N | | FK → `person` | Veterinário responsável (pessoa ativa). |
@@ -774,6 +773,7 @@ Um procedimento (vacina, vermífugo, tratamento, exame…) aplicado a um grupo d
 | `id` | serial | | | PK | Identificador. |
 | `notes` | text | N | | | Observação desse animal (reação adversa, aplicação incompleta…). |
 | `dose_ml` | numeric(10,2) | N | | | Dose aplicada (ml). **Obrigatória** quando o procedimento tem dose (`FIXED`/`PER_WEIGHT`) e sempre nula em `NONE`. Na etapa da sessão já vem sugerida pela regra do procedimento (`FIXED` = `dose_ml`; `PER_WEIGHT` = `dose_ml` × peso ÷ `dose_weight_kg`, com 1 casa, usando o peso da sessão ou o atual) e pode ser corrigida; sem peso, o operador informa a dose aplicada. Não é calculada depois, na consolidação. |
+| `applied_at` | timestamp | | | | Data e hora da aplicação neste animal. Em sessão, a hora do registro no animal; avulso num grupo, a mesma para todos. |
 | `management_id` | uuid | | | FK → `health_management` | Procedimento. |
 | `animal_id` | uuid | | | FK → `animal` | Animal. |
 | `created_at` | timestamp | | now | | Auditoria. |
@@ -825,7 +825,7 @@ Plano de mover animais de um ou mais lotes para um lote de destino. Estado deriv
 **Regras:**
 - Os animais podem vir de lotes diferentes (ou de nenhum), mas precisam estar ativos na propriedade e fora do lote de destino, tanto ao salvar quanto ao confirmar.
 - Um animal não pode estar em duas transferências pendentes, nem numa transferência pendente e numa sessão aberta com apartação, nem numa recepção aberta (ver 2.9).
-- A confirmação registra `origin_batch_id` em cada item, fecha o período vigente em `animal_batch_history`, abre um novo no destino e atualiza `animal.current_batch_id`. Se a data for hoje, usa o instante da confirmação.
+- A confirmação registra `origin_batch_id` em cada item, fecha o período vigente em `animal_batch_history`, abre um novo no destino e atualiza `animal.current_batch_id`, com o `moved_at` de cada animal (ver 9.2).
 - Transferências de sessão ainda não consolidada são geridas só pela sessão: não aparecem na lista de transferências, não podem ser editadas, confirmadas ou canceladas por fora, e são confirmadas (ou canceladas) junto com a sessão.
 
 ### 9.2 `animal_batch_transfer_item` — Animal da transferência entre lotes
@@ -837,6 +837,7 @@ Plano de mover animais de um ou mais lotes para um lote de destino. Estado deriv
 | `transfer_id` | uuid | | | FK → `animal_batch_transfer` | Transferência. |
 | `animal_id` | uuid | | | FK → `animal` | Animal. |
 | `origin_batch_id` | uuid | N | | FK → `batch` | Lote de onde o animal saiu, gravado **na confirmação**. Nulo enquanto pendente, ou se o animal estava sem lote. |
+| `moved_at` | timestamp | | | | Data e hora em que o animal muda de lote: na transferência, a dela, igual para todos (acompanha a data ao editar); na apartação de uma sessão, a hora em que foi registrada no animal. Na confirmação, fecha o período no lote de origem e abre o do destino com essa data. |
 | `created_at` | timestamp | | now | | Auditoria. |
 
 **Índices:** `animal_id`, `transfer_id`, `origin_batch_id`.
