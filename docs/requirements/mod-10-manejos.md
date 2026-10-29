@@ -6,22 +6,22 @@ Uma sessão é planejada (o que será feito e em quais animais), executada anima
 
 ## Dicionário de dados conceitual
 
-| Campo            | Descrição                                                      | Tipo       | Obrig. | Restrições                                                                 |
-| ---------------- | -------------------------------------------------------------- | ---------- | ------ | -------------------------------------------------------------------------- |
-| `Título`         | Identifica a sessão, como "Pesagem mensal da recria"           | Texto      | Sim    | Até 100 caracteres                                                         |
-| `Data Prevista`  | Data planejada para o manejo                                   | Data       | Sim    | —                                                                          |
-| `Observação`     | Objetivo ou detalhes do manejo                                 | Texto      | Não    | Até 500 caracteres                                                         |
-| `Manejos`        | Etapas a realizar em cada animal, na ordem em que serão feitas | Lista      | Sim    | Ao menos um manejo (`RN-MANEJO-02`)                                        |
-| `Animais`        | Animais que participam da sessão                               | Lista      | Não    | Ver `RN-MANEJO-04`                                                         |
-| `Data do Manejo` | Data em que o manejo é de fato realizado                       | Data       | Não    | Definida ao iniciar o registro; não pode ser futura (`RN-MANEJO-01`)       |
-| `Situação`       | Situação da sessão                                             | Enum       | Sim    | `Planejada`, `Em andamento`, `Consolidada` ou `Cancelada` (`RN-MANEJO-03`) |
-| `Propriedade`    | Propriedade em que a sessão é feita                            | Referência | Sim    | Propriedade selecionada (`RN-MANEJO-01`)                                   |
+| Campo              | Descrição                                                      | Tipo        | Obrig. | Restrições                                                                 |
+| ------------------ | -------------------------------------------------------------- | ----------- | ------ | -------------------------------------------------------------------------- |
+| `Título`           | Identifica a sessão, como "Pesagem mensal da recria"           | Texto       | Sim    | Até 100 caracteres                                                         |
+| `Data Prevista`    | Data planejada para o manejo                                   | Data        | Sim    | —                                                                          |
+| `Observação`       | Objetivo ou detalhes do manejo                                 | Texto       | Não    | Até 500 caracteres                                                         |
+| `Manejos`          | Etapas a realizar em cada animal, na ordem em que serão feitas | Lista       | Sim    | Ao menos um manejo (`RN-MANEJO-02`)                                        |
+| `Animais`          | Animais que participam da sessão                               | Lista       | Não    | Ver `RN-MANEJO-04`                                                         |
+| `Início do Manejo` | Data e hora em que o registro da sessão foi iniciado           | Data e hora | Não    | Definido pelo sistema ao iniciar o registro (`RN-MANEJO-01`)               |
+| `Situação`         | Situação da sessão                                             | Enum        | Sim    | `Planejada`, `Em andamento`, `Consolidada` ou `Cancelada` (`RN-MANEJO-03`) |
+| `Propriedade`      | Propriedade em que a sessão é feita                            | Referência  | Sim    | Propriedade selecionada (`RN-MANEJO-01`)                                   |
 
 ---
 
 # 1 - Regras de Negócio do Módulo (RN)
 
-- **`RN-MANEJO-01` - Sessão de Manejo:** Uma sessão de manejo reúne o trabalho feito em um grupo de animais de uma mesma propriedade, em uma mesma data. Todos os manejos da sessão têm a data do manejo, que não pode ser futura.
+- **`RN-MANEJO-01` - Sessão de Manejo:** Uma sessão de manejo reúne o trabalho feito em um grupo de animais de uma mesma propriedade. Ela começa quando o registro é iniciado, e cada manejo tem a data e a hora em que foi registrado no animal: o registro é feito durante o manejo, e um manejo registrado depois vale com a hora do registro. Uma sessão pode atravessar a meia-noite; cada manejo fica no dia em que foi feito.
 - **`RN-MANEJO-02` - Etapas:** Os manejos possíveis em uma sessão são pesagem, castração, brinco, RFID, ferra, procedimento sanitário e apartação. Cada tipo aparece no máximo uma vez, exceto o procedimento sanitário, que pode se repetir com procedimentos diferentes (ex.: vacina e vermífugo). A ordem das etapas é a ordem em que elas são feitas em cada animal, e a apartação, quando existe, é sempre a última, pois define para onde o animal vai ao sair do curral.
 - **`RN-MANEJO-03` - Ciclo da Sessão:** Uma sessão é planejada, depois executada e, por fim, consolidada ou cancelada. Os manejos de uma sessão só têm efeito sobre os animais quando ela é consolidada; uma sessão cancelada não tem efeito sobre eles. Uma sessão consolidada ou cancelada não muda mais.
 - **`RN-MANEJO-04` - Participantes:** Só participam de uma sessão os animais ativos da propriedade que não tenham compromisso conflitante com as etapas dela (`RN-ANIMAL-10`). Duas sessões abertas não podem ter o mesmo animal na mesma etapa, exceto a pesagem.
@@ -197,7 +197,7 @@ Permite criar e alterar o planejamento de uma sessão: data prevista, manejos a 
 
 ### 2.3.1 - Descrição
 
-Permite iniciar a execução de uma sessão planejada, definindo a data em que o manejo está sendo feito.
+Permite iniciar a execução de uma sessão planejada. O início do manejo é a data e a hora em que o registro é iniciado.
 
 |                       |                                                                                                                                                  |
 | :-------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -211,29 +211,16 @@ Permite iniciar a execução de uma sessão planejada, definindo a data em que o
 
 ### 2.3.2 - Critérios de Aceitação
 
-- [ ] Ao iniciar o registro, a `Data do Manejo` é definida, inicialmente como a data de hoje, e a sessão passa a `Em andamento`.
-- [ ] A `Data do Manejo` não pode ser futura (`RN-MANEJO-01`).
-- [ ] Enquanto a sessão estiver em andamento, a `Data do Manejo` pode ser alterada; todos os registros da sessão passam a ter a nova data.
+- [ ] Ao iniciar o registro, o `Início do Manejo` é definido com a data e a hora atuais, e a sessão passa a `Em andamento`.
+- [ ] O `Início do Manejo` não pode ser alterado; cada manejo tem a data e a hora do seu registro (`RN-MANEJO-01`).
 
 ### 2.3.3 - Fluxos
 
 **Fluxo principal**
 
 1. O fluxo começa quando o usuário aciona a ação "Iniciar registro" de uma sessão planejada na listagem (`RF-MANEJO-01`).
-2. O sistema define a data de hoje como `Data do Manejo`, altera a situação da sessão para `Em andamento` e exibe a mensagem: _"Registro iniciado com a data de hoje."_
+2. O sistema define a data e a hora atuais como `Início do Manejo`, altera a situação da sessão para `Em andamento` e exibe a mensagem: _"Registro iniciado."_
 3. O fluxo continua em `RF-MANEJO-04`.
-
-**Fluxos alternativos**
-
-- **A1 – Alteração da data do manejo (passo 3):**
-  1. Com a sessão em andamento, o usuário altera a `Data do Manejo`.
-  2. O sistema valida a data (`RN-MANEJO-01`) e aplica a nova data a todos os registros da sessão.
-  3. O fluxo continua em `RF-MANEJO-04`.
-
-- **A2 – Data do manejo futura (passo A1.2):**
-  1. A data informada é posterior a hoje (`RN-MANEJO-01`).
-  2. O sistema impede a alteração e exibe a mensagem: _"A data do manejo não pode ser futura."_
-  3. O fluxo retorna ao passo A1.1.
 
 </div>
 
@@ -262,7 +249,6 @@ Permite acompanhar a execução de uma sessão em andamento: localizar o próxim
 - [ ] Deve ser possível incluir na sessão animais que chegaram ao curral sem estar planejados, com as mesmas regras do planejamento (`RN-MANEJO-04`).
 - [ ] Animais da sessão que não estão mais ativos na propriedade devem ser destacados, com a sua situação atual, conforme [Operações com animais selecionados](comum.md#operações-com-animais-selecionados).
 - [ ] Deve ser possível remover um animal da sessão, mediante confirmação; se o animal já tiver registros, eles devem ser desfeitos, e a confirmação deve informar isso.
-- [ ] Deve ser possível alterar a `Data do Manejo` (`RF-MANEJO-03`).
 - [ ] Deve ser possível acionar a consolidação (`RF-MANEJO-12`).
 
 ### 2.4.3 - Fluxos
@@ -294,12 +280,7 @@ Permite acompanhar a execução de uma sessão em andamento: localizar o próxim
   4. O sistema remove o animal da sessão, desfazendo os seus registros.
   5. O fluxo retorna ao passo 3.
 
-- **A4 – Alteração da data do manejo (passo 3):**
-  1. O usuário altera a `Data do Manejo`.
-  2. O sistema aplica a alteração conforme `RF-MANEJO-03`.
-  3. O fluxo retorna ao passo 3.
-
-- **A5 – Consolidação (passo 3):**
+- **A4 – Consolidação (passo 3):**
   1. O usuário aciona a consolidação da sessão.
   2. O fluxo continua em `RF-MANEJO-12`.
 
@@ -596,7 +577,7 @@ Permite registrar a etapa em que o animal recebe um procedimento sanitário (vac
 
 **Na consolidação**
 
-- [ ] O procedimento entra no histórico sanitário de cada animal que o recebeu, com a dose aplicada, a carência (`RN-MANEJO-10`) e a próxima dose.
+- [ ] O procedimento entra no histórico sanitário de cada animal que o recebeu, com a data e a hora da aplicação no animal, a dose aplicada, a carência (`RN-MANEJO-10`) e a próxima dose.
 
 ### 2.9.3 - Fluxos
 
@@ -652,7 +633,7 @@ Permite registrar a etapa em que se define para qual lote o animal vai ao sair d
 
 **Na consolidação**
 
-- [ ] Os animais com destino em outro lote saem do lote atual e entram no lote de destino, e a mudança entra no histórico de lotes de cada animal (`RN-ANIMAL-03`).
+- [ ] Os animais com destino em outro lote saem do lote atual e entram no lote de destino na data e na hora em que a apartação foi registrada em cada um, e a mudança entra no histórico de lotes de cada animal (`RN-ANIMAL-03`).
 - [ ] Os animais que permaneceram no lote atual não têm mudança.
 
 ### 2.10.3 - Fluxos
@@ -760,8 +741,8 @@ Permite encerrar a execução de uma sessão, fazendo os seus registros passarem
 
 - [ ] Somente sessões em andamento podem ser consolidadas.
 - [ ] A consolidação exige confirmação do usuário, informando que a sessão não poderá mais ser alterada e, se houver, quantos animais não foram manejados e serão removidos da sessão (`RN-MANEJO-05`).
-- [ ] A consolidação deve ser impedida se: nenhum animal tiver sido manejado; a `Data do Manejo` for futura; algum animal da sessão não estiver mais ativo na propriedade (ver [Operações com animais selecionados](comum.md#operações-com-animais-selecionados)); houver compromisso conflitante com outra operação aberta (`RN-MANEJO-04`); ou um brinco (ou RFID) registrado estiver em uso por outro animal (`RN-MANEJO-08`).
-- [ ] Na consolidação, os registros passam a valer com a `Data do Manejo` (ou com o horário da consolidação, se o manejo for de hoje), e cada manejo produz o seu efeito nos animais, conforme `RF-MANEJO-06` a `RF-MANEJO-11`.
+- [ ] A consolidação deve ser impedida se: nenhum animal tiver sido manejado; algum animal da sessão não estiver mais ativo na propriedade (ver [Operações com animais selecionados](comum.md#operações-com-animais-selecionados)); houver compromisso conflitante com outra operação aberta (`RN-MANEJO-04`); ou um brinco (ou RFID) registrado estiver em uso por outro animal (`RN-MANEJO-08`).
+- [ ] Na consolidação, os registros passam a valer com a data e a hora em que foram feitos (`RN-MANEJO-01`), e cada manejo produz o seu efeito nos animais, conforme `RF-MANEJO-06` a `RF-MANEJO-11`.
 
 ### 2.12.3 - Fluxos
 
@@ -770,8 +751,8 @@ Permite encerrar a execução de uma sessão, fazendo os seus registros passarem
 1. O fluxo começa quando o usuário aciona a consolidação no acompanhamento de uma sessão em andamento (`RF-MANEJO-04`).
 2. O sistema solicita a confirmação, informando que a sessão não poderá mais ser alterada e, se houver, quantos animais não foram manejados e serão removidos da sessão (`RN-MANEJO-05`).
 3. O usuário confirma a consolidação.
-4. O sistema verifica que a consolidação não tem impedimentos (`RN-MANEJO-01`, `RN-MANEJO-04`, `RN-MANEJO-05`, `RN-MANEJO-08`).
-5. O sistema altera a situação da sessão para `Consolidada`, remove os animais não manejados e aplica os registros nos animais com a `Data do Manejo` (ou com o horário da consolidação, se o manejo for de hoje), cada manejo produzindo o seu efeito conforme `RF-MANEJO-06` a `RF-MANEJO-11`.
+4. O sistema verifica que a consolidação não tem impedimentos (`RN-MANEJO-04`, `RN-MANEJO-05`, `RN-MANEJO-08`).
+5. O sistema altera a situação da sessão para `Consolidada`, remove os animais não manejados e aplica os registros nos animais com a data e a hora em que foram feitos, cada manejo produzindo o seu efeito conforme `RF-MANEJO-06` a `RF-MANEJO-11`.
 6. O fluxo termina.
 
 **Fluxos alternativos**
@@ -792,7 +773,7 @@ Permite encerrar a execução de uma sessão, fazendo os seus registros passarem
   3. O fluxo termina com falha.
 
 - **A4 – Outro impedimento (passo 4):**
-  1. A `Data do Manejo` é futura (`RN-MANEJO-01`), há compromisso conflitante com outra operação aberta (`RN-MANEJO-04`) ou um brinco (ou RFID) registrado está em uso por outro animal (`RN-MANEJO-08`).
+  1. Há compromisso conflitante com outra operação aberta (`RN-MANEJO-04`) ou um brinco (ou RFID) registrado está em uso por outro animal (`RN-MANEJO-08`).
   2. O sistema impede a consolidação e informa o motivo.
   3. O fluxo termina com falha.
 

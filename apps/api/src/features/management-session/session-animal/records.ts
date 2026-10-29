@@ -31,21 +31,26 @@ async function touchParticipant(
   session: LoadedSession,
   participantId: number,
   animalId: string,
+  at: Date,
 ) {
   const records = await loadStepRecords(tx, session, session.steps, [animalId]);
   await tx.managementParticipant.update({
     where: { id: participantId },
-    data: { lastHandledAt: countDone(records, animalId) ? new Date() : null },
+    data: { lastHandledAt: countDone(records, animalId) ? at : null },
   });
 }
 
-/** Registra (ou corrige) uma etapa do manejo no animal. Lança Error se inválido. */
+/**
+ * Registra (ou corrige) uma etapa do manejo no animal, com a hora do registro (`at`, padrão: agora;
+ * o seed informa a de cada registro). Lança Error se inválido.
+ */
 export async function saveAnimalStep(
   tx: Tx,
   sessionId: string,
   animalId: string,
   key: string,
   body: unknown,
+  at: Date = new Date(),
 ) {
   const session = requireManagementDate(
     await requireSessionIn(
@@ -75,8 +80,8 @@ export async function saveAnimalStep(
     },
   });
 
-  await handler.save(tx, session, step, animal, validation.data);
-  await touchParticipant(tx, session, participant.id, animalId);
+  await handler.save(tx, session, step, animal, validation.data, at);
+  await touchParticipant(tx, session, participant.id, animalId, at);
 }
 
 /** Desfaz o registro da etapa no animal. */
@@ -96,5 +101,5 @@ export async function clearAnimalStep(
   const participant = await requireParticipant(tx, sessionId, animalId);
 
   await stepModule(step.type).clear(tx, session, step, animalId);
-  await touchParticipant(tx, session, participant.id, animalId);
+  await touchParticipant(tx, session, participant.id, animalId, new Date());
 }

@@ -138,7 +138,7 @@ export const healthStep = defineStep({
   // o procedimento (a tela usa healthPayloadSchemaFor).
   payloadSchema: healthPayloadSchema,
 
-  async save(tx, _session, step, animal, payload) {
+  async save(tx, _session, step, animal, payload, at) {
     const hm = await tx.healthManagement.findUnique({
       where: { id: step.healthManagementId },
       select: { doseType: true },
@@ -157,7 +157,7 @@ export const healthStep = defineStep({
     if (existing) {
       await tx.healthManagementItem.update({
         where: { id: existing.id },
-        data: { doseMl, notes: payload.notes },
+        data: { doseMl, notes: payload.notes, appliedAt: at },
       });
     } else {
       await tx.healthManagementItem.create({
@@ -166,6 +166,7 @@ export const healthStep = defineStep({
           animalId: animal.id,
           doseMl,
           notes: payload.notes,
+          appliedAt: at,
         },
       });
     }
@@ -177,10 +178,16 @@ export const healthStep = defineStep({
     });
   },
 
-  async consolidate(tx, _session, step, effectiveAt) {
+  // Cada animal tem a hora da sua aplicação; o procedimento fica com a da primeira.
+  async consolidate(tx, _session, step) {
+    const first = await tx.healthManagementItem.aggregate({
+      where: { managementId: step.healthManagementId },
+      _min: { appliedAt: true },
+    });
+    if (!first._min.appliedAt) return;
     await tx.healthManagement.update({
       where: { id: step.healthManagementId },
-      data: { performedAt: effectiveAt },
+      data: { performedAt: first._min.appliedAt },
     });
   },
 });

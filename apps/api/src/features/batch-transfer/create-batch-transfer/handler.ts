@@ -29,7 +29,11 @@ export async function createBatchTransfer(data: BatchTransferData) {
         destinationBatchId: data.destinationBatchId,
         propertyId,
         items: {
-          create: animalIds.map((animalId) => ({ animalId })),
+          // O grupo muda de lote de uma vez: todos na data da transferência.
+          create: animalIds.map((animalId) => ({
+            animalId,
+            movedAt: transferredAt,
+          })),
         },
       },
     });

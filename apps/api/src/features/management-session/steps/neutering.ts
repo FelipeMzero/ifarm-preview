@@ -104,7 +104,7 @@ export const neuteringStep = defineStep({
 
   payloadSchema: neuteringPayloadSchema,
 
-  async save(tx, session, _step, animal, payload) {
+  async save(tx, session, _step, animal, payload, at) {
     const management = await container(tx, session.id);
     if (!management) throw new StepError("Etapa de castração não encontrada.");
 
@@ -123,7 +123,11 @@ export const neuteringStep = defineStep({
     if (existing) {
       await tx.animalNeutering.update({
         where: { id: existing.id },
-        data: { techniqueId: payload.techniqueId, notes: payload.notes },
+        data: {
+          techniqueId: payload.techniqueId,
+          notes: payload.notes,
+          neuteredAt: at,
+        },
       });
     } else {
       await tx.animalNeutering.create({
@@ -132,7 +136,7 @@ export const neuteringStep = defineStep({
           animalId: animal.id,
           techniqueId: payload.techniqueId,
           notes: payload.notes,
-          neuteredAt: session.performedAt,
+          neuteredAt: at,
         },
       });
     }
@@ -144,14 +148,9 @@ export const neuteringStep = defineStep({
     });
   },
 
-  async consolidate(tx, session, _step, effectiveAt) {
+  async consolidate(tx, session) {
     const management = await container(tx, session.id);
     if (!management) return;
-
-    await tx.animalNeutering.updateMany({
-      where: { managementId: management.id },
-      data: { neuteredAt: effectiveAt },
-    });
 
     const items = await tx.animalNeutering.findMany({
       where: { managementId: management.id },

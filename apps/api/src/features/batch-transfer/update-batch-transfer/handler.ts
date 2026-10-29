@@ -61,6 +61,12 @@ export async function updateBatchTransfer(id: string, data: BatchTransferData) {
     });
     if (updated.count !== 1) throw new BusinessError(NOT_PENDING, 409);
 
+    // O grupo muda de lote de uma vez: os que continuam acompanham a nova data.
+    await tx.animalBatchTransferItem.updateMany({
+      where: { transferId: id },
+      data: { movedAt: transferredAt },
+    });
+
     if (removedItemIds.length) {
       await tx.animalBatchTransferItem.deleteMany({
         where: { id: { in: removedItemIds } },
@@ -79,6 +85,7 @@ export async function updateBatchTransfer(id: string, data: BatchTransferData) {
         data: addedAnimalIds.map((animalId) => ({
           transferId: id,
           animalId,
+          movedAt: transferredAt,
         })),
       });
     }

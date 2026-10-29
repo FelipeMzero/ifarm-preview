@@ -16,13 +16,10 @@ import {
   isSessionOpen,
   type SessionParticipant,
   formatDateTime,
-  nowInZone,
-  toDateTimeInput,
 } from "@ifarm/shared";
 import { managementSessionDetailQuery } from "@/features/management-session/queries";
 import {
   ParticipantTabs,
-  SessionDateDialog,
   UnavailableNotice,
   groupParticipants,
   matchesParticipant,
@@ -53,7 +50,6 @@ export function ReceptionBoard({ id }: { id: string }) {
   const boardPath = `/recepcoes/${id}`;
 
   const [search, setSearch] = useState("");
-  const [dateDialog, setDateDialog] = useState(false);
   const [documentsDialog, setDocumentsDialog] = useState(false);
   const [removing, setRemoving] = useState<SessionParticipant | null>(null);
   const [confirming, setConfirming] = useState(false);
@@ -69,14 +65,6 @@ export function ReceptionBoard({ id }: { id: string }) {
   // Toda alteração na recepção recarrega a sessão e o que ela afeta (compra, animais, lotes).
   const reloadReception = useReloadReception();
 
-  const changeDate = useMutation({
-    mutationFn: (date: string) =>
-      managementSessionClient.startManagementSession(id, date),
-    onSuccess: () => {
-      toast.success("Data da recepção alterada.");
-      return reloadReception();
-    },
-  });
   const removeAnimal = useMutation({
     mutationFn: (animalId: string) =>
       managementSessionClient.removeParticipant(id, animalId),
@@ -134,8 +122,6 @@ export function ReceptionBoard({ id }: { id: string }) {
   }
 
   const { status, steps } = detail;
-  // O "agora" sugerido é o da propriedade da sessão, que pode não ser a atual do usuário.
-  const { timeZone } = detail.property;
   const inProgress = status === "in_progress";
   const editable = isSessionOpen(status);
   const hasSteps = steps.length > 0;
@@ -182,16 +168,6 @@ export function ReceptionBoard({ id }: { id: string }) {
     else if (target) openAnimal(target.animal.id);
     else if (!filtered.length)
       toast.warning("Nenhum animal da recepção encontrado.");
-  }
-
-  // O diálogo de data espera a promessa: fecha no sucesso e continua aberto na falha.
-  async function handleDate(date: string) {
-    try {
-      await changeDate.mutateAsync(date);
-    } catch (e) {
-      toast.error((e as Error).message);
-      throw e;
-    }
   }
 
   function handleRemove() {
@@ -276,21 +252,11 @@ export function ReceptionBoard({ id }: { id: string }) {
 
       <div className="flex flex-wrap items-center gap-x-6 gap-y-1 text-sm text-muted-foreground">
         {detail.performedAt && (
-          <span className="flex items-center gap-1">
+          <span>
             Data da recepção:{" "}
             <span className="font-medium text-foreground">
               {formatDateTime(detail.performedAt)}
             </span>
-            {inProgress && (
-              <Button
-                variant="link"
-                size="sm"
-                className="h-auto px-1"
-                onClick={() => setDateDialog(true)}
-              >
-                alterar
-              </Button>
-            )}
           </span>
         )}
         <span className="flex items-center gap-1">
@@ -369,21 +335,6 @@ export function ReceptionBoard({ id }: { id: string }) {
         removeTitle="Desfazer o recebimento"
         onOpen={(p) => openAnimal(p.animal.id)}
         onRemove={setRemoving}
-      />
-
-      <SessionDateDialog
-        open={dateDialog}
-        timeZone={timeZone}
-        initial={
-          detail.performedAt
-            ? toDateTimeInput(detail.performedAt)
-            : nowInZone(timeZone)
-        }
-        title="Data da recepção"
-        description="Data em que os animais chegaram. Todos os registros da recepção recebem esta data."
-        confirmLabel="Salvar"
-        onOpenChange={setDateDialog}
-        onConfirm={handleDate}
       />
 
       <ReceptionDocumentsDialog

@@ -59,7 +59,7 @@ export const weighingStep = defineStep({
 
   payloadSchema: weighingPayloadSchema,
 
-  async save(tx, session, _step, animal, payload) {
+  async save(tx, session, _step, animal, payload, at) {
     const management = await container(tx, session.id);
     if (!management) throw new StepError("Etapa de pesagem não encontrada.");
 
@@ -69,7 +69,11 @@ export const weighingStep = defineStep({
     if (existing) {
       await tx.animalWeighing.update({
         where: { id: existing.id },
-        data: { weight: payload.weightKg, notes: payload.notes },
+        data: {
+          weight: payload.weightKg,
+          notes: payload.notes,
+          weighedAt: at,
+        },
       });
     } else {
       await tx.animalWeighing.create({
@@ -78,7 +82,7 @@ export const weighingStep = defineStep({
           animalId: animal.id,
           weight: payload.weightKg,
           notes: payload.notes,
-          weighedAt: session.performedAt,
+          weighedAt: at,
         },
       });
     }
@@ -90,14 +94,9 @@ export const weighingStep = defineStep({
     });
   },
 
-  async consolidate(tx, session, _step, effectiveAt) {
+  async consolidate(tx, session) {
     const management = await container(tx, session.id);
     if (!management) return;
-
-    await tx.animalWeighing.updateMany({
-      where: { managementId: management.id },
-      data: { weighedAt: effectiveAt },
-    });
 
     const items = await tx.animalWeighing.findMany({
       where: { managementId: management.id },

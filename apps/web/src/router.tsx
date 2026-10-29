@@ -93,13 +93,9 @@ export const router = createBrowserRouter([
       { path: "/manejos/:id", Component: ManagementSessionEditPage },
       { path: "/manejos/:id/registro", Component: RegistrationPage },
       // O registro de cada animal abre no primeiro passo pendente; com o passo na URL (link,
-      // recarregar a página), na mesma tela.
+      // recarregar a página), na mesma tela. Uma rota só: trocar de passo não remonta a tela.
       {
-        path: "/manejos/:id/registro/:animalId",
-        Component: RegistrationAnimalPage,
-      },
-      {
-        path: "/manejos/:id/registro/:animalId/:passo",
+        path: "/manejos/:id/registro/:animalId/:passo?",
         Component: RegistrationAnimalPage,
       },
       { path: "/manejos/novo", Component: ManagementSessionNewPage },
@@ -117,9 +113,8 @@ export const router = createBrowserRouter([
       { path: "/racas", Component: BreedListPage },
       { path: "/recepcoes", Component: ReceptionPurchaseListPage },
       { path: "/recepcoes/:id", Component: ReceptionPage },
-      { path: "/recepcoes/:id/:animalId", Component: ReceptionAnimalPage },
       {
-        path: "/recepcoes/:id/:animalId/:passo",
+        path: "/recepcoes/:id/:animalId/:passo?",
         Component: ReceptionAnimalPage,
       },
       { path: "/recepcoes/compras/:id", Component: ReceptionPurchasePage },

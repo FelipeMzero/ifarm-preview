@@ -147,12 +147,14 @@ export async function describeReception(tx: Tx, sessionId: string) {
 }
 
 // Cria o animal que desceu do caminhão: já ativo, na propriedade e no lote de entrada,
-// ligado à categoria da compra e participante da sessão.
+// ligado à categoria da compra e participante da sessão. Entra na hora em que é recebido
+// (`at`, padrão: agora).
 export async function receiveAnimal(
   tx: Tx,
-  session: { id: string; propertyId: string; performedAt: Date },
+  session: { id: string; propertyId: string },
   reception: Reception,
   input: ReceiveAnimalData,
+  at: Date = new Date(),
 ) {
   if (reception.purchaseEvent.cancelledAt) {
     throw new ReceptionError("A compra foi cancelada.", 409);
@@ -178,18 +180,15 @@ export async function receiveAnimal(
     );
   }
 
-  // Entrada na fazenda: a data e hora da recepção.
-  const enteredAt = session.performedAt;
+  // Entrada na fazenda: a hora em que o animal é recebido.
+  const enteredAt = at;
 
-  // @db.Date: o dia estimado, contado a partir do dia da recepção no fuso da propriedade.
+  // @db.Date: o dia estimado, contado a partir do dia do recebimento no fuso da propriedade.
   const birthDate =
     input.ageMonths != null
       ? toDbDate(
           estimatedBirthDay(
-            dayInZone(
-              session.performedAt,
-              await propertyTimeZone(session.propertyId, tx),
-            ),
+            dayInZone(at, await propertyTimeZone(session.propertyId, tx)),
             input.ageMonths,
           ),
         )

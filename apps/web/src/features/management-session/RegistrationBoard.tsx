@@ -30,8 +30,6 @@ import {
   isNotFoundError,
   isSessionOpen,
   type TransferAnimal,
-  nowInZone,
-  toDateTimeInput,
   formatDateTime,
 } from "@ifarm/shared";
 import { useCurrentProperty } from "@/features/shell/useCurrentProperty";
@@ -42,7 +40,6 @@ import { type SessionParticipant } from "@ifarm/shared";
 import { managementSessionDetailQuery, useReloadSessions } from "./queries";
 import {
   ParticipantTabs,
-  SessionDateDialog,
   UnavailableNotice,
   groupParticipants,
   matchesParticipant,
@@ -67,7 +64,6 @@ export function RegistrationBoard({ id }: { id: string }) {
   const { property: currentProperty } = useCurrentProperty();
 
   const [search, setSearch] = useState("");
-  const [dateDialog, setDateDialog] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [removing, setRemoving] = useState<SessionParticipant | null>(null);
   const [confirming, setConfirming] = useState(false);
@@ -82,8 +78,7 @@ export function RegistrationBoard({ id }: { id: string }) {
   // Toda alteração recarrega a sessão e o que ela afeta (animais e lotes).
   const reloadSessions = useReloadSessions();
   const startSession = useMutation({
-    mutationFn: (date: string) =>
-      managementSessionClient.startManagementSession(id, date),
+    mutationFn: () => managementSessionClient.startManagementSession(id),
     onSuccess: reloadSessions,
   });
   const addAnimals = useMutation({
@@ -148,8 +143,6 @@ export function RegistrationBoard({ id }: { id: string }) {
   }
 
   const { status, steps } = detail;
-  // O "agora" sugerido é o da propriedade da sessão, que pode não ser a atual do usuário.
-  const { timeZone } = detail.property;
   const inProgress = status === "in_progress";
   const editable = isSessionOpen(status);
 
@@ -171,11 +164,11 @@ export function RegistrationBoard({ id }: { id: string }) {
     ? ((counts.done + counts.partial) / counts.total) * 100
     : 0;
 
-  // O registro começa com a data de hoje; se precisar, ela é corrigida no cabeçalho.
-  async function startToday(animalId?: string) {
+  // O início do registro é a hora em que ele começa; cada registro guarda a própria hora.
+  async function start(animalId?: string) {
     try {
-      await startSession.mutateAsync(nowInZone(timeZone));
-      toast.success("Registro iniciado com a data de hoje.");
+      await startSession.mutateAsync();
+      toast.success("Registro iniciado.");
       if (animalId) navigate(`/manejos/${id}/registro/${animalId}`);
     } catch (e) {
       toast.error((e as Error).message);
@@ -184,7 +177,7 @@ export function RegistrationBoard({ id }: { id: string }) {
 
   function openAnimal(animalId: string) {
     if (status === "planned") {
-      startToday(animalId);
+      start(animalId);
       return;
     }
     navigate(`/manejos/${id}/registro/${animalId}`);
@@ -208,17 +201,6 @@ export function RegistrationBoard({ id }: { id: string }) {
     else if (target) openAnimal(target.animal.id);
     else if (!filtered.length)
       toast.warning("Nenhum animal da sessão encontrado.");
-  }
-
-  // O diálogo de data espera a promessa: fecha no sucesso e continua aberto na falha.
-  async function handleStart(date: string) {
-    try {
-      await startSession.mutateAsync(date);
-      toast.success("Data do manejo alterada.");
-    } catch (e) {
-      toast.error((e as Error).message);
-      throw e;
-    }
   }
 
   function handleAdd(animals: TransferAnimal[]) {
@@ -301,21 +283,11 @@ export function RegistrationBoard({ id }: { id: string }) {
           </span>
         </span>
         {detail.performedAt && (
-          <span className="flex items-center gap-1">
-            Data do manejo:{" "}
+          <span>
+            Início do manejo:{" "}
             <span className="font-medium text-foreground">
               {formatDateTime(detail.performedAt)}
             </span>
-            {inProgress && (
-              <Button
-                variant="link"
-                size="sm"
-                className="h-auto px-1"
-                onClick={() => setDateDialog(true)}
-              >
-                alterar
-              </Button>
-            )}
           </span>
         )}
         <span>
@@ -334,10 +306,10 @@ export function RegistrationBoard({ id }: { id: string }) {
         <div className="flex flex-wrap items-center gap-3 rounded-lg border border-border bg-muted/40 p-4">
           <CalendarDays className="size-5 text-muted-foreground" />
           <p className="flex-1 text-sm">
-            O registro ainda não começou. Ao iniciar, a data do manejo será a de
-            hoje (pode ser alterada depois).
+            O registro ainda não começou. Cada manejo registrado guarda a data e
+            a hora em que foi feito.
           </p>
-          <Button onClick={() => startToday()}>
+          <Button onClick={() => start()}>
             <Play className="size-4" /> Iniciar registro
           </Button>
         </div>
@@ -405,21 +377,6 @@ export function RegistrationBoard({ id }: { id: string }) {
         removeTitle="Remover da sessão"
         onOpen={(p) => openAnimal(p.animal.id)}
         onRemove={setRemoving}
-      />
-
-      <SessionDateDialog
-        open={dateDialog}
-        timeZone={timeZone}
-        initial={
-          detail.performedAt
-            ? toDateTimeInput(detail.performedAt)
-            : nowInZone(timeZone)
-        }
-        title="Data do manejo"
-        description="Data em que o manejo está sendo feito. Todos os registros da sessão recebem esta data."
-        confirmLabel="Salvar"
-        onOpenChange={setDateDialog}
-        onConfirm={handleStart}
       />
 
       <Dialog open={pickerOpen} onOpenChange={setPickerOpen}>

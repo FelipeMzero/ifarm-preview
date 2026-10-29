@@ -45,10 +45,9 @@ type IdentifierAdapter = {
   updateItem(
     tx: Tx,
     id: number,
-    data: { value: string; notes: string | null },
+    data: { value: string; notes: string | null; identifiedAt: Date },
   ): Promise<unknown>;
   deleteItems(tx: Tx, sessionId: string, animalId: string): Promise<unknown>;
-  setIdentifiedAt(tx: Tx, managementId: string, at: Date): Promise<unknown>;
 };
 
 const sessionFilter = (sessionId: string, animalIds?: string[]) => ({
@@ -79,16 +78,11 @@ const tagAdapter: IdentifierAdapter = {
     ).map((i) => ({ ...i, value: i.tag })),
   createItem: (tx, { value, ...data }) =>
     tx.animalTagging.create({ data: { ...data, tag: value } }),
-  updateItem: (tx, id, { value, notes }) =>
-    tx.animalTagging.update({ where: { id }, data: { tag: value, notes } }),
+  updateItem: (tx, id, { value, ...data }) =>
+    tx.animalTagging.update({ where: { id }, data: { ...data, tag: value } }),
   deleteItems: (tx, sessionId, animalId) =>
     tx.animalTagging.deleteMany({
       where: { ...sessionFilter(sessionId), animalId },
-    }),
-  setIdentifiedAt: (tx, managementId, at) =>
-    tx.animalTagging.updateMany({
-      where: { managementId },
-      data: { identifiedAt: at },
     }),
 };
 
@@ -115,19 +109,14 @@ const rfidAdapter: IdentifierAdapter = {
     ).map((i) => ({ ...i, value: i.rfid })),
   createItem: (tx, { value, ...data }) =>
     tx.animalRfidTagging.create({ data: { ...data, rfid: value } }),
-  updateItem: (tx, id, { value, notes }) =>
+  updateItem: (tx, id, { value, ...data }) =>
     tx.animalRfidTagging.update({
       where: { id },
-      data: { rfid: value, notes },
+      data: { ...data, rfid: value },
     }),
   deleteItems: (tx, sessionId, animalId) =>
     tx.animalRfidTagging.deleteMany({
       where: { ...sessionFilter(sessionId), animalId },
-    }),
-  setIdentifiedAt: (tx, managementId, at) =>
-    tx.animalRfidTagging.updateMany({
-      where: { managementId },
-      data: { identifiedAt: at },
     }),
 };
 
@@ -194,7 +183,7 @@ function identifierStep(adapter: IdentifierAdapter) {
 
     payloadSchema: identifierPayloadSchemaFor(adapter.type),
 
-    async save(tx, session, _step, animal: StepAnimal, payload) {
+    async save(tx, session, _step, animal: StepAnimal, payload, at) {
       const management = await adapter.findContainer(tx, session.id);
       if (!management) {
         throw new StepError(`Etapa de ${adapter.label} não encontrada.`);
@@ -238,6 +227,7 @@ function identifierStep(adapter: IdentifierAdapter) {
         await adapter.updateItem(tx, existing.id, {
           value: payload.value,
           notes: payload.notes,
+          identifiedAt: at,
         });
       } else {
         await adapter.createItem(tx, {
@@ -245,7 +235,7 @@ function identifierStep(adapter: IdentifierAdapter) {
           animalId: animal.id,
           value: payload.value,
           notes: payload.notes,
-          identifiedAt: session.performedAt,
+          identifiedAt: at,
         });
       }
     },
@@ -254,7 +244,7 @@ function identifierStep(adapter: IdentifierAdapter) {
       await adapter.deleteItems(tx, session.id, animalId);
     },
 
-    async consolidate(tx, session, _step, effectiveAt) {
+    async consolidate(tx, session) {
       const management = await adapter.findContainer(tx, session.id);
       if (!management) return;
       const items = (await adapter.findItems(tx, session.id)).filter(
@@ -279,8 +269,6 @@ function identifierStep(adapter: IdentifierAdapter) {
           409,
         );
       }
-
-      await adapter.setIdentifiedAt(tx, management.id, effectiveAt);
 
       // Libera primeiro os valores atuais: permite trocar identificadores entre
       // animais da sessão sem esbarrar no índice único.

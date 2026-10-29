@@ -221,7 +221,6 @@ export function ReceptionPanel({
           />
           <Button
             type="button"
-            variant="outline"
             disabled={saving || !category}
             title="Receber e continuar recebendo (sem abrir os manejos)"
             onClick={() => receive(false)}

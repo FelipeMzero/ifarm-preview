@@ -1,19 +1,10 @@
 import { useState } from "react";
-import { ChevronRight, CircleAlert, Loader2, Trash2 } from "lucide-react";
+import { ChevronRight, CircleAlert, Trash2 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import type { ParticipantStatus } from "@ifarm/shared";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { Pagination } from "@/components/our/Pagination";
 import {
   AnimalIdentification,
@@ -25,8 +16,6 @@ import {
   type SessionParticipant,
   type SessionStepView,
   type SessionValues,
-  nowInZone,
-  type BrTimeZone,
 } from "@ifarm/shared";
 
 // Partes do registro de uma sessão compartilhadas entre o registro de manejo e a
@@ -344,90 +333,5 @@ export function ParticipantTabs({
         />
       )}
     </Tabs>
-  );
-}
-
-type DateDialogProps = {
-  open: boolean;
-  initial: string;
-  title: string;
-  description: string;
-  confirmLabel: string;
-  onOpenChange: (open: boolean) => void;
-  onConfirm: (date: string) => Promise<void>;
-  /** Fuso da propriedade da sessão: limite do campo (não pode ser no futuro). */
-  timeZone: BrTimeZone;
-};
-
-export function SessionDateDialog({
-  open,
-  onOpenChange,
-  title,
-  description,
-  ...rest
-}: DateDialogProps) {
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-sm">
-        <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
-          <DialogDescription>{description}</DialogDescription>
-        </DialogHeader>
-        {/* Montado só com o diálogo aberto: cada abertura começa da data atual. */}
-        <DateForm {...rest} onOpenChange={onOpenChange} />
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-function DateForm({
-  initial,
-  confirmLabel,
-  onOpenChange,
-  onConfirm,
-  timeZone,
-}: Pick<
-  DateDialogProps,
-  "initial" | "confirmLabel" | "onOpenChange" | "onConfirm" | "timeZone"
->) {
-  const [date, setDate] = useState(initial);
-  const [saving, setSaving] = useState(false);
-
-  async function submit(e: React.FormEvent) {
-    e.preventDefault();
-    setSaving(true);
-    try {
-      await onConfirm(date);
-      onOpenChange(false);
-    } catch {
-      // Erro já avisado por onConfirm; o diálogo continua aberto para correção.
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  return (
-    <form onSubmit={submit} className="space-y-4">
-      <Input
-        type="datetime-local"
-        value={date}
-        max={nowInZone(timeZone)}
-        required
-        onChange={(e) => setDate(e.target.value)}
-      />
-      <DialogFooter>
-        <Button
-          type="button"
-          variant="secondary"
-          onClick={() => onOpenChange(false)}
-        >
-          Cancelar
-        </Button>
-        <Button type="submit" disabled={saving || !date}>
-          {saving && <Loader2 className="animate-spin" />}
-          {confirmLabel}
-        </Button>
-      </DialogFooter>
-    </form>
   );
 }

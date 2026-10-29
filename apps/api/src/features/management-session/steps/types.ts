@@ -59,25 +59,28 @@ export interface StepModule<
     animalIds?: string[],
   ): Promise<Map<string, TRecord>>;
   payloadSchema: ZodType<TPayload>;
-  /** Grava (ou substitui) o registro da etapa para o animal. */
+  /**
+   * Grava (ou substitui) o registro da etapa para o animal, com a data e a hora do registro
+   * (`at`; RN-MANEJO-01: cada manejo tem a hora em que foi registrado).
+   */
   save(
     tx: Tx,
     session: SessionCtx & { performedAt: Date },
     step: S,
     animal: StepAnimal,
     payload: TPayload,
+    at: Date,
   ): Promise<void>;
   clear(tx: Tx, session: SessionCtx, step: S, animalId: string): Promise<void>;
   /**
-   * Efetiva os registros. `effectiveAt` é a data/hora que os registros passam a ter.
-   * Roda depois de a sessão ser marcada como consolidada (os registros já contam
-   * como efetivos), na ordem de `consolidateOrder`.
+   * Efetiva os registros, cada um com a data e a hora em que foi feito. Roda depois de a
+   * sessão ser marcada como consolidada (os registros já contam como efetivos), na ordem
+   * de `consolidateOrder`.
    */
   consolidate(
     tx: Tx,
     session: SessionCtx & { performedAt: Date },
     step: S,
-    effectiveAt: Date,
   ): Promise<void>;
   consolidateOrder: number;
 }

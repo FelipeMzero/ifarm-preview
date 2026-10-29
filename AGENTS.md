@@ -218,8 +218,9 @@ servidor, mova-a nesse momento (funções puras: só os imports mudam).
    (incluído na união `planStepSchema`); o schema de registro em `step-payloads.ts`.
 3. **API**: `apps/api/src/features/management-session/steps/<tipo>.ts` com `defineStep`, usando
    os schemas do shared (`planSchema` e `payloadSchema`), registrado em `STEP_MODULES`
-   (`steps/index.ts`). O que depende do banco fica no `prepare` / `save`. Se o registro aparece no
-   histórico do animal, crie o filtro em `management-session/effective.public.ts`.
+   (`steps/index.ts`). O que depende do banco fica no `prepare` / `save`; o `save` grava a data do
+   registro com o `at` que recebe (a hora em que foi feito, não a da sessão). Se o registro
+   aparece no histórico do animal, crie o filtro em `management-session/effective.public.ts`.
 4. **Compromissos**: decida se a etapa é exclusiva entre sessões abertas (`isExclusiveStep`,
    em `shared/animal/commitments.ts`).
 5. **UI**: a tela em `features/management-session/steps/<tipo>/` (com o schema de registro do

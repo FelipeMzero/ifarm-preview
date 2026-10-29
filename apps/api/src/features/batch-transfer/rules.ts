@@ -45,7 +45,9 @@ export function blockedTransferAnimals<T extends TransferAnimal>(
 // dele no lote atual. Devolve os históricos ativos que violam isso.
 export function enteredAfter<T extends { enteredAt: Date }>(
   activeHistories: T[],
-  transferredAt: Date,
+  transferredAt: Date | ((history: T) => Date),
 ) {
-  return activeHistories.filter((h) => h.enteredAt > transferredAt);
+  const dateOf =
+    typeof transferredAt === "function" ? transferredAt : () => transferredAt;
+  return activeHistories.filter((h) => h.enteredAt > dateOf(h));
 }

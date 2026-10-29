@@ -27,7 +27,6 @@ import { managementSessionClient } from "@/lib/clients";
 import {
   isSessionOpen,
   type ManagementSessionRow,
-  nowInZone,
   type ManagementSessionListParams,
   formatDateTime,
 } from "@ifarm/shared";
@@ -222,11 +221,8 @@ function buildColumns(handlers: {
 
 export function ManagementSessionList() {
   const navigate = useNavigate();
-  const {
-    property: currentProperty,
-    isLoading: isPropertyLoading,
-    timeZone,
-  } = useCurrentProperty();
+  const { property: currentProperty, isLoading: isPropertyLoading } =
+    useCurrentProperty();
   const reloadSessions = useReloadSessions();
   const [searchParams, setSearchParams] = useSearchParams();
   const {
@@ -300,12 +296,11 @@ export function ManagementSessionList() {
     // O diálogo já fechou no clique (AlertDialogAction); o aviso explica a falha.
     onError: (e) => toast.error(e.message),
   });
-  // Inicia com a data de hoje; a data pode ser corrigida no cabeçalho do registro.
   const startSession = useMutation({
     mutationFn: (id: string) =>
-      managementSessionClient.startManagementSession(id, nowInZone(timeZone)),
+      managementSessionClient.startManagementSession(id),
     onSuccess: (_, id) => {
-      toast.success("Registro iniciado com a data de hoje.");
+      toast.success("Registro iniciado.");
       reloadSessions();
       navigate(`/manejos/${id}/registro`);
     },

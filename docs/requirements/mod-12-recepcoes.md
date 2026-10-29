@@ -10,16 +10,16 @@ A recepção é feita na área de recepções, que mostra as compras sem os valo
 
 **Recepção**
 
-| Campo              | Descrição                                                         | Tipo       | Obrig. | Restrições                                                                                     |
-| ------------------ | ----------------------------------------------------------------- | ---------- | ------ | ---------------------------------------------------------------------------------------------- |
-| `Título`           | Identifica a recepção, como "Recepção 2 — Bezerros desmamados"    | Texto      | Sim    | Gerado pelo sistema: número da recepção na compra e título da compra                           |
-| `Compra`           | Compra cujos animais são recebidos                                | Referência | Sim    | Compra em andamento (`RN-RECEPCAO-01`)                                                         |
-| `Lote de Entrada`  | Lote em que os animais recebidos entram                           | Referência | Sim    | Lote vigente da propriedade de destino da compra (`RN-RECEPCAO-01`)                            |
-| `GTA`              | Número da Guia de Trânsito Animal da carga                        | Texto      | Não    | Até 30 caracteres                                                                              |
-| `Nota Fiscal`      | Número da nota fiscal da carga                                    | Texto      | Não    | Até 30 caracteres                                                                              |
-| `Data da Recepção` | Data em que os animais chegaram                                   | Data       | Sim    | Inicialmente a data de hoje; não pode ser futura (`RN-MANEJO-01`)                              |
-| `Manejos`          | Etapas feitas em cada animal recebido, na ordem em que são feitas | Lista      | Não    | Mesmas regras dos manejos da sessão (`RN-MANEJO-02`), mas podem não existir (`RN-RECEPCAO-01`) |
-| `Situação`         | Situação da recepção                                              | Enum       | Sim    | `Em andamento`, `Concluída` ou `Cancelada` (`RN-RECEPCAO-04`)                                  |
+| Campo              | Descrição                                                         | Tipo        | Obrig. | Restrições                                                                                     |
+| ------------------ | ----------------------------------------------------------------- | ----------- | ------ | ---------------------------------------------------------------------------------------------- |
+| `Título`           | Identifica a recepção, como "Recepção 2 — Bezerros desmamados"    | Texto       | Sim    | Gerado pelo sistema: número da recepção na compra e título da compra                           |
+| `Compra`           | Compra cujos animais são recebidos                                | Referência  | Sim    | Compra em andamento (`RN-RECEPCAO-01`)                                                         |
+| `Lote de Entrada`  | Lote em que os animais recebidos entram                           | Referência  | Sim    | Lote vigente da propriedade de destino da compra (`RN-RECEPCAO-01`)                            |
+| `GTA`              | Número da Guia de Trânsito Animal da carga                        | Texto       | Não    | Até 30 caracteres                                                                              |
+| `Nota Fiscal`      | Número da nota fiscal da carga                                    | Texto       | Não    | Até 30 caracteres                                                                              |
+| `Data da Recepção` | Data e hora em que a recepção foi aberta                          | Data e hora | Sim    | Definida pelo sistema ao abrir a recepção (`RN-MANEJO-01`)                                     |
+| `Manejos`          | Etapas feitas em cada animal recebido, na ordem em que são feitas | Lista       | Não    | Mesmas regras dos manejos da sessão (`RN-MANEJO-02`), mas podem não existir (`RN-RECEPCAO-01`) |
+| `Situação`         | Situação da recepção                                              | Enum        | Sim    | `Em andamento`, `Concluída` ou `Cancelada` (`RN-RECEPCAO-04`)                                  |
 
 **Animal recebido**
 
@@ -35,7 +35,7 @@ A recepção é feita na área de recepções, que mostra as compras sem os valo
 # 1 - Regras de Negócio do Módulo (RN)
 
 - **`RN-RECEPCAO-01` - Recepção:** Uma recepção é a chegada de uma leva de animais de uma compra em andamento, na propriedade de destino da compra. Ela é feita em uma sessão de manejo (`RN-MANEJO-01`) e tem um lote de entrada, vigente, em que todos os animais recebidos entram. Diferente das demais sessões, uma recepção pode não ter manejos: nesse caso, receber os animais é todo o trabalho.
-- **`RN-RECEPCAO-02` - Animal Recebido:** Os animais de uma recepção são apenas os recebidos nela; animais já cadastrados não podem ser incluídos. Ao ser recebido, o animal passa a existir já ativo, com origem `Compra`, a raça da categoria e o sexo da categoria, que pode ser trocado, pois quem decide é quem vê o animal. Ele entra na propriedade e no lote de entrada na data da recepção. Se a idade for estimada, a data de nascimento é calculada a partir dela e fica marcada como estimada. Receber um animal de sexo ou faixa de idade diferentes dos da categoria, ou além da quantidade negociada, é atípico, mas permitido.
+- **`RN-RECEPCAO-02` - Animal Recebido:** Os animais de uma recepção são apenas os recebidos nela; animais já cadastrados não podem ser incluídos. Ao ser recebido, o animal passa a existir já ativo, com origem `Compra`, a raça da categoria e o sexo da categoria, que pode ser trocado, pois quem decide é quem vê o animal. Ele entra na propriedade e no lote de entrada na data e na hora em que é recebido. Se a idade for estimada, a data de nascimento é calculada a partir dela e fica marcada como estimada. Receber um animal de sexo ou faixa de idade diferentes dos da categoria, ou além da quantidade negociada, é atípico, mas permitido.
 - **`RN-RECEPCAO-03` - Desfazer Recebimento:** Retirar um animal de uma recepção em andamento desfaz o seu recebimento: os registros da recepção são desfeitos e o animal é apagado. Se o animal já tiver registros fora da recepção, a retirada é recusada.
 - **`RN-RECEPCAO-04` - Ciclo da Recepção:** Uma recepção fica em andamento até ser concluída ou cancelada. Na conclusão, todos os animais recebidos permanecem, mesmo sem nenhum manejo registrado, e os manejos registrados passam a valer (`RN-MANEJO-03`). Somente uma recepção sem animais recebidos pode ser cancelada. Enquanto a recepção está em andamento, os animais recebidos não participam de outras operações (`RN-ANIMAL-10`).
 - **`RN-RECEPCAO-05` - Sigilo da Negociação:** A área de recepções não exibe os valores da negociação: preços, valores, custos e pagamento da compra.
@@ -181,7 +181,7 @@ Permite abrir uma recepção para uma carga que chegou, definindo o lote de entr
 - [ ] Somente uma compra em andamento pode receber uma nova recepção (`RN-RECEPCAO-01`).
 - [ ] A abertura deve permitir informar o `Lote de Entrada`, obrigatório e escolhido entre os lotes vigentes da propriedade de destino da compra, o `GTA` e a `Nota Fiscal`, opcionais, e os `Manejos`.
 - [ ] Os `Manejos` seguem as mesmas regras e têm os mesmos dados próprios do planejamento de uma sessão de manejo (`RF-MANEJO-02`), exceto que podem não existir (`RN-RECEPCAO-01`). Inicialmente, são sugeridos brinco, RFID e pesagem.
-- [ ] A recepção é criada já iniciada, com a data de hoje como `Data da Recepção`, e recebe o título com o número da recepção na compra e o título da compra.
+- [ ] A recepção é criada já iniciada, com a data e a hora atuais como `Data da Recepção`, e recebe o título com o número da recepção na compra e o título da compra.
 
 ### 2.3.3 - Fluxos
 
@@ -243,7 +243,7 @@ Permite conduzir uma recepção: receber os animais conforme descem do caminhão
 - [ ] Os animais recebidos são exibidos, localizados e abertos para o registro dos manejos como no acompanhamento de uma sessão (`RF-MANEJO-04`), indicando a categoria de cada um. O registro dos manejos em cada animal segue `RF-MANEJO-05` a `RF-MANEJO-10`.
 - [ ] Em uma recepção em andamento, deve ser possível receber animais (`RF-RECEPCAO-05`). Animais já cadastrados não podem ser incluídos (`RN-RECEPCAO-02`).
 - [ ] Retirar um animal da recepção desfaz o seu recebimento, mediante confirmação que informe que o animal será apagado (`RN-RECEPCAO-03`).
-- [ ] Enquanto a recepção está em andamento, devem ser possíveis alterar a `Data da Recepção`, conforme a alteração da data do manejo (`RF-MANEJO-03`), e informar ou alterar o `GTA` e a `Nota Fiscal`.
+- [ ] Enquanto a recepção está em andamento, deve ser possível informar ou alterar o `GTA` e a `Nota Fiscal`. A `Data da Recepção` não pode ser alterada (`RN-MANEJO-01`).
 - [ ] Deve permitir acionar a conclusão (`RF-RECEPCAO-06`) e o cancelamento (`RF-RECEPCAO-07`) da recepção.
 - [ ] Uma recepção concluída ou cancelada é exibida apenas para consulta.
 
@@ -284,12 +284,7 @@ Permite conduzir uma recepção: receber os animais conforme descem do caminhão
   4. O sistema grava os documentos e exibe a mensagem: _"Documentos da carga salvos."_
   5. O fluxo retorna ao passo 3.
 
-- **A5 – Alteração da data da recepção (passo 3):**
-  1. O usuário altera a `Data da Recepção`.
-  2. O sistema aplica a alteração conforme a alteração da data do manejo (`RF-MANEJO-03`), com os mesmos impedimentos, e exibe a mensagem: _"Data da recepção alterada."_
-  3. O fluxo retorna ao passo 3.
-
-- **A6 – Recepção sem manejos (passo 4):**
+- **A5 – Recepção sem manejos (passo 4):**
   1. A recepção não tem manejos (`RN-RECEPCAO-01`).
   2. Não há registro de manejos a fazer: o recebimento é todo o trabalho.
   3. O fluxo continua no passo 5.

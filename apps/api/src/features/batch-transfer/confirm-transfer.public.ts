@@ -68,8 +68,10 @@ export async function confirmTransferInTx(tx: Tx, id: string) {
     );
   }
 
-  // Os animais mudam de lote na data e hora programadas.
-  const effectiveDate = transfer.transferredAt;
+  // Cada animal muda de lote no seu movedAt: na transferência, a data dela; na apartação de
+  // uma sessão, a hora em que a apartação foi registrada nele.
+  const movedAt = new Map(transfer.items.map((i) => [i.animalId, i.movedAt]));
+  const movedAtOf = (animalId: string) => movedAt.get(animalId)!;
 
   const { unavailable, alreadyInDestination } = blockedTransferAnimals(
     transfer.items.map((i) => i.animal),
@@ -94,7 +96,9 @@ export async function confirmTransferInTx(tx: Tx, id: string) {
     where: { animalId: { in: animalIds }, exitedAt: null },
   });
 
-  const enteredLater = enteredAfter(activeHistories, effectiveDate);
+  const enteredLater = enteredAfter(activeHistories, (h) =>
+    movedAtOf(h.animalId),
+  );
   if (enteredLater.length) {
     const byId = new Map(transfer.items.map((i) => [i.animalId, i.animal]));
     throw new ConfirmError(
@@ -128,10 +132,10 @@ export async function confirmTransferInTx(tx: Tx, id: string) {
     });
   }
 
-  if (activeHistories.length) {
-    await tx.animalBatchHistory.updateMany({
-      where: { id: { in: activeHistories.map((h) => h.id) } },
-      data: { exitedAt: effectiveDate },
+  for (const h of activeHistories) {
+    await tx.animalBatchHistory.update({
+      where: { id: h.id },
+      data: { exitedAt: movedAtOf(h.animalId) },
     });
   }
 
@@ -139,7 +143,7 @@ export async function confirmTransferInTx(tx: Tx, id: string) {
     data: transfer.items.map((item) => ({
       animalId: item.animalId,
       batchId: transfer.destinationBatchId,
-      enteredAt: effectiveDate,
+      enteredAt: movedAtOf(item.animalId),
       notes: item.notes ?? transfer.notes,
     })),
   });

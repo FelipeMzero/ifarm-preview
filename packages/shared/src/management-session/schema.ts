@@ -44,15 +44,6 @@ export const managementSessionSchema = managementSessionFieldsSchema.extend({
 export type ManagementSessionPayload = z.input<typeof managementSessionSchema>;
 export type ManagementSessionData = z.output<typeof managementSessionSchema>;
 
-export const managementSessionStartSchema = z.object({
-  // Data e hora em que o manejo acontece ("AAAA-MM-DDTHH:mm", no fuso da propriedade).
-  performedAt: dateTimeField,
-});
-
-export type ManagementSessionStartData = z.output<
-  typeof managementSessionStartSchema
->;
-
 export const sessionParticipantsSchema = z.object({
   animalIds: z.array(z.uuid()).min(1, "Selecione ao menos um animal."),
 });

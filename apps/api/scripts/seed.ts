@@ -32,6 +32,9 @@ TODAY.setHours(0, 0, 0, 0);
 /** Data/hora `n` dias atrás (10h, para não cair em outro dia por fuso); negativo = futuro. */
 const ago = (n: number) =>
   new Date(TODAY.getTime() - n * DAY_MS + 10 * 60 * 60 * 1000);
+/** Hora do registro `i` de uma sessão iniciada em `start`, como no painel: 2 minutos por animal. */
+const recordAt = (start: Date, i: number) =>
+  new Date(start.getTime() + (i + 1) * 2 * 60 * 1000);
 /** Data (sem horário) `n` dias atrás; negativo = futuro. */
 const dateAgo = (n: number) => new Date(TODAY.getTime() - n * DAY_MS);
 
@@ -1391,11 +1394,17 @@ async function seedSessions(ctx: Ctx, animals: SeededAnimal[]) {
   for (const prop of ["SR", "BV"] as PropKey[]) {
     const sessions = WEIGHING_SESSIONS[prop];
     for (const daysAgo of sessions) {
-      // A data da sessão é copiada para cada registro do manejo.
+      // Cada animal é manejado na sua vez: os registros dele têm a hora em que passou.
       const sessionDate = ago(daysAgo);
       const present = animals.filter((a) => propAt(a.spec, daysAgo) === prop);
       if (!present.length) continue;
       const weighed = present.filter((a) => a.weights.has(daysAgo));
+      const atOf = new Map(
+        present.map((a, i) => [a.id, recordAt(sessionDate, i)]),
+      );
+      // O procedimento sanitário vale a partir da primeira aplicação.
+      const firstAt = (list: SeededAnimal[]) =>
+        list.length ? atOf.get(list[0].id)! : sessionDate;
 
       // Etapas na ordem em que foram feitas; gravadas no fim, com os ids dos sanitários.
       const steps: SessionStep[] = [{ type: "weighing" }];
@@ -1404,8 +1413,9 @@ async function seedSessions(ctx: Ctx, animals: SeededAnimal[]) {
         data: {
           propertyId: ctx.properties[prop],
           scheduledAt: ago(daysAgo),
-          performedAt: ago(daysAgo),
-          confirmedAt: ago(daysAgo),
+          performedAt: sessionDate,
+          // Consolidada meia hora depois do último animal.
+          confirmedAt: recordAt(sessionDate, present.length + 15),
           title: `Pesagem mensal de ${sessionDate.toLocaleDateString("pt-BR", { month: "long" })}`,
           notes: "Pesagem mensal do rebanho",
           participants: { create: present.map((a) => ({ animalId: a.id })) },
@@ -1415,7 +1425,7 @@ async function seedSessions(ctx: Ctx, animals: SeededAnimal[]) {
                 create: weighed.map((a) => ({
                   animalId: a.id,
                   weight: a.weights.get(daysAgo)!,
-                  weighedAt: sessionDate,
+                  weighedAt: atOf.get(a.id)!,
                 })),
               },
             },
@@ -1436,7 +1446,7 @@ async function seedSessions(ctx: Ctx, animals: SeededAnimal[]) {
               animalId: a.id,
               rfid: a.rfid,
               managementId: rfidManagement.id,
-              identifiedAt: sessionDate,
+              identifiedAt: atOf.get(a.id)!,
             },
           });
           await prisma.animal.update({
@@ -1453,7 +1463,7 @@ async function seedSessions(ctx: Ctx, animals: SeededAnimal[]) {
                 .map((p) => ({
                   animalId: p.id,
                   techniqueId: ctx.neuteringTechniques["Cirúrgica"],
-                  neuteredAt: sessionDate,
+                  neuteredAt: atOf.get(p.id)!,
                 })),
             },
           },
@@ -1468,12 +1478,16 @@ async function seedSessions(ctx: Ctx, animals: SeededAnimal[]) {
             title: "Febre aftosa",
             veterinarianId: ctx.people.vet,
             managementSessionId: session.id,
-            performedAt: sessionDate,
+            performedAt: firstAt(present),
             doseType: "FIXED",
             doseMl: 2,
             nextDueDate: dateAgo(daysAgo - 180),
             items: {
-              create: present.map((a) => ({ animalId: a.id, doseMl: 2 })),
+              create: present.map((a) => ({
+                animalId: a.id,
+                doseMl: 2,
+                appliedAt: atOf.get(a.id)!,
+              })),
             },
           },
         });
@@ -1486,7 +1500,7 @@ async function seedSessions(ctx: Ctx, animals: SeededAnimal[]) {
             typeId: ctx.healthTypes["Vermifugação"],
             title: "Ivermectina 1%",
             managementSessionId: session.id,
-            performedAt: sessionDate,
+            performedAt: firstAt(weighed),
             doseType: "PER_WEIGHT",
             doseMl: 1,
             doseWeightKg: 50,
@@ -1495,6 +1509,7 @@ async function seedSessions(ctx: Ctx, animals: SeededAnimal[]) {
               create: weighed.map((a) => ({
                 animalId: a.id,
                 doseMl: round(a.weights.get(daysAgo)! / 50, 1),
+                appliedAt: atOf.get(a.id)!,
               })),
             },
           },
@@ -1508,7 +1523,7 @@ async function seedSessions(ctx: Ctx, animals: SeededAnimal[]) {
             typeId: ctx.healthTypes["Controle de ectoparasitas"],
             title: "Carrapaticida pour-on",
             managementSessionId: session.id,
-            performedAt: sessionDate,
+            performedAt: firstAt(weighed),
             doseType: "PER_WEIGHT",
             doseMl: 1,
             doseWeightKg: 10,
@@ -1518,6 +1533,7 @@ async function seedSessions(ctx: Ctx, animals: SeededAnimal[]) {
               create: weighed.map((a) => ({
                 animalId: a.id,
                 doseMl: round(a.weights.get(daysAgo)! / 10, 1),
+                appliedAt: atOf.get(a.id)!,
               })),
             },
           },
@@ -1654,9 +1670,15 @@ async function seedSpecialCases(ctx: Ctx, animals: SeededAnimal[]) {
           {
             animalId: engorda[3].id,
             doseMl: 42,
+            appliedAt: ago(9),
             notes: "Tosse e febre (40,2 °C)",
           },
-          { animalId: recria[0].id, doseMl: 28, notes: "Secreção nasal" },
+          {
+            animalId: recria[0].id,
+            doseMl: 28,
+            appliedAt: ago(9),
+            notes: "Secreção nasal",
+          },
         ],
       },
     },
@@ -1673,6 +1695,7 @@ async function seedSpecialCases(ctx: Ctx, animals: SeededAnimal[]) {
         create: [
           {
             animalId: bull.id,
+            appliedAt: ago(140),
             notes: "Apto para a estação de monta",
           },
         ],
@@ -1694,7 +1717,13 @@ async function seedSpecialCases(ctx: Ctx, animals: SeededAnimal[]) {
       performedAt: ago(130),
       doseType: "FIXED",
       doseMl: 2,
-      items: { create: heifers.map((a) => ({ animalId: a.id, doseMl: 2 })) },
+      items: {
+        create: heifers.map((a) => ({
+          animalId: a.id,
+          doseMl: 2,
+          appliedAt: ago(130),
+        })),
+      },
     },
   });
 
@@ -1796,20 +1825,55 @@ async function seedPurchases(ctx: Ctx, animals: SeededAnimal[]) {
     const trips = [...new Set(bought.map((a) => a.spec.entryDaysAgo))].sort(
       (a, b) => b - a,
     );
+    let lastConfirmedAt = ago(Math.min(...trips));
     for (const [tripIndex, entryDaysAgo] of trips.entries()) {
       const arrived = bought.filter(
         (a) => a.spec.entryDaysAgo === entryDaysAgo,
       );
+      const start = ago(entryDaysAgo);
+      lastConfirmedAt = recordAt(start, arrived.length + 15);
       const session = await prisma.managementSession.create({
         data: {
           propertyId: ctx.properties[p.prop],
           title: `Recepção ${tripIndex + 1} — ${p.title}`,
-          scheduledAt: ago(entryDaysAgo),
-          performedAt: ago(entryDaysAgo),
-          confirmedAt: ago(entryDaysAgo),
+          scheduledAt: start,
+          performedAt: start,
+          // Consolidada meia hora depois do último animal.
+          confirmedAt: lastConfirmedAt,
           participants: { create: arrived.map((a) => ({ animalId: a.id })) },
         },
       });
+
+      // O peso de entrada é a pesagem da recepção, com a hora em que cada animal passou.
+      const entryWeighings = await prisma.animalWeighing.findMany({
+        where: {
+          animalId: { in: arrived.map((a) => a.id) },
+          managementId: null,
+          notes: "Peso de entrada",
+        },
+      });
+      if (entryWeighings.length) {
+        const weighing = await prisma.weighingManagement.create({
+          data: { managementSessionId: session.id },
+        });
+        for (const w of entryWeighings) {
+          const i = arrived.findIndex((a) => a.id === w.animalId);
+          await prisma.animalWeighing.update({
+            where: { id: w.id },
+            data: {
+              managementId: weighing.id,
+              weighedAt: recordAt(start, i),
+              notes: null,
+            },
+          });
+        }
+        await prisma.managementStep.createMany({
+          data: toStepRows([{ type: "weighing" }]).map((row) => ({
+            ...row,
+            managementSessionId: session.id,
+          })),
+        });
+      }
       // A compra incorpora a sessão de manejo como recepção (lote de entrada = lote da compra).
       const reception = await prisma.purchaseReception.create({
         data: {
@@ -1837,10 +1901,12 @@ async function seedPurchases(ctx: Ctx, animals: SeededAnimal[]) {
       }
     }
 
-    // Consolidada no dia da última chegada: custos rateados.
+    // Consolidada logo depois da última recepção: custos rateados.
     await prisma.purchaseEvent.update({
       where: { id: event.id },
-      data: { confirmedAt: ago(Math.min(...trips)) },
+      data: {
+        confirmedAt: new Date(lastConfirmedAt.getTime() + 60 * 60 * 1000),
+      },
     });
 
     if (p.estimatedBirth) {
@@ -1914,10 +1980,11 @@ async function seedTransfers(
     }
   }
   for (const m of moves.values()) {
+    const transferredAt = ago(m.daysAgo);
     await prisma.animalBatchTransfer.create({
       data: {
-        transferredAt: ago(m.daysAgo),
-        confirmedAt: ago(m.daysAgo),
+        transferredAt,
+        confirmedAt: transferredAt,
         notes: m.to.endsWith("Recria")
           ? "Desmama"
           : "Formação do lote de reprodução",
@@ -1927,6 +1994,7 @@ async function seedTransfers(
           create: m.ids.map((animalId) => ({
             animalId,
             originBatchId: ctx.batches[m.from],
+            movedAt: transferredAt,
           })),
         },
       },
@@ -1970,13 +2038,17 @@ async function seedTransfers(
       destinationBatchId: ctx.batches["SR:Engorda"],
       propertyId: ctx.properties.SR,
       items: {
-        create: heaviest(groups.recria, 3).map((a) => ({ animalId: a.id })),
+        create: heaviest(groups.recria, 3).map((a) => ({
+          animalId: a.id,
+          movedAt: eventAt(-5),
+        })),
       },
     },
   });
+  const treatmentAt = eventAt(0);
   await prisma.animalBatchTransfer.create({
     data: {
-      transferredAt: eventAt(0),
+      transferredAt: treatmentAt,
       notes: "Separar animais em tratamento",
       destinationBatchId: ctx.batches["SR:Quarentena"],
       propertyId: ctx.properties.SR,
@@ -1984,9 +2056,10 @@ async function seedTransfers(
         create: [
           {
             animalId: groups.engorda[3].id,
+            movedAt: treatmentAt,
             notes: "Em tratamento de pneumonia",
           },
-          { animalId: groups.recria[0].id },
+          { animalId: groups.recria[0].id, movedAt: treatmentAt },
         ],
       },
     },
@@ -2004,7 +2077,11 @@ async function seedTransfers(
       notes: "Reforço de vacas para a estação de monta (desistimos)",
       destinationBatchId: ctx.batches["SR:Reprodução"],
       propertyId: ctx.properties.SR,
-      items: { create: oldCows.slice(0, 2).map((a) => ({ animalId: a.id })) },
+      items: {
+        create: oldCows
+          .slice(0, 2)
+          .map((a) => ({ animalId: a.id, movedAt: eventAt(30) })),
+      },
     },
   });
   const bvEngorda = animals.filter(
@@ -2017,7 +2094,10 @@ async function seedTransfers(
       destinationBatchId: ctx.batches["BV:Terminação"],
       propertyId: ctx.properties.BV,
       items: {
-        create: heaviest(bvEngorda, 2).map((a) => ({ animalId: a.id })),
+        create: heaviest(bvEngorda, 2).map((a) => ({
+          animalId: a.id,
+          movedAt: eventAt(-10),
+        })),
       },
     },
   });
@@ -2090,7 +2170,17 @@ async function createStartedSession(
     [],
     data.steps.map((s) => planStepSchema.parse(s)),
   );
-  return { id: session.id, steps };
+  return { id: session.id, performedAt: session.performedAt!, steps };
+}
+
+// Hora dos registros de uma sessão, como no painel: começa no início dela e avança alguns
+// minutos a cada registro, sem passar de agora.
+function recordClock(session: { performedAt: Date }, minutes = 3) {
+  let at = session.performedAt.getTime();
+  return () => {
+    at += minutes * 60 * 1000;
+    return new Date(Math.min(at, Date.now()));
+  };
 }
 
 const keyOf = (steps: SessionStep[], type: string) =>
@@ -2140,21 +2230,50 @@ async function seedOpenSessions(ctx: Ctx) {
     const weighing = keyOf(session.steps, "weighing");
     const health = keyOf(session.steps, "health");
     const batch = keyOf(session.steps, "batch");
+    const clock = recordClock(session);
 
     for (const [i, a] of engorda.entries()) {
       const weightKg = Math.round((a.currentWeight?.toNumber() ?? 380) + 12);
       if (i < 4) {
         // Completos; dois voltam para a recria.
-        await saveAnimalStep(tx, session.id, a.id, weighing, { weightKg });
-        await saveAnimalStep(tx, session.id, a.id, health, {
-          doseMl: Math.round(weightKg / 5) / 10, // 1 ml a cada 50 kg
-        });
-        await saveAnimalStep(tx, session.id, a.id, batch, {
-          batchId: i >= 2 ? ctx.batches["SR:Recria"] : null,
-        });
+        await saveAnimalStep(
+          tx,
+          session.id,
+          a.id,
+          weighing,
+          { weightKg },
+          clock(),
+        );
+        await saveAnimalStep(
+          tx,
+          session.id,
+          a.id,
+          health,
+          {
+            doseMl: Math.round(weightKg / 5) / 10, // 1 ml a cada 50 kg
+          },
+          clock(),
+        );
+        await saveAnimalStep(
+          tx,
+          session.id,
+          a.id,
+          batch,
+          {
+            batchId: i >= 2 ? ctx.batches["SR:Recria"] : null,
+          },
+          clock(),
+        );
       } else if (i < 7) {
         // Parciais: pesados; o sanitário ficou para depois.
-        await saveAnimalStep(tx, session.id, a.id, weighing, { weightKg });
+        await saveAnimalStep(
+          tx,
+          session.id,
+          a.id,
+          weighing,
+          { weightKg },
+          clock(),
+        );
       }
     }
   }, WORKFLOW_TX);
@@ -2214,6 +2333,7 @@ async function seedOpenSessions(ctx: Ctx) {
     const rfid = keyOf(session.steps, "rfid");
     const health = keyOf(session.steps, "health");
     const batch = keyOf(session.steps, "batch");
+    const clock = recordClock(session);
 
     // Faixa própria de brincos e RFIDs, fora das usadas pelo restante do seed.
     let rfidCounter = 8000;
@@ -2222,23 +2342,65 @@ async function seedOpenSessions(ctx: Ctx) {
     for (const [i, a] of completo.entries()) {
       if (i >= 6) continue; // o resto ainda a manejar
       const weightKg = Math.round((a.currentWeight?.toNumber() ?? 250) + 8);
-      await saveAnimalStep(tx, session.id, a.id, weighing, { weightKg });
-      await saveAnimalStep(tx, session.id, a.id, tag, {
-        value: `SR-${9001 + i}`,
-      });
+      await saveAnimalStep(
+        tx,
+        session.id,
+        a.id,
+        weighing,
+        { weightKg },
+        clock(),
+      );
+      await saveAnimalStep(
+        tx,
+        session.id,
+        a.id,
+        tag,
+        {
+          value: `SR-${9001 + i}`,
+        },
+        clock(),
+      );
       if (i >= 3) continue; // parciais: só pesados e brincados
 
       // Completos: a castração só vale para machos ainda inteiros.
       if (a.sex === "MALE" && !a.neutered) {
-        await saveAnimalStep(tx, session.id, a.id, neutering, {
-          techniqueId: ctx.neuteringTechniques["Burdizzo"],
-        });
+        await saveAnimalStep(
+          tx,
+          session.id,
+          a.id,
+          neutering,
+          {
+            techniqueId: ctx.neuteringTechniques["Burdizzo"],
+          },
+          clock(),
+        );
       }
-      await saveAnimalStep(tx, session.id, a.id, rfid, { value: nextRfid() });
-      await saveAnimalStep(tx, session.id, a.id, health, { doseMl: 5 });
-      await saveAnimalStep(tx, session.id, a.id, batch, {
-        batchId: i === 0 ? ctx.batches["SR:Engorda"] : null,
-      });
+      await saveAnimalStep(
+        tx,
+        session.id,
+        a.id,
+        rfid,
+        { value: nextRfid() },
+        clock(),
+      );
+      await saveAnimalStep(
+        tx,
+        session.id,
+        a.id,
+        health,
+        { doseMl: 5 },
+        clock(),
+      );
+      await saveAnimalStep(
+        tx,
+        session.id,
+        a.id,
+        batch,
+        {
+          batchId: i === 0 ? ctx.batches["SR:Engorda"] : null,
+        },
+        clock(),
+      );
     }
   }, WORKFLOW_TX);
 
@@ -2334,6 +2496,7 @@ async function receive(
   sessionId: string,
   categoryId: number,
   ageMonths: number,
+  at: Date,
 ) {
   const session = await tx.managementSession.findUniqueOrThrow({
     where: { id: sessionId },
@@ -2341,13 +2504,10 @@ async function receive(
   const reception = await findReception(tx, sessionId);
   return receiveAnimal(
     tx,
-    {
-      id: session.id,
-      propertyId: session.propertyId,
-      performedAt: session.performedAt!,
-    },
+    session,
     reception!,
     { categoryId, ageMonths, name: null },
+    at,
   );
 }
 
@@ -2387,12 +2547,27 @@ async function seedOpenPurchases(ctx: Ctx) {
       invoice: "NF 004.112",
       steps: [{ type: "tag" }, { type: "weighing" }],
     });
+    const clock1 = recordClock(trip1);
     for (let i = 0; i < 4; i++) {
-      const id = await receive(tx, trip1.id, novilhas.id, 15 + i);
-      await saveAnimalStep(tx, trip1.id, id, "tag", { value: nextTag() });
-      await saveAnimalStep(tx, trip1.id, id, "weighing", {
-        weightKg: 305 + i * 11,
-      });
+      const id = await receive(tx, trip1.id, novilhas.id, 15 + i, clock1());
+      await saveAnimalStep(
+        tx,
+        trip1.id,
+        id,
+        "tag",
+        { value: nextTag() },
+        clock1(),
+      );
+      await saveAnimalStep(
+        tx,
+        trip1.id,
+        id,
+        "weighing",
+        {
+          weightKg: 305 + i * 11,
+        },
+        clock1(),
+      );
     }
     await consolidateSession(tx, trip1.id, atHour(5, 17));
 
@@ -2402,16 +2577,51 @@ async function seedOpenPurchases(ctx: Ctx) {
       gta: "MT-2203398",
       steps: [{ type: "tag" }, { type: "rfid" }, { type: "weighing" }],
     });
+    const clock2 = recordClock(trip2);
     for (let i = 0; i < 5; i++) {
-      const id = await receive(tx, trip2.id, novilhas.id, 16 + (i % 3));
+      const id = await receive(
+        tx,
+        trip2.id,
+        novilhas.id,
+        16 + (i % 3),
+        clock2(),
+      );
       if (i < 2) {
-        await saveAnimalStep(tx, trip2.id, id, "tag", { value: nextTag() });
-        await saveAnimalStep(tx, trip2.id, id, "rfid", { value: nextRfid() });
-        await saveAnimalStep(tx, trip2.id, id, "weighing", {
-          weightKg: 298 + i * 9,
-        });
+        await saveAnimalStep(
+          tx,
+          trip2.id,
+          id,
+          "tag",
+          { value: nextTag() },
+          clock2(),
+        );
+        await saveAnimalStep(
+          tx,
+          trip2.id,
+          id,
+          "rfid",
+          { value: nextRfid() },
+          clock2(),
+        );
+        await saveAnimalStep(
+          tx,
+          trip2.id,
+          id,
+          "weighing",
+          {
+            weightKg: 298 + i * 9,
+          },
+          clock2(),
+        );
       } else if (i < 4) {
-        await saveAnimalStep(tx, trip2.id, id, "tag", { value: nextTag() });
+        await saveAnimalStep(
+          tx,
+          trip2.id,
+          id,
+          "tag",
+          { value: nextTag() },
+          clock2(),
+        );
       }
     }
   }, WORKFLOW_TX);
@@ -2449,11 +2659,19 @@ async function seedOpenPurchases(ctx: Ctx) {
         invoice: `NF 010.55${trip}`,
         steps: [{ type: "weighing" }],
       });
+      const clock = recordClock(session);
       for (let i = 0; i < count; i++) {
-        const id = await receive(tx, session.id, garrotes.id, 20);
-        await saveAnimalStep(tx, session.id, id, "weighing", {
-          weightKg: 362 + i * 8 + trip * 3,
-        });
+        const id = await receive(tx, session.id, garrotes.id, 20, clock());
+        await saveAnimalStep(
+          tx,
+          session.id,
+          id,
+          "weighing",
+          {
+            weightKg: 362 + i * 8 + trip * 3,
+          },
+          clock(),
+        );
       }
       await consolidateSession(tx, session.id, atHour(daysAgo, 17));
     }
@@ -2487,11 +2705,19 @@ async function seedOpenPurchases(ctx: Ctx) {
       gta: "GO-5501223",
       steps: [{ type: "weighing" }],
     });
+    const clock = recordClock(session);
     for (let i = 0; i < 4; i++) {
-      const id = await receive(tx, session.id, bezerras.id, 8);
-      await saveAnimalStep(tx, session.id, id, "weighing", {
-        weightKg: 188 + i * 7,
-      });
+      const id = await receive(tx, session.id, bezerras.id, 8, clock());
+      await saveAnimalStep(
+        tx,
+        session.id,
+        id,
+        "weighing",
+        {
+          weightKg: 188 + i * 7,
+        },
+        clock(),
+      );
     }
     await consolidateSession(tx, session.id, atHour(22, 17));
 
@@ -2534,12 +2760,27 @@ async function seedOpenPurchases(ctx: Ctx) {
       invoice: "NF 000.931",
       steps: [{ type: "weighing" }, { type: "tag" }],
     });
+    const clock = recordClock(session);
     for (let i = 0; i < 5; i++) {
-      const id = await receive(tx, session.id, garrotes.id, 14);
-      await saveAnimalStep(tx, session.id, id, "weighing", {
-        weightKg: 296 + i * 13,
-      });
-      await saveAnimalStep(tx, session.id, id, "tag", { value: nextTag() });
+      const id = await receive(tx, session.id, garrotes.id, 14, clock());
+      await saveAnimalStep(
+        tx,
+        session.id,
+        id,
+        "weighing",
+        {
+          weightKg: 296 + i * 13,
+        },
+        clock(),
+      );
+      await saveAnimalStep(
+        tx,
+        session.id,
+        id,
+        "tag",
+        { value: nextTag() },
+        clock(),
+      );
     }
     await consolidateSession(tx, session.id, atHour(7, 17));
   }, WORKFLOW_TX);
@@ -2571,7 +2812,7 @@ async function seedOpenPurchases(ctx: Ctx) {
       gta: "MT-9910045",
       steps: [],
     });
-    await receive(tx, session.id, touros.id, 34);
+    await receive(tx, session.id, touros.id, 34, recordClock(session)());
   }, WORKFLOW_TX);
 
   // 6. Cancelada: negociação desfeita antes da entrega (a recepção vazia também).

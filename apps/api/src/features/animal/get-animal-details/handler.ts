@@ -1,8 +1,4 @@
-import {
-  dayInZone,
-  instantToZonedIso,
-  type AnimalFullDetails,
-} from "@ifarm/shared";
+import { instantToZonedIso, type AnimalFullDetails } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
 import { fromDbDate } from "../../../lib/db-dates";
 import { NotFoundError } from "../../../lib/errors";
@@ -34,7 +30,10 @@ export async function getAnimalDetails(id: string): Promise<AnimalFullDetails> {
       breed: { select: { name: true } },
       currentBatch: { select: { id: true, name: true } },
       currentProperty: { select: { id: true, name: true, timeZone: true } },
-      animalWeighings: { where: { cancelledAt: null, ...effectiveWeighing } },
+      animalWeighings: {
+        where: { cancelledAt: null, ...effectiveWeighing },
+        include: { management: { select: { managementSessionId: true } } },
+      },
       animalTaggings: { where: { cancelledAt: null, ...effectiveTagging } },
       animalRfidTaggings: {
         where: { cancelledAt: null, ...effectiveRfidTagging },
@@ -82,7 +81,7 @@ export async function getAnimalDetails(id: string): Promise<AnimalFullDetails> {
           reception: {
             select: {
               gtaNumber: true,
-              managementSession: { select: { performedAt: true } },
+              managementSessionId: true,
             },
           },
         },
@@ -135,7 +134,7 @@ export async function getAnimalDetails(id: string): Promise<AnimalFullDetails> {
   const health = animal.healthManagementItems
     .map((h) => ({
       id: h.id,
-      date: zoned(h.management.performedAt),
+      date: zoned(h.appliedAt),
       typeName: h.management.type.name,
       title: h.management.title,
       veterinarianName: h.management.veterinarian?.name ?? null,
@@ -189,13 +188,11 @@ export async function getAnimalDetails(id: string): Promise<AnimalFullDetails> {
         const { category } = purchased;
         const { event } = category;
         const unitPrice = category.unitPrice?.toNumber() ?? null;
-        // Peso de entrada = pesagem feita no dia da recepção, se houver.
-        const receivedAt = purchased.reception.managementSession.performedAt;
-        const receptionDay = receivedAt
-          ? dayInZone(receivedAt, zoneOf(receivedAt))
-          : null;
-        const entryWeighing = weighings.find(
-          (w) => w.date.slice(0, 10) === receptionDay,
+        // Peso de entrada = pesagem feita na sessão da recepção, se houver.
+        const entryWeighing = animal.animalWeighings.find(
+          (w) =>
+            w.management?.managementSessionId ===
+            purchased.reception.managementSessionId,
         );
         return {
           date: fromDbDate(event.purchaseDate),
@@ -213,7 +210,7 @@ export async function getAnimalDetails(id: string): Promise<AnimalFullDetails> {
           cost:
             purchased.cost?.toNumber() ??
             (category.pricingType === "PER_HEAD" ? unitPrice : null),
-          weightKg: entryWeighing?.weightKg ?? null,
+          weightKg: entryWeighing?.weight.toNumber() ?? null,
           // GTA da carga (recepção) em que o animal chegou.
           gtaNumber: purchased.reception.gtaNumber,
           notes: event.notes,

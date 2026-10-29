@@ -68,14 +68,15 @@ export function createManagementSessionClient(request: ApiRequest) {
       );
     },
 
-    async startManagementSession(id: string, performedAt: string) {
+    /** Inicia o registro: o início do manejo é a hora do sistema. */
+    async startManagementSession(id: string) {
       const response = await request(
         `${SESSION_BY_ID(id)}/start`,
-        jsonRequest("POST", { performedAt }),
+        jsonRequest("POST", {}),
       );
       return readJson<{ success: true }>(
         response,
-        "Não foi possível definir a data do manejo.",
+        "Não foi possível iniciar o registro.",
       );
     },
 

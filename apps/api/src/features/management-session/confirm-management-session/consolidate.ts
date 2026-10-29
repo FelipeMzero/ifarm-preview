@@ -32,11 +32,6 @@ export async function consolidateSession(tx: Tx, id: string, at?: Date) {
     ),
   );
 
-  if (session.performedAt > new Date()) {
-    throw new StepError(
-      "A data do manejo é futura. Ajuste a data para consolidar.",
-    );
-  }
 
   const participants = await tx.managementParticipant.findMany({
     where: { managementSessionId: id },
@@ -116,13 +111,8 @@ export async function consolidateSession(tx: Tx, id: string, at?: Date) {
       stepModule(a.type).consolidateOrder - stepModule(b.type).consolidateOrder,
   );
   for (const step of steps) {
-    // Os registros passam a valer na data e hora do manejo.
-    await stepModule(step.type).consolidate(
-      tx,
-      session,
-      step,
-      session.performedAt,
-    );
+    // Os registros passam a valer com a data e a hora em que foram feitos.
+    await stepModule(step.type).consolidate(tx, session, step);
   }
 
   return { handled: handled.length, removed: notHandled.length };

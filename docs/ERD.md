@@ -101,17 +101,17 @@ erDiagram
 
   "person" {
     String id "🗝️"
-    PersonType type 
-    String tax_id 
-    String name 
-    String state_registration "❓"
     String phone "❓"
     String email "❓"
-    DateTime deactivated_at "❓"
+    String name 
+    PersonType type 
+    String tax_id 
+    String state_registration "❓"
     String trade_name "❓"
     String rg "❓"
     DateTime birth_date "❓"
     MaritalStatus marital_status "❓"
+    DateTime deactivated_at "❓"
     Int address_id "❓"
     DateTime created_at 
     DateTime updated_at 
@@ -180,11 +180,11 @@ erDiagram
   
 
   "management_participant" {
-    Int batch_id "🗝️"
-    String management_session_id 
-    String animal_id 
+    Int id "🗝️"
     Boolean batch_kept 
     DateTime last_handled_at "❓"
+    String management_session_id 
+    String animal_id 
     DateTime created_at 
     }
   
@@ -197,9 +197,9 @@ erDiagram
   
 
   "animal_tagging" {
-    Int management_id "🗝️"
-    String tag "❓"
+    Int id "🗝️"
     String notes "❓"
+    String tag "❓"
     DateTime identified_at 
     String original_tag "❓"
     DateTime corrected_at "❓"
@@ -342,6 +342,7 @@ erDiagram
     Int id "🗝️"
     String notes "❓"
     Decimal dose_ml "❓"
+    DateTime applied_at 
     String management_id 
     String animal_id 
     DateTime created_at 
@@ -415,6 +416,7 @@ erDiagram
     String notes "❓"
     String transfer_id 
     String animal_id 
+    DateTime moved_at 
     String origin_batch_id "❓"
     DateTime created_at 
     }
@@ -554,7 +556,7 @@ erDiagram
     "management_step" }o--|| management_session : "managementSession"
     "management_step" |o--|o health_management : "healthManagement"
     "management_participant" }o--|| management_session : "managementSession"
-    "management_participant" }o--|| animal : "batch_id"
+    "management_participant" }o--|| animal : "animal"
     "tag_management" |o--|| management_session : "managementSession"
     "animal_tagging" }o--|o tag_management : "management"
     "animal_tagging" }o--|| animal : "animal"

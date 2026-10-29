@@ -280,24 +280,32 @@ model UserSettings {
   @@map("user_settings")
 }
 
+/// Pessoa física ou jurídica. Uma mesma pessoa pode ter vários papéis no sistema: titular de
+/// propriedade, vendedora numa compra, veterinária responsável por um procedimento sanitário etc.
 model Person {
-  id                String     @id @default(uuid()) @db.Uuid
-  type              PersonType
-  taxId             String     @unique @map("tax_id") // CPF/CNPJ
-  name              String
-  stateRegistration String?    @unique @map("state_registration") // Inscrição Estadual
+  id                String         @id @default(uuid()) @db.Uuid
   phone             String?
-  email             String?    @unique
-  deactivatedAt     DateTime?  @map("deactivated_at") @db.Timestamptz(3)
+  email             String?        @unique
+  /// Nome completo (pessoa física) ou razão social (pessoa jurídica).
+  name              String
+  /// Física ou jurídica (não muda depois do cadastro).
+  type              PersonType
+  /// CPF (pessoa física) ou CNPJ (pessoa jurídica); identifica a pessoa e não muda depois do cadastro.
+  taxId             String         @unique @map("tax_id")
+  /// Inscrição estadual (só pessoa jurídica).
+  stateRegistration String?        @unique @map("state_registration")
+  /// Nome fantasia (só pessoa jurídica).
+  tradeName         String?        @map("trade_name")
+  /// Registro Geral (só pessoa física).
+  rg                String?        @unique
+  /// Data de nascimento (só pessoa física).
+  birthDate         DateTime?      @map("birth_date") @db.Date
+  /// Estado civil (só pessoa física).
+  maritalStatus     MaritalStatus? @map("marital_status")
+  /// Quando a pessoa foi desativada (vazio = ativa).
+  deactivatedAt     DateTime?      @map("deactivated_at") @db.Timestamptz(3)
 
-  // Exclusivo de Pessoa Jurídica
-  tradeName String? @map("trade_name") // Nome Fantasia
-
-  // Exclusivos de Pessoa Física
-  rg            String?        @unique // RG (Registro Geral)
-  birthDate     DateTime?      @map("birth_date") @db.Date // Data de nascimento
-  maritalStatus MaritalStatus? @map("marital_status") // Estado civil
-
+  /// Endereço da pessoa
   addressId Int?     @unique @map("address_id")
   address   Address? @relation(fields: [addressId], references: [id])
 
@@ -314,16 +322,26 @@ model Person {
   @@map("person")
 }
 
+/// Endereço de uma pessoa ou de uma propriedade (cada endereço pertence a no máximo uma delas). É
+/// opcional para quem o tem; quando existe, CEP, logradouro, município e UF são obrigatórios.
 model Address {
   id           Int     @id @default(autoincrement())
-  zipCode      String  @map("zip_code") // CEP
-  street       String // Logradouro
+  /// CEP (Código de Endereçamento Postal).
+  zipCode      String  @map("zip_code")
+  /// Logradouro: rua, avenida, rodovia ou estrada de acesso.
+  street       String
+  /// Número do imóvel ou ponto de referência na via, quando houver.
   number       String?
-  complement   String? // Complemento
-  neighborhood String? // Bairro
-  city         String // Município
-  state        String // UF (unidade federativa)
-  country      String  @default("Brasil") // País
+  /// Informação adicional para localização (ex.: "Km 15", "Próximo à ponte").
+  complement   String?
+  /// Bairro ou zona rural.
+  neighborhood String?
+  /// Município.
+  city         String
+  /// UF: sigla do estado com 2 letras (ex.: "MT").
+  state        String
+  /// País (sempre Brasil).
+  country      String  @default("Brasil")
 
   person   Person?
   property Property?
@@ -331,9 +349,12 @@ model Address {
   @@map("address")
 }
 
+/// Raça de animal (ex.: "Nelore", "Angus"), usada para classificar o rebanho e as categorias das
+/// compras. Cadastro geral, comum a todas as propriedades.
 model Breed {
   id            String    @id @default(uuid()) @db.Uuid
   name          String    @unique
+  /// Quando a raça foi desativada (vazio = ativa). Raça inativa não aparece em cadastros novos.
   deactivatedAt DateTime? @map("deactivated_at") @db.Timestamptz(3)
 
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
@@ -345,17 +366,28 @@ model Breed {
   @@map("breed")
 }
 
+/// Marca de ferro (marca a fogo) que identifica a quem o animal pertence. É de um titular, que pode
+/// usá-la nos animais de qualquer uma das suas fazendas, e costuma ser registrada num órgão oficial.
 model Brand {
   id                 String    @id @default(uuid()) @db.Uuid
-  name               String // identificação curta, ex.: "Marca principal"
-  image              Bytes?    @map("image") // desenho da marca
+  /// Identificação curta da marca (ex.: "Marca principal", "Marca da recria").
+  name               String
+  /// Desenho da marca (imagem PNG, JPG ou WEBP).
+  image              Bytes?    @map("image")
+  /// Número atribuído pelo órgão de registro (repetido no mesmo local indica possível duplicidade).
   registrationNumber String?   @map("registration_number")
-  registrationBody   String?   @map("registration_body") // prefeitura, órgão estadual, cartório
+  /// Órgão em que a marca foi registrada (prefeitura, órgão estadual ou cartório).
+  registrationBody   String?   @map("registration_body")
+  /// Município do registro, quando o registro é municipal.
   registrationCity   String?   @map("registration_city")
-  registrationState  String?   @map("registration_state") // UF
+  /// UF do registro: sigla do estado com 2 letras (ex.: "MT").
+  registrationState  String?   @map("registration_state")
+  /// Data em que a marca foi registrada no órgão.
   registrationDate   DateTime? @map("registration_date") @db.Date
+  /// Quando a marca foi desativada (vazio = ativa). Marca inativa não é aplicada em novos animais.
   deactivatedAt      DateTime? @map("deactivated_at") @db.Timestamptz(3)
 
+  /// Titular da marca: pessoa física ou jurídica dona dela.
   ownerId String @map("owner_id") @db.Uuid
   owner   Person @relation(fields: [ownerId], references: [id], onDelete: Restrict)
 
@@ -371,84 +403,86 @@ model Brand {
   @@map("brand")
 }
 
+/// Sessão de manejo: o trabalho feito no curral num grupo de animais de uma propriedade, em que cada
+/// animal passa pelas mesmas etapas (pesagem, castração, identificação, ferra, sanitário, apartação).
+/// É planejada, executada e, ao final, consolidada (os registros passam a valer no histórico dos
+/// animais) ou cancelada (os registros não têm efeito).
 model ManagementSession {
   id          String    @id @default(uuid()) @db.Uuid
-  title       String // identifica a sessão na listagem (ex.: "Pesagem mensal da recria")
+  title       String
   notes       String?
-  scheduledAt DateTime  @map("scheduled_at") @db.Timestamptz(3) // data e hora previstas, usadas para lembretes/agendamento
-  performedAt DateTime? @map("performed_at") @db.Timestamptz(3) // data e hora em que o manejo de fato ocorreu
+  /// Data e hora previstas para o manejo.
+  scheduledAt DateTime  @map("scheduled_at") @db.Timestamptz(3)
+  /// Data e hora em que o registro da sessão começou (vazio = ainda não iniciado). Cada registro guarda a própria hora.
+  performedAt DateTime? @map("performed_at") @db.Timestamptz(3)
+  /// Quando a sessão foi consolidada (vazio = não consolidada). A partir daí, os registros passam a valer.
   confirmedAt DateTime? @map("confirmed_at") @db.Timestamptz(3)
+  /// Quando a sessão foi cancelada (vazio = não cancelada). Os registros dela não têm efeito.
   cancelledAt DateTime? @map("cancelled_at") @db.Timestamptz(3)
 
+  /// Propriedade em que a sessão é feita.
   propertyId String   @map("property_id") @db.Uuid
   property   Property @relation(fields: [propertyId], references: [id], onDelete: Restrict)
-
-  steps        ManagementStep[]
-  participants ManagementParticipant[]
-
-  weighingManagement  WeighingManagement?
-  neuteringManagement NeuteringManagement?
-  tagManagement       TagManagement?
-  rfidManagement      RfidManagement?
-  brandManagement     BrandManagement?
-  batchManagement     BatchManagement?
-  healthManagements   HealthManagement[]
-
-  // A sessão de manejo é genérica; quando é usada para receber animais comprados, a
-  // compra a incorpora por PurchaseReception (a dependência vai da compra para a sessão).
-  purchaseReception PurchaseReception?
-
-  animalBatchTransfers    AnimalBatchTransfer[]
-  animalPropertyTransfers AnimalPropertyTransfer[]
 
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
 
+  steps                   ManagementStep[]
+  participants            ManagementParticipant[]
+  weighingManagement      WeighingManagement?
+  neuteringManagement     NeuteringManagement?
+  tagManagement           TagManagement?
+  rfidManagement          RfidManagement?
+  brandManagement         BrandManagement?
+  batchManagement         BatchManagement?
+  healthManagements       HealthManagement[]
+  purchaseReception       PurchaseReception?
+  animalBatchTransfers    AnimalBatchTransfer[]
+  animalPropertyTransfers AnimalPropertyTransfer[]
+
   @@index([propertyId, scheduledAt])
-  // Sessões abertas são sempre poucas: a checagem de compromissos dos animais parte
-  // delas, sem passar pelo histórico (docs/data-dictionary.md, 2.9).
   @@index([propertyId], map: "management_session_open_idx", where: { confirmedAt: null, cancelledAt: null })
   @@map("management_session")
 }
 
-// Etapas do manejo, na ordem em que são feitas em cada animal. A configuração de cada etapa
-// fica no contêiner do tipo (ex.: técnica prevista, lotes sugeridos, dados do procedimento).
-// A apartação, quando existe, é sempre a última.
+/// Etapa de uma sessão de manejo, na ordem em que é feita em cada animal. A configuração da etapa
+/// fica no registro do tipo (ex.: técnica prevista, lotes sugeridos, dados do procedimento).
 model ManagementStep {
   id       Int                @id @default(autoincrement())
+  /// Tipo da etapa (pesagem, castração, brinco, RFID, ferra, sanitário ou apartação).
   type     ManagementStepType
-  position Int // ordem da etapa na sessão (a partir de 0)
+  /// Ordem da etapa na sessão (a partir de 0). A apartação, quando existe, é sempre a última.
+  position Int
 
+  /// Sessão da etapa.
   managementSessionId String            @map("management_session_id") @db.Uuid
   managementSession   ManagementSession @relation(fields: [managementSessionId], references: [id], onDelete: Cascade)
 
-  // Só no sanitário, que pode se repetir na sessão: o procedimento desta etapa.
+  /// Procedimento sanitário da etapa (só nas etapas sanitárias, que podem se repetir na sessão).
   healthManagementId String?           @unique @map("health_management_id") @db.Uuid
   healthManagement   HealthManagement? @relation(fields: [healthManagementId], references: [id], onDelete: Restrict)
 
   @@unique([managementSessionId, position])
-  // Cada tipo aparece no máximo uma vez na sessão, exceto o sanitário.
-  @@unique([managementSessionId, type], map: "management_step_unique_type", where: { type: { not: "HEALTH" } })
+  @@unique([managementSessionId, type], map: "management_step_unique_type", where: { type: { not: "HEALTH" } }) // Cada tipo aparece no máximo uma vez na sessão, exceto o sanitário.
   @@map("management_step")
 }
 
+/// Animal que participa de uma sessão de manejo (no máximo uma vez por sessão). Os registros de
+/// cada etapa feita nele ficam nas tabelas de cada tipo (ligados à sessão).
 model ManagementParticipant {
-  id Int @id @default(autoincrement())
+  id            Int       @id @default(autoincrement())
+  /// Na apartação, o animal ficou no lote atual: não gera transferência, mas a etapa conta como feita.
+  batchKept     Boolean   @default(false) @map("batch_kept")
+  /// Quando foi feito o último registro de etapa no animal (vazio = ainda não manejado). Ordena a lista de manejados.
+  lastHandledAt DateTime? @map("last_handled_at") @db.Timestamptz(3)
 
+  /// Sessão da participação.
   managementSessionId String            @map("management_session_id") @db.Uuid
   managementSession   ManagementSession @relation(fields: [managementSessionId], references: [id], onDelete: Restrict)
 
+  /// Animal que participa da sessão.
   animalId String @map("animal_id") @db.Uuid
   animal   Animal @relation(fields: [animalId], references: [id], onDelete: Restrict)
-
-  // batchId String? @db.Uuid @map("batch_id") // Colocar isso se for frequente precisar de "todas as pesagens realizadas enquanto o animal estava no Lote X"
-
-  // Na apartação, "permanecer no lote atual" não gera transferência; fica registrado aqui
-  // para a etapa contar como feita.
-  batchKept Boolean @default(false) @map("batch_kept")
-
-  // Último registro de etapa feito no animal (ordena a lista de manejados).
-  lastHandledAt DateTime? @map("last_handled_at") @db.Timestamptz(3)
 
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
 
@@ -457,34 +491,46 @@ model ManagementParticipant {
   @@map("management_participant")
 }
 
+/// Etapa de brinco de uma sessão de manejo: agrupa os brincos colocados, trocados ou retirados
+/// nos animais da sessão. Uma por sessão.
 model TagManagement {
-  id    String          @id @default(uuid()) @db.Uuid
-  items AnimalTagging[]
+  id String @id @default(uuid()) @db.Uuid
 
+  /// Sessão da etapa (no máximo uma etapa de brinco por sessão).
   managementSessionId String            @unique @map("management_session_id") @db.Uuid
   managementSession   ManagementSession @relation(fields: [managementSessionId], references: [id], onDelete: Restrict)
 
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
 
+  items AnimalTagging[]
+
   @@map("tag_management")
 }
 
+/// Colocação, troca ou retirada de brinco num animal: o histórico de brincos dele. Feita avulsa ou
+/// numa sessão de manejo (nesse caso, só vale depois que a sessão é consolidada). O brinco atual do
+/// animal (Animal.currentTag) é o do registro válido mais recente.
 model AnimalTagging {
   id    Int     @id @default(autoincrement())
-  tag   String? // null = tag removida
   notes String?
+  /// Brinco colocado (vazio = brinco retirado).
+  tag   String?
 
-  identifiedAt DateTime @map("identified_at") @db.Timestamptz(3) // data do manejo; em sessão, copiada da data da sessão
+  /// Data e hora em que o brinco foi colocado. Em sessão, a hora do registro no animal.
+  identifiedAt DateTime @map("identified_at") @db.Timestamptz(3)
 
-  // Correções preservam o rastro: o valor lançado originalmente é guardado na primeira
-  // correção e a exclusão é lógica (cancelada = ignorada no histórico e nos cálculos).
+  /// Brinco lançado originalmente, guardado na primeira correção do valor (a correção preserva o rastro).
   originalTag String?   @map("original_tag")
+  /// Quando o registro foi corrigido (vazio = nunca corrigido).
   correctedAt DateTime? @map("corrected_at") @db.Timestamptz(3)
+  /// Quando o registro foi excluído (vazio = válido). Excluído = ignorado no histórico e nos cálculos.
   cancelledAt DateTime? @map("cancelled_at") @db.Timestamptz(3)
 
-  managementId String?        @map("management_id") @db.Uuid // null = avulso
+  /// Etapa de brinco da sessão em que o registro foi feito (vazio = registro avulso).
+  managementId String?        @map("management_id") @db.Uuid
   management   TagManagement? @relation(fields: [managementId], references: [id], onDelete: Restrict)
 
+  /// Animal que recebeu (ou perdeu) o brinco.
   animalId String @map("animal_id") @db.Uuid
   animal   Animal @relation(fields: [animalId], references: [id], onDelete: Restrict)
 
@@ -512,7 +558,7 @@ model AnimalRfidTagging {
   rfid  String? // null = rfid removido
   notes String?
 
-  identifiedAt DateTime @map("identified_at") @db.Timestamptz(3) // data do manejo; em sessão, copiada da data da sessão
+  identifiedAt DateTime @map("identified_at") @db.Timestamptz(3) // data e hora do manejo; em sessão, a hora do registro no animal
 
   originalRfid String?   @map("original_rfid")
   correctedAt  DateTime? @map("corrected_at") @db.Timestamptz(3)
@@ -557,7 +603,7 @@ model AnimalNeutering {
   techniqueId String?             @map("technique_id") @db.Uuid
   technique   NeuteringTechnique? @relation("NeuteringTechnique", fields: [techniqueId], references: [id], onDelete: Restrict)
 
-  neuteredAt DateTime @map("neutered_at") @db.Timestamptz(3) // data do manejo; em sessão, copiada da data da sessão
+  neuteredAt DateTime @map("neutered_at") @db.Timestamptz(3) // data e hora do manejo; em sessão, a hora do registro no animal
 
   // Correções preservam o rastro: os valores lançados originalmente são guardados na primeira
   // correção e a exclusão é lógica (cancelada = ignorada no histórico e nos cálculos).
@@ -612,7 +658,7 @@ model AnimalWeighing {
   id        Int      @id @default(autoincrement())
   weight    Decimal  @db.Decimal(10, 2) // valor da pesagem (kg), sempre individual
   notes     String?
-  weighedAt DateTime @map("weighed_at") @db.Timestamptz(3) // data do manejo; em sessão, copiada da data da sessão
+  weighedAt DateTime @map("weighed_at") @db.Timestamptz(3) // data e hora do manejo; em sessão, a hora do registro no animal
 
   // Correções preservam o rastro: o peso lançado originalmente é guardado na primeira correção
   // e a exclusão é lógica (cancelada = ignorada no histórico, gráficos e peso atual).
@@ -655,7 +701,7 @@ model AnimalBranding {
   id    Int     @id @default(autoincrement())
   notes String?
 
-  brandedAt DateTime @map("branded_at") @db.Timestamptz(3) // data do manejo; em sessão, copiada da data da sessão
+  brandedAt DateTime @map("branded_at") @db.Timestamptz(3) // data e hora do manejo; em sessão, a hora do registro no animal
 
   // marca aplicada neste animal; em sessão, pré-selecionada com a sugerida no manejo
   brandId String @map("brand_id") @db.Uuid
@@ -718,7 +764,7 @@ model HealthManagement {
   doseMl            Decimal?                 @map("dose_ml") @db.Decimal(10, 2) // FIXED: ml por animal; PER_WEIGHT: ml a cada doseWeightKg
   doseWeightKg      Decimal?                 @map("dose_weight_kg") @db.Decimal(10, 2) // PER_WEIGHT: peso de referência (ex.: 1 ml a cada 50 kg)
 
-  performedAt DateTime @map("performed_at") @db.Timestamptz(3) // data e hora do procedimento; em sessão, copiada da data da sessão
+  performedAt DateTime @map("performed_at") @db.Timestamptz(3) // data e hora do procedimento; em sessão, a da primeira aplicação
 
   items HealthManagementItem[]
   step  ManagementStep? // etapa da sessão que aplica este procedimento (null = avulso), uma vez que a mesma sessão pode ter vários manejos sanitários.
@@ -741,9 +787,11 @@ model HealthManagement {
 }
 
 model HealthManagementItem {
-  id     Int      @id @default(autoincrement())
-  notes  String? // observação específica desse animal nesse procedimento (reação adversa, etc.)
-  doseMl Decimal? @map("dose_ml") @db.Decimal(10, 2) // dose aplicada neste animal (ml)
+  id        Int      @id @default(autoincrement())
+  notes     String? // observação específica desse animal nesse procedimento (reação adversa, etc.)
+  doseMl    Decimal? @map("dose_ml") @db.Decimal(10, 2) // dose aplicada neste animal (ml)
+  /// Data e hora da aplicação neste animal. Em sessão, a hora do registro; avulso, a do procedimento.
+  appliedAt DateTime @default(now()) @map("applied_at") @db.Timestamptz(3)
 
   managementId String           @map("management_id") @db.Uuid
   management   HealthManagement @relation(fields: [managementId], references: [id], onDelete: Restrict)
@@ -892,6 +940,10 @@ model AnimalBatchTransferItem {
 
   animalId String @map("animal_id") @db.Uuid
   animal   Animal @relation(fields: [animalId], references: [id], onDelete: Restrict)
+
+  /// Data e hora em que o animal muda de lote: na transferência, a dela, igual para todos; na
+  /// apartação de uma sessão, a hora em que a apartação foi registrada no animal.
+  movedAt DateTime @map("moved_at") @db.Timestamptz(3)
 
   // Lote do animal no momento da confirmação (null enquanto pendente ou se o animal estava sem lote)
   originBatchId String? @map("origin_batch_id") @db.Uuid

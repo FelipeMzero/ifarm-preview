@@ -74,9 +74,9 @@ type AnimalStepPageProps = {
 
 /**
  * Registro de um animal, etapa por etapa. Atende às URLs /<animal> (abre no primeiro
- * passo pendente) e /<animal>/<passo>. Trocar de passo só troca a URL
- * (history.pushState, integrado ao roteador do Next): a tela não é remontada nem
- * recarrega os dados, e o voltar do navegador continua passando pelos passos.
+ * passo pendente) e /<animal>/<passo>, na mesma rota. Trocar de passo só troca a URL: a
+ * tela não é remontada nem recarrega os dados, e o voltar do navegador continua passando
+ * pelos passos.
  */
 export function AnimalStepPage({
   sessionId,
@@ -112,21 +112,16 @@ export function AnimalStepPage({
   const options = optionsData ?? EMPTY_OPTIONS;
 
   // Aberto sem passo: fixa na URL o primeiro pendente (sem nova entrada no histórico), para
-  // recarregar a página cair no mesmo passo. Sincroniza o histórico do navegador, um sistema
-  // fora do React: por isso no efeito.
+  // recarregar a página cair no mesmo passo.
   const loaded = !!context;
   useEffect(() => {
-    if (!context || window.location.pathname.startsWith(`${animalPath}/`)) {
-      return;
-    }
-    window.history.replaceState(
-      null,
-      "",
-      stepUrl(boardPath, animalId, firstPendingStep(context)),
-    );
+    if (!context || urlStep !== null) return;
+    navigate(stepUrl(boardPath, animalId, firstPendingStep(context)), {
+      replace: true,
+    });
     // Só ao carregar: depois, os passos mudam a URL por conta própria.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loaded, animalPath, boardPath, animalId]);
+  }, [loaded, urlStep, boardPath, animalId, navigate]);
 
   // Registrar ou desfazer devolve o registro atualizado do animal: vai direto para o cache, e
   // a sessão (lista de animais e contagens) é recarregada.
@@ -221,7 +216,7 @@ export function AnimalStepPage({
   const record = records[current.key] ?? null;
 
   function goTo(target: number) {
-    window.history.pushState(null, "", stepUrl(boardPath, animalId, target));
+    navigate(stepUrl(boardPath, animalId, target));
   }
 
   function goNext() {

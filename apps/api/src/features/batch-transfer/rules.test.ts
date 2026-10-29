@@ -62,4 +62,14 @@ describe("enteredAfter", () => {
     ];
     expect(enteredAfter(histories, at).map((h) => h.id)).toEqual([3]);
   });
+
+  it("aceita a data de cada animal (apartação: cada um na sua hora)", () => {
+    const histories = [
+      { id: 1, enteredAt: new Date("2026-03-10T08:00:00Z") },
+      { id: 2, enteredAt: new Date("2026-03-10T08:00:00Z") },
+    ];
+    const movedAt = (h: { id: number }) =>
+      new Date(h.id === 1 ? "2026-03-10T07:00:00Z" : "2026-03-10T09:00:00Z");
+    expect(enteredAfter(histories, movedAt).map((h) => h.id)).toEqual([1]);
+  });
 });

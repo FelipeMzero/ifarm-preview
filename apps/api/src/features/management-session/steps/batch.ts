@@ -140,7 +140,7 @@ export const batchStep = defineStep({
 
   payloadSchema: batchPayloadSchema,
 
-  async save(tx, session, _step, animal, payload) {
+  async save(tx, session, _step, animal, payload, at) {
     await removeAnimal(tx, session, animal.id);
 
     if (!payload.batchId || payload.batchId === animal.currentBatchId) {
@@ -173,7 +173,8 @@ export const batchStep = defineStep({
           destinationBatchId: batch.id,
           propertyId: session.propertyId,
           managementSessionId: session.id,
-          transferredAt: session.performedAt,
+          // Provisória: na consolidação, a do primeiro animal apartado para este lote.
+          transferredAt: at,
           notes: "Apartação em sessão de manejo",
         },
         select: { id: true },
@@ -184,6 +185,8 @@ export const batchStep = defineStep({
         transferId: transfer.id,
         animalId: animal.id,
         notes: payload.notes,
+        // O animal muda de lote na hora em que a apartação é registrada nele.
+        movedAt: at,
       },
     });
   },
@@ -198,10 +201,17 @@ export const batchStep = defineStep({
       select: { id: true },
     });
     for (const t of transfers) {
-      await tx.animalBatchTransfer.update({
-        where: { id: t.id },
-        data: { transferredAt: session.performedAt },
+      // Cada animal muda de lote na sua hora (movedAt); a transferência fica com a do primeiro.
+      const first = await tx.animalBatchTransferItem.aggregate({
+        where: { transferId: t.id },
+        _min: { movedAt: true },
       });
+      if (first._min.movedAt) {
+        await tx.animalBatchTransfer.update({
+          where: { id: t.id },
+          data: { transferredAt: first._min.movedAt },
+        });
+      }
       await confirmTransferInTx(tx, t.id);
     }
   },
