@@ -32,7 +32,6 @@ export async function consolidateSession(tx: Tx, id: string, at?: Date) {
     ),
   );
 
-
   const participants = await tx.managementParticipant.findMany({
     where: { managementSessionId: id },
     include: {

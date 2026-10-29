@@ -773,7 +773,7 @@ Um procedimento (vacina, vermífugo, tratamento, exame…) aplicado a um grupo d
 | `id` | serial | | | PK | Identificador. |
 | `notes` | text | N | | | Observação desse animal (reação adversa, aplicação incompleta…). |
 | `dose_ml` | numeric(10,2) | N | | | Dose aplicada (ml). **Obrigatória** quando o procedimento tem dose (`FIXED`/`PER_WEIGHT`) e sempre nula em `NONE`. Na etapa da sessão já vem sugerida pela regra do procedimento (`FIXED` = `dose_ml`; `PER_WEIGHT` = `dose_ml` × peso ÷ `dose_weight_kg`, com 1 casa, usando o peso da sessão ou o atual) e pode ser corrigida; sem peso, o operador informa a dose aplicada. Não é calculada depois, na consolidação. |
-| `applied_at` | timestamp | | | | Data e hora da aplicação neste animal. Em sessão, a hora do registro no animal; avulso num grupo, a mesma para todos. |
+| `applied_at` | timestamp | | | | Data e hora da aplicação neste animal. Em sessão, a hora do registro no animal; avulso, a informada no registro, a mesma para todos os animais do procedimento. |
 | `management_id` | uuid | | | FK → `health_management` | Procedimento. |
 | `animal_id` | uuid | | | FK → `animal` | Animal. |
 | `created_at` | timestamp | | now | | Auditoria. |

@@ -340,8 +340,8 @@ erDiagram
   "health_management_item" {
     Int id "🗝️"
     String notes "❓"
-    Decimal dose_ml "❓"
     DateTime applied_at 
+    Decimal dose_ml "❓"
     String management_id 
     String animal_id 
     DateTime created_at 
@@ -358,9 +358,9 @@ erDiagram
   
 
   "animal_property_transfer" {
-    String origin_batch_id "🗝️"
-    DateTime transferred_at 
+    String id "🗝️"
     String notes "❓"
+    DateTime transferred_at 
     String gta_number "❓"
     DateTime confirmed_at "❓"
     DateTime received_at "❓"
@@ -386,20 +386,20 @@ erDiagram
 
   "animal_property_history" {
     Int id "🗝️"
+    String notes "❓"
     DateTime entered_at 
     DateTime exited_at "❓"
-    String notes "❓"
-    DateTime created_at 
-    DateTime updated_at 
     String animal_id 
     String property_id 
+    DateTime created_at 
+    DateTime updated_at 
     }
   
 
   "animal_batch_transfer" {
-    String management_session_id "🗝️"
-    DateTime transferred_at 
+    String id "🗝️"
     String notes "❓"
+    DateTime transferred_at 
     DateTime confirmed_at "❓"
     DateTime cancelled_at "❓"
     String destination_batch_id 
@@ -413,31 +413,31 @@ erDiagram
   "animal_batch_transfer_item" {
     Int id "🗝️"
     String notes "❓"
+    DateTime moved_at 
     String transfer_id 
     String animal_id 
-    DateTime moved_at 
     String origin_batch_id "❓"
     DateTime created_at 
     }
   
 
   "animal_batch_history" {
-    Int batch_id "🗝️"
+    Int id "🗝️"
+    String notes "❓"
     DateTime entered_at 
     DateTime exited_at "❓"
-    String notes "❓"
-    DateTime created_at 
-    DateTime updated_at 
     String animal_id 
     String batch_id "❓"
+    DateTime created_at 
+    DateTime updated_at 
     }
   
 
   "purchase_event" {
     String id "🗝️"
+    String notes "❓"
     String title 
     DateTime purchase_date 
-    String notes "❓"
     DateTime payment_date "❓"
     String payment_reference "❓"
     DateTime confirmed_at "❓"
@@ -451,11 +451,11 @@ erDiagram
 
   "purchase_category" {
     Int id "🗝️"
+    String notes "❓"
     Sex sex 
     Int min_age_months "❓"
     Int max_age_months "❓"
     Int expected_quantity 
-    String notes "❓"
     PurchasePricingType pricing_type 
     Decimal unit_price "❓"
     Decimal total_price "❓"
@@ -469,11 +469,11 @@ erDiagram
 
   "purchase_reception" {
     String id "🗝️"
+    String gta_number "❓"
+    String invoice_number "❓"
     String purchase_event_id 
     String management_session_id 
     String entry_batch_id 
-    String gta_number "❓"
-    String invoice_number "❓"
     DateTime created_at 
     }
   
@@ -491,8 +491,8 @@ erDiagram
 
   "loss_event" {
     String id "🗝️"
+    String notes "❓"
     String title 
-    String description "❓"
     DateTime occurred_at 
     DateTime confirmed_at "❓"
     DateTime cancelled_at "❓"
@@ -504,8 +504,8 @@ erDiagram
 
   "loss_event_item" {
     Int id "🗝️"
-    AnimalLossType type 
     String notes "❓"
+    AnimalLossType type 
     String event_id 
     String animal_id 
     String origin_batch_id "❓"
@@ -515,8 +515,8 @@ erDiagram
 
   "slaughter_event" {
     String id "🗝️"
+    String notes "❓"
     String title 
-    String description "❓"
     DateTime scheduled_at 
     DateTime slaughtered_at "❓"
     DateTime confirmed_at "❓"
@@ -584,7 +584,7 @@ erDiagram
     "health_management" }o--|o management_session : "managementSession"
     "health_management" }o--|o person : "veterinarian"
     "health_management_item" }o--|| health_management : "management"
-    "health_management_item" }o--|| animal : "dose_ml"
+    "health_management_item" }o--|| animal : "animal"
     "animal_property_transfer" }o--|| property : "originProperty"
     "animal_property_transfer" }o--|| property : "destinationProperty"
     "animal_property_transfer" }o--|o batch : "originBatch"
@@ -600,7 +600,7 @@ erDiagram
     "animal_batch_transfer_item" }o--|| animal_batch_transfer : "transfer"
     "animal_batch_transfer_item" }o--|| animal : "animal"
     "animal_batch_transfer_item" }o--|o batch : "originBatch"
-    "animal_batch_history" }o--|| animal : "batch_id"
+    "animal_batch_history" }o--|| animal : "animal"
     "animal_batch_history" }o--|o batch : "batch"
     "purchase_event" }o--|| person : "seller"
     "purchase_event" }o--|| property : "destinationProperty"

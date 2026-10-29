@@ -854,17 +854,22 @@ model HealthManagement {
   @@map("health_management")
 }
 
+/// Aplicação de um procedimento sanitário num animal: o histórico sanitário dele. Vale junto com o
+/// procedimento (avulso, ou de sessão consolidada).
 model HealthManagementItem {
   id        Int      @id @default(autoincrement())
-  notes     String? // observação específica desse animal nesse procedimento (reação adversa, etc.)
-  doseMl    Decimal? @map("dose_ml") @db.Decimal(10, 2) // dose aplicada neste animal (ml)
-  /// Data e hora da aplicação neste animal. Em sessão, a hora do registro; avulso num grupo, a
-  /// mesma para todos.
+  /// Observação sobre a aplicação neste animal (ex.: reação adversa, aplicação incompleta).
+  notes     String?
+  /// Data/hora da aplicação neste animal.
   appliedAt DateTime @map("applied_at") @db.Timestamptz(3)
+  /// Dose aplicada neste animal (ml). Vazio quando o procedimento não tem dose.
+  doseMl    Decimal? @map("dose_ml") @db.Decimal(10, 2)
 
+  /// Procedimento aplicado.
   managementId String           @map("management_id") @db.Uuid
   management   HealthManagement @relation(fields: [managementId], references: [id], onDelete: Restrict)
 
+  /// Animal tratado.
   animalId String @map("animal_id") @db.Uuid
   animal   Animal @relation(fields: [animalId], references: [id], onDelete: Restrict)
 
@@ -875,9 +880,12 @@ model HealthManagementItem {
   @@map("health_management_item")
 }
 
+/// Tipo de procedimento sanitário (ex.: "Vacinação", "Vermifugação", "Tratamento", "Exame"), usado
+/// para classificar os procedimentos. Cadastro geral, comum a todas as propriedades.
 model HealthManagementType {
   id            String    @id @default(uuid()) @db.Uuid
   name          String    @unique
+  /// Quando o tipo foi desativado (vazio = ativo). Tipo inativo não aparece em registros novos.
   deactivatedAt DateTime? @map("deactivated_at") @db.Timestamptz(3)
 
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
@@ -888,43 +896,47 @@ model HealthManagementType {
   @@map("health_management_type")
 }
 
-enum HealthManagementDoseType {
-  NONE // procedimento sem dose (exame, banho, curativo)
-  FIXED // mesma dose para todos os animais
-  PER_WEIGHT // dose proporcional ao peso vivo
-
-  @@map("health_management_dose_type")
-}
-
+/// Envio de um grupo de animais de uma propriedade para outra, em duas confirmações: a origem
+/// confirma o envio e o destino confirma o recebimento, escolhendo o lote de entrada. Situação:
+/// pendente, enviada, recebida ou cancelada.
 model AnimalPropertyTransfer {
-  id            String   @id @default(uuid()) @db.Uuid
-  transferredAt DateTime @map("transferred_at") @db.Timestamptz(3)
+  id            String    @id @default(uuid()) @db.Uuid
   notes         String?
-  gtaNumber     String?  @map("gta_number")
+  /// Data e hora do envio.
+  transferredAt DateTime  @map("transferred_at") @db.Timestamptz(3)
+  /// Número da GTA (Guia de Trânsito Animal) do transporte (vazio = não informado).
+  gtaNumber     String?   @map("gta_number")
+  /// Quando a origem confirmou o envio (vazio = não enviada).
+  confirmedAt   DateTime? @map("confirmed_at") @db.Timestamptz(3)
+  /// Quando o destino confirmou o recebimento (vazio = não recebida).
+  receivedAt    DateTime? @map("received_at") @db.Timestamptz(3)
+  /// Quando a transferência foi cancelada (vazio = não cancelada).
+  cancelledAt   DateTime? @map("cancelled_at") @db.Timestamptz(3)
 
-  confirmedAt DateTime? @map("confirmed_at") @db.Timestamptz(3) // origem confirma o envio
-  receivedAt  DateTime? @map("received_at") @db.Timestamptz(3) // destino confirma o recebimento
-  cancelledAt DateTime? @map("cancelled_at") @db.Timestamptz(3)
-
-  items AnimalPropertyTransferItem[]
-
+  /// Propriedade de onde os animais saem.
   originPropertyId String   @map("origin_property_id") @db.Uuid
   originProperty   Property @relation("AnimalPropertyTransferOrigin", fields: [originPropertyId], references: [id], onDelete: Restrict)
 
+  /// Propriedade para onde os animais vão.
   destinationPropertyId String   @map("destination_property_id") @db.Uuid
   destinationProperty   Property @relation("AnimalPropertyTransferDestination", fields: [destinationPropertyId], references: [id], onDelete: Restrict)
 
-  originBatchId String? @map("origin_batch_id") @db.Uuid // null = animais vinham sem lote
+  /// Lote de onde os animais saem (vazio = estavam sem lote).
+  originBatchId String? @map("origin_batch_id") @db.Uuid
   originBatch   Batch?  @relation("AnimalPropertyTransferOriginBatch", fields: [originBatchId], references: [id], onDelete: Restrict)
 
-  destinationBatchId String? @map("destination_batch_id") @db.Uuid // preenchido só no recebimento, pelo destino
+  /// Lote em que os animais entram no destino, escolhido no recebimento (vazio = ainda não recebida).
+  destinationBatchId String? @map("destination_batch_id") @db.Uuid
   destinationBatch   Batch?  @relation("AnimalPropertyTransferDestinationBatch", fields: [destinationBatchId], references: [id], onDelete: Restrict)
 
-  managementSessionId String?            @map("management_session_id") @db.Uuid // null = transferência isolada
+  /// Sessão de manejo que gerou a transferência (vazio = transferência avulsa).
+  managementSessionId String?            @map("management_session_id") @db.Uuid
   managementSession   ManagementSession? @relation(fields: [managementSessionId], references: [id], onDelete: Restrict)
 
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  items AnimalPropertyTransferItem[]
 
   @@index([originPropertyId])
   @@index([destinationPropertyId])
@@ -933,13 +945,16 @@ model AnimalPropertyTransfer {
   @@map("animal_property_transfer")
 }
 
+/// Animal de uma transferência entre propriedades.
 model AnimalPropertyTransferItem {
   id    Int     @id @default(autoincrement())
   notes String?
 
+  /// Transferência de que o animal faz parte.
   transferId String                 @map("transfer_id") @db.Uuid
   transfer   AnimalPropertyTransfer @relation(fields: [transferId], references: [id], onDelete: Restrict)
 
+  /// Animal transferido.
   animalId String @map("animal_id") @db.Uuid
   animal   Animal @relation(fields: [animalId], references: [id], onDelete: Restrict)
 
@@ -950,20 +965,29 @@ model AnimalPropertyTransferItem {
   @@map("animal_property_transfer_item")
 }
 
+/// Período em que um animal esteve numa propriedade: o histórico de propriedades dele. Aberto ao
+/// entrar (cadastro, recebimento de compra ou transferência) e fechado ao sair, inclusive do
+/// rebanho (venda, perda, abate). No rebanho, o animal tem um só período aberto, o da propriedade
+/// atual (Animal.currentPropertyId). Os eventos do animal usam o fuso da propriedade onde ele
+/// estava no momento.
 model AnimalPropertyHistory {
   id        Int       @id @default(autoincrement())
-  enteredAt DateTime  @map("entered_at") @db.Timestamptz(3)
-  exitedAt  DateTime? @map("exited_at") @db.Timestamptz(3)
   notes     String?
+  /// Data e hora em que o animal entrou na propriedade.
+  enteredAt DateTime  @map("entered_at") @db.Timestamptz(3)
+  /// Data e hora em que o animal saiu da propriedade (vazio = ainda está nela).
+  exitedAt  DateTime? @map("exited_at") @db.Timestamptz(3)
 
-  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
-
+  /// Animal.
   animalId String @map("animal_id") @db.Uuid
   animal   Animal @relation(fields: [animalId], references: [id], onDelete: Restrict)
 
+  /// Propriedade onde o animal esteve no período.
   propertyId String   @map("property_id") @db.Uuid
   property   Property @relation(fields: [propertyId], references: [id], onDelete: Restrict)
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   @@unique([animalId], where: { exitedAt: null })
   @@index([animalId, enteredAt])
@@ -971,50 +995,60 @@ model AnimalPropertyHistory {
   @@map("animal_property_history")
 }
 
+/// Movimentação de um grupo de animais para um lote da mesma propriedade. Feita pela página de
+/// transferências (planejada e depois confirmada) ou pela apartação de uma sessão de manejo (uma
+/// por lote de destino, confirmada na consolidação). Os animais podem vir de lotes diferentes.
+/// Situação: pendente, confirmada ou cancelada.
 model AnimalBatchTransfer {
   id            String    @id @default(uuid()) @db.Uuid
-  transferredAt DateTime  @map("transferred_at") @db.Timestamptz(3)
   notes         String?
+  /// Data e hora da transferência. Na apartação de uma sessão, a do primeiro animal apartado.
+  transferredAt DateTime  @map("transferred_at") @db.Timestamptz(3)
+  /// Quando a transferência foi confirmada (vazio = não confirmada). A partir daí, os animais estão no lote de destino.
   confirmedAt   DateTime? @map("confirmed_at") @db.Timestamptz(3)
+  /// Quando a transferência foi cancelada (vazio = não cancelada).
   cancelledAt   DateTime? @map("cancelled_at") @db.Timestamptz(3)
 
-  items AnimalBatchTransferItem[]
-
+  /// Lote para onde os animais vão.
   destinationBatchId String @map("destination_batch_id") @db.Uuid
   destinationBatch   Batch  @relation("AnimalBatchTransferDestination", fields: [destinationBatchId], references: [id], onDelete: Restrict)
 
+  /// Propriedade dos animais e dos lotes.
   propertyId String   @map("property_id") @db.Uuid
   property   Property @relation(fields: [propertyId], references: [id], onDelete: Restrict)
 
-  managementSessionId String?            @map("management_session_id") @db.Uuid // null = transferência isolada
+  /// Sessão de manejo cuja apartação gerou a transferência (vazio = feita pela página de transferências). Enquanto a sessão está aberta, só ela altera a transferência.
+  managementSessionId String?            @map("management_session_id") @db.Uuid
   managementSession   ManagementSession? @relation(fields: [managementSessionId], references: [id], onDelete: Restrict)
 
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
 
+  items AnimalBatchTransferItem[]
+
   @@index([destinationBatchId])
   @@index([propertyId])
   @@index([managementSessionId])
-  // Idem para as transferências pendentes.
-  @@index([propertyId], map: "animal_batch_transfer_open_idx", where: { confirmedAt: null, cancelledAt: null })
+  @@index([propertyId], map: "animal_batch_transfer_open_idx", where: { confirmedAt: null, cancelledAt: null }) // Transferências pendentes da propriedade (compromissos dos animais).
   @@map("animal_batch_transfer")
 }
 
+/// Animal de uma transferência entre lotes, com a hora em que ele muda de lote.
 model AnimalBatchTransferItem {
-  id    Int     @id @default(autoincrement())
-  notes String?
+  id      Int      @id @default(autoincrement())
+  notes   String?
+  /// Data e hora em que o animal muda de lote
+  movedAt DateTime @map("moved_at") @db.Timestamptz(3)
 
+  /// Transferência de que o animal faz parte.
   transferId String              @map("transfer_id") @db.Uuid
   transfer   AnimalBatchTransfer @relation(fields: [transferId], references: [id], onDelete: Restrict)
 
+  /// Animal transferido.
   animalId String @map("animal_id") @db.Uuid
   animal   Animal @relation(fields: [animalId], references: [id], onDelete: Restrict)
 
-  /// Data e hora em que o animal muda de lote: na transferência, a dela, igual para todos; na
-  /// apartação de uma sessão, a hora em que a apartação foi registrada no animal.
-  movedAt DateTime @map("moved_at") @db.Timestamptz(3)
-
-  // Lote do animal no momento da confirmação (null enquanto pendente ou se o animal estava sem lote)
+  /// Lote de onde o animal saiu, gravado na confirmação (vazio = ainda pendente, ou o animal estava sem lote).
   originBatchId String? @map("origin_batch_id") @db.Uuid
   originBatch   Batch?  @relation("AnimalBatchTransferItemOrigin", fields: [originBatchId], references: [id], onDelete: Restrict)
 
@@ -1026,20 +1060,28 @@ model AnimalBatchTransferItem {
   @@map("animal_batch_transfer_item")
 }
 
+/// Período em que um animal esteve num lote (ou sem lote): o histórico de lotes dele. Aberto ao
+/// entrar (cadastro, recebimento de compra, transferência confirmada ou troca de lote na edição do
+/// animal) e fechado ao sair, inclusive do rebanho (venda, perda, abate). No rebanho, o animal tem
+/// um só período aberto, o do lote atual (Animal.currentBatchId).
 model AnimalBatchHistory {
   id        Int       @id @default(autoincrement())
-  enteredAt DateTime  @map("entered_at") @db.Timestamptz(3)
-  exitedAt  DateTime? @map("exited_at") @db.Timestamptz(3)
   notes     String?
+  /// Data e hora em que o animal entrou no lote.
+  enteredAt DateTime  @map("entered_at") @db.Timestamptz(3)
+  /// Data e hora em que o animal saiu do lote (vazio = ainda está nele).
+  exitedAt  DateTime? @map("exited_at") @db.Timestamptz(3)
 
-  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
-
+  /// Animal.
   animalId String @map("animal_id") @db.Uuid
   animal   Animal @relation(fields: [animalId], references: [id], onDelete: Restrict)
 
-  batchId String? @map("batch_id") @db.Uuid // null = animal sem lote nesse período
+  /// Lote onde o animal esteve no período (vazio = esteve sem lote).
+  batchId String? @map("batch_id") @db.Uuid
   batch   Batch?  @relation(fields: [batchId], references: [id], onDelete: Restrict)
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   @@unique([animalId], where: { exitedAt: null })
   @@index([animalId, enteredAt])
@@ -1047,110 +1089,144 @@ model AnimalBatchHistory {
   @@map("animal_batch_history")
 }
 
+/// Compra de animais de um vendedor para uma propriedade: o que foi negociado (categorias e
+/// preços), o pagamento e a chegada dos animais, em uma ou mais recepções (viagens). Situação: em
+/// andamento, consolidada ou cancelada.
 model PurchaseEvent {
-  id           String   @id @default(uuid()) @db.Uuid
-  title        String // distingue compras do mesmo vendedor
-  purchaseDate DateTime @map("purchase_date") @db.Date
-  notes        String?
-
-  // Situação: em andamento (sem confirmedAt/cancelledAt), consolidada ou cancelada.
-  // O pagamento é um fato registrado durante o andamento; bloqueia os valores.
+  id               String    @id @default(uuid()) @db.Uuid
+  notes            String?
+  /// Título que distingue a compra das outras do mesmo vendedor.
+  title            String
+  /// Dia da negociação.
+  purchaseDate     DateTime  @map("purchase_date") @db.Date
+  /// Dia do pagamento (vazio = não paga). Depois do pagamento, o vendedor, as categorias e os
+  /// valores não mudam (o pagamento pode ser desfeito para corrigir).
   paymentDate      DateTime? @map("payment_date") @db.Date
-  paymentReference String?   @map("payment_reference") // comprovante (PIX, TED...)
-  confirmedAt      DateTime? @map("confirmed_at") @db.Timestamptz(3) // consolidada: custos rateados, nada mais muda
+  /// Comprovante do pagamento (ex.: PIX, TED).
+  paymentReference String?   @map("payment_reference")
+  /// Quando a compra foi consolidada (vazio = não consolidada): exige pagamento, animais recebidos
+  /// e nenhuma recepção aberta. Os custos são rateados entre os animais, e a compra não muda mais.
+  confirmedAt      DateTime? @map("confirmed_at") @db.Timestamptz(3)
+  /// Quando a compra foi cancelada (vazio = não cancelada). Só é possível cancelar se não há
+  /// pagamento nem animais recebidos.
   cancelledAt      DateTime? @map("cancelled_at") @db.Timestamptz(3)
 
-  sellerId              String   @map("seller_id") @db.Uuid
-  seller                Person   @relation(fields: [sellerId], references: [id], onDelete: Restrict)
+  /// Vendedor.
+  sellerId String @map("seller_id") @db.Uuid
+  seller   Person @relation(fields: [sellerId], references: [id], onDelete: Restrict)
+
+  /// Propriedade que recebe os animais.
   destinationPropertyId String   @map("destination_property_id") @db.Uuid
   destinationProperty   Property @relation(fields: [destinationPropertyId], references: [id], onDelete: Restrict)
 
-  categories       PurchaseCategory[]
-  receptions       PurchaseReception[] // uma compra pode ter várias recepções (viagens)
-  purchasedAnimals PurchasedAnimal[]
-
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  categories       PurchaseCategory[]
+  receptions       PurchaseReception[]
+  purchasedAnimals PurchasedAnimal[]
 
   @@index([sellerId])
   @@index([destinationPropertyId])
   @@map("purchase_event")
 }
 
+/// Grupo de animais negociado junto numa compra, com a mesma forma de preço (ex.: "30 machos de 12
+/// a 18 meses, por arroba"). Cada animal recebido entra numa categoria.
 model PurchaseCategory {
-  id               Int     @id @default(autoincrement())
-  sex              Sex
-  minAgeMonths     Int?    @map("min_age_months")
-  maxAgeMonths     Int?    @map("max_age_months")
-  expectedQuantity Int     @map("expected_quantity")
+  id               Int                 @id @default(autoincrement())
   notes            String?
+  sex              Sex
+  /// Idade mínima negociada, em meses (vazio = sem mínimo).
+  minAgeMonths     Int?                @map("min_age_months")
+  /// Idade máxima negociada, em meses (vazio = sem máximo).
+  maxAgeMonths     Int?                @map("max_age_months")
+  /// Quantidade de animais negociada.
+  expectedQuantity Int                 @map("expected_quantity")
+  /// Forma de preço: por cabeça, por arroba ou valor fechado.
+  pricingType      PurchasePricingType @map("pricing_type")
+  /// Preço por cabeça ou por arroba (vazio no valor fechado).
+  unitPrice        Decimal?            @map("unit_price") @db.Decimal(12, 2)
+  /// Valor fechado da categoria (só no valor fechado).
+  totalPrice       Decimal?            @map("total_price") @db.Decimal(12, 2)
+  /// Por arroba: peso faturado (kg), o de origem ou embarque, base do pagamento (vazio = ainda não
+  /// informado; exigido até o pagamento).
+  invoicedWeight   Decimal?            @map("invoiced_weight") @db.Decimal(12, 2)
+  /// Por arroba: quebra de peso acordada (%) entre o embarque e a chegada, descontada do peso
+  /// faturado.
+  shrinkPercent    Decimal?            @map("shrink_percent") @db.Decimal(5, 2)
+  /// No valor fechado, como o valor é rateado entre os animais recebidos: em partes iguais ou pelo
+  /// peso de entrada.
+  costSplit        PurchaseCostSplit   @default(EQUAL) @map("cost_split")
 
-  pricingType    PurchasePricingType @map("pricing_type")
-  unitPrice      Decimal?            @map("unit_price") @db.Decimal(12, 2) // por cabeça ou por arroba
-  totalPrice     Decimal?            @map("total_price") @db.Decimal(12, 2) // LUMP_SUM
-  invoicedWeight Decimal?            @map("invoiced_weight") @db.Decimal(12, 2) // peso de origem/embarque (kg), base do pagamento
-  shrinkPercent  Decimal?            @map("shrink_percent") @db.Decimal(5, 2) // quebra acordada
-  costSplit      PurchaseCostSplit   @default(EQUAL) @map("cost_split") // rateio do valor fechado
-
+  /// Raça, quando a categoria é de uma raça só (vazio = raças variadas ou não informada).
   breedId String? @map("breed_id") @db.Uuid
   breed   Breed?  @relation(fields: [breedId], references: [id], onDelete: Restrict)
 
+  /// Compra.
   eventId String        @map("event_id") @db.Uuid
   event   PurchaseEvent @relation(fields: [eventId], references: [id], onDelete: Restrict)
 
   animals PurchasedAnimal[]
 
-  @@unique([id, eventId]) // alvo da FK composta de PurchasedAnimal (mesma compra)
+  @@unique([id, eventId])
   @@index([eventId])
   @@map("purchase_category")
 }
 
-// Chegada física de animais de uma compra (uma por viagem). A compra incorpora uma
-// sessão de manejo para receber os animais: os animais são criados no registro da
-// sessão e recebem nela os primeiros manejos.
+/// Chegada de uma carga de animais de uma compra (uma por viagem). É uma sessão de manejo: os
+/// animais são cadastrados ao serem recebidos nela e recebem os primeiros manejos; a situação da
+/// recepção é a da sessão.
 model PurchaseReception {
-  id String @id @default(uuid()) @db.Uuid
+  id            String  @id @default(uuid()) @db.Uuid
+  /// Número da GTA (Guia de Trânsito Animal) da carga (vazio = não informado).
+  gtaNumber     String? @map("gta_number")
+  /// Número da nota fiscal da carga (vazio = não informado).
+  invoiceNumber String? @map("invoice_number")
 
+  /// Compra.
   purchaseEventId String        @map("purchase_event_id") @db.Uuid
   purchaseEvent   PurchaseEvent @relation(fields: [purchaseEventId], references: [id], onDelete: Restrict)
 
+  /// Sessão de manejo da recepção.
   managementSessionId String            @unique @map("management_session_id") @db.Uuid
   managementSession   ManagementSession @relation(fields: [managementSessionId], references: [id], onDelete: Restrict)
 
-  // Lote em que os animais recebidos entram (até uma eventual apartação).
+  /// Lote em que os animais recebidos entram (até uma eventual apartação na própria recepção).
   entryBatchId String @map("entry_batch_id") @db.Uuid
   entryBatch   Batch  @relation(fields: [entryBatchId], references: [id], onDelete: Restrict)
 
-  // Documentos da carga (cada viagem tem os seus).
-  gtaNumber     String? @map("gta_number")
-  invoiceNumber String? @map("invoice_number")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
 
   purchasedAnimals PurchasedAnimal[]
 
-  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
-
-  @@unique([id, purchaseEventId]) // alvo da FK composta de PurchasedAnimal (mesma compra)
+  @@unique([id, purchaseEventId]) //// Alvo da chave estrangeira composta de PurchasedAnimal: a recepção é da mesma compra do animal.
   @@index([purchaseEventId])
   @@index([entryBatchId])
   @@map("purchase_reception")
 }
 
-// Vínculo animal ↔ compra, criado na recepção. Categoria e recepção são ligadas por FKs
-// compostas com purchase_event_id: o banco garante que as duas são da mesma compra.
+/// Animal recebido numa compra: liga o animal à compra, à categoria em que foi negociado e à
+/// recepção em que chegou. Criado ao receber o animal. A categoria e a recepção são ligadas junto
+/// com a compra (chaves compostas): o banco garante que as duas são da mesma compra.
 model PurchasedAnimal {
   id   Int      @id @default(autoincrement())
-  // Custo de aquisição, rateado uma única vez na consolidação da compra (nulo antes).
+  /// Custo de aquisição do animal, rateado na consolidação da compra (vazio = ainda não consolidada).
   cost Decimal? @db.Decimal(12, 2)
 
+  /// Compra.
   purchaseEventId String        @map("purchase_event_id") @db.Uuid
   purchaseEvent   PurchaseEvent @relation(fields: [purchaseEventId], references: [id], onDelete: Restrict)
 
+  /// Categoria em que o animal foi negociado.
   categoryId Int              @map("category_id")
   category   PurchaseCategory @relation(fields: [categoryId, purchaseEventId], references: [id, eventId], onDelete: Restrict)
 
+  /// Recepção em que o animal chegou.
   receptionId String            @map("reception_id") @db.Uuid
   reception   PurchaseReception @relation(fields: [receptionId, purchaseEventId], references: [id, purchaseEventId], onDelete: Restrict)
 
+  /// Animal comprado (cada animal vem de uma compra só).
   animalId String @unique @map("animal_id") @db.Uuid
   animal   Animal @relation(fields: [animalId], references: [id], onDelete: Restrict)
 
@@ -1162,39 +1238,53 @@ model PurchasedAnimal {
   @@map("purchased_animal")
 }
 
+/// Perda do rebanho: os animais de uma propriedade que morreram ou desapareceram numa mesma data
+/// (ex.: as mortes por uma descarga elétrica, os que faltaram na contagem do mês). Registrada como
+/// pendente e revisável; os animais só saem do rebanho na consolidação. Situação: pendente,
+/// consolidada ou cancelada.
 model LossEvent {
-  id          String   @id @default(uuid()) @db.Uuid
+  id          String    @id @default(uuid()) @db.Uuid
+  /// Título que identifica a perda (ex.: "Contagem de março").
   title       String
-  description String?
-  occurredAt  DateTime @map("occurred_at") @db.Timestamptz(3)
-
+  /// Circunstâncias ou detalhes da perda.
+  notes       String?
+  /// Data e hora em que os animais morreram ou foram dados como desaparecidos.
+  occurredAt  DateTime  @map("occurred_at") @db.Timestamptz(3)
+  /// Quando a perda foi consolidada (vazio = pendente). A partir daí, os animais saem do rebanho.
   confirmedAt DateTime? @map("confirmed_at") @db.Timestamptz(3)
+  /// Quando a perda foi cancelada (vazio = não cancelada).
   cancelledAt DateTime? @map("cancelled_at") @db.Timestamptz(3)
 
+  /// Propriedade em que a perda ocorreu.
   propertyId String   @map("property_id") @db.Uuid
   property   Property @relation(fields: [propertyId], references: [id], onDelete: Restrict)
 
-  items LossEventItem[]
-
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  items LossEventItem[]
 
   @@index([propertyId])
   @@map("loss_event")
 }
 
+/// Animal de uma perda, com o tipo de perda dele.
 model LossEventItem {
   id    Int            @id @default(autoincrement())
-  type  AnimalLossType // DEAD ou MISSING, decidido por animal
+  /// Detalhes sobre o animal (ex.: a causa provável da morte).
   notes String?
+  /// Tipo de perda deste animal: morte ou desaparecimento.
+  type  AnimalLossType
 
+  /// Perda de que o animal faz parte.
   eventId String    @map("event_id") @db.Uuid
   event   LossEvent @relation(fields: [eventId], references: [id], onDelete: Restrict)
 
+  /// Animal perdido.
   animalId String @map("animal_id") @db.Uuid
   animal   Animal @relation(fields: [animalId], references: [id], onDelete: Restrict)
 
-  // Lote do animal no momento da consolidação
+  /// Lote de onde o animal saiu, gravado na consolidação (vazio = ainda pendente, ou o animal estava sem lote).
   originBatchId String? @map("origin_batch_id") @db.Uuid
   originBatch   Batch?  @relation("LossEventItemOrigin", fields: [originBatchId], references: [id], onDelete: Restrict)
 
@@ -1206,41 +1296,56 @@ model LossEventItem {
   @@map("loss_event_item")
 }
 
-// Abate na própria fazenda, para consumo da propriedade (MOD-ABATES). O abate em
-// frigorífico é uma venda com finalidade de abate: o animal sai como SOLD, não SLAUGHTERED.
+/// Abate na própria fazenda, para consumo da propriedade (ex.: alimentação da sede e dos
+/// funcionários): os animais abatidos numa mesma data. Planejado com antecedência como pendente e
+/// revisável; os animais só saem do rebanho na consolidação, depois de abatidos. Situação:
+/// pendente, consolidado ou cancelado. O abate em frigorífico não é um abate, e sim uma venda: o
+/// animal sai como vendido.
 model SlaughterEvent {
   id            String    @id @default(uuid()) @db.Uuid
+  /// Título que identifica o abate.
   title         String
-  description   String?
-  scheduledAt   DateTime  @map("scheduled_at") @db.Timestamptz(3) // data e hora previstas no planejamento
-  slaughteredAt DateTime? @map("slaughtered_at") @db.Timestamptz(3) // data e hora em que o abate de fato ocorreu; informadas na consolidação
+  /// Finalidade ou outros detalhes do abate.
+  notes         String?
+  /// Data e hora previstas para o abate.
+  scheduledAt   DateTime  @map("scheduled_at") @db.Timestamptz(3)
+  /// Data e hora em que o abate de fato aconteceu, informadas na consolidação (vazio = não
+  /// consolidado).
+  slaughteredAt DateTime? @map("slaughtered_at") @db.Timestamptz(3)
+  /// Quando o abate foi consolidado (vazio = pendente). A partir daí, os animais saem do rebanho
+  /// como abatidos.
+  confirmedAt   DateTime? @map("confirmed_at") @db.Timestamptz(3)
+  /// Quando o abate foi cancelado (vazio = não cancelado).
+  cancelledAt   DateTime? @map("cancelled_at") @db.Timestamptz(3)
 
-  confirmedAt DateTime? @map("confirmed_at") @db.Timestamptz(3) // consolidado: aplica o status final nos animais
-  cancelledAt DateTime? @map("cancelled_at") @db.Timestamptz(3)
-
+  /// Propriedade do abate.
   propertyId String   @map("property_id") @db.Uuid
   property   Property @relation(fields: [propertyId], references: [id], onDelete: Restrict)
 
-  items SlaughterEventItem[]
-
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  items SlaughterEventItem[]
 
   @@index([propertyId])
   @@map("slaughter_event")
 }
 
+/// Animal de um abate.
 model SlaughterEventItem {
   id    Int     @id @default(autoincrement())
+  /// Observação sobre este animal no abate.
   notes String?
 
+  /// Abate de que o animal faz parte.
   eventId String         @map("event_id") @db.Uuid
   event   SlaughterEvent @relation(fields: [eventId], references: [id], onDelete: Restrict)
 
+  /// Animal abatido.
   animalId String @map("animal_id") @db.Uuid
   animal   Animal @relation(fields: [animalId], references: [id], onDelete: Restrict)
 
-  // Lote do animal no momento da consolidação
+  /// Lote de onde o animal saiu, gravado na consolidação (vazio = ainda pendente, ou o animal estava sem lote).
   originBatchId String? @map("origin_batch_id") @db.Uuid
   originBatch   Batch?  @relation("SlaughterEventItemOrigin", fields: [originBatchId], references: [id], onDelete: Restrict)
 
@@ -1254,83 +1359,140 @@ model SlaughterEventItem {
 
 // Enums
 
+/// Como a dose de cada animal é definida num procedimento sanitário.
+enum HealthManagementDoseType {
+  /// Procedimento sem dose (ex.: exame, banho, curativo).
+  NONE
+  /// Mesma dose para todos os animais.
+  FIXED
+  /// Dose proporcional ao peso vivo do animal.
+  PER_WEIGHT
+
+  @@map("health_management_dose_type")
+}
+
+/// Tipo de etapa de uma sessão de manejo. Cada tipo tem a sua tabela de etapa (ex.:
+/// WeighingManagement) e os seus registros por animal.
 enum ManagementStepType {
-  WEIGHING // pesagem
-  NEUTERING // castração
-  TAG // brinco
+  /// Pesagem.
+  WEIGHING
+  /// Castração.
+  NEUTERING
+  /// Colocação, troca ou retirada de brinco.
+  TAG
+  /// Colocação, troca ou retirada de RFID.
   RFID
-  BRAND // ferra
-  HEALTH // procedimento sanitário
-  BATCH // apartação
+  /// Marcação com marca de ferro.
+  BRAND
+  /// Procedimento sanitário; uma sessão pode ter vários.
+  HEALTH
+  /// Apartação: decide o lote de cada animal.
+  BATCH
 
   @@map("management_step_type")
 }
 
+/// Forma de preço de uma categoria de compra.
 enum PurchasePricingType {
+  /// Preço por cabeça, multiplicado pelos animais recebidos.
   PER_HEAD
+  /// Preço por arroba, sobre o peso faturado menos a quebra (arroba de 30 kg de peso vivo).
   PER_ARROBA
+  /// Valor fechado da categoria, rateado entre os animais recebidos.
   LUMP_SUM
 
   @@map("purchase_pricing_type")
 }
 
-// Rateio do valor fechado entre os animais recebidos.
+/// Como o valor fechado de uma categoria de compra é rateado entre os animais recebidos.
 enum PurchaseCostSplit {
-  EQUAL // valor ÷ recebidos
-  BY_WEIGHT // proporcional ao peso de entrada
+  /// Em partes iguais (valor ÷ animais recebidos).
+  EQUAL
+  /// Proporcional ao peso de entrada de cada animal.
+  BY_WEIGHT
 
   @@map("purchase_cost_split")
 }
 
+/// Sexo do animal.
 enum Sex {
-  MALE // Macho
-  FEMALE // Fêmea
+  /// Macho.
+  MALE
+  /// Fêmea.
+  FEMALE
 
   @@map("sex")
 }
 
+/// Como o animal entrou no rebanho. Não muda depois do cadastro.
 enum AnimalOrigin {
-  UNDEFINED // Indefinida
-  BIRTH // Nascimento
-  PURCHASE // Compra
-  DONATION // Doação
-  REFERENCE // Referência (o animal não existe na fazenda, serve apenas de referência para genealogia)
+  /// Origem não informada.
+  UNDEFINED
+  /// Nascido na fazenda.
+  BIRTH
+  /// Comprado.
+  PURCHASE
+  /// Recebido em doação.
+  DONATION
+  /// O animal não existe na fazenda: serve só de referência para a genealogia.
+  REFERENCE
 
   @@map("animal_origin")
 }
 
+/// Tipo de perda de um animal: morte ou desaparecimento.
 enum AnimalLossType {
+  /// Morte.
   DEAD
+  /// Desaparecimento.
   MISSING
 
   @@map("animal_loss_type")
 }
 
+/// Situação do animal no rebanho. Fora de ACTIVE, o animal saiu do rebanho, e o brinco e o RFID
+/// dele podem ser usados por outro animal.
 enum AnimalStatus {
-  ACTIVE // Ativo na propriedade
-  SOLD // Vendido (inclusive para abate em frigorífico)
-  DONATED // Doado
-  DEAD // Morto
-  MISSING // Desaparecido
-  SLAUGHTERED // Abatido na fazenda, para consumo da propriedade
-  REFERENCE // Referência (o animal não existe na fazenda, serve apenas de referência para genealogia)
+  /// No rebanho da propriedade atual.
+  ACTIVE
+  /// Vendido, inclusive para abate em frigorífico.
+  SOLD
+  /// Doado.
+  DONATED
+  /// Morto.
+  DEAD
+  /// Desaparecido.
+  MISSING
+  /// Abatido na fazenda, para consumo da propriedade.
+  SLAUGHTERED
+  /// O animal não existe na fazenda: serve só de referência para a genealogia.
+  REFERENCE
 
   @@map("animal_status")
 }
 
+/// Tipo de pessoa: física ou jurídica.
 enum PersonType {
-  INDIVIDUAL // Pessoa Física
-  COMPANY // Pessoa Jurídica
+  /// Pessoa física.
+  INDIVIDUAL
+  /// Pessoa jurídica.
+  COMPANY
 
   @@map("person_type")
 }
 
+/// Estado civil de uma pessoa física.
 enum MaritalStatus {
-  SINGLE // Solteiro
-  MARRIED // Casado
-  STABLE_UNION // União Estável
-  DIVORCED // Divorciado
-  WIDOWED // Viúvo
+  /// Solteiro.
+  SINGLE
+  /// Casado.
+  MARRIED
+  /// União estável.
+  STABLE_UNION
+  /// Divorciado.
+  DIVORCED
+  /// Viúvo.
+  WIDOWED
 
   @@map("marital_status")
 }

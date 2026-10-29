@@ -1360,7 +1360,7 @@ async function seedLossesAndSlaughters(ctx: Ctx, animals: SeededAnimal[]) {
       await prisma.slaughterEvent.create({
         data: {
           title: "Abate para consumo",
-          description: exit.notes,
+          notes: exit.notes,
           scheduledAt: ago(exit.daysAgo + 2),
           slaughteredAt: date,
           confirmedAt: date,
@@ -1374,7 +1374,7 @@ async function seedLossesAndSlaughters(ctx: Ctx, animals: SeededAnimal[]) {
       await prisma.lossEvent.create({
         data: {
           title: type === "DEAD" ? "Óbito" : "Desaparecimento",
-          description: exit.notes,
+          notes: exit.notes,
           occurredAt: date,
           confirmedAt: date,
           propertyId,
@@ -1402,6 +1402,8 @@ async function seedSessions(ctx: Ctx, animals: SeededAnimal[]) {
       const atOf = new Map(
         present.map((a, i) => [a.id, recordAt(sessionDate, i)]),
       );
+      // Animais com algum registro: os demais saem da sessão na consolidação.
+      const handled = new Set(weighed.map((a) => a.id));
 
       // Etapas na ordem em que foram feitas; gravadas no fim, com os ids dos sanitários.
       const steps: SessionStep[] = [{ type: "weighing" }];
@@ -1415,7 +1417,6 @@ async function seedSessions(ctx: Ctx, animals: SeededAnimal[]) {
           confirmedAt: recordAt(sessionDate, present.length + 15),
           title: `Pesagem mensal de ${sessionDate.toLocaleDateString("pt-BR", { month: "long" })}`,
           notes: "Pesagem mensal do rebanho",
-          participants: { create: present.map((a) => ({ animalId: a.id })) },
           weighingManagement: {
             create: {
               items: {
@@ -1437,6 +1438,7 @@ async function seedSessions(ctx: Ctx, animals: SeededAnimal[]) {
           data: { managementSessionId: session.id },
         });
         for (const a of present.filter((p) => !p.spec.skipRfid && !p.rfid)) {
+          handled.add(a.id);
           a.rfid = nextRfid();
           await prisma.animalRfidTagging.create({
             data: {
@@ -1451,17 +1453,17 @@ async function seedSessions(ctx: Ctx, animals: SeededAnimal[]) {
             data: { currentRfid: a.rfid },
           });
         }
+        const neutered = present.filter((p) => p.spec.neuteredDaysAgo === 72);
+        for (const a of neutered) handled.add(a.id);
         await prisma.neuteringManagement.create({
           data: {
             managementSessionId: session.id,
             items: {
-              create: present
-                .filter((p) => p.spec.neuteredDaysAgo === 72)
-                .map((p) => ({
-                  animalId: p.id,
-                  techniqueId: ctx.neuteringTechniques["Cirúrgica"],
-                  neuteredAt: atOf.get(p.id)!,
-                })),
+              create: neutered.map((p) => ({
+                animalId: p.id,
+                techniqueId: ctx.neuteringTechniques["Cirúrgica"],
+                neuteredAt: atOf.get(p.id)!,
+              })),
             },
           },
         });
@@ -1469,6 +1471,7 @@ async function seedSessions(ctx: Ctx, animals: SeededAnimal[]) {
 
       // Vacinação contra aftosa (dose fixa por animal); próxima dose no futuro.
       if (daysAgo === sessions[3]) {
+        for (const a of present) handled.add(a.id);
         const health = await prisma.healthManagement.create({
           data: {
             typeId: ctx.healthTypes["Vacinação"],
@@ -1540,6 +1543,16 @@ async function seedSessions(ctx: Ctx, animals: SeededAnimal[]) {
           ...row,
           managementSessionId: session.id,
         })),
+      });
+      // Participantes como ficam depois da consolidação: só os manejados, com a hora do registro.
+      await prisma.managementParticipant.createMany({
+        data: present
+          .filter((a) => handled.has(a.id))
+          .map((a) => ({
+            managementSessionId: session.id,
+            animalId: a.id,
+            lastHandledAt: atOf.get(a.id)!,
+          })),
       });
     }
   }
@@ -1855,6 +1868,10 @@ async function seedPurchases(ctx: Ctx, animals: SeededAnimal[]) {
               weighedAt: recordAt(start, i),
               notes: null,
             },
+          });
+          await prisma.managementParticipant.updateMany({
+            where: { managementSessionId: session.id, animalId: w.animalId },
+            data: { lastHandledAt: recordAt(start, i) },
           });
         }
         await prisma.managementStep.createMany({
