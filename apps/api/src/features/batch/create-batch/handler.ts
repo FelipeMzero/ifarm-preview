@@ -2,14 +2,12 @@ import type { BatchCreateData } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
 import { write } from "../../../lib/db-errors";
 import { assertAreaAvailable } from "../../area/availability.public";
-import { getOrAssignCurrentProperty } from "../../current-property/resolve.public";
 import { toTargetDate } from "../shared";
 
 // Cria o lote já numa área livre (o lote sempre ocupa uma área) e, se houver, a meta de venda.
-export async function createBatch(data: BatchCreateData, userId: string) {
+export async function createBatch(data: BatchCreateData) {
   const { name, notes, hasMeta, targetDate, targetWeight, areaId } = data;
-  const propertyId =
-    data.propertyId ?? (await getOrAssignCurrentProperty(userId))?.id ?? "";
+  const { propertyId } = data;
 
   await assertAreaAvailable(prisma, { areaId, propertyId, field: "areaId" });
 

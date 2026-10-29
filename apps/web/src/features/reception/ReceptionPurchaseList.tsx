@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useCurrentProperty } from "@/features/shell/useCurrentProperty";
+import { NoPropertySelected } from "@/features/shell/NoPropertySelected";
 import { ReceivedCount } from "@/features/purchase/display";
 import {
   type ReceptionFilter,
@@ -210,12 +211,15 @@ export function ReceptionPurchaseList() {
       search: debouncedSearch,
       filter,
     }),
-    enabled: !isPropertyLoading,
+    // Só com a propriedade: a API pede sempre o propertyId.
+    enabled: !!currentProperty,
     placeholderData: keepPreviousData,
   });
   const purchases: ReceptionPurchase[] = data?.data ?? [];
 
   const columns = buildColumns((id) => navigate(`/recepcoes/compras/${id}`));
+
+  if (!isPropertyLoading && !currentProperty) return <NoPropertySelected />;
 
   if (isPending) return <ListSkeleton columns={5} />;
 

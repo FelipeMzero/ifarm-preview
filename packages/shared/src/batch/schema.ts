@@ -64,7 +64,7 @@ export function requireBatchGoal(
 export const batchCreateSchema = batchFieldsSchema
   .extend({
     areaId: z.uuid("Área inválida"),
-    propertyId: z.uuid().optional(),
+    propertyId: z.uuid("Propriedade inválida."),
   })
   .superRefine(requireBatchGoal);
 
@@ -91,7 +91,7 @@ export type BatchReopenData = z.output<typeof batchReopenSchema>;
 
 // Filtros e paginação da listagem (parâmetros da URL: chegam como texto e são convertidos).
 export const batchQuerySchema = z.object({
-  propertyId: z.uuid().optional(),
+  propertyId: z.uuid("Propriedade inválida."),
   page: z.coerce.number().int().min(0).optional().default(0),
   pageSize: z.coerce.number().int().min(1).optional().default(10),
   search: z.string().trim().optional().default(""),

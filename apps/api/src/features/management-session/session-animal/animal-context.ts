@@ -52,6 +52,7 @@ export async function loadAnimalContext(db: Tx, id: string, animalId: string) {
   return {
     session: {
       id: session.id,
+      propertyId: session.propertyId,
       status: session.status,
       performedAt: toZonedIso(session.performedAt, timeZone),
     },

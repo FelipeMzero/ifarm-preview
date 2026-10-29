@@ -20,7 +20,6 @@ import { animalClient } from "@/lib/clients";
 import { type AnimalRow, toAnimalListParams } from "@ifarm/shared";
 import { animalKeys } from "@/features/animal/queries";
 import { batchListQuery } from "@/features/batch/queries";
-import { useCurrentProperty } from "@/features/shell/useCurrentProperty";
 import { AnimalIdentification, SEX_ICON } from "@/features/animal/display";
 import {
   blockingReason,
@@ -123,11 +122,10 @@ export function useAnimalPicker({
 
   // Quem usa o seletor passa a propriedade atual: até ela carregar, a busca traria animais e
   // lotes de todas as propriedades.
-  const { isLoading: isPropertyLoading } = useCurrentProperty();
 
   const { data: batches } = useQuery({
     ...batchListQuery({ propertyId, status: "active", pageSize: 100 }),
-    enabled: !isPropertyLoading,
+    enabled: !!propertyId,
   });
   const batchItems: SelectFieldItem[] =
     batches?.data.map((b) => ({ value: b.id, label: b.name })) ?? [];
@@ -166,7 +164,7 @@ export function useAnimalPicker({
       );
       return { ...result, unavailable };
     },
-    enabled: !isPropertyLoading,
+    enabled: !!propertyId,
     placeholderData: keepPreviousData,
   });
   const animals: AnimalRow[] = data?.data ?? [];

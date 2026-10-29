@@ -5,7 +5,6 @@ import {
 } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
 import { fromDbDate, toDbDate } from "../../../lib/db-dates";
-import { getOrAssignCurrentProperty } from "../../current-property/resolve.public";
 import { propertyTimeZone, toZonedIso } from "../../property/time-zone.public";
 import { birthDateBounds, type AgeRange } from "../rules";
 
@@ -23,7 +22,6 @@ function birthDateFilter(range: AgeRange, timeZone: string) {
 // Animais da propriedade informada ou, sem ela, da propriedade atual do usuário.
 export async function listAnimals(
   query: AnimalQuery,
-  userId: string,
 ): Promise<AnimalListResult> {
   const {
     page,
@@ -41,10 +39,7 @@ export async function listAnimals(
     origin,
   } = query;
 
-  const propertyId =
-    query.propertyId ?? (await getOrAssignCurrentProperty(userId))?.id;
-  if (!propertyId) return { data: [], total: 0, pageCount: 0 };
-
+  const { propertyId } = query;
   const timeZone = await propertyTimeZone(propertyId);
   const codeMatch = search.match(/^#?(\d{1,9})$/);
   const searchCode = codeMatch ? Number(codeMatch[1]) : null;

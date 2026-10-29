@@ -26,6 +26,7 @@ import { SelectField } from "@/components/our/SelectField";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useCurrentProperty } from "@/features/shell/useCurrentProperty";
+import { NoPropertySelected } from "@/features/shell/NoPropertySelected";
 import { batchTransferClient } from "@/lib/clients";
 import {
   type BatchTransferRow,
@@ -237,7 +238,8 @@ export function BatchTransferList() {
   // nova (keepPreviousData). Sem a propriedade atual, a busca traria as de todas.
   const { data, isPending, isPlaceholderData, refetch } = useQuery({
     ...batchTransferListQuery(params),
-    enabled: !isPropertyLoading,
+    // Só com a propriedade: a API pede sempre o propertyId.
+    enabled: !!currentProperty,
     placeholderData: keepPreviousData,
   });
   const transfers: BatchTransferRow[] = data?.data ?? [];
@@ -282,6 +284,8 @@ export function BatchTransferList() {
     onConfirm: (row) => setPendingAction({ type: "confirm", row }),
     onCancel: (row) => setPendingAction({ type: "cancel", row }),
   });
+
+  if (!isPropertyLoading && !currentProperty) return <NoPropertySelected />;
 
   if (isPending) {
     return <ListSkeleton columns={5} />;

@@ -4,7 +4,6 @@ import {
 } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
 import { assertNoConflicts } from "../../animal/commitments.public";
-import { getOrAssignCurrentProperty } from "../../current-property/resolve.public";
 import { propertyTimeZone } from "../../property/time-zone.public";
 import {
   invalidAnimals,
@@ -15,16 +14,8 @@ import {
 import { applyPlanSteps } from "../plan.public";
 
 // Planeja uma sessão: data prevista, etapas e animais participantes.
-export async function createManagementSession(
-  data: ManagementSessionData,
-  userId: string,
-) {
-  const propertyId =
-    data.propertyId ?? (await getOrAssignCurrentProperty(userId))?.id;
-  if (!propertyId) {
-    throw new StepError("Nenhuma propriedade selecionada.", 400);
-  }
-
+export async function createManagementSession(data: ManagementSessionData) {
+  const { propertyId } = data;
   if (!data.steps.length) {
     throw new StepError("Adicione ao menos um manejo.", 400, "steps");
   }

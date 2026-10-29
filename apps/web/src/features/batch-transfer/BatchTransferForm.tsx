@@ -42,7 +42,11 @@ import { BatchForm } from "@/features/batch/BatchForm";
 import { batchDetailQuery } from "@/features/batch/queries";
 import { useBatchOptions } from "@/features/batch/useBatchOptions";
 import { StockingNotice } from "@/features/area/StockingNotice";
-import { useCurrentProperty } from "@/features/shell/useCurrentProperty";
+import {
+  requirePropertyId,
+  useCurrentProperty,
+} from "@/features/shell/useCurrentProperty";
+import { NoPropertySelected } from "@/features/shell/NoPropertySelected";
 import {
   AnimalPickerFilters,
   AnimalPickerPagination,
@@ -121,7 +125,6 @@ export function BatchTransferForm({
     isLoading: isPropertyLoading,
     timeZone,
   } = useCurrentProperty();
-  const propertyId = currentProperty?.id;
 
   // Transferência em edição (só com id).
   const {
@@ -133,6 +136,8 @@ export function BatchTransferForm({
     ...batchTransferDetailQuery(id ?? ""),
     enabled: isEditing,
   });
+  // A propriedade da transferência: na edição, a dela (pode não ser a atual); no cadastro, a atual.
+  const propertyId = isEditing ? detail?.propertyId : currentProperty?.id;
   // Destino pré-definido (atalho do lote): o nome, para o campo exibir.
   const { data: presetBatch } = useQuery({
     ...batchDetailQuery(initialDestinationBatchId ?? ""),
@@ -281,7 +286,7 @@ export function BatchTransferForm({
     const payload = {
       ...data,
       animalIds: selected.map((a) => a.id),
-      propertyId,
+      propertyId: requirePropertyId(propertyId),
     };
 
     try {
@@ -352,6 +357,11 @@ export function BatchTransferForm({
   const dataHasError = Object.keys(errors).length > 0;
   const destinationName =
     batches.items.find((i) => i.value === destinationBatchId)?.label ?? null;
+
+  // Novo registro sem propriedade selecionada: a API pede sempre a propriedade.
+  if (!isEditing && !isPropertyLoading && !currentProperty) {
+    return <NoPropertySelected />;
+  }
 
   if (isEditing && isPending) {
     return <FormSkeleton />;

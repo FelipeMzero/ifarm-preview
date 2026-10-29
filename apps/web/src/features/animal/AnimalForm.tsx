@@ -1,3 +1,4 @@
+import { z } from "zod";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Controller, useForm, useWatch } from "react-hook-form";
@@ -13,7 +14,11 @@ import { BatchForm } from "@/features/batch/BatchForm";
 import { StockingNotice } from "@/features/area/StockingNotice";
 import { usePersonOptions } from "@/features/person/usePersonOptions";
 import { PersonForm } from "@/features/person/PersonForm";
-import { useCurrentProperty } from "@/features/shell/useCurrentProperty";
+import {
+  requirePropertyId,
+  useCurrentProperty,
+} from "@/features/shell/useCurrentProperty";
+import { NoPropertySelected } from "@/features/shell/NoPropertySelected";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -34,15 +39,17 @@ import { SelectField } from "@/components/our/SelectField";
 
 import { SearchCombobox } from "@/components/our/SearchCombobox";
 import { ArrowLeft, Loader2 } from "lucide-react";
-import {
-  animalCreateSchema,
-  type AnimalCreatePayload as AnimalFormData,
-} from "@ifarm/shared";
+import { animalCreateFieldsSchema, requirePurchaseData } from "@ifarm/shared";
 import { AnimalOrigin, Sex } from "@ifarm/shared";
 import { Separator } from "@/components/ui/separator";
 import { FormActionBar } from "@/components/our/FormActionBar";
 import { ANIMAL_ORIGIN_ITEMS, SEX_ITEMS } from "@ifarm/shared";
 import { animalKeys } from "./queries";
+
+// Os campos e as regras da API, sem a propriedade (vai no envio: a atual).
+const animalFormSchema =
+  animalCreateFieldsSchema.superRefine(requirePurchaseData);
+type AnimalFormData = z.input<typeof animalFormSchema>;
 
 type AnimalFormProps = {
   title?: string;
@@ -52,7 +59,8 @@ type AnimalFormProps = {
 
 export function AnimalForm({ title, onCancel, onSuccess }: AnimalFormProps) {
   const queryClient = useQueryClient();
-  const { property: currentProperty } = useCurrentProperty();
+  const { property: currentProperty, isLoading: isPropertyLoading } =
+    useCurrentProperty();
   const propertyId = currentProperty?.id;
 
   // Opções dos campos: raças e técnicas ativas, lotes vigentes da propriedade e vendedores.
@@ -73,7 +81,7 @@ export function AnimalForm({ title, onCancel, onSuccess }: AnimalFormProps) {
     formState: { isSubmitting },
   } = useForm<AnimalFormData>({
     // raw: valida com o schema da API e envia os valores do formulário (a API converte).
-    resolver: zodResolver(animalCreateSchema, undefined, { raw: true }),
+    resolver: zodResolver(animalFormSchema, undefined, { raw: true }),
     defaultValues: {
       currentTag: "",
       currentRfid: "",
@@ -104,7 +112,10 @@ export function AnimalForm({ title, onCancel, onSuccess }: AnimalFormProps) {
 
   const create = useMutation({
     mutationFn: (data: AnimalFormData) =>
-      animalClient.createAnimal({ ...data, propertyId }),
+      animalClient.createAnimal({
+        ...data,
+        propertyId: requirePropertyId(propertyId),
+      }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: animalKeys.all });
     },
@@ -119,6 +130,9 @@ export function AnimalForm({ title, onCancel, onSuccess }: AnimalFormProps) {
       applyServerErrors(setError, error);
     }
   }
+
+  // Sem propriedade selecionada: a API pede sempre a propriedade.
+  if (!isPropertyLoading && !currentProperty) return <NoPropertySelected />;
 
   return (
     <>

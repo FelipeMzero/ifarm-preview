@@ -2,7 +2,7 @@
 erDiagram
 
   "property" {
-    String owner_id "🗝️"
+    String id "🗝️"
     String name 
     Decimal total_area "❓"
     Decimal productive_area "❓"
@@ -23,12 +23,12 @@ erDiagram
   "area" {
     String id "🗝️"
     String name 
+    String notes "❓"
     Json polygon 
     Decimal hectares 
     Decimal stocking_rate 
     Int default_occupation_days "❓"
     Int default_rest_days "❓"
-    String notes "❓"
     DateTime closed_at "❓"
     String property_id 
     DateTime created_at 
@@ -41,9 +41,9 @@ erDiagram
     String name 
     String notes "❓"
     DateTime closed_at "❓"
+    String property_id 
     DateTime created_at 
     DateTime updated_at 
-    String property_id 
     }
   
 
@@ -59,35 +59,35 @@ erDiagram
 
   "batch_area_history" {
     Int id "🗝️"
+    String notes "❓"
     DateTime entered_at 
     DateTime exited_at "❓"
-    String notes "❓"
-    DateTime created_at 
-    DateTime updated_at 
     String batch_id 
     String area_id 
+    DateTime created_at 
+    DateTime updated_at 
     }
   
 
   "animal" {
-    String dam_id "🗝️"
+    String current_rfid "🗝️"
+    Sex sex 
+    DateTime birth_date "❓"
     Int code 
     String name "❓"
-    DateTime birth_date "❓"
     Boolean birth_date_estimated 
     AnimalOrigin origin 
-    Sex sex 
     AnimalStatus status 
-    DateTime created_at 
-    DateTime updated_at 
-    String breed_id "❓"
-    String current_batch_id "❓"
-    String current_property_id 
-    String current_brand_id "❓"
+    Boolean neutered 
     String current_tag "❓"
     String current_rfid "❓"
     Decimal current_weight "❓"
-    Boolean neutered 
+    String breed_id "❓"
+    String current_property_id 
+    String current_batch_id "❓"
+    String current_brand_id "❓"
+    DateTime created_at 
+    DateTime updated_at 
     }
   
 
@@ -543,8 +543,8 @@ erDiagram
     "batch_area_history" }o--|| batch : "batch"
     "batch_area_history" }o--|| area : "area"
     "animal" }o--|o breed : "breed"
-    "animal" }o--|o batch : "currentBatch"
     "animal" }o--|| property : "currentProperty"
+    "animal" }o--|o batch : "currentBatch"
     "animal" }o--|o brand : "currentBrand"
     "user_settings" |o--|| "User" : "user"
     "user_settings" }o--|o property : "currentProperty"

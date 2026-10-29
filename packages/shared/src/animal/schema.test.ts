@@ -4,7 +4,12 @@ import { animalCreateSchema, weighingCorrectionSchema } from "./schema";
 // Os formulários de animal validam com estes schemas: as regras abaixo valem igual na tela
 // e na API.
 
-const base = { sex: "MALE", origin: "BIRTH", batchId: "lote-1" } as const;
+const base = {
+  sex: "MALE",
+  origin: "BIRTH",
+  batchId: "lote-1",
+  propertyId: "44d64a49-6a31-4c81-ad90-20d44fb2bc8e",
+} as const;
 
 describe("animalCreateSchema", () => {
   it("aceita o formulário com campos vazios e converte para a API", () => {

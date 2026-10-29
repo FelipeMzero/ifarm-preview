@@ -6,8 +6,6 @@ import {
 import { prisma } from "@ifarm/db";
 import { toDbDate } from "../../../lib/db-dates";
 import { write } from "../../../lib/db-errors";
-import { BusinessError } from "../../../lib/errors";
-import { getOrAssignCurrentProperty } from "../../current-property/resolve.public";
 import { propertyTimeZone } from "../../property/time-zone.public";
 import {
   INVALID_TECHNIQUE_MESSAGE,
@@ -18,7 +16,7 @@ import { fieldError } from "../shared";
 // Cadastro avulso de um animal, com os registros iniciais (lote, propriedade, pesagem,
 // identificação, castração) na data de entrada. Origem compra gera uma compra avulsa já
 // consolidada.
-export async function createAnimal(data: AnimalCreateData, userId: string) {
+export async function createAnimal(data: AnimalCreateData) {
   if (
     data.neutered &&
     !(await isValidNeuteringTechnique(data.neuteringTechniqueId))
@@ -26,12 +24,7 @@ export async function createAnimal(data: AnimalCreateData, userId: string) {
     throw fieldError("neuteringTechniqueId", INVALID_TECHNIQUE_MESSAGE);
   }
 
-  const propertyId =
-    data.propertyId ?? (await getOrAssignCurrentProperty(userId))?.id ?? null;
-  if (!propertyId) {
-    throw new BusinessError("Nenhuma propriedade selecionada.", 400);
-  }
-
+  const { propertyId } = data;
   const batch = await prisma.batch.findFirst({
     where: { id: data.batchId, propertyId, closedAt: null },
     select: { id: true },

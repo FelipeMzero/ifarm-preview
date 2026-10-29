@@ -44,3 +44,12 @@ export function useCurrentProperty() {
     refresh,
   };
 }
+
+/**
+ * A propriedade de um envio à API (a API pede sempre o propertyId). As telas que dependem de
+ * propriedade já mostram NoPropertySelected quando não há nenhuma; isto só garante o tipo.
+ */
+export function requirePropertyId(propertyId: string | undefined): string {
+  if (!propertyId) throw new Error("Selecione uma propriedade no menu.");
+  return propertyId;
+}

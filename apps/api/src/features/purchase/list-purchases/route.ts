@@ -7,7 +7,7 @@ import { listPurchases } from "./handler";
 export const listPurchasesRoute = new Hono();
 
 listPurchasesRoute.get("/", async (c) => {
-  const { response, session } = await requireSession(RESOURCE_ACCESS.compras);
+  const { response } = await requireSession(RESOURCE_ACCESS.compras);
   if (response) return response;
 
   try {
@@ -19,7 +19,7 @@ listPurchasesRoute.get("/", async (c) => {
       return c.json({ message: "Parâmetros inválidos." }, 400);
     }
 
-    return c.json(await listPurchases(query.data, session.user.id));
+    return c.json(await listPurchases(query.data));
   } catch (error) {
     return errorResponse(error);
   }

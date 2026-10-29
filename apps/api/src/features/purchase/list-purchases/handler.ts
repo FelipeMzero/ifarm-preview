@@ -1,7 +1,6 @@
 import type { PurchaseListResult, PurchaseQuery } from "@ifarm/shared";
 import { prisma, type Prisma } from "@ifarm/db";
 import { fromDbDate } from "../../../lib/db-dates";
-import { getOrAssignCurrentProperty } from "../../current-property/resolve.public";
 import { categoryLabel } from "../reception.public";
 import { estimatedCategoryValue, sumIfAllKnown } from "../rules";
 import { PURCHASE_STATUS_WHERE, purchaseStatus } from "../status.public";
@@ -29,12 +28,8 @@ function buildWhere(query: PurchaseQuery, propertyId: string) {
 // Compras da propriedade informada ou, sem ela, da propriedade atual do usuário.
 export async function listPurchases(
   query: PurchaseQuery,
-  userId: string,
 ): Promise<PurchaseListResult> {
-  const propertyId =
-    query.propertyId ?? (await getOrAssignCurrentProperty(userId))?.id;
-  if (!propertyId) return { data: [], total: 0, pageCount: 0 };
-
+  const { propertyId } = query;
   const where = buildWhere(query, propertyId);
   const [events, total] = await Promise.all([
     prisma.purchaseEvent.findMany({

@@ -7,7 +7,7 @@ import { listManagementSessions } from "./handler";
 export const listManagementSessionsRoute = new Hono();
 
 listManagementSessionsRoute.get("/", async (c) => {
-  const { response, session } = await requireSession(RESOURCE_ACCESS.manejos);
+  const { response } = await requireSession(RESOURCE_ACCESS.manejos);
   if (response) return response;
 
   try {
@@ -19,7 +19,7 @@ listManagementSessionsRoute.get("/", async (c) => {
       return c.json({ message: "Parâmetros inválidos." }, 400);
     }
 
-    return c.json(await listManagementSessions(query.data, session.user.id));
+    return c.json(await listManagementSessions(query.data));
   } catch (error) {
     return errorResponse(error);
   }

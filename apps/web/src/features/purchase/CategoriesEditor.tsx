@@ -21,7 +21,7 @@ import {
   ReceivedCount,
   formatBRL,
 } from "./display";
-import type { PurchasePayload as PurchaseFormData } from "@ifarm/shared";
+import type { PurchaseFormData } from "./schema";
 import {
   type PurchaseCategory,
   type PurchaseCostSplit,

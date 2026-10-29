@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useCurrentProperty } from "@/features/shell/useCurrentProperty";
+import { NoPropertySelected } from "@/features/shell/NoPropertySelected";
 import { PurchaseStatusBadge, ReceivedCount, formatBRL } from "./display";
 import {
   type PurchaseRow,
@@ -218,12 +219,15 @@ export function PurchaseList() {
   // nova (keepPreviousData). Sem a propriedade atual, a busca traria as de todas.
   const { data, isPending, isPlaceholderData, refetch } = useQuery({
     ...purchaseListQuery(params),
-    enabled: !isPropertyLoading,
+    // Só com a propriedade: a API pede sempre o propertyId.
+    enabled: !!currentProperty,
     placeholderData: keepPreviousData,
   });
   const purchases: PurchaseRow[] = data?.data ?? [];
 
   const columns = buildColumns((id) => navigate(`/compras/${id}`));
+
+  if (!isPropertyLoading && !currentProperty) return <NoPropertySelected />;
 
   if (isPending) return <ListSkeleton columns={6} />;
 

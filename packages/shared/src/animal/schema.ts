@@ -39,101 +39,110 @@ const eventDateTime = z
   .optional()
   .transform((v) => v || undefined);
 
-export const animalCreateSchema = z
-  .object({
-    currentTag: z
-      .string()
-      .max(
-        FIELD_LIMITS.animal.earTag,
-        `Máximo de ${FIELD_LIMITS.animal.earTag} caracteres`,
-      )
-      .optional()
-      .transform((v) => v || null),
-    currentRfid: z
-      .string()
-      .max(
-        FIELD_LIMITS.animal.rfid,
-        `Máximo de ${FIELD_LIMITS.animal.rfid} caracteres`,
-      )
-      .optional()
-      .transform((v) => v || null),
-    name: z
-      .string()
-      .max(
-        FIELD_LIMITS.animal.name,
-        `Máximo de ${FIELD_LIMITS.animal.name} caracteres`,
-      )
-      .optional()
-      .transform((v) => v || null),
-    breedId: z
-      .string()
-      .optional()
-      .transform((v) => v || null),
+// Campos do cadastro de um animal, sem a propriedade (o formulário a completa no envio, com a
+// propriedade atual). A regra da compra (requirePurchaseData) vale para os dois schemas.
+export const animalCreateFieldsSchema = z.object({
+  currentTag: z
+    .string()
+    .max(
+      FIELD_LIMITS.animal.earTag,
+      `Máximo de ${FIELD_LIMITS.animal.earTag} caracteres`,
+    )
+    .optional()
+    .transform((v) => v || null),
+  currentRfid: z
+    .string()
+    .max(
+      FIELD_LIMITS.animal.rfid,
+      `Máximo de ${FIELD_LIMITS.animal.rfid} caracteres`,
+    )
+    .optional()
+    .transform((v) => v || null),
+  name: z
+    .string()
+    .max(
+      FIELD_LIMITS.animal.name,
+      `Máximo de ${FIELD_LIMITS.animal.name} caracteres`,
+    )
+    .optional()
+    .transform((v) => v || null),
+  breedId: z
+    .string()
+    .optional()
+    .transform((v) => v || null),
 
-    sex: z.enum(Sex, "Este campo não pode ser vazio"),
-    origin: z.enum(AnimalOrigin, "Este campo não pode ser vazio"),
+  sex: z.enum(Sex, "Este campo não pode ser vazio"),
+  origin: z.enum(AnimalOrigin, "Este campo não pode ser vazio"),
 
-    birthDate: optionalDate,
-    // Entrada na fazenda: data e hora (vazia = agora).
-    propertyEntryDate: optionalDateTime,
+  birthDate: optionalDate,
+  // Entrada na fazenda: data e hora (vazia = agora).
+  propertyEntryDate: optionalDateTime,
 
-    batchId: z.string().min(1, "Este campo não pode ser vazio"),
-    currentWeightKg: z
-      .string()
-      .optional()
-      .transform((v) => (v ? parseFloat(v) : null)),
+  batchId: z.string().min(1, "Este campo não pode ser vazio"),
+  currentWeightKg: z
+    .string()
+    .optional()
+    .transform((v) => (v ? parseFloat(v) : null)),
 
-    neutered: z.boolean().optional().default(false),
-    // Castração: data e hora (vazia = a da entrada).
-    neuteringDate: optionalDateTime,
-    neuteringTechniqueId: z
-      .string()
-      .optional()
-      .transform((v) => v || null),
+  neutered: z.boolean().optional().default(false),
+  // Castração: data e hora (vazia = a da entrada).
+  neuteringDate: optionalDateTime,
+  neuteringTechniqueId: z
+    .string()
+    .optional()
+    .transform((v) => v || null),
 
-    // Compra
-    sellerId: z
-      .string()
-      .optional()
-      .transform((v) => v || null),
-    purchasePrice: z
-      .string()
-      .optional()
-      .transform((v) => (v ? parseFloat(v) : null)),
-    purchaseNotes: z
-      .string()
-      .max(
-        FIELD_LIMITS.animal.purchaseNotes,
-        `Máximo de ${FIELD_LIMITS.animal.purchaseNotes} caracteres`,
-      )
-      .optional()
-      .transform((v) => v || null),
+  // Compra
+  sellerId: z
+    .string()
+    .optional()
+    .transform((v) => v || null),
+  purchasePrice: z
+    .string()
+    .optional()
+    .transform((v) => (v ? parseFloat(v) : null)),
+  purchaseNotes: z
+    .string()
+    .max(
+      FIELD_LIMITS.animal.purchaseNotes,
+      `Máximo de ${FIELD_LIMITS.animal.purchaseNotes} caracteres`,
+    )
+    .optional()
+    .transform((v) => v || null),
 
-    acquisitionDate: optionalDate,
+  acquisitionDate: optionalDate,
+});
 
-    propertyId: z
-      .string()
-      .optional()
-      .transform((v) => v || null),
-  })
-  .superRefine((data, ctx) => {
-    if (data.origin === "PURCHASE") {
-      if (!data.sellerId) {
-        ctx.addIssue({
-          code: "custom",
-          path: ["sellerId"],
-          message: "Este campo é obrigatório para compra.",
-        });
-      }
-      if (!data.purchasePrice) {
-        ctx.addIssue({
-          code: "custom",
-          path: ["purchasePrice"],
-          message: "Este campo é obrigatório para compra.",
-        });
-      }
+/** Compra: vendedor e valor obrigatórios. */
+export function requirePurchaseData(
+  data: {
+    origin: string;
+    sellerId: string | null;
+    purchasePrice: number | null;
+  },
+  ctx: z.RefinementCtx,
+) {
+  if (data.origin === "PURCHASE") {
+    if (!data.sellerId) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["sellerId"],
+        message: "Este campo é obrigatório para compra.",
+      });
     }
-  });
+    if (!data.purchasePrice) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["purchasePrice"],
+        message: "Este campo é obrigatório para compra.",
+      });
+    }
+  }
+}
+
+export const animalCreateSchema = animalCreateFieldsSchema
+  .extend({ propertyId: z.uuid("Propriedade inválida.") })
+  .superRefine(requirePurchaseData);
 
 export type AnimalCreateData = z.infer<typeof animalCreateSchema>;
 
@@ -349,7 +358,7 @@ export type IdentifierCorrectionPayload = z.input<
 
 // Filtros e paginação da listagem (parâmetros da URL: chegam como texto e são convertidos).
 export const animalQuerySchema = z.object({
-  propertyId: z.uuid().optional(),
+  propertyId: z.uuid("Propriedade inválida."),
   page: z.coerce.number().int().min(0).optional().default(0),
   pageSize: z.coerce.number().int().min(1).optional().default(10),
   search: z.string().trim().optional().default(""),
@@ -402,10 +411,12 @@ export type AnimalListParams = Partial<AnimalQuery>;
 export function toAnimalListParams(
   filters: Record<string, string | number | undefined>,
 ): AnimalListParams {
-  const parsed = animalQuerySchema.safeParse(filters);
+  // A propriedade pode faltar aqui (a tela ainda não a tem): quem pede a lista só consulta com ela.
+  const schema = animalQuerySchema.partial({ propertyId: true });
+  const parsed = schema.safeParse(filters);
   if (parsed.success) return parsed.data;
   const invalid = new Set(parsed.error.issues.map((i) => i.path[0]));
-  return animalQuerySchema.parse(
+  return schema.parse(
     Object.fromEntries(
       Object.entries(filters).filter(([k]) => !invalid.has(k)),
     ),

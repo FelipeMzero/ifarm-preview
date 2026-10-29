@@ -7,7 +7,7 @@ import { listAnimals } from "./handler";
 export const listAnimalsRoute = new Hono();
 
 listAnimalsRoute.get("/", async (c) => {
-  const { response, session } = await requireSession(RESOURCE_ACCESS.animais);
+  const { response } = await requireSession(RESOURCE_ACCESS.animais);
   if (response) return response;
 
   try {
@@ -19,7 +19,7 @@ listAnimalsRoute.get("/", async (c) => {
       return c.json({ message: "Parâmetros inválidos." }, 400);
     }
 
-    return c.json(await listAnimals(validation.data, session.user.id));
+    return c.json(await listAnimals(validation.data));
   } catch (error) {
     return errorResponse(error);
   }

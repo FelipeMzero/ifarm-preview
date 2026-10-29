@@ -7,7 +7,7 @@ import { listBatches } from "./handler";
 export const listBatchesRoute = new Hono();
 
 listBatchesRoute.get("/", async (c) => {
-  const { response, session } = await requireSession(RESOURCE_ACCESS.lotes);
+  const { response } = await requireSession(RESOURCE_ACCESS.lotes);
   if (response) return response;
 
   try {
@@ -17,7 +17,7 @@ listBatchesRoute.get("/", async (c) => {
       return c.json({ message: "Parâmetros inválidos." }, 400);
     }
 
-    return c.json(await listBatches(query.data, session.user.id));
+    return c.json(await listBatches(query.data));
   } catch (error) {
     return errorResponse(error);
   }

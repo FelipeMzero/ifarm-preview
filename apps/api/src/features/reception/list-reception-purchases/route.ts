@@ -8,7 +8,7 @@ export const listReceptionPurchasesRoute = new Hono();
 
 // Compras da propriedade vistas pela área de recepções (sem valores).
 listReceptionPurchasesRoute.get("/purchases", async (c) => {
-  const { response, session } = await requireSession(RESOURCE_ACCESS.recepcoes);
+  const { response } = await requireSession(RESOURCE_ACCESS.recepcoes);
   if (response) return response;
 
   try {
@@ -19,7 +19,7 @@ listReceptionPurchasesRoute.get("/purchases", async (c) => {
       return c.json({ message: "Parâmetros inválidos." }, 400);
     }
 
-    return c.json(await listReceptionPurchases(query.data, session.user.id));
+    return c.json(await listReceptionPurchases(query.data));
   } catch (error) {
     return errorResponse(error);
   }

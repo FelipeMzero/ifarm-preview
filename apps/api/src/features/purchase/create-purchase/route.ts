@@ -8,14 +8,14 @@ export const createPurchaseRoute = new Hono();
 
 // Registra a negociação (sem animais; eles são criados nas recepções).
 createPurchaseRoute.post("/", async (c) => {
-  const { response, session } = await requireSession(RESOURCE_ACCESS.compras);
+  const { response } = await requireSession(RESOURCE_ACCESS.compras);
   if (response) return response;
 
   try {
     const validation = purchaseSchema.safeParse(await c.req.json());
     if (!validation.success) return validationErrorResponse(validation.error);
 
-    const data = await createPurchase(validation.data, session.user.id);
+    const data = await createPurchase(validation.data);
     return c.json({ success: true, data }, 201);
   } catch (error) {
     return errorResponse(error);

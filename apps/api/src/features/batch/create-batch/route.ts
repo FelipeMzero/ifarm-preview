@@ -7,14 +7,14 @@ import { createBatch } from "./handler";
 export const createBatchRoute = new Hono();
 
 createBatchRoute.post("/", async (c) => {
-  const { response, session } = await requireSession(RESOURCE_ACCESS.lotes);
+  const { response } = await requireSession(RESOURCE_ACCESS.lotes);
   if (response) return response;
 
   try {
     const validation = batchCreateSchema.safeParse(await c.req.json());
     if (!validation.success) return validationErrorResponse(validation.error);
 
-    const data = await createBatch(validation.data, session.user.id);
+    const data = await createBatch(validation.data);
     return c.json({ success: true, data }, 201);
   } catch (error) {
     return errorResponse(error);

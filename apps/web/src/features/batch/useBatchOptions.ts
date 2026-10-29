@@ -30,7 +30,6 @@ export function useBatchOptions({
   const queryClient = useQueryClient();
   const current = useCurrentProperty();
   const property = propertyId ? { id: propertyId } : current.property;
-  const isPropertyLoading = !propertyId && current.isLoading;
 
   const [search, setSearch] = useState("");
   const debounce = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -52,8 +51,8 @@ export function useBatchOptions({
       search,
       pageSize: search ? 20 : 10,
     }),
-    // Sem a propriedade atual, a busca traria lotes de todas as propriedades.
-    enabled: enabled && !isPropertyLoading,
+    // Só com a propriedade: a API pede sempre o propertyId.
+    enabled: enabled && !!property,
     placeholderData: keepPreviousData,
   });
   const listed: SearchComboboxItem[] =

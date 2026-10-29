@@ -116,6 +116,8 @@ export type StepAnimalDetail = SessionAnimal & {
 export type SessionAnimalContext = {
   session: {
     id: string;
+    /** Propriedade da sessão: as opções da tela (lotes da apartação) são as dela. */
+    propertyId: string;
     status: ManagementSessionStatus;
     performedAt: string | null;
   };

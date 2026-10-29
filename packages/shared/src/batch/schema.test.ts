@@ -9,9 +9,15 @@ const fields = (r: {
   error?: { issues: { path: PropertyKey[] }[] };
 }) => r.error?.issues.map((i) => i.path[0]).sort() ?? [];
 
+const PROPERTY = "44d64a49-6a31-4c81-ad90-20d44fb2bc8e";
+
 describe("meta de venda (RN-LOTE-04)", () => {
   it("sem meta, data e peso são dispensados", () => {
-    const r = batchCreateSchema.safeParse({ name: "Engorda", areaId: AREA });
+    const r = batchCreateSchema.safeParse({
+      name: "Engorda",
+      areaId: AREA,
+      propertyId: PROPERTY,
+    });
     expect(r.success).toBe(true);
   });
 
@@ -23,7 +29,13 @@ describe("meta de venda (RN-LOTE-04)", () => {
       targetWeight: "",
     };
     expect(
-      fields(batchCreateSchema.safeParse({ ...meta, areaId: AREA })),
+      fields(
+        batchCreateSchema.safeParse({
+          ...meta,
+          areaId: AREA,
+          propertyId: PROPERTY,
+        }),
+      ),
     ).toEqual(["targetDate", "targetWeight"]);
     expect(fields(batchUpdateSchema.safeParse(meta))).toEqual([
       "targetDate",

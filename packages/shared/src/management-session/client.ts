@@ -39,7 +39,7 @@ export function createManagementSessionClient(request: ApiRequest) {
       );
     },
 
-    async getManagementOptions(propertyId?: string) {
+    async getManagementOptions(propertyId: string) {
       const response = await request(
         `${SESSIONS}/options?${toQueryString({ propertyId })}`,
       );

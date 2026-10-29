@@ -43,7 +43,11 @@ import {
   useSelectedPage,
 } from "@/features/batch-transfer/SelectedAnimals";
 import { type TransferAnimal } from "@ifarm/shared";
-import { useCurrentProperty } from "@/features/shell/useCurrentProperty";
+import {
+  requirePropertyId,
+  useCurrentProperty,
+} from "@/features/shell/useCurrentProperty";
+import { NoPropertySelected } from "@/features/shell/NoPropertySelected";
 import { SessionStatusBadge } from "./display";
 import { planFormSchema, toStepPayload, type PlanFormData } from "./schema";
 import { managementSessionClient } from "@/lib/clients";
@@ -109,7 +113,6 @@ export function ManagementSessionForm({
     isLoading: isPropertyLoading,
     timeZone,
   } = useCurrentProperty();
-  const propertyId = currentProperty?.id;
   const reloadSessions = useReloadSessions();
 
   // Sessão em edição (só com id) e as opções dos manejos (lotes, tipos sanitários…).
@@ -122,9 +125,11 @@ export function ManagementSessionForm({
     ...managementSessionDetailQuery(id ?? ""),
     enabled: isEditing,
   });
+  // A propriedade da sessão: na edição, a dela (pode não ser a atual); no cadastro, a atual.
+  const propertyId = isEditing ? detail?.property.id : currentProperty?.id;
   const { data: optionsData, isError: optionsFailed } = useQuery({
-    ...managementOptionsQuery(propertyId),
-    enabled: !isPropertyLoading,
+    ...managementOptionsQuery(propertyId ?? ""),
+    enabled: !!propertyId,
   });
   const options = optionsData ?? EMPTY_OPTIONS;
 
@@ -222,7 +227,7 @@ export function ManagementSessionForm({
       notes: data.notes,
       steps: data.steps.map(toStepPayload),
       animalIds: selected.map((a) => a.id),
-      propertyId,
+      propertyId: requirePropertyId(propertyId),
     };
 
     try {
@@ -271,6 +276,11 @@ export function ManagementSessionForm({
       return;
     }
     handleSubmit(onSubmit, onInvalid)(e);
+  }
+
+  // Novo registro sem propriedade selecionada: a API pede sempre a propriedade.
+  if (!isEditing && !isPropertyLoading && !currentProperty) {
+    return <NoPropertySelected />;
   }
 
   if (isEditing && isPending) return <FormSkeleton />;

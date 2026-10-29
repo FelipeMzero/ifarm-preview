@@ -15,7 +15,7 @@ export const managementSessionKeys = {
   detail: (id: string) => ["managementSessions", "detail", id] as const,
   animal: (sessionId: string, animalId: string) =>
     ["managementSessions", "animal", sessionId, animalId] as const,
-  options: (propertyId?: string) =>
+  options: (propertyId: string) =>
     ["managementSessions", "options", { propertyId }] as const,
 };
 
@@ -59,7 +59,7 @@ export const sessionAnimalQuery = (sessionId: string, animalId: string) =>
   });
 
 /** Opções para planejar manejos: lotes, tipos sanitários, técnicas e pessoas da propriedade. */
-export const managementOptionsQuery = (propertyId?: string) =>
+export const managementOptionsQuery = (propertyId: string) =>
   queryOptions({
     queryKey: managementSessionKeys.options(propertyId),
     queryFn: () => managementSessionClient.getManagementOptions(propertyId),

@@ -31,16 +31,17 @@ import { animalKeys } from "@/features/animal/queries";
 import { breedListQuery } from "@/features/breed/queries";
 import { usePersonOptions } from "@/features/person/usePersonOptions";
 import { SessionStatusBadge } from "@/features/management-session/display";
-import { useCurrentProperty } from "@/features/shell/useCurrentProperty";
+import {
+  requirePropertyId,
+  useCurrentProperty,
+} from "@/features/shell/useCurrentProperty";
+import { NoPropertySelected } from "@/features/shell/NoPropertySelected";
 import { Badge } from "@/components/ui/badge";
 import { CategoriesEditor } from "./CategoriesEditor";
 import { PaymentDialog } from "./PaymentDialog";
 import { PurchaseStatusBadge, ReceivedCount, formatBRL } from "./display";
-import {
-  purchaseSchema,
-  today,
-  type PurchasePayload as PurchaseFormData,
-} from "@ifarm/shared";
+import { today } from "@ifarm/shared";
+import { purchaseFormSchema, type PurchaseFormData } from "./schema";
 import { purchaseClient } from "@/lib/clients";
 import { applyServerErrors } from "@/lib/form-errors";
 import {
@@ -84,7 +85,8 @@ type Action = "pay" | "undoPay" | "consolidate" | "cancel";
 export function PurchaseForm({ id }: { id?: string }) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { property: currentProperty } = useCurrentProperty();
+  const { property: currentProperty, isLoading: isPropertyLoading } =
+    useCurrentProperty();
   const [action, setAction] = useState<Action | null>(null);
 
   // Compra em edição (só com id).
@@ -109,7 +111,7 @@ export function PurchaseForm({ id }: { id?: string }) {
   } = useForm<PurchaseFormData>({
     // raw: valida com o schema da API e envia os valores do formulário; a API converte
     // e descarta os campos que não são da forma de preço escolhida.
-    resolver: zodResolver(purchaseSchema, undefined, { raw: true }),
+    resolver: zodResolver(purchaseFormSchema, undefined, { raw: true }),
     // Dados da compra em edição. Se forem buscados de novo em segundo plano (ex.: depois de
     // pagar), só os campos que o usuário não alterou são atualizados (keepDirtyValues).
     values: detail && toFormValues(detail),
@@ -160,7 +162,13 @@ export function PurchaseForm({ id }: { id?: string }) {
   });
 
   async function onSubmit(data: PurchaseFormData) {
-    const payload = { ...data, propertyId: currentProperty?.id };
+    // Na edição, a propriedade da compra (a API usa a gravada); no cadastro, a atual.
+    const payload = {
+      ...data,
+      propertyId: requirePropertyId(
+        id ? detail?.destinationProperty.id : currentProperty?.id,
+      ),
+    };
     try {
       if (id) {
         await update.mutateAsync(payload);
@@ -207,6 +215,11 @@ export function PurchaseForm({ id }: { id?: string }) {
   function confirmAction() {
     if (id && action && action !== "pay") runAction.mutate(action);
     setAction(null);
+  }
+
+  // Novo registro sem propriedade selecionada: a API pede sempre a propriedade.
+  if (!id && !isPropertyLoading && !currentProperty) {
+    return <NoPropertySelected />;
   }
 
   if (id && isPending) return <FormSkeleton />;

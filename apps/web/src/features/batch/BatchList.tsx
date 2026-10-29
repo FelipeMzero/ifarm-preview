@@ -42,6 +42,7 @@ import {
 import { ConfirmDialog } from "@/components/our/ConfirmDialog";
 import { ErrorPage } from "@/components/our/ErrorPage";
 import { useCurrentProperty } from "@/features/shell/useCurrentProperty";
+import { NoPropertySelected } from "@/features/shell/NoPropertySelected";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import {
   AlertDialog,
@@ -258,7 +259,8 @@ export function BatchList() {
   // nova (keepPreviousData). Sem a propriedade atual, a busca traria lotes de todas.
   const { data, isPending, isPlaceholderData, refetch } = useQuery({
     ...batchListQuery(params),
-    enabled: !isPropertyLoading,
+    // Só com a propriedade: a API pede sempre o propertyId.
+    enabled: !!currentProperty,
     placeholderData: keepPreviousData,
   });
   const batches: BatchRow[] = data?.data ?? [];
@@ -300,6 +302,8 @@ export function BatchList() {
     requestClose,
     setReopeningBatch,
   );
+
+  if (!isPropertyLoading && !currentProperty) return <NoPropertySelected />;
 
   if (isPending) {
     return <ListSkeleton columns={5} />;

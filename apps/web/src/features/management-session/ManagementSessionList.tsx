@@ -21,6 +21,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useCurrentProperty } from "@/features/shell/useCurrentProperty";
+import { NoPropertySelected } from "@/features/shell/NoPropertySelected";
 import { SessionStatusBadge } from "./display";
 import { managementSessionClient } from "@/lib/clients";
 import {
@@ -283,7 +284,8 @@ export function ManagementSessionList() {
       search: debouncedSearch,
       status: STATUS_BY_FILTER[filter],
     }),
-    enabled: !isPropertyLoading,
+    // Só com a propriedade: a API pede sempre o propertyId.
+    enabled: !!currentProperty,
     placeholderData: keepPreviousData,
   });
   const sessions: ManagementSessionRow[] = data?.data ?? [];
@@ -321,6 +323,8 @@ export function ManagementSessionList() {
     onEdit: (id) => navigate(`/manejos/${id}`),
     onCancel: setCancelling,
   });
+
+  if (!isPropertyLoading && !currentProperty) return <NoPropertySelected />;
 
   if (isPending) return <ListSkeleton columns={6} />;
 

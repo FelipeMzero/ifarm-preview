@@ -23,7 +23,11 @@ import { ErrorPage } from "@/components/our/ErrorPage";
 import { FieldRow } from "@/components/our/FieldRow";
 import { FormActionBar } from "@/components/our/FormActionBar";
 import { SearchCombobox } from "@/components/our/SearchCombobox";
-import { useCurrentProperty } from "@/features/shell/useCurrentProperty";
+import {
+  requirePropertyId,
+  useCurrentProperty,
+} from "@/features/shell/useCurrentProperty";
+import { NoPropertySelected } from "@/features/shell/NoPropertySelected";
 import { z } from "zod";
 import { batchFieldsSchema, requireBatchGoal } from "@ifarm/shared";
 import type { BatchAreaChangeData } from "./BatchAreaChangeDialog";
@@ -125,7 +129,10 @@ export function BatchForm({ id, title, onCancel, onSuccess }: BatchFormProps) {
     queryClient.invalidateQueries({ queryKey: batchKeys.all });
   const create = useMutation({
     mutationFn: (data: BatchFormData) =>
-      batchClient.createBatch({ ...data, propertyId }),
+      batchClient.createBatch({
+        ...data,
+        propertyId: requirePropertyId(propertyId),
+      }),
     onSuccess: reloadBatches,
   });
   // A troca de área escolhida no diálogo vai junto com os dados do lote.
@@ -179,6 +186,11 @@ export function BatchForm({ id, title, onCancel, onSuccess }: BatchFormProps) {
 
   const currentAreaName = editingBatch?.currentArea?.name ?? null;
   const displayAreaName = pendingAreaName ?? currentAreaName;
+
+  // Novo registro sem propriedade selecionada: a API pede sempre a propriedade.
+  if (!isEditing && !isPropertyLoading && !currentProperty) {
+    return <NoPropertySelected />;
+  }
 
   if (isEditing && isPending) {
     return <FormSkeleton />;

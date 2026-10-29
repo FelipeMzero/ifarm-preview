@@ -7,7 +7,7 @@ import { listBatchTransfers } from "./handler";
 export const listBatchTransfersRoute = new Hono();
 
 listBatchTransfersRoute.get("/", async (c) => {
-  const { response, session } = await requireSession(RESOURCE_ACCESS.lotes);
+  const { response } = await requireSession(RESOURCE_ACCESS.lotes);
   if (response) return response;
 
   try {
@@ -19,7 +19,7 @@ listBatchTransfersRoute.get("/", async (c) => {
       return c.json({ message: "Parâmetros inválidos." }, 400);
     }
 
-    return c.json(await listBatchTransfers(query.data, session.user.id));
+    return c.json(await listBatchTransfers(query.data));
   } catch (error) {
     return errorResponse(error);
   }

@@ -1,16 +1,12 @@
 import type { PurchaseData } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
 import { toDbDate } from "../../../lib/db-dates";
-import { getOrAssignCurrentProperty } from "../../current-property/resolve.public";
 import { PurchaseError } from "../rules";
 
 // Registra a negociação: título, vendedor e as categorias negociadas (com preços). Nenhum animal
 // existe ainda; eles são criados nas recepções.
-export async function createPurchase(data: PurchaseData, userId: string) {
-  const propertyId =
-    data.propertyId ?? (await getOrAssignCurrentProperty(userId))?.id;
-  if (!propertyId) throw new PurchaseError("Nenhuma propriedade selecionada.");
-
+export async function createPurchase(data: PurchaseData) {
+  const { propertyId } = data;
   const seller = await prisma.person.findFirst({
     where: { id: data.sellerId, deactivatedAt: null },
     select: { id: true },

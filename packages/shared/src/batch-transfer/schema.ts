@@ -18,7 +18,7 @@ export const batchTransferSchema = z.object({
     .optional()
     .transform((v) => v || null),
   animalIds: z.array(z.uuid()).default([]),
-  propertyId: z.uuid().optional(),
+  propertyId: z.uuid("Propriedade inválida."),
 });
 
 export type BatchTransferPayload = z.input<typeof batchTransferSchema>;
@@ -26,7 +26,7 @@ export type BatchTransferData = z.output<typeof batchTransferSchema>;
 
 // Filtros e paginação da listagem (parâmetros da URL: chegam como texto e são convertidos).
 export const batchTransferQuerySchema = z.object({
-  propertyId: z.uuid().optional(),
+  propertyId: z.uuid("Propriedade inválida."),
   page: z.coerce.number().int().min(0).optional().default(0),
   pageSize: z.coerce.number().int().min(1).optional().default(10),
   search: z.string().trim().optional().default(""),

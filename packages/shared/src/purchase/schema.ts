@@ -110,7 +110,7 @@ export const purchaseSchema = z.object({
   categories: z
     .array(purchaseCategorySchema)
     .min(1, "Adicione ao menos uma categoria."),
-  propertyId: z.uuid().optional(),
+  propertyId: z.uuid("Propriedade inválida."),
 });
 
 // Pagamento: data informada (padrão: hoje) e referência opcional.
@@ -133,7 +133,7 @@ export type ReceptionDocumentsData = z.output<typeof receptionDocumentsSchema>;
 
 // Filtros e paginação da listagem (parâmetros da URL: chegam como texto e são convertidos).
 export const purchaseQuerySchema = z.object({
-  propertyId: z.uuid().optional(),
+  propertyId: z.uuid("Propriedade inválida."),
   page: z.coerce.number().int().min(0).optional().default(0),
   pageSize: z.coerce.number().int().min(1).optional().default(10),
   search: z.string().trim().optional().default(""),

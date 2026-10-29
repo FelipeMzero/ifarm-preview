@@ -23,7 +23,6 @@ import {
   NewValueMark,
   SEX_ICON,
 } from "@/features/animal/display";
-import { useCurrentProperty } from "@/features/shell/useCurrentProperty";
 import { ParticipantStatusBadge, STEP_ICONS } from "./display";
 import { managementSessionClient } from "@/lib/clients";
 import {
@@ -87,8 +86,6 @@ export function AnimalStepPage({
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { pathname } = useLocation();
-  const { property: currentProperty, isLoading: isPropertyLoading } =
-    useCurrentProperty();
   const [undoing, setUndoing] = useState(false);
   // Remonta a tela da etapa depois de desfazer, para limpar o formulário.
   const [version, setVersion] = useState(0);
@@ -106,9 +103,11 @@ export function AnimalStepPage({
     refetch,
   } = useQuery(sessionAnimalQuery(sessionId, animalId));
   // Sem as opções, só a apartação perde a lista de outros lotes.
+  // As opções são as da propriedade da sessão (pode não ser a atual do usuário).
+  const sessionPropertyId = context?.session.propertyId;
   const { data: optionsData } = useQuery({
-    ...managementOptionsQuery(currentProperty?.id),
-    enabled: !isPropertyLoading,
+    ...managementOptionsQuery(sessionPropertyId ?? ""),
+    enabled: !!sessionPropertyId,
   });
   const options = optionsData ?? EMPTY_OPTIONS;
 

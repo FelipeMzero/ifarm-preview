@@ -4,7 +4,6 @@ import {
   type BatchTransferQuery,
 } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
-import { getOrAssignCurrentProperty } from "../../current-property/resolve.public";
 import { propertyTimeZone, toZonedIso } from "../../property/time-zone.public";
 import { TRANSFER_STATUS_WHERE, transferStatus } from "../rules";
 
@@ -53,12 +52,8 @@ function originBatchNames(t: {
 // Transferências da propriedade informada ou, sem ela, da propriedade atual do usuário.
 export async function listBatchTransfers(
   query: BatchTransferQuery,
-  userId: string,
 ): Promise<BatchTransferListResult> {
-  const propertyId =
-    query.propertyId ?? (await getOrAssignCurrentProperty(userId))?.id;
-  if (!propertyId) return { data: [], total: 0, pageCount: 0 };
-
+  const { propertyId } = query;
   const where = buildWhere(query, propertyId);
   const [transfers, total, timeZone] = await Promise.all([
     prisma.animalBatchTransfer.findMany({

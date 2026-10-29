@@ -19,6 +19,8 @@ const viaUrl = (params: Record<string, string | number | undefined>) =>
       .map((pair) => pair.split("=").map(decodeURIComponent)),
   );
 
+const PROPERTY = "44d64a49-6a31-4c81-ad90-20d44fb2bc8e";
+
 describe("parâmetros de listagem: cliente → URL → servidor", () => {
   it("pessoas", () => {
     const params: PersonListParams = {
@@ -34,12 +36,20 @@ describe("parâmetros de listagem: cliente → URL → servidor", () => {
   });
 
   it("compras", () => {
-    const params: PurchaseListParams = { status: "all", search: "boi" };
+    const params: PurchaseListParams = {
+      propertyId: PROPERTY,
+      status: "all",
+      search: "boi",
+    };
     expect(purchaseQuerySchema.parse(viaUrl(params))).toMatchObject(params);
   });
 
   it("animais, com pesos numéricos", () => {
-    const params = toAnimalListParams({ minWeight: "300", sex: "FEMALE" });
+    const params = toAnimalListParams({
+      propertyId: PROPERTY,
+      minWeight: "300",
+      sex: "FEMALE",
+    });
     expect(animalQuerySchema.parse(viaUrl(params))).toMatchObject({
       minWeight: 300,
       sex: "FEMALE",

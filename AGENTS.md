@@ -135,8 +135,9 @@ Parâmetros com `c.req.param()` e `uuidParam("id")` no caminho; corpo com `c.req
 - Quando o formato do contrato difere do banco (ex.: o endereço vem junto, mas é outra tabela),
   a função que monta os dados termina com `satisfies Prisma.XCreateInput` (ex.:
   `toPropertyData`).
-- Registros da propriedade atual: `getOrAssignCurrentProperty`
-  (`current-property/resolve.public.ts`).
+- O `propertyId` vem sempre na requisição: é obrigatório nos filtros e nos cadastros de
+  registros de propriedade. A propriedade atual do usuário (`getOrAssignCurrentProperty`) é só a
+  preferência do web, informada pela rota `/api/user`; os handlers não a usam.
 
 **`rules.ts`**
 
@@ -167,6 +168,10 @@ Parâmetros com `c.req.param()` e `uuidParam("id")` no caminho; corpo com `c.req
   (fora da tabela = sem filtro), ou pelo schema do shared (como `toAnimalListParams`).
 - Mostre o que a API decide (situação, bloqueio, motivo); não recalcule regra na tela. Enums vêm
   de `@ifarm/shared`, nunca de `@ifarm/db/enums`.
+- Telas que dependem de propriedade: a consulta só roda com ela (`enabled: !!currentProperty`) e,
+  sem nenhuma selecionada, a tela mostra `NoPropertySelected`. No envio, a propriedade do
+  registro (na edição) ou a atual (no cadastro), com `requirePropertyId`. Os formulários
+  validam com o schema sem o `propertyId` (ex.: `.omit({ propertyId: true })`).
 - Gráficos com eixo de datas: `timeOf`, `timeDomain` e `timeTicks` (`lib/time-domain.ts`).
 
 ## 5. Datas e fusos horários

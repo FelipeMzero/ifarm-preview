@@ -133,9 +133,11 @@ export type FilterOptions = {
 // para os rótulos das etiquetas. Sem as opções (carregando ou com erro), o painel mostra só os
 // filtros fixos.
 export function useFilterOptions(propertyId?: string): FilterOptions {
-  const { data: batches } = useQuery(
-    batchListQuery({ propertyId, status: "active", pageSize: 100 }),
-  );
+  const { data: batches } = useQuery({
+    ...batchListQuery({ propertyId, status: "active", pageSize: 100 }),
+    // Só com a propriedade: a API pede sempre o propertyId.
+    enabled: !!propertyId,
+  });
   const { data: breeds } = useQuery(breedListQuery());
 
   return {

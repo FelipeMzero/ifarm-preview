@@ -1,23 +1,20 @@
 import type { AreaQuery, AreaRow } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
-import { getOrAssignCurrentProperty } from "../../current-property/resolve.public";
 import { propertyTimeZone, toZonedIso } from "../../property/time-zone.public";
 import { areaRotation, areaStatus } from "../rules";
 import { areasLastExit, areasOccupancy } from "../stocking.public";
 
 // Áreas da propriedade informada ou, sem ela, da propriedade atual do usuário; cada uma com a
 // ocupação de hoje e a última saída de lote.
-export async function listAreas(
-  { propertyId, status, search, availableOnly }: AreaQuery,
-  userId: string,
-): Promise<AreaRow[]> {
-  const resolvedPropertyId =
-    propertyId ?? (await getOrAssignCurrentProperty(userId))?.id;
-  if (!resolvedPropertyId) return [];
-
+export async function listAreas({
+  propertyId,
+  status,
+  search,
+  availableOnly,
+}: AreaQuery): Promise<AreaRow[]> {
   const areas = await prisma.area.findMany({
     where: {
-      propertyId: resolvedPropertyId,
+      propertyId: propertyId,
       ...(status === "active" ? { closedAt: null } : {}),
       ...(status === "inactive" ? { closedAt: { not: null } } : {}),
       ...(search
@@ -34,7 +31,7 @@ export async function listAreas(
     orderBy: { name: "asc" },
   });
 
-  const timeZone = await propertyTimeZone(resolvedPropertyId);
+  const timeZone = await propertyTimeZone(propertyId);
   const lastExit = await areasLastExit(
     areas.map((a) => a.id),
     timeZone,

@@ -38,7 +38,7 @@ export const managementSessionSchema = managementSessionFieldsSchema.extend({
   // sessão é recepção.
   steps: z.array(planStepSchema),
   animalIds: z.array(z.uuid()).default([]),
-  propertyId: z.uuid().optional(),
+  propertyId: z.uuid("Propriedade inválida."),
 });
 
 export type ManagementSessionPayload = z.input<typeof managementSessionSchema>;
@@ -86,7 +86,7 @@ export type ReceiveAnimalData = z.output<typeof receiveAnimalSchema>;
 
 // Filtros e paginação da listagem (parâmetros da URL: chegam como texto e são convertidos).
 export const managementSessionQuerySchema = z.object({
-  propertyId: z.uuid().optional(),
+  propertyId: z.uuid("Propriedade inválida."),
   page: z.coerce.number().int().min(0).optional().default(0),
   pageSize: z.coerce.number().int().min(1).optional().default(10),
   search: z.string().trim().optional().default(""),
@@ -104,3 +104,8 @@ export type ManagementSessionQuery = z.output<
 >;
 /** Parâmetros que o cliente passa para listar (todos opcionais). */
 export type ManagementSessionListParams = Partial<ManagementSessionQuery>;
+
+// Opções do planejamento e do registro (parâmetros da URL): as da propriedade da sessão.
+export const managementOptionsQuerySchema = z.object({
+  propertyId: z.uuid("Propriedade inválida."),
+});

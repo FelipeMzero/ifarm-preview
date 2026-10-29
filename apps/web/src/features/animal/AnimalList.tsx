@@ -60,6 +60,7 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { ANIMAL_ORIGIN_LABELS, ANIMAL_STATUS_LABELS } from "@ifarm/shared";
 import { ErrorPage } from "@/components/our/ErrorPage";
 import { useCurrentProperty } from "@/features/shell/useCurrentProperty";
+import { NoPropertySelected } from "@/features/shell/NoPropertySelected";
 import { ListSkeleton } from "@/components/our/PageSkeletons";
 import { useLocalStorageState } from "@/hooks/use-local-storage-state";
 import { animalKeys, animalListQuery } from "./queries";
@@ -253,7 +254,8 @@ export function AnimalList() {
   // nova (keepPreviousData). Sem a propriedade atual, a busca traria animais de todas.
   const { data, isPending, isPlaceholderData, refetch } = useQuery({
     ...animalListQuery(params),
-    enabled: !isPropertyLoading,
+    // Só com a propriedade: a API pede sempre o propertyId.
+    enabled: !!currentProperty,
     placeholderData: keepPreviousData,
   });
   const animals: AnimalRow[] = data?.data ?? [];
@@ -285,6 +287,8 @@ export function AnimalList() {
     setViewingDetailsId,
     setPendingDeleteId,
   );
+
+  if (!isPropertyLoading && !currentProperty) return <NoPropertySelected />;
 
   if (isPending) {
     return <ListSkeleton columns={6} />;

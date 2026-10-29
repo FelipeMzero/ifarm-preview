@@ -3,23 +3,21 @@ import type {
   ReceptionPurchaseQuery,
 } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
-import { getOrAssignCurrentProperty } from "../../current-property/resolve.public";
 import { isPending } from "../rules";
 import { receptionPurchaseInclude, toReceptionPurchase } from "../shared";
 
 // Compras da propriedade vistas pela área de recepções (sem valores).
-export async function listReceptionPurchases(
-  { propertyId, page, pageSize, search, filter }: ReceptionPurchaseQuery,
-  userId: string,
-): Promise<ReceptionPurchaseListResult> {
-  const resolvedPropertyId =
-    propertyId ?? (await getOrAssignCurrentProperty(userId))?.id;
-  if (!resolvedPropertyId) return { data: [], total: 0, pageCount: 0 };
-
+export async function listReceptionPurchases({
+  propertyId,
+  page,
+  pageSize,
+  search,
+  filter,
+}: ReceptionPurchaseQuery): Promise<ReceptionPurchaseListResult> {
   // "A receber" depende das contagens: filtra depois de montar (volume pequeno).
   const events = await prisma.purchaseEvent.findMany({
     where: {
-      destinationPropertyId: resolvedPropertyId,
+      destinationPropertyId: propertyId,
       cancelledAt: null,
       ...(search
         ? {

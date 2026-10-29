@@ -32,7 +32,8 @@ export function useAvailableAreaOptions({
 
   const { data, isPending } = useQuery({
     ...availableAreasQuery(search, propertyId),
-    enabled,
+    // Só com a propriedade: a API pede sempre o propertyId.
+    enabled: enabled && !!propertyId,
     placeholderData: keepPreviousData,
   });
   const items: SearchComboboxItem[] =

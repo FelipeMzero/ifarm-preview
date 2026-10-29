@@ -55,14 +55,7 @@ export type AreaData = z.output<typeof areaSchema>;
 
 // Filtros e paginação da listagem (parâmetros da URL: chegam como texto e são convertidos).
 export const areaQuerySchema = z.object({
-  propertyId: z.preprocess(
-    (v) =>
-      typeof v === "string" &&
-      (v.trim() === "" || v === "undefined" || v === "null")
-        ? undefined
-        : v,
-    z.uuid().optional(),
-  ),
+  propertyId: z.uuid("Propriedade inválida."),
   status: z.preprocess(
     (v) => (v === "" ? undefined : v),
     z.enum(["active", "inactive"]).optional().default("active"),

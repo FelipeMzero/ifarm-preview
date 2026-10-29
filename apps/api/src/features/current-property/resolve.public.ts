@@ -1,8 +1,8 @@
 import type { BrTimeZone, CurrentProperty } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
 
-// Propriedade atual do usuário: usada pelas listagens e cadastros de quase todos os domínios
-// (sem `propertyId`, valem os da propriedade atual).
+// Propriedade atual do usuário: a preferência que o web usa para escolher a propriedade das
+// telas (o seletor do menu). As listagens e os cadastros recebem sempre o `propertyId`.
 //
 // Se o usuário nunca teve uma propriedade selecionada, assume automaticamente a
 // propriedade ativa mais antiga cadastrada, sem exigir escolha manual no primeiro

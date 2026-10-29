@@ -5,7 +5,6 @@ import {
   type ManagementSessionQuery,
 } from "@ifarm/shared";
 import { prisma, type Prisma } from "@ifarm/db";
-import { getOrAssignCurrentProperty } from "../../current-property/resolve.public";
 import { propertyTimeZone, toZonedIso } from "../../property/time-zone.public";
 import { SESSION_STATUS_WHERE } from "../rules";
 import {
@@ -34,12 +33,8 @@ function buildWhere(query: ManagementSessionQuery, propertyId: string) {
 // Sessões da propriedade informada ou, sem ela, da propriedade atual do usuário.
 export async function listManagementSessions(
   query: ManagementSessionQuery,
-  userId: string,
 ): Promise<ManagementSessionListResult> {
-  const propertyId =
-    query.propertyId ?? (await getOrAssignCurrentProperty(userId))?.id;
-  if (!propertyId) return { data: [], total: 0, pageCount: 0 };
-
+  const { propertyId } = query;
   const where = buildWhere(query, propertyId);
 
   const [sessions, total, timeZone] = await Promise.all([

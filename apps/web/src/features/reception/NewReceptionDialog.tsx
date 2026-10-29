@@ -103,14 +103,13 @@ function ReceptionForm({
   onCancel: () => void;
   onCreated: (sessionId: string) => void;
 }) {
-  const { property: currentProperty, isLoading: isPropertyLoading } =
-    useCurrentProperty();
+  const { property: currentProperty } = useCurrentProperty();
   const reloadReception = useReloadReception();
 
   // Lotes de entrada e opções dos manejos. Sem a propriedade atual, viriam os de todas.
   const { data, isError } = useQuery({
-    ...managementOptionsQuery(currentProperty?.id),
-    enabled: !isPropertyLoading,
+    ...managementOptionsQuery(currentProperty?.id ?? ""),
+    enabled: !!currentProperty,
   });
   const options = data ?? EMPTY_OPTIONS;
 

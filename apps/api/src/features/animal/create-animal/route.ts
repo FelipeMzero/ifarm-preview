@@ -7,14 +7,14 @@ import { createAnimal } from "./handler";
 export const createAnimalRoute = new Hono();
 
 createAnimalRoute.post("/", async (c) => {
-  const { response, session } = await requireSession(RESOURCE_ACCESS.animais);
+  const { response } = await requireSession(RESOURCE_ACCESS.animais);
   if (response) return response;
 
   try {
     const validation = animalCreateSchema.safeParse(await c.req.json());
     if (!validation.success) return validationErrorResponse(validation.error);
 
-    const data = await createAnimal(validation.data, session.user.id);
+    const data = await createAnimal(validation.data);
     return c.json({ success: true, data }, 201);
   } catch (error) {
     return errorResponse(error);

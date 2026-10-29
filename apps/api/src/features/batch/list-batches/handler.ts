@@ -1,7 +1,6 @@
 import type { BatchListResult, BatchQuery } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
 import { fromDbDate } from "../../../lib/db-dates";
-import { getOrAssignCurrentProperty } from "../../current-property/resolve.public";
 import { propertyTimeZone, toZonedIso } from "../../property/time-zone.public";
 
 function buildWhere(query: BatchQuery, propertyId: string) {
@@ -23,12 +22,8 @@ function buildWhere(query: BatchQuery, propertyId: string) {
 // Lotes da propriedade informada ou, sem ela, da propriedade atual do usuário.
 export async function listBatches(
   query: BatchQuery,
-  userId: string,
 ): Promise<BatchListResult | { data: [] }> {
-  const propertyId =
-    query.propertyId ?? (await getOrAssignCurrentProperty(userId))?.id;
-  if (!propertyId) return { data: [] };
-
+  const { propertyId } = query;
   const where = buildWhere(query, propertyId);
   const timeZone = await propertyTimeZone(propertyId);
   const [batches, total] = await Promise.all([

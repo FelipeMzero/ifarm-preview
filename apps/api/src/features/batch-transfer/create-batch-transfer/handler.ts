@@ -1,22 +1,12 @@
 import { zonedDateTimeToInstant, type BatchTransferData } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
-import { BusinessError } from "../../../lib/errors";
 import { assertNoConflicts } from "../../animal/commitments.public";
 import { propertyTimeZone } from "../../property/time-zone.public";
-import { getOrAssignCurrentProperty } from "../../current-property/resolve.public";
 import { validateTransferPlan } from "../shared";
 
 // Planeja uma transferência (pendente) para a propriedade informada ou a atual do usuário.
-export async function createBatchTransfer(
-  data: BatchTransferData,
-  userId: string,
-) {
-  const propertyId =
-    data.propertyId ?? (await getOrAssignCurrentProperty(userId))?.id;
-  if (!propertyId) {
-    throw new BusinessError("Nenhuma propriedade selecionada.", 400);
-  }
-
+export async function createBatchTransfer(data: BatchTransferData) {
+  const { propertyId } = data;
   const animalIds = [...new Set(data.animalIds)];
   await validateTransferPlan({
     propertyId,

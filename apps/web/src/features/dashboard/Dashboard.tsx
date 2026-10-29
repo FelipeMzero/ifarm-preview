@@ -1,14 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
-import { Link } from "react-router";
 import { LandPlot, MapPin, Fence, User } from "lucide-react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorPage } from "@/components/our/ErrorPage";
 import { useCurrentProperty } from "@/features/shell/useCurrentProperty";
 import { currentPropertyDetailsQuery } from "@/features/shell/queries";
+import { NoPropertySelected } from "@/features/shell/NoPropertySelected";
 
 function DashboardSkeleton() {
   return (
@@ -21,11 +20,8 @@ function DashboardSkeleton() {
 }
 
 export function Dashboard() {
-  const {
-    property: currentProperty,
-    options: propertyOptions,
-    isLoading: isCurrentPropertyLoading,
-  } = useCurrentProperty();
+  const { property: currentProperty, isLoading: isCurrentPropertyLoading } =
+    useCurrentProperty();
   // Busca de novo sempre que a propriedade selecionada mudar (trocada no seletor do menu),
   // depois de saber qual é.
   const {
@@ -51,29 +47,7 @@ export function Dashboard() {
     );
   }
 
-  if (!property) {
-    if (propertyOptions.length === 0) {
-      return (
-        <div className="flex flex-col items-center justify-center gap-3 py-16 text-center text-muted-foreground">
-          <Fence className="size-8" />
-          <p>Nenhuma propriedade cadastrada ainda.</p>
-          <Button asChild size="sm">
-            <Link to="/propriedades/novo">Cadastrar propriedade</Link>
-          </Button>
-        </div>
-      );
-    }
-
-    return (
-      <div className="flex flex-col items-center justify-center gap-3 py-16 text-center text-muted-foreground">
-        <Fence className="size-8" />
-        <p>Nenhuma propriedade selecionada.</p>
-        <p className="text-sm">
-          Escolha uma propriedade no menu lateral para continuar.
-        </p>
-      </div>
-    );
-  }
+  if (!property) return <NoPropertySelected />;
 
   const location = [property.city, property.state].filter(Boolean).join("/");
 

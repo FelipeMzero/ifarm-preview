@@ -7,7 +7,7 @@ import { listAreas } from "./handler";
 export const listAreasRoute = new Hono();
 
 listAreasRoute.get("/", async (c) => {
-  const { session, response } = await requireSession(RESOURCE_ACCESS.areas);
+  const { response } = await requireSession(RESOURCE_ACCESS.areas);
   if (response) return response;
 
   try {
@@ -17,7 +17,7 @@ listAreasRoute.get("/", async (c) => {
     );
     if (!validation.success) return validationErrorResponse(validation.error);
 
-    const data = await listAreas(validation.data, session.user.id);
+    const data = await listAreas(validation.data);
     return c.json({ data });
   } catch (error) {
     return errorResponse(error);

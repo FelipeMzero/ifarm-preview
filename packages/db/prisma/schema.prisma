@@ -18,33 +18,45 @@ generator erd {
   ignoreEnums   = true
 }
 
+/// Propriedade (fazenda): a unidade de gestão do sistema. Cada uma tem as próprias áreas, lotes
+/// e animais, e as operações (manejos, compras, transferências) acontecem numa propriedade.
+/// Animais podem ser transferidos entre propriedades. Tem sempre um titular, uma localização e um
+/// fuso horário, que define a hora e o dia dos eventos dela.
 model Property {
   id             String    @id @default(uuid()) @db.Uuid
   name           String
-  totalArea      Decimal?  @map("total_area") @db.Decimal(10, 4) // Área Total (ha)
-  productiveArea Decimal?  @map("productive_area") @db.Decimal(10, 4) // Área Produtiva (ha)
-  car            String?   @unique // Cadastro Ambiental Rural
-  cib            String?   @unique // Cadastro Imobiliário Brasileiro
-  ccir           String?   @unique // Certificado de Cadastro de Imóvel Rural (INCRA)
+  /// Área total, em hectares.
+  totalArea      Decimal?  @map("total_area") @db.Decimal(10, 4)
+  /// Área produtiva, em hectares; não deve ser maior que a área total.
+  productiveArea Decimal?  @map("productive_area") @db.Decimal(10, 4)
+  /// Cadastro Ambiental Rural: registro que identifica uma propriedade.
+  car            String?   @unique
+  /// Cadastro Imobiliário Brasileiro: registro que identifica uma propriedade.
+  cib            String?   @unique
+  /// Certificado de Cadastro de Imóvel Rural, do INCRA: registro que identifica uma propriedade.
+  ccir           String?   @unique
   latitude       Float
   longitude      Float
-  timeZone       String    @default("America/Sao_Paulo") @map("time_zone") // Fuso horário IANA
+  /// Fuso horário dos eventos da propriedade usando identificador IANA (ex.: "America/Cuiaba").
+  timeZone       String    @default("America/Sao_Paulo") @map("time_zone")
+  /// Quando a propriedade foi desativada (vazio = ativa).
   deactivatedAt  DateTime? @map("deactivated_at") @db.Timestamptz(3)
 
+  /// Endereço da propriedade
   addressId Int?     @unique @map("address_id")
   address   Address? @relation(fields: [addressId], references: [id])
 
-  ownerId String @map("owner_id") @db.Uuid // Titular
+  /// Titular da propriedade
+  ownerId String @map("owner_id") @db.Uuid
   owner   Person @relation(fields: [ownerId], references: [id], onDelete: Restrict)
 
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
 
-  selectedByUserSettings UserSettings[]
-  areas                  Area[]
-  batches                Batch[]
-  animals                Animal[]
-
+  selectedByUserSettings  UserSettings[]
+  areas                   Area[]
+  batches                 Batch[]
+  animals                 Animal[]
   originatedTransfers     AnimalPropertyTransfer[] @relation("AnimalPropertyTransferOrigin")
   receivedTransfers       AnimalPropertyTransfer[] @relation("AnimalPropertyTransferDestination")
   batchTransfers          AnimalBatchTransfer[]
@@ -59,17 +71,26 @@ model Property {
   @@map("property")
 }
 
+/// Área de pastagem (piquete) de uma propriedade, com o contorno desenhado no mapa. É ocupada por
+/// no máximo um lote por vez, e o pastejo rotacionado acompanha os dias de ocupação e de descanso.
 model Area {
   id                    String    @id @default(uuid()) @db.Uuid
-  name                  String // Nome, ex: "Piquete 01"
-  polygon               Json // Contorno desenhado no mapa
-  hectares              Decimal   @db.Decimal(10, 4) // Área total (ha)
-  stockingRate          Decimal   @map("stocking_rate") @db.Decimal(10, 4) // Taxa de lotação (UA/ha)
-  defaultOccupationDays Int?      @map("default_occupation_days") // referência geral, usada quando não há plano ativo
-  defaultRestDays       Int?      @map("default_rest_days") // idem
-  notes                 String? // Observação
-  closedAt              DateTime? @map("closed_at") @db.Timestamptz(3) // No caso da Área e Fazenda acho que vai se tornar closedAt (fechar uma área não é o mesmo que desativar uma pessoa)
+  name                  String
+  notes                 String?
+  /// Contorno desenhado no mapa: lista de vértices [{ lat, lng }].
+  polygon               Json
+  /// Área em hectares. Pode divergir da área calculada pelo contorno, ex.: medição oficial.
+  hectares              Decimal   @db.Decimal(10, 4)
+  /// Taxa de lotação suportada, em UA/ha. Capacidade de suporte = hectares × taxa.
+  stockingRate          Decimal   @map("stocking_rate") @db.Decimal(10, 4)
+  /// Referência de dias que um lote costuma ficar na área (vazio = sem prazo de ocupação).
+  defaultOccupationDays Int?      @map("default_occupation_days")
+  /// Referência de dias sem animais para o pasto se recuperar (vazio = sem prazo de descanso).
+  defaultRestDays       Int?      @map("default_rest_days")
+  /// Quando a área foi retirada de uso (vazio = em uso). Área ocupada por um lote não pode ser retirada.
+  closedAt              DateTime? @map("closed_at") @db.Timestamptz(3)
 
+  /// Propriedade da área (não muda depois do cadastro).
   propertyId String   @map("property_id") @db.Uuid
   property   Property @relation(fields: [propertyId], references: [id], onDelete: Restrict)
 
@@ -82,23 +103,25 @@ model Area {
   @@map("area")
 }
 
+/// Lote: grupo de animais manejados juntos em uma propriedade. Enquanto vigente, ocupa uma área de
+/// pastagem por vez, que é a localização do lote inteiro, podendo ter uma meta de venda.
 model Batch {
   id       String         @id @default(uuid()) @db.Uuid
   name     String
   notes    String?
+  /// Meta de venda: data e peso médio a atingir; sem meta = sem registro (RN-LOTE-04).
   saleGoal BatchSaleGoal?
+  /// Quando o lote foi encerrado (vazio = vigente). Lote encerrado não ocupa área nem recebe animais.
   closedAt DateTime?      @map("closed_at") @db.Timestamptz(3)
+
+  /// Propriedade do lote (a área que o lote ocupa é sempre desta propriedade).
+  propertyId String   @map("property_id") @db.Uuid
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Restrict)
 
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
 
-  propertyId String   @map("property_id") @db.Uuid
-  property   Property @relation(fields: [propertyId], references: [id], onDelete: Restrict)
-
-  // Manejos
-  animals Animal[]
-
-  // Tramsferências e históricos
+  animals                      Animal[]
   batchAreaHistories           BatchAreaHistory[]
   animalBatchHistories         AnimalBatchHistory[]
   destinationAnimalTransfers   AnimalBatchTransfer[]       @relation("AnimalBatchTransferDestination")
@@ -114,12 +137,16 @@ model Batch {
   @@map("batch")
 }
 
+/// Meta de venda de um lote: a data para venda e o peso médio que os animais devem atingir até ela.
+/// Lote sem meta não tem registro aqui.
 model BatchSaleGoal {
   id           Int       @id @default(autoincrement())
+  /// Data em que se pretende vender o lote.
   targetDate   DateTime? @map("target_date") @db.Date
+  /// Peso médio (em kg) que os animais do lote devem atingir para a venda.
   targetWeight Decimal?  @map("target_weight") @db.Decimal(10, 2)
-  // targetValue    Decimal?  @db.Decimal(12, 2) @map("target_value")
 
+  /// Lote da meta (um lote tem no máximo uma meta).
   batchId String @unique @map("batch_id") @db.Uuid
   batch   Batch  @relation(fields: [batchId], references: [id], onDelete: Restrict)
 
@@ -129,20 +156,26 @@ model BatchSaleGoal {
   @@map("batch_sale_goal")
 }
 
+/// Passagem de um lote por uma área de pastagem: quando entrou e quando saiu. A passagem sem saída
+/// é a área atual do lote. Na troca de área, a saída da antiga e a entrada na nova têm a mesma data.
 model BatchAreaHistory {
   id        Int       @id @default(autoincrement())
-  enteredAt DateTime  @map("entered_at") @db.Timestamptz(3)
-  exitedAt  DateTime? @map("exited_at") @db.Timestamptz(3)
   notes     String?
+  /// Quando o lote entrou na área.
+  enteredAt DateTime  @map("entered_at") @db.Timestamptz(3)
+  /// Quando o lote saiu da área (vazio = o lote está nela agora).
+  exitedAt  DateTime? @map("exited_at") @db.Timestamptz(3)
 
-  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
-
+  /// Lote da passagem (um lote tem no máximo uma passagem sem saída, a área atual).
   batchId String @map("batch_id") @db.Uuid
   batch   Batch  @relation(fields: [batchId], references: [id], onDelete: Restrict)
 
+  /// Área ocupada pelo lote.
   areaId String @map("area_id") @db.Uuid
   area   Area   @relation(fields: [areaId], references: [id], onDelete: Restrict)
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   @@unique([batchId], where: { exitedAt: null })
   @@index([batchId, enteredAt])
@@ -150,21 +183,47 @@ model BatchAreaHistory {
   @@map("batch_area_history")
 }
 
+/// Animal (bovino) do rebanho, acompanhado individualmente ao longo da vida: identificação, lote,
+/// pesagens, castração e manejos. Pertence sempre a uma propriedade e a um
+/// lote dela enquanto está no rebanho. Os campos "current" são cópias do registro mais recente de cada histórico.
 model Animal {
   id                 String       @id @default(uuid()) @db.Uuid
-  code               Int          @unique @default(autoincrement())
-  name               String?
-  birthDate          DateTime?    @map("birth_date") @db.Date
-  birthDateEstimated Boolean      @default(false) @map("birth_date_estimated")
-  origin             AnimalOrigin @default(UNDEFINED)
   sex                Sex          @default(MALE)
+  birthDate          DateTime?    @map("birth_date") @db.Date
+  /// Número sequencial que identifica o animal no sistema (não muda).
+  code               Int          @unique @default(autoincrement())
+  /// Apelido pelo qual o animal é conhecido.
+  name               String?
+  /// Indica que a data de nascimento foi estimada (ex.: pela idade na compra), aparecendo como aproximada.
+  birthDateEstimated Boolean      @default(false) @map("birth_date_estimated")
+  /// Como o animal entrou no rebanho (não muda depois do cadastro).
+  origin             AnimalOrigin @default(UNDEFINED)
+  /// Situação no rebanho; só o animal ativo participa de manejos, trocas de lote e transferências.
   status             AnimalStatus @default(ACTIVE)
+  /// Indica se o animal é castrado (por castração registrada ou porque já chegou castrado).
+  neutered           Boolean      @default(false)
+  /// Brinco atual, copiado do registro mais recente de AnimalTagging (atualizado junto com ele) para o banco garantir brinco único entre os ativos da propriedade e melhorar o desempenho das buscas por brinco.
+  currentTag         String?      @map("current_tag")
+  /// RFID atual, copiado do registro mais recente de AnimalRfidTagging (atualizado junto com ele) para o banco garantir RFID único entre os ativos da propriedade e melhorar o desempenho das buscas por RFID.
+  currentRfid        String?      @map("current_rfid")
+  /// Peso atual (em kg), copiado da pesagem válida mais recente de AnimalWeighing (atualizado junto com ela) para melhorar o desempenho das buscas e dos cálculos por peso.
+  currentWeight      Decimal?     @map("current_weight") @db.Decimal(10, 2)
 
-  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
-
+  /// Raça do animal
   breedId String? @map("breed_id") @db.Uuid
   breed   Breed?  @relation(fields: [breedId], references: [id], onDelete: Restrict)
+
+  /// Propriedade atual, copiada da passagem sem saída de AnimalPropertyHistory (atualizada junto com ela) para o banco garantir brinco e RFID únicos entre os ativos da propriedade e melhorar o desempenho das buscas por propriedade.
+  currentPropertyId String   @map("current_property_id") @db.Uuid
+  currentProperty   Property @relation(fields: [currentPropertyId], references: [id], onDelete: Restrict)
+
+  /// Lote atual (vazio = fora do rebanho), copiado da passagem sem saída de AnimalBatchHistory (atualizado junto com ela) para melhorar o desempenho das buscas por lote.
+  currentBatchId String? @map("current_batch_id") @db.Uuid
+  currentBatch   Batch?  @relation(fields: [currentBatchId], references: [id], onDelete: Restrict)
+
+  /// Marca (ferro) atual, copiada do registro mais recente de AnimalBranding (atualizada junto com ele) para melhorar o desempenho das buscas por marca.
+  currentBrandId String? @map("current_brand_id") @db.Uuid
+  currentBrand   Brand?  @relation("AnimalCurrentBrand", fields: [currentBrandId], references: [id], onDelete: SetNull)
 
   // damId       String?  @db.Uuid @map("dam_id") //Matriz (mãe)
   // dam         Animal?  @relation("AnimalDam", fields: [damId], references: [id], onDelete: Restrict)
@@ -174,43 +233,23 @@ model Animal {
   // sire         Animal?  @relation("AnimalSire", fields: [sireId], references: [id], onDelete: Restrict)
   // sireProgeny  Animal[] @relation("AnimalSire")
 
-  // desnormalizado/sincronizado para lote
-  currentBatchId String? @map("current_batch_id") @db.Uuid
-  currentBatch   Batch?  @relation(fields: [currentBatchId], references: [id], onDelete: Restrict)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
 
-  // desnormalizado/sincronizado para propriedade
-  currentPropertyId String   @map("current_property_id") @db.Uuid // Campo desnormalizado, pois há constraints que dependem dele, os históricos são apenas registros
-  currentProperty   Property @relation(fields: [currentPropertyId], references: [id], onDelete: Restrict)
-
-  // desnormalizado/sincronizado para marcação (ferra)
-  currentBrandId String? @map("current_brand_id") @db.Uuid
-  currentBrand   Brand?  @relation("AnimalCurrentBrand", fields: [currentBrandId], references: [id], onDelete: SetNull)
-
-  // desnormalizado/sincronizado
-  currentTag    String?  @map("current_tag") // Campo desnormalizado, pois há constraints que dependem dele, os históricos são apenas registros
-  currentRfid   String?  @map("current_rfid") // Campo desnormalizado, pois há constraints que dependem dele, os históricos são apenas registros
-  currentWeight Decimal? @map("current_weight") @db.Decimal(10, 2) // peso atual (kg)
-  neutered      Boolean  @default(false) // Indica se está castrado ou não
-
-  // Manejos
-  animalNeuterings       AnimalNeutering[]
-  animalWeighings        AnimalWeighing[]
-  animalTaggings         AnimalTagging[]
-  animalRfidTaggings     AnimalRfidTagging[]
-  animalBrandings        AnimalBranding[]
-  healthManagementItems  HealthManagementItem[]
-  managementParticipants ManagementParticipant[]
-
-  // Transferências e históricos
+  animalNeuterings        AnimalNeutering[]
+  animalWeighings         AnimalWeighing[]
+  animalTaggings          AnimalTagging[]
+  animalRfidTaggings      AnimalRfidTagging[]
+  animalBrandings         AnimalBranding[]
+  healthManagementItems   HealthManagementItem[]
+  managementParticipants  ManagementParticipant[]
   propertyTransferItems   AnimalPropertyTransferItem[]
   batchTransferItems      AnimalBatchTransferItem[]
   animalPropertyHistories AnimalPropertyHistory[]
   animalBatchHistories    AnimalBatchHistory[]
-
-  // Compras
-  purchasedAnimals    PurchasedAnimal[]
-  lossEventItems      LossEventItem[]
-  slaughterEventItems SlaughterEventItem[]
+  purchasedAnimals        PurchasedAnimal[]
+  lossEventItems          LossEventItem[]
+  slaughterEventItems     SlaughterEventItem[]
 
   @@unique([currentPropertyId, currentTag], where: { status: "ACTIVE", currentTag: { not: null } })
   @@unique([currentPropertyId, currentRfid], where: { status: "ACTIVE", currentRfid: { not: null } })
@@ -223,12 +262,16 @@ model Animal {
   @@map("animal")
 }
 
+/// Preferências de cada usuário do sistema. Hoje guarda só a propriedade atual: a que o seletor do
+/// menu mostra ao abrir o sistema, em qualquer aparelho.
 model UserSettings {
+  /// Usuário das preferências (uma linha por usuário, criada no primeiro acesso).
   userId String @id @map("user_id")
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  /// Propriedade atual do usuário (vazio = nenhuma selecionada; o usuário escolhe na tela).
   currentPropertyId String?   @map("current_property_id") @db.Uuid
-  currentProperty   Property? @relation(fields: [currentPropertyId], references: [id], onDelete: Cascade)
+  currentProperty   Property? @relation(fields: [currentPropertyId], references: [id], onDelete: SetNull)
 
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
