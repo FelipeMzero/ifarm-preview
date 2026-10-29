@@ -1,6 +1,6 @@
 # Arquitetura
 
-O projeto segue uma arquitetura em três camadas físicas (_three-tier architecture_): os clientes (web e mobile) na apresentação, a API na aplicação e o PostgreSQL nos dados. A API concentra as regras de negócio e o acesso aos dados; a plataforma web e o aplicativo móvel só exibem e enviam dados, falando com a API por um contrato compartilhado.
+A arquitetura do sistema segue o modelo em três camadas físicas (_three-tier architecture_): os clientes (web e mobile) na apresentação, a API na aplicação e o PostgreSQL nos dados. A API concentra as regras de negócio e o acesso aos dados; a plataforma web e o aplicativo móvel só exibem e enviam dados, falando com a API por um contrato compartilhado.
 
 ```mermaid
 flowchart LR
@@ -70,9 +70,7 @@ API.
 
 ## API (`apps/api`)
 
-A API é organizada em **fatias verticais** (Vertical Slice Architecture): cada operação do
-sistema tem a própria pasta, que reúne tudo de que ela precisa. As fatias são agrupadas por
-domínio (pessoas, áreas, lotes, animais, compras, sessões de manejo...).
+A arquitetura da API segue o modelo de fatias verticais (_Vertical Slice Architecture_): cada operação do sistema tem a própria pasta, que reúne tudo de que ela precisa. As fatias são agrupadas por domínio (pessoas, áreas, lotes, animais, compras, sessões de manejo...).
 
 ```
 src/features/
@@ -84,7 +82,7 @@ src/features/
     rules.ts        decisões de negócio puras
     shared.ts       código comum às fatias do domínio
     <assunto>.ts    módulos internos com nome próprio
-    *.public.ts     o que outros domínios podem usar
+    *.public.ts     recursos do domínio que outros domínios podem usar
 ```
 
 ### Dentro de uma fatia
