@@ -13,6 +13,7 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,
   DialogContent,
@@ -147,10 +148,7 @@ function IdentifierChangePanel({
         intent={{ kind: "record", type: kind }}
       />
 
-      <form
-        onSubmit={handleSubmit}
-        className="grid gap-2 sm:grid-cols-[1fr_1.4fr_auto]"
-      >
+      <form onSubmit={handleSubmit} className="grid gap-2">
         <Input
           aria-label={`Novo ${label.toLowerCase()}`}
           placeholder={`Novo ${label.toLowerCase()}`}
@@ -164,13 +162,15 @@ function IdentifierChangePanel({
             setError(null);
           }}
         />
-        <Input
+        <Textarea
           aria-label="Observação da troca"
           placeholder="Observação (ex.: perdeu o anterior)"
+          className="resize-none"
+          rows={2}
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
         />
-        <Button type="submit" disabled={saving}>
+        <Button type="submit" disabled={saving} className="sm:justify-self-end">
           {saving ? (
             <Loader2 className="size-4 animate-spin" />
           ) : (

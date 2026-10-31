@@ -13,6 +13,7 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,
   DialogContent,
@@ -198,10 +199,7 @@ function NeuteringRegisterPanel({
         intent={{ kind: "record", type: "neutering" }}
       />
 
-      <form
-        onSubmit={handleSubmit}
-        className="grid gap-2 sm:grid-cols-[10rem_9rem_1fr_auto]"
-      >
+      <form onSubmit={handleSubmit} className="grid gap-2 sm:grid-cols-2">
         <Input
           aria-label="Data da castração"
           type="datetime-local"
@@ -226,8 +224,10 @@ function NeuteringRegisterPanel({
           }}
           className="w-full min-w-0"
         />
-        <Input
+        <Textarea
           aria-label={neutered ? "Motivo da recastração" : "Observação"}
+          className="resize-none sm:col-span-2"
+          rows={2}
           placeholder={
             neutered ? "Motivo da recastração (obrigatório)" : "Observação"
           }
@@ -238,7 +238,11 @@ function NeuteringRegisterPanel({
             setErrors({});
           }}
         />
-        <Button type="submit" disabled={saving || !date}>
+        <Button
+          type="submit"
+          disabled={saving || !date}
+          className="sm:col-span-2 sm:justify-self-end"
+        >
           {saving ? (
             <Loader2 className="size-4 animate-spin" />
           ) : (

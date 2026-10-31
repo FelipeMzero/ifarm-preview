@@ -12,6 +12,7 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,
   DialogContent,
@@ -134,7 +135,7 @@ function WeighingRegisterPanel({
 
       <form
         onSubmit={handleSubmit}
-        className="grid gap-2 sm:grid-cols-[8rem_10rem_1fr_auto]"
+        className="grid gap-2 sm:grid-cols-[8rem_1fr]"
       >
         <Input
           aria-label="Peso (kg)"
@@ -163,13 +164,19 @@ function WeighingRegisterPanel({
             setErrors({});
           }}
         />
-        <Input
+        <Textarea
           aria-label="Observação da pesagem"
           placeholder="Observação"
+          className="resize-none sm:col-span-2"
+          rows={2}
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
         />
-        <Button type="submit" disabled={saving}>
+        <Button
+          type="submit"
+          disabled={saving}
+          className="sm:col-span-2 sm:justify-self-end"
+        >
           {saving ? (
             <Loader2 className="size-4 animate-spin" />
           ) : (
