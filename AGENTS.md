@@ -176,25 +176,8 @@ Parâmetros com `c.req.param()` e `uuidParam("id")` no caminho; corpo com `c.req
 
 ## 5. Datas e fusos horários
 
-Cada propriedade tem o seu fuso (`Property.timeZone`). O banco guarda as datas e horas como
-instantes (`timestamptz`, em UTC) e as datas civis como o dia (`@db.Date`).
-
-| Tipo                                                                                                                              | Entrada (cliente → API)                                                                                     | Saída (API → cliente)                                                       |
-| --------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
-| Data civil (nascimento, pagamento)                                                                                                | `"AAAA-MM-DD"` (`dateField`); no banco com `toDbDate`                                                       | `fromDbDate` → `"AAAA-MM-DD"`                                               |
-| Data e hora de um registro de propriedade (manejos, pesagens, transferências; e o `createdAt`, `confirmedAt`... desses registros) | `"AAAA-MM-DDTHH:mm"` (`dateTimeField`), convertido com `zonedDateTimeToInstant(valor, fuso da propriedade)` | `toZonedIso(instante, fuso)`: ISO com o deslocamento (`"…T08:00:00-04:00"`) |
-| Instante de registro sem propriedade (usuários, pessoas, cadastros gerais)                                                        | —                                                                                                           | `toISOString()` (`"…Z"`)                                                    |
-
-- O fuso vem sempre do banco, pela propriedade do registro (`propertyTimeZone`,
-  `property/time-zone.public.ts`); nunca do cliente. Eventos do animal usam o fuso da propriedade
-  onde ele estava no instante (`animalStays`, `timeZoneAt`).
-- Regras que dependem do dia usam o fuso da propriedade: `dayInZone`, `todayInZone`.
-- Na tela, mostre com `formatDay` / `formatDateTime` e preencha campos com `toDateTimeInput`
-  (todos do shared): o valor com deslocamento aparece como veio; o valor em `Z`, no fuso de quem
-  vê. Nunca crie `Date` para mostrar um dia.
-- O "agora" e o "hoje" sugeridos nos campos (`nowInZone`, `todayInZone`) usam o fuso da
-  propriedade **do registro** (o detalhe traz `property.timeZone`); ao criar um registro, o da
-  propriedade atual (`useCurrentProperty`).
+Ao escrever código que lê, grava ou mostra datas, siga o guia
+[`docs/guides/datas-e-fusos.md`](docs/guides/datas-e-fusos.md).
 
 ## 6. Shared ou servidor?
 
@@ -211,22 +194,7 @@ servidor, mova-a nesse momento (funções puras: só os imports mudam).
 
 ## 7. Tipo novo de etapa de manejo
 
-1. **Banco** (pela equipe): valor no enum `ManagementStepType` e a tabela contêiner da etapa
-   (modelo: `WeighingManagement`).
-2. **Shared**: o tipo em `management-session/steps.ts` (`STEP_TYPES`, `STEP_TYPE_LABELS` e,
-   se repetível, `REPEATABLE_STEP_TYPES`); o schema de planejamento em `plan-steps.ts`
-   (incluído na união `planStepSchema`); o schema de registro em `step-payloads.ts`.
-3. **API**: `apps/api/src/features/management-session/steps/<tipo>.ts` com `defineStep`, usando
-   os schemas do shared (`planSchema` e `payloadSchema`), registrado em `STEP_MODULES`
-   (`steps/index.ts`). O que depende do banco fica no `prepare` / `save`; o `save` grava a data do
-   registro com o `at` que recebe (a hora em que foi feito, não a da sessão). Se o registro
-   aparece no histórico do animal, crie o filtro em `management-session/effective.public.ts`.
-4. **Compromissos**: decida se a etapa é exclusiva entre sessões abertas (`isExclusiveStep`,
-   em `shared/animal/commitments.ts`).
-5. **UI**: a tela em `features/management-session/steps/<tipo>/` (com o schema de registro do
-   shared), o registro em `CLIENT_STEP_MODULES` (`steps/registry.ts`) e o ícone em
-   `STEP_ICONS` (`display.tsx`); no planejamento, o campo em `planStepFormSchema` e no
-   `toStepPayload` (tipado com o contrato).
+Siga o guia [`docs/guides/nova-etapa-de-manejo.md`](docs/guides/nova-etapa-de-manejo.md).
 
 ## 8. Antes de concluir
 

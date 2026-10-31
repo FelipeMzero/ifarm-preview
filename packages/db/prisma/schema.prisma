@@ -1194,7 +1194,7 @@ model PurchaseCategory {
   @@map("purchase_category")
 }
 
-/// Chegada de uma carga de animais de uma compra (uma por viagem). É uma sessão de manejo: os
+/// Chegada de uma carga de animais de uma compra (uma por viagem). Usa uma sessão de manejo: os
 /// animais são cadastrados ao serem recebidos nela e recebem os primeiros manejos; a situação da
 /// recepção é a da sessão.
 model PurchaseReception {

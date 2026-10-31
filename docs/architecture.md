@@ -35,7 +35,7 @@ O monorepo do projeto está organizado como abaixo:
 | Pacote            | Papel                                                      |
 | ----------------- | ---------------------------------------------------------- |
 | `apps/api`        | API HTTP/JSON (Hono): regras de negócio e acesso aos dados |
-| `apps/web`        | plataforma web (React)                                     |
+| `apps/web`        | plataforma web (SPA em React e Vite)                       |
 | `apps/mobile`     | aplicativo móvel (Expo / React Native)                     |
 | `packages/shared` | contrato entre os clientes e a API                         |
 | `packages/db`     | modelo de dados (Prisma) e acesso ao PostgreSQL            |
@@ -46,8 +46,8 @@ A plataforma web e o aplicativo móvel são clientes da mesma API. Eles não con
 decisão: exibem o que a API decide (situações, bloqueios, motivos) e, no máximo, antecipam
 validações para orientar o usuário antes do envio.
 
-No web, cada domínio tem as suas telas em `src/features/<domínio>`; as páginas (`src/pages`) só
-montam essas telas.
+O web é uma SPA em React e Vite, e as telas obtêm os dados da API pelo TanStack Query. Cada domínio
+tem as suas telas em `src/features/<domínio>`; as páginas (`src/pages`) só montam essas telas.
 
 ## Contrato (`packages/shared`)
 
