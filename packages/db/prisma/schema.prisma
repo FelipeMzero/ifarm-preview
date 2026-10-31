@@ -394,10 +394,9 @@ model Brand {
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
 
-  brandings         AnimalBranding[]  @relation("AnimalBrandingBrand")
-  originalBrandings AnimalBranding[]  @relation("AnimalBrandingOriginalBrand")
-  suggestedIn       BrandManagement[] @relation("BrandSuggestedBrand")
-  animals           Animal[]          @relation("AnimalCurrentBrand")
+  brandings   AnimalBranding[]  @relation("AnimalBrandingBrand")
+  suggestedIn BrandManagement[] @relation("BrandSuggestedBrand")
+  animals     Animal[]          @relation("AnimalCurrentBrand")
 
   @@index([ownerId])
   @@map("brand")
@@ -510,6 +509,7 @@ model TagManagement {
 /// Colocação, troca ou retirada de brinco num animal: o histórico de brincos dele. Feita avulsa ou
 /// numa sessão de manejo (nesse caso, só vale depois que a sessão é consolidada). O brinco atual do
 /// animal (Animal.currentTag) é o do registro válido mais recente.
+/// Os registros não são editados: corrigir cancela o registro e insere outro, que aponta para ele.
 model AnimalTagging {
   id           Int       @id @default(autoincrement())
   notes        String?
@@ -517,11 +517,7 @@ model AnimalTagging {
   tag          String?
   /// Data e hora em que o brinco foi colocado ou retirado.
   identifiedAt DateTime  @map("identified_at") @db.Timestamptz(3)
-  /// Brinco lançado originalmente, guardado na primeira correção do valor (a correção preserva o rastro).
-  originalTag  String?   @map("original_tag")
-  /// Quando o registro foi corrigido (vazio = nunca corrigido).
-  correctedAt  DateTime? @map("corrected_at") @db.Timestamptz(3)
-  /// Quando o registro foi excluído (vazio = válido). Excluído = ignorado no histórico e nos cálculos.
+  /// Quando o registro foi excluído ou corrigido (vazio = válido). Cancelado = ignorado no histórico e nos cálculos.
   cancelledAt  DateTime? @map("cancelled_at") @db.Timestamptz(3)
 
   /// Etapa de brinco da sessão em que o registro foi feito (vazio = registro avulso).
@@ -532,7 +528,14 @@ model AnimalTagging {
   animalId String @map("animal_id") @db.Uuid
   animal   Animal @relation(fields: [animalId], references: [id], onDelete: Restrict)
 
+  /// Registro que este corrige (vazio = lançamento original).
+  replacesId Int?           @unique @map("replaces_id")
+  replaces   AnimalTagging? @relation("TaggingCorrection", fields: [replacesId], references: [id], onDelete: NoAction)
+
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  /// Correção deste registro (vazio = não corrigido; se cancelado, foi excluído).
+  replacedBy AnimalTagging? @relation("TaggingCorrection")
 
   @@index([animalId])
   @@index([managementId])
@@ -558,6 +561,7 @@ model RfidManagement {
 /// Colocação, troca ou retirada de RFID num animal: o histórico de RFIDs dele. Feita avulsa ou
 /// numa sessão de manejo (nesse caso, só vale depois que a sessão é consolidada). O RFID atual do
 /// animal (Animal.currentRfid) é o do registro válido mais recente.
+/// Os registros não são editados: corrigir cancela o registro e insere outro, que aponta para ele.
 model AnimalRfidTagging {
   id           Int       @id @default(autoincrement())
   notes        String?
@@ -565,11 +569,7 @@ model AnimalRfidTagging {
   rfid         String?
   /// Data e hora em que o RFID foi colocado ou retirado.
   identifiedAt DateTime  @map("identified_at") @db.Timestamptz(3)
-  /// RFID lançado originalmente, guardado na primeira correção do valor (a correção preserva o rastro).
-  originalRfid String?   @map("original_rfid")
-  /// Quando o registro foi corrigido (vazio = nunca corrigido).
-  correctedAt  DateTime? @map("corrected_at") @db.Timestamptz(3)
-  /// Quando o registro foi excluído (vazio = válido). Excluído = ignorado no histórico e nos cálculos.
+  /// Quando o registro foi excluído ou corrigido (vazio = válido). Cancelado = ignorado no histórico e nos cálculos.
   cancelledAt  DateTime? @map("cancelled_at") @db.Timestamptz(3)
 
   /// Etapa de RFID da sessão em que o registro foi feito (vazio = registro avulso).
@@ -580,7 +580,14 @@ model AnimalRfidTagging {
   animalId String @map("animal_id") @db.Uuid
   animal   Animal @relation(fields: [animalId], references: [id], onDelete: Restrict)
 
+  /// Registro que este corrige (vazio = lançamento original).
+  replacesId Int?               @unique @map("replaces_id")
+  replaces   AnimalRfidTagging? @relation("RfidTaggingCorrection", fields: [replacesId], references: [id], onDelete: NoAction)
+
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  /// Correção deste registro (vazio = não corrigido; se cancelado, foi excluído).
+  replacedBy AnimalRfidTagging? @relation("RfidTaggingCorrection")
 
   @@index([animalId])
   @@index([managementId])
@@ -612,25 +619,18 @@ model NeuteringManagement {
 /// Castração de um animal (inclusive recastração): o histórico de castrações dele. Feita avulsa ou
 /// numa sessão de manejo (nesse caso, só vale depois que a sessão é consolidada). Ao valer, o
 /// animal passa a constar como castrado (Animal.neutered).
+/// Os registros não são editados: corrigir cancela o registro e insere outro, que aponta para ele.
 model AnimalNeutering {
-  id                 Int       @id @default(autoincrement())
-  notes              String?
+  id          Int       @id @default(autoincrement())
+  notes       String?
   /// Data e hora da castração.
-  neuteredAt         DateTime  @map("neutered_at") @db.Timestamptz(3)
-  /// Data lançada originalmente, guardada na primeira correção (a correção preserva o rastro).
-  originalNeuteredAt DateTime? @map("original_neutered_at") @db.Timestamptz(3)
-  /// Quando o registro foi corrigido (vazio = nunca corrigido).
-  correctedAt        DateTime? @map("corrected_at") @db.Timestamptz(3)
-  /// Quando o registro foi excluído (vazio = válido). Excluído = ignorado no histórico e nos cálculos.
-  cancelledAt        DateTime? @map("cancelled_at") @db.Timestamptz(3)
+  neuteredAt  DateTime  @map("neutered_at") @db.Timestamptz(3)
+  /// Quando o registro foi excluído ou corrigido (vazio = válido). Cancelado = ignorado no histórico e nos cálculos.
+  cancelledAt DateTime? @map("cancelled_at") @db.Timestamptz(3)
 
   /// Técnica usada neste animal (vazio = não informada).
   techniqueId String?             @map("technique_id") @db.Uuid
   technique   NeuteringTechnique? @relation("NeuteringTechnique", fields: [techniqueId], references: [id], onDelete: Restrict)
-
-  /// Técnica lançada originalmente, guardada na primeira correção (vazio = não informada).
-  originalTechniqueId String?             @map("original_technique_id") @db.Uuid
-  originalTechnique   NeuteringTechnique? @relation("NeuteringOriginalTechnique", fields: [originalTechniqueId], references: [id], onDelete: Restrict)
 
   /// Etapa de castração da sessão em que o registro foi feito (vazio = registro avulso).
   managementId String?              @map("management_id") @db.Uuid
@@ -640,7 +640,14 @@ model AnimalNeutering {
   animalId String @map("animal_id") @db.Uuid
   animal   Animal @relation(fields: [animalId], references: [id], onDelete: Restrict)
 
+  /// Registro que este corrige (vazio = lançamento original).
+  replacesId Int?             @unique @map("replaces_id")
+  replaces   AnimalNeutering? @relation("NeuteringCorrection", fields: [replacesId], references: [id], onDelete: NoAction)
+
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  /// Correção deste registro (vazio = não corrigido; se cancelado, foi excluído).
+  replacedBy AnimalNeutering? @relation("NeuteringCorrection")
 
   @@index([animalId])
   @@index([managementId])
@@ -659,9 +666,8 @@ model NeuteringTechnique {
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
 
-  neuterings         AnimalNeutering[]     @relation("NeuteringTechnique")
-  originalNeuterings AnimalNeutering[]     @relation("NeuteringOriginalTechnique")
-  suggestedIn        NeuteringManagement[] @relation("NeuteringSuggestedTechnique")
+  neuterings  AnimalNeutering[]     @relation("NeuteringTechnique")
+  suggestedIn NeuteringManagement[] @relation("NeuteringSuggestedTechnique")
 
   @@map("neutering_technique")
 }
@@ -685,19 +691,16 @@ model WeighingManagement {
 /// Pesagem individual de um animal: o histórico de pesos dele. Feita avulsa ou numa sessão de
 /// manejo (nesse caso, só vale depois que a sessão é consolidada). O peso atual do animal
 /// (Animal.currentWeight) é o da pesagem válida mais recente.
+/// Os registros não são editados: corrigir cancela o registro e insere outro, que aponta para ele.
 model AnimalWeighing {
-  id             Int       @id @default(autoincrement())
-  notes          String?
+  id          Int       @id @default(autoincrement())
+  notes       String?
   /// Peso do animal (kg).
-  weight         Decimal   @db.Decimal(10, 2)
+  weight      Decimal   @db.Decimal(10, 2)
   /// Data e hora da pesagem.
-  weighedAt      DateTime  @map("weighed_at") @db.Timestamptz(3)
-  /// Peso lançado originalmente, guardado na primeira correção do valor (a correção preserva o rastro).
-  originalWeight Decimal?  @map("original_weight") @db.Decimal(10, 2)
-  /// Quando o registro foi corrigido (vazio = nunca corrigido).
-  correctedAt    DateTime? @map("corrected_at") @db.Timestamptz(3)
-  /// Quando o registro foi excluído (vazio = válido). Excluído = ignorado no histórico, nos gráficos e no peso atual.
-  cancelledAt    DateTime? @map("cancelled_at") @db.Timestamptz(3)
+  weighedAt   DateTime  @map("weighed_at") @db.Timestamptz(3)
+  /// Quando o registro foi excluído ou corrigido (vazio = válido). Cancelado = ignorado no histórico, nos gráficos e no peso atual.
+  cancelledAt DateTime? @map("cancelled_at") @db.Timestamptz(3)
 
   /// Etapa de pesagem da sessão em que o registro foi feito (vazio = registro avulso).
   managementId String?             @map("management_id") @db.Uuid
@@ -707,7 +710,14 @@ model AnimalWeighing {
   animalId String @map("animal_id") @db.Uuid
   animal   Animal @relation(fields: [animalId], references: [id], onDelete: Restrict)
 
+  /// Registro que este corrige (vazio = lançamento original).
+  replacesId Int?            @unique @map("replaces_id")
+  replaces   AnimalWeighing? @relation("WeighingCorrection", fields: [replacesId], references: [id], onDelete: NoAction)
+
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  /// Correção deste registro (vazio = não corrigido; se cancelado, foi excluído).
+  replacedBy AnimalWeighing? @relation("WeighingCorrection")
 
   @@index([animalId])
   @@index([managementId])
@@ -739,17 +749,14 @@ model BrandManagement {
 /// Marcação de um animal com uma marca de ferro: o histórico de marcas dele. Feita avulsa ou numa
 /// sessão de manejo (nesse caso, só vale depois que a sessão é consolidada). Um animal pode ter
 /// várias marcas (ex.: uma por dono por que passou).
+/// Os registros não são editados: corrigir cancela o registro e insere outro, que aponta para ele.
 model AnimalBranding {
-  id                Int       @id @default(autoincrement())
-  notes             String?
+  id          Int       @id @default(autoincrement())
+  notes       String?
   /// Data e hora da marcação.
-  brandedAt         DateTime  @map("branded_at") @db.Timestamptz(3)
-  /// Data lançada originalmente, guardada na primeira correção (a correção preserva o rastro).
-  originalBrandedAt DateTime? @map("original_branded_at") @db.Timestamptz(3)
-  /// Quando o registro foi corrigido (vazio = nunca corrigido).
-  correctedAt       DateTime? @map("corrected_at") @db.Timestamptz(3)
-  /// Quando o registro foi excluído (vazio = válido). Excluído = ignorado no histórico.
-  cancelledAt       DateTime? @map("cancelled_at") @db.Timestamptz(3)
+  brandedAt   DateTime  @map("branded_at") @db.Timestamptz(3)
+  /// Quando o registro foi excluído ou corrigido (vazio = válido). Cancelado = ignorado no histórico.
+  cancelledAt DateTime? @map("cancelled_at") @db.Timestamptz(3)
 
   /// Etapa de marcação da sessão em que o registro foi feito (vazio = registro avulso).
   managementId String?          @map("management_id") @db.Uuid
@@ -759,15 +766,18 @@ model AnimalBranding {
   brandId String @map("brand_id") @db.Uuid
   brand   Brand  @relation("AnimalBrandingBrand", fields: [brandId], references: [id], onDelete: Restrict)
 
-  /// Marca lançada originalmente, guardada na primeira correção.
-  originalBrandId String? @map("original_brand_id") @db.Uuid
-  originalBrand   Brand?  @relation("AnimalBrandingOriginalBrand", fields: [originalBrandId], references: [id], onDelete: Restrict)
-
   /// Animal marcado.
   animalId String @map("animal_id") @db.Uuid
   animal   Animal @relation(fields: [animalId], references: [id], onDelete: Restrict)
 
+  /// Registro que este corrige (vazio = lançamento original).
+  replacesId Int?            @unique @map("replaces_id")
+  replaces   AnimalBranding? @relation("BrandingCorrection", fields: [replacesId], references: [id], onDelete: NoAction)
+
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  /// Correção deste registro (vazio = não corrigido; se cancelado, foi excluído).
+  replacedBy AnimalBranding? @relation("BrandingCorrection")
 
   @@index([animalId])
   @@index([managementId])
@@ -856,14 +866,17 @@ model HealthManagement {
 
 /// Aplicação de um procedimento sanitário num animal: o histórico sanitário dele. Vale junto com o
 /// procedimento (avulso, ou de sessão consolidada).
+/// Os registros não são editados: corrigir cancela o registro e insere outro, que aponta para ele.
 model HealthManagementItem {
-  id        Int      @id @default(autoincrement())
+  id          Int       @id @default(autoincrement())
   /// Observação sobre a aplicação neste animal (ex.: reação adversa, aplicação incompleta).
-  notes     String?
+  notes       String?
   /// Data/hora da aplicação neste animal.
-  appliedAt DateTime @map("applied_at") @db.Timestamptz(3)
+  appliedAt   DateTime  @map("applied_at") @db.Timestamptz(3)
   /// Dose aplicada neste animal (ml). Vazio quando o procedimento não tem dose.
-  doseMl    Decimal? @map("dose_ml") @db.Decimal(10, 2)
+  doseMl      Decimal?  @map("dose_ml") @db.Decimal(10, 2)
+  /// Quando a aplicação foi excluída ou corrigida (vazio = válida). Cancelada = ignorada no histórico e nos cálculos.
+  cancelledAt DateTime? @map("cancelled_at") @db.Timestamptz(3)
 
   /// Procedimento aplicado.
   managementId String           @map("management_id") @db.Uuid
@@ -873,7 +886,14 @@ model HealthManagementItem {
   animalId String @map("animal_id") @db.Uuid
   animal   Animal @relation(fields: [animalId], references: [id], onDelete: Restrict)
 
+  /// Aplicação que esta corrige (vazio = lançamento original).
+  replacesId Int?                  @unique @map("replaces_id")
+  replaces   HealthManagementItem? @relation("HealthItemCorrection", fields: [replacesId], references: [id], onDelete: NoAction)
+
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  /// Correção desta aplicação (vazio = não corrigida; se cancelada, foi excluída).
+  replacedBy HealthManagementItem? @relation("HealthItemCorrection")
 
   @@index([animalId])
   @@index([managementId])

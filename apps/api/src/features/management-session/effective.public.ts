@@ -36,6 +36,7 @@ export const effectiveRfidTagging: Prisma.AnimalRfidTaggingWhereInput = {
 };
 
 export const effectiveHealthItem: Prisma.HealthManagementItemWhereInput = {
+  cancelledAt: null,
   management: {
     OR: [
       { managementSessionId: null },

@@ -79,20 +79,28 @@ function NeuteringCorrectionNote({
 }) {
   if (!neutering.correctedAt) return null;
 
-  const was = [
-    neutering.originalDate &&
-    formatDateTime(neutering.originalDate) !== formatDateTime(neutering.date)
-      ? formatDateTime(neutering.originalDate)
-      : null,
-    neutering.originalTechniqueId !== neutering.techniqueId
-      ? (neutering.originalTechniqueName ?? "sem técnica")
-      : null,
-  ].filter(Boolean);
+  const original = neutering.previousVersions.at(-1);
+  const was = original
+    ? [
+        formatDateTime(original.date) !== formatDateTime(neutering.date)
+          ? formatDateTime(original.date)
+          : null,
+        original.techniqueId !== neutering.techniqueId
+          ? (original.techniqueName ?? "sem técnica")
+          : null,
+      ].filter(Boolean)
+    : [];
 
   return (
     <div
       className="text-xs text-muted-foreground"
-      title={`Corrigida em ${formatDay(neutering.correctedAt)}`}
+      title={[
+        `Corrigida em ${formatDay(neutering.correctedAt)}`,
+        ...neutering.previousVersions.map(
+          (v) =>
+            `Lançada em ${formatDay(v.recordedAt)}: ${formatDateTime(v.date)}, ${v.techniqueName ?? "sem técnica"}`,
+        ),
+      ].join("\n")}
     >
       {was.length ? `corrigido (era ${was.join(", ")})` : "corrigido"}
     </div>

@@ -117,6 +117,7 @@ export const healthStep = defineStep({
   async load(tx, _session, step, animalIds) {
     const items = await tx.healthManagementItem.findMany({
       where: {
+        cancelledAt: null,
         managementId: step.healthManagementId,
         ...(animalIds ? { animalId: { in: animalIds } } : {}),
       },

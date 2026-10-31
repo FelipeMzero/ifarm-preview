@@ -51,6 +51,7 @@ type IdentifierAdapter = {
 };
 
 const sessionFilter = (sessionId: string, animalIds?: string[]) => ({
+  cancelledAt: null,
   management: { managementSessionId: sessionId },
   ...(animalIds ? { animalId: { in: animalIds } } : {}),
 });

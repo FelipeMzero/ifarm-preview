@@ -45,6 +45,7 @@ export const weighingStep = defineStep({
   async load(tx, session, _step, animalIds) {
     const items = await tx.animalWeighing.findMany({
       where: {
+        cancelledAt: null,
         management: { managementSessionId: session.id },
         ...(animalIds ? { animalId: { in: animalIds } } : {}),
       },

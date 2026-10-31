@@ -1,13 +1,15 @@
 import type { WeighingCorrectionData } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
+import { NotFoundError } from "../../../../lib/errors";
 import { animalStays, timeZoneAt } from "../../../property/time-zone.public";
 import { resolveEventDateIn } from "../../event-date";
-import { keepsOriginal, sessionDateLock } from "../../rules";
+import { sessionDateLock } from "../../rules";
 import { fieldError } from "../../shared";
 import { findActiveWeighing } from "../shared";
 import { recomputeCurrentWeight } from "../current-weight.public";
 
-// Corrige peso, data (só pesagens avulsas) e observação; guarda o peso original.
+// Corrige peso, data (só pesagens avulsas) e observação: a pesagem não é alterada; é cancelada e
+// substituída por outra, que aponta para ela.
 export async function correctWeighing(
   animalId: string,
   weighingId: string,
@@ -26,20 +28,24 @@ export async function correctWeighing(
     weighedAt = await resolveEventDateIn(animalId, data.date, timeZone);
   }
 
-  const weightChanged = !weighing.weight.equals(data.weightKg);
-
   await prisma.$transaction(async (tx) => {
-    await tx.animalWeighing.update({
-      where: { id: weighing.id },
+    // Condicional para uma correção concorrente não substituir a mesma pesagem.
+    const cancelled = await tx.animalWeighing.updateMany({
+      where: { id: weighing.id, cancelledAt: null },
+      data: { cancelledAt: new Date() },
+    });
+    if (cancelled.count !== 1) {
+      throw new NotFoundError("Pesagem não encontrada.");
+    }
+
+    await tx.animalWeighing.create({
       data: {
+        animalId,
+        managementId: weighing.managementId,
+        replacesId: weighing.id,
         weight: data.weightKg,
         notes: data.notes,
-        ...(weighedAt ? { weighedAt } : {}),
-        // Guarda o valor lançado originalmente só na primeira correção de peso.
-        ...(keepsOriginal(weightChanged, weighing.originalWeight)
-          ? { originalWeight: weighing.weight }
-          : {}),
-        correctedAt: new Date(),
+        weighedAt: weighedAt ?? weighing.weighedAt,
       },
     });
 

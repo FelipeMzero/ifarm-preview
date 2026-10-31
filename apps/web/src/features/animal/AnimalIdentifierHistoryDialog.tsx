@@ -197,6 +197,18 @@ function IdentifierChangePanel({
   );
 }
 
+// Qual era o valor lançado originalmente (a correção pode ter mudado só a data ou a observação).
+function IdentifierCorrectionLabel({
+  record,
+}: {
+  record: AnimalIdentifierRecord;
+}) {
+  const original = record.previousVersions.at(-1);
+  return original?.value != null && original.value !== record.value
+    ? `corrigido (era ${original.value})`
+    : "corrigido";
+}
+
 export function AnimalIdentifierHistoryDialog({
   animalId,
   timeZone,
@@ -331,11 +343,15 @@ export function AnimalIdentifierHistoryDialog({
                         {r.correctedAt && (
                           <div
                             className="text-xs text-muted-foreground"
-                            title={`Corrigido em ${formatDay(r.correctedAt)}`}
+                            title={[
+                              `Corrigido em ${formatDay(r.correctedAt)}`,
+                              ...r.previousVersions.map(
+                                (v) =>
+                                  `Lançado em ${formatDay(v.recordedAt)}: ${v.value ?? "removido"}`,
+                              ),
+                            ].join("\n")}
                           >
-                            {r.originalValue != null
-                              ? `corrigido (era ${r.originalValue})`
-                              : "corrigido"}
+                            <IdentifierCorrectionLabel record={r} />
                           </div>
                         )}
                       </TableCell>

@@ -8,14 +8,16 @@ import { neuteringInclude, toNeuteringDto } from "../shared";
 export async function listNeuterings(
   animalId: string,
 ): Promise<AnimalNeuteringRecord[]> {
-  const items = await prisma.animalNeutering.findMany({
-    where: { animalId, cancelledAt: null, ...effectiveNeutering },
+  // As canceladas vêm junto: são as versões anteriores das corrigidas.
+  const all = await prisma.animalNeutering.findMany({
+    where: { animalId, ...effectiveNeutering },
     include: neuteringInclude,
   });
+  const items = all.filter((n) => !n.cancelledAt);
   if (!items.length) return [];
   const { zoneOf } = await animalStays(animalId);
   // Pelo instante: as datas podem vir com deslocamentos diferentes.
   return items
-    .map((n) => toNeuteringDto(n, zoneOf))
+    .map((n) => toNeuteringDto(n, zoneOf, all))
     .sort((a, b) => Date.parse(b.date) - Date.parse(a.date) || b.id - a.id);
 }

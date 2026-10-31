@@ -85,6 +85,7 @@ export const neuteringStep = defineStep({
   async load(tx, session, _step, animalIds) {
     const items = await tx.animalNeutering.findMany({
       where: {
+        cancelledAt: null,
         management: { managementSessionId: session.id },
         ...(animalIds ? { animalId: { in: animalIds } } : {}),
       },

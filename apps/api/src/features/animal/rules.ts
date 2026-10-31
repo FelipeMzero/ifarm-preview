@@ -7,7 +7,7 @@ import {
 
 // Regras comuns às correções de registros do animal (pesagem, castração, brinco/RFID).
 
-// Um registro feito em sessão de manejo tem a data da sessão: a correção não muda a data.
+// Um registro feito em sessão de manejo tem a hora em que foi feito: a correção não muda a data.
 // Devolve a mensagem de erro (null = pode). `record` é o nome do registro ("pesagem"...).
 export function sessionDateLock(
   saved: { managementId: string | null },
@@ -15,13 +15,23 @@ export function sessionDateLock(
   record: string,
 ): string | null {
   if (!newDate || !saved.managementId) return null;
-  return `A data de uma ${record} feita em sessão de manejo segue a data da sessão.`;
+  return `A data de uma ${record} feita em sessão de manejo não pode ser corrigida.`;
 }
 
-// O valor lançado originalmente é guardado só na primeira correção que o muda (as
-// seguintes já o encontram guardado).
-export function keepsOriginal(changed: boolean, savedOriginal: unknown) {
-  return changed && savedOriginal == null;
+// Versões anteriores de um registro corrigido, da mais recente para a original: cada correção
+// aponta para o registro que substituiu. `all` são os registros do animal, inclusive cancelados.
+export function previousVersions<
+  T extends { id: number; replacesId: number | null },
+>(record: T, all: T[]): T[] {
+  const byId = new Map(all.map((r) => [r.id, r]));
+  const versions: T[] = [];
+  let previous = record.replacesId != null ? byId.get(record.replacesId) : null;
+  while (previous) {
+    versions.push(previous);
+    previous =
+      previous.replacesId != null ? byId.get(previous.replacesId) : null;
+  }
+  return versions;
 }
 
 // Operações da edição pelo cadastro que dependem dos compromissos do animal em

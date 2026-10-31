@@ -30,8 +30,9 @@ export async function getAnimalDetails(id: string): Promise<AnimalFullDetails> {
       breed: { select: { name: true } },
       currentBatch: { select: { id: true, name: true } },
       currentProperty: { select: { id: true, name: true, timeZone: true } },
+      // As canceladas vêm junto: são as versões anteriores das corrigidas.
       animalWeighings: {
-        where: { cancelledAt: null, ...effectiveWeighing },
+        where: effectiveWeighing,
         include: { management: { select: { managementSessionId: true } } },
       },
       animalTaggings: { where: { cancelledAt: null, ...effectiveTagging } },
@@ -97,8 +98,9 @@ export async function getAnimalDetails(id: string): Promise<AnimalFullDetails> {
   const zoneOf: ZoneOf = (instant) => timeZoneAt(stays, instant, currentZone);
   const zoned = (instant: Date) => instantToZonedIso(instant, zoneOf(instant));
 
+  const validWeighings = animal.animalWeighings.filter((w) => !w.cancelledAt);
   const weighings = sortWeighings(
-    animal.animalWeighings.map((w) => toWeighingDto(w, zoneOf)),
+    validWeighings.map((w) => toWeighingDto(w, zoneOf, animal.animalWeighings)),
   );
 
   const tagHistory = animal.animalTaggings
@@ -125,9 +127,11 @@ export async function getAnimalDetails(id: string): Promise<AnimalFullDetails> {
       date: zoned(n.neuteredAt),
       techniqueName: n.technique?.name ?? null,
       notes: n.notes,
-      correctedAt: n.correctedAt
-        ? toZonedIso(n.correctedAt, zoneOf(n.correctedAt))
-        : null,
+      // Uma correção é um registro novo: foi corrigida quando ele foi criado.
+      correctedAt:
+        n.replacesId != null
+          ? toZonedIso(n.createdAt, zoneOf(n.createdAt))
+          : null,
     }))
     .sort(byDateDesc);
 
@@ -189,7 +193,7 @@ export async function getAnimalDetails(id: string): Promise<AnimalFullDetails> {
         const { event } = category;
         const unitPrice = category.unitPrice?.toNumber() ?? null;
         // Peso de entrada = pesagem feita na sessão da recepção, se houver.
-        const entryWeighing = animal.animalWeighings.find(
+        const entryWeighing = validWeighings.find(
           (w) =>
             w.management?.managementSessionId ===
             purchased.reception.managementSessionId,

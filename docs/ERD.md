@@ -201,11 +201,10 @@ erDiagram
     String notes "❓"
     String tag "❓"
     DateTime identified_at 
-    String original_tag "❓"
-    DateTime corrected_at "❓"
     DateTime cancelled_at "❓"
     String management_id "❓"
     String animal_id 
+    Int replaces_id "❓"
     DateTime created_at 
     }
   
@@ -218,15 +217,14 @@ erDiagram
   
 
   "animal_rfid_tagging" {
-    Int original_rfid "🗝️"
+    Int id "🗝️"
     String notes "❓"
     String rfid "❓"
     DateTime identified_at 
-    String original_rfid "❓"
-    DateTime corrected_at "❓"
     DateTime cancelled_at "❓"
     String management_id "❓"
     String animal_id 
+    Int replaces_id "❓"
     DateTime created_at 
     }
   
@@ -243,13 +241,11 @@ erDiagram
     Int id "🗝️"
     String notes "❓"
     DateTime neutered_at 
-    DateTime original_neutered_at "❓"
-    DateTime corrected_at "❓"
     DateTime cancelled_at "❓"
     String technique_id "❓"
-    String original_technique_id "❓"
     String management_id "❓"
     String animal_id 
+    Int replaces_id "❓"
     DateTime created_at 
     }
   
@@ -275,11 +271,10 @@ erDiagram
     String notes "❓"
     Decimal weight 
     DateTime weighed_at 
-    Decimal original_weight "❓"
-    DateTime corrected_at "❓"
     DateTime cancelled_at "❓"
     String management_id "❓"
     String animal_id 
+    Int replaces_id "❓"
     DateTime created_at 
     }
   
@@ -296,13 +291,11 @@ erDiagram
     Int id "🗝️"
     String notes "❓"
     DateTime branded_at 
-    DateTime original_branded_at "❓"
-    DateTime corrected_at "❓"
     DateTime cancelled_at "❓"
     String management_id "❓"
     String brand_id 
-    String original_brand_id "❓"
     String animal_id 
+    Int replaces_id "❓"
     DateTime created_at 
     }
   
@@ -342,8 +335,10 @@ erDiagram
     String notes "❓"
     DateTime applied_at 
     Decimal dose_ml "❓"
+    DateTime cancelled_at "❓"
     String management_id 
     String animal_id 
+    Int replaces_id "❓"
     DateTime created_at 
     }
   
@@ -491,8 +486,8 @@ erDiagram
 
   "loss_event" {
     String id "🗝️"
-    String notes "❓"
     String title 
+    String notes "❓"
     DateTime occurred_at 
     DateTime confirmed_at "❓"
     DateTime cancelled_at "❓"
@@ -515,8 +510,8 @@ erDiagram
 
   "slaughter_event" {
     String id "🗝️"
-    String notes "❓"
     String title 
+    String notes "❓"
     DateTime scheduled_at 
     DateTime slaughtered_at "❓"
     DateTime confirmed_at "❓"
@@ -559,24 +554,27 @@ erDiagram
     "tag_management" |o--|| management_session : "managementSession"
     "animal_tagging" }o--|o tag_management : "management"
     "animal_tagging" }o--|| animal : "animal"
+    "animal_tagging" |o--|o animal_tagging : "replaces"
     "rfid_management" |o--|| management_session : "managementSession"
     "animal_rfid_tagging" }o--|o rfid_management : "management"
     "animal_rfid_tagging" }o--|| animal : "animal"
+    "animal_rfid_tagging" |o--|o animal_rfid_tagging : "replaces"
     "neutering_management" |o--|| management_session : "managementSession"
     "neutering_management" }o--|o neutering_technique : "suggestedTechnique"
     "animal_neutering" }o--|o neutering_technique : "technique"
-    "animal_neutering" }o--|o neutering_technique : "originalTechnique"
     "animal_neutering" }o--|o neutering_management : "management"
     "animal_neutering" }o--|| animal : "animal"
+    "animal_neutering" |o--|o animal_neutering : "replaces"
     "weighing_management" |o--|| management_session : "managementSession"
     "animal_weighing" }o--|o weighing_management : "management"
     "animal_weighing" }o--|| animal : "animal"
+    "animal_weighing" |o--|o animal_weighing : "replaces"
     "brand_management" |o--|| management_session : "managementSession"
     "brand_management" }o--|o brand : "suggestedBrand"
     "animal_branding" }o--|o brand_management : "management"
     "animal_branding" }o--|| brand : "brand"
-    "animal_branding" }o--|o brand : "originalBrand"
     "animal_branding" }o--|| animal : "animal"
+    "animal_branding" |o--|o animal_branding : "replaces"
     "batch_management" |o--|| management_session : "managementSession"
     "batch_management_suggestion" }o--|| batch_management : "management"
     "batch_management_suggestion" }o--|| batch : "batch"
@@ -585,6 +583,7 @@ erDiagram
     "health_management" }o--|o person : "veterinarian"
     "health_management_item" }o--|| health_management : "management"
     "health_management_item" }o--|| animal : "animal"
+    "health_management_item" |o--|o health_management_item : "replaces"
     "animal_property_transfer" }o--|| property : "originProperty"
     "animal_property_transfer" }o--|| property : "destinationProperty"
     "animal_property_transfer" }o--|o batch : "originBatch"

@@ -125,7 +125,8 @@ export const animalDeletionPolicy: DeletionPolicy = {
     if (blocker) return blocker;
 
     // Sequencial: o cliente da transação não aceita consultas em paralelo.
-    const where = { animalId: id };
+    // Um registro corrigido e a sua correção contam como um só lançamento.
+    const where = { animalId: id, replacedBy: null };
     const select = { managementId: true };
     const weighings = await tx.animalWeighing.findMany({ where, select });
     const taggings = await tx.animalTagging.findMany({ where, select });

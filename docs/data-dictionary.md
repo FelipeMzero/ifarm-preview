@@ -125,73 +125,52 @@ Toda consulta de histórico, cálculo ou recálculo de `current_*` deve usar ess
 
 ### 2.7 Correção com rastro e exclusão lógica
 
-Registros de manejo são fatos históricos: servem de base para peso atual, GMD, custos, carência e rastreabilidade. Por isso, um lançamento errado **não é sobrescrito sem deixar marca nem apagado fisicamente**. O usuário corrige ou exclui o registro, e o banco guarda a memória do que foi lançado.
+Registros de manejo são fatos históricos: servem de base para peso atual, GMD, custos, carência e rastreabilidade. Por isso, os dados de um registro **não são alterados nem apagados fisicamente**: corrigir cancela o registro e insere outro, que aponta para ele. O histórico de um registro é a cadeia dessas versões.
 
-Isso vale para `animal_weighing`, `animal_neutering`, `animal_tagging` e `animal_rfid_tagging`. `animal_branding` tem só a exclusão lógica.
+Isso vale para `animal_weighing`, `animal_neutering`, `animal_tagging` e `animal_rfid_tagging`. `animal_branding` e `health_management_item` já têm as mesmas colunas, mas ainda não têm as operações de correção e exclusão.
 
 #### Colunas envolvidas
 
 | Coluna | Papel |
 |---|---|
-| Colunas de valor (`weight`, `neutered_at`, `technique_id`, `tag`, `rfid`, `notes`…) | Sempre contêm o valor **vigente**, já corrigido. É o que histórico, gráficos e cálculos usam. |
-| `original_*` | **Memória do valor lançado originalmente**, antes de qualquer correção. É gravada uma única vez e não muda nas correções seguintes. Nula = o valor nunca foi corrigido. |
-| `corrected_at` | Instante da **última** correção. Nulo = o registro nunca foi corrigido. É atualizado a cada nova correção, inclusive quando só a observação muda. |
-| `cancelled_at` | **Exclusão lógica.** Preenchido = o registro foi excluído pelo usuário: sai do histórico, dos gráficos e dos cálculos, mas continua no banco para auditoria. Não há desfazer pela interface. |
+| `cancelled_at` | Preenchido = o registro saiu de uso, por exclusão ou por correção: fica fora do histórico, dos gráficos e dos cálculos, mas continua no banco. Não há desfazer pela interface. |
+| `replaces_id` | Registro que este corrige. Nulo = lançamento original. É único: um registro tem no máximo uma correção. |
+| `created_at` | Quando a versão foi lançada. Numa correção, é a data da correção. |
 
 #### Ciclo de vida de um registro
 
-```
-lançado ──corrigir──▶ corrigido ──corrigir──▶ corrigido (de novo)
-   │                      │
-   └──────excluir─────────┴──────▶ excluído (cancelled_at preenchido; estado final)
-```
-
-| Estado | `original_*` | `corrected_at` | `cancelled_at` | Aparece no histórico/cálculos? |
-|---|---|---|---|---|
-| Lançado | nulo | nulo | nulo | Sim |
-| Corrigido | valor original | data da última correção | nulo | Sim, com o valor corrigido |
-| Excluído | (mantém o que tinha) | (mantém o que tinha) | data da exclusão | Não |
-
-#### O que cada tabela preserva
-
-As tabelas guardam o rastro de maneiras ligeiramente diferentes:
-
-| Tabela | Campos de memória | Quando são preenchidos | O que **não** é preservado |
+| Estado | `cancelled_at` | Tem correção apontando para ele? | Aparece no histórico/cálculos? |
 |---|---|---|---|
-| `animal_weighing` | `original_weight` | Na primeira correção que **muda o peso**. Uma correção só da data ou da observação não preenche. | A data original (`weighed_at` é sobrescrita) e a observação original. |
-| `animal_neutering` | `original_neutered_at`, `original_technique_id` | Na **primeira correção de qualquer tipo**: os dois são copiados juntos, mesmo que só um tenha mudado. | A observação original. |
-| `animal_tagging` | `original_tag` | Na primeira correção que **muda o brinco**. | A data original (`identified_at`) e a observação original. |
-| `animal_rfid_tagging` | `original_rfid` | Na primeira correção que **muda o RFID**. | A data original (`identified_at`) e a observação original. |
+| Válido | nulo | Não | Sim |
+| Substituído por uma correção | data da correção | Sim | Não; aparece como versão anterior do válido |
+| Excluído | data da exclusão | Não | Não |
 
-Por isso, na castração, `original_neutered_at` preenchido não significa que a data mudou: é preciso comparar com `neutered_at`. A interface faz essa comparação e só mostra o que de fato mudou ("corrigido (era 25/03/2026, Burdizzo)").
+Só o registro válido pode ser corrigido ou excluído. Por isso, a cadeia não tem bifurcações, e excluir o registro válido retira a cadeia inteira do histórico.
 
-#### Exemplo — pesagem
+#### Exemplo: pesagem
 
-| Momento | Ação | `weight` | `original_weight` | `corrected_at` | `cancelled_at` |
+| Momento | Ação | `id` | `weight` | `replaces_id` | `cancelled_at` |
 |---|---|---|---|---|---|
-| 10/03 | Lançada 3.120 kg (erro de digitação) | 3120,00 | — | — | — |
-| 10/03 | Corrigida para 312 kg | 312,00 | 3120,00 | 10/03 | — |
-| 12/03 | Corrigida para 321 kg (nova conferência) | 321,00 | 3120,00 | 12/03 | — |
-| 15/03 | Excluída (animal errado) | 321,00 | 3120,00 | 12/03 | 15/03 |
-
-O valor intermediário (312 kg) não fica guardado: o banco mantém só o **primeiro** valor e o **atual**.
+| 10/03 | Lançada 3.120 kg (erro de digitação) | 1 | 3120,00 | — | — |
+| 10/03 | Corrigida para 312 kg | 1 | 3120,00 | — | 10/03 |
+| | | 2 | 312,00 | 1 | — |
+| 12/03 | Corrigida para 321 kg (nova conferência) | 2 | 312,00 | 1 | 12/03 |
+| | | 3 | 321,00 | 2 | — |
+| 15/03 | Excluída (animal errado) | 3 | 321,00 | 2 | 15/03 |
 
 #### Regras
 
 - **Recálculo dos campos atuais.** Toda correção ou exclusão recalcula, na mesma transação, o campo desnormalizado do animal (ver 2.4): `current_weight`, `current_tag` ou `current_rfid`. Excluir a pesagem mais recente faz o peso atual voltar ao da pesagem anterior; excluir o brinco atual faz o animal voltar ao brinco anterior.
 - **Unicidade na correção.** Se o recálculo levar o animal a um brinco ou RFID que outro animal ativo da propriedade já usa, a correção ou exclusão é recusada.
 - **Exclusão da última castração.** Se não sobrar nenhuma castração, o usuário decide se o animal continua castrado (pode ter chegado castrado, sem registro). A resposta define `animal.neutered`.
-- **Registros de sessão.** O valor pode ser corrigido, mas a data não: ela é a hora em que o registro foi feito na sessão. Só registros de sessão **consolidada** podem ser corrigidos ou excluídos pelo cadastro do animal; enquanto a sessão está em andamento, o registro é desfeito pela própria sessão (e aí é apagado de fato, porque ainda não era efetivo).
+- **Registros de sessão.** O valor pode ser corrigido, mas a data não: ela é a hora em que o registro foi feito na sessão. A correção continua ligada à mesma etapa da sessão. Só registros de sessão **consolidada** podem ser corrigidos ou excluídos pelo cadastro do animal; enquanto a sessão está em andamento, o registro é alterado ou desfeito pela própria sessão (e aí é apagado de fato, porque ainda não era efetivo).
 - **Datas corrigidas.** Seguem as mesmas regras de um lançamento: não podem ser futuras nem anteriores ao nascimento. Ao trocar só o dia, o horário original é mantido, para não alterar a ordem entre registros do mesmo dia.
-- **Interface.** Registros corrigidos aparecem no histórico com a indicação "corrigido (era …)" e a data da correção na dica de tela.
+- **Exclusão de animal.** Um registro e as suas correções contam como um só lançamento: corrigir o lançamento feito no cadastro não impede excluir o animal.
+- **Interface.** Registros corrigidos aparecem no histórico com a indicação "corrigido (era …)", com o valor lançado originalmente, e a dica de tela traz a data da correção e as versões anteriores.
 
 #### Limitações conhecidas
 
 - Não se registra **quem** corrigiu ou excluiu (não há coluna de usuário).
-- Valores intermediários entre a primeira e a última correção se perdem.
-- Numa correção de brinco/RFID em que o valor original era uma **remoção** (`tag`/`rfid` nulo), `original_*` continua nulo. Nesse caso não dá para distinguir "nunca corrigido" de "originalmente era uma remoção"; use `corrected_at` para saber se houve correção.
-
-Se for necessária auditoria completa (quem, quando, cada valor), o caminho é uma tabela de eventos de alteração, e não mais colunas `original_*`.
 
 ### 2.8 Datas de manejo
 
@@ -659,9 +638,8 @@ O contêiner é criado quando a etapa entra no planejamento e apagado quando a e
 | `weight` | numeric(10,2) | | | | Peso individual em kg. Maior que 0 (até 3.000 em sessão). |
 | `notes` | text | N | | | Observação. |
 | `weighed_at` | timestamp | | | | Data da pesagem (ver 2.8). |
-| `original_weight` | numeric(10,2) | N | | | **Memória do peso lançado originalmente.** Gravado uma única vez, na primeira correção que muda o peso; correções seguintes não o alteram. Nulo = o peso nunca foi corrigido. Não guarda a data original. Ver 2.7. |
-| `corrected_at` | timestamp | N | | | Instante da **última** correção (peso, data ou observação). Nulo = nunca corrigida. |
-| `cancelled_at` | timestamp | N | | | **Exclusão lógica.** Preenchido = a pesagem foi excluída pelo usuário: sai do histórico, do gráfico, do GMD e do cálculo do peso atual, mas continua no banco. |
+| `cancelled_at` | timestamp | N | | | Preenchido = a pesagem saiu de uso, por exclusão ou por correção: sai do histórico, do gráfico, do GMD e do cálculo do peso atual, mas continua no banco. |
+| `replaces_id` | integer | N | | UK, FK → `animal_weighing` | Registro que este corrige. Nulo = lançamento original. Ver 2.7. |
 | `management_id` | uuid | N | | FK → `weighing_management` | Nulo = avulsa (ver 2.5). |
 | `animal_id` | uuid | | | FK → `animal` | Animal. |
 | `created_at` | timestamp | | now | | Auditoria. |
@@ -677,10 +655,8 @@ O contêiner é criado quando a etapa entra no planejamento e apagado quando a e
 | `technique_id` | uuid | N | | FK → `neutering_technique` | Técnica usada. **Obrigatória** na etapa de sessão e no registro avulso (castração feita na fazenda) e deve estar ativa; opcional só no cadastro de animal que já chegou castrado. Numa correção, não pode ser apagada se o registro já tinha técnica, e pode manter uma técnica inativada depois. |
 | `notes` | text | N | | | Observação. **Obrigatória numa recastração** (castração de animal que já é castrado), como justificativa. |
 | `neutered_at` | timestamp | | | | Data do procedimento (ver 2.8). |
-| `original_neutered_at` | timestamp | N | | | **Memória da data lançada originalmente.** Gravada uma única vez, na **primeira correção de qualquer tipo**, junto com `original_technique_id`, mesmo que a data não tenha mudado; para saber se a data mudou, compare com `neutered_at`. Nulo = nunca corrigida. Ver 2.7. |
-| `original_technique_id` | uuid | N | | FK → `neutering_technique` | **Memória da técnica lançada originalmente.** Gravada junto com `original_neutered_at`, na primeira correção. Como a técnica pode ser nula, `original_technique_id` nulo com `corrected_at` preenchido significa que a técnica original estava em branco. |
-| `corrected_at` | timestamp | N | | | Instante da **última** correção. Nulo = nunca corrigida; é o indicador confiável de que houve correção. |
-| `cancelled_at` | timestamp | N | | | **Exclusão lógica.** Preenchido = castração excluída: sai do histórico e da data de castração exibida. Se era a única, o usuário decide se o animal continua castrado (`animal.neutered`). |
+| `cancelled_at` | timestamp | N | | | Preenchido = a castração saiu de uso, por exclusão ou por correção: sai do histórico e da data de castração exibida. Se era a única, o usuário decide se o animal continua castrado (`animal.neutered`). |
+| `replaces_id` | integer | N | | UK, FK → `animal_neutering` | Registro que este corrige. Nulo = lançamento original. Ver 2.7. |
 | `management_id` | uuid | N | | FK → `neutering_management` | Nulo = avulsa. |
 | `animal_id` | uuid | | | FK → `animal` | Animal. |
 | `created_at` | timestamp | | now | | Auditoria. |
@@ -698,9 +674,8 @@ Cada registro é uma colocação, troca ou remoção de brinco.
 | `tag` | text | N | | | Brinco colocado. **Nulo = remoção do brinco.** Até 30 caracteres. |
 | `notes` | text | N | | | Motivo (ex.: perda do anterior). |
 | `identified_at` | timestamp | | | | Data (ver 2.8). |
-| `original_tag` | text | N | | | **Memória do brinco lançado originalmente.** Gravado uma única vez, na primeira correção que muda o brinco. Nulo = o brinco nunca foi corrigido (ou o registro original era uma remoção; nesse caso, use `corrected_at`). Não guarda a data original. Ver 2.7. |
-| `corrected_at` | timestamp | N | | | Instante da **última** correção (brinco, data ou observação). Nulo = nunca corrigido. |
 | `cancelled_at` | timestamp | N | | | **Exclusão lógica.** Preenchido = registro excluído: sai do histórico, e o brinco atual do animal é recalculado a partir do registro válido anterior. |
+| `replaces_id` | integer | N | | UK, FK → `animal_tagging` | Registro que este corrige. Nulo = lançamento original. Ver 2.7. |
 | `management_id` | uuid | N | | FK → `tag_management` | Nulo = avulso. |
 | `animal_id` | uuid | | | FK → `animal` | Animal. |
 | `created_at` | timestamp | | now | | Auditoria. |
@@ -722,9 +697,8 @@ Mesma estrutura e regras de `animal_tagging`, para o identificador eletrônico.
 | `rfid` | text | N | | | RFID. **Nulo = remoção.** Até 50 caracteres. |
 | `notes` | text | N | | | Observação. |
 | `identified_at` | timestamp | | | | Data (ver 2.8). |
-| `original_rfid` | text | N | | | **Memória do RFID lançado originalmente.** Mesma regra de `animal_tagging.original_tag`. Ver 2.7. |
-| `corrected_at` | timestamp | N | | | Instante da **última** correção. Nulo = nunca corrigido. |
 | `cancelled_at` | timestamp | N | | | **Exclusão lógica.** Preenchido = registro excluído; o RFID atual do animal é recalculado a partir do registro válido anterior. |
+| `replaces_id` | integer | N | | UK, FK → `animal_rfid_tagging` | Registro que este corrige. Nulo = lançamento original. Ver 2.7. |
 | `management_id` | uuid | N | | FK → `rfid_management` | Nulo = avulso. |
 | `animal_id` | uuid | | | FK → `animal` | Animal. |
 | `created_at` | timestamp | | now | | Auditoria. |
@@ -740,6 +714,7 @@ Mesma estrutura e regras de `animal_tagging`, para o identificador eletrônico.
 | `notes` | text | N | | | Observação. |
 | `branded_at` | timestamp | | | | Data da marcação (ver 2.8). |
 | `cancelled_at` | timestamp | N | | | **Exclusão lógica.** Preenchido = marcação excluída, mantida para auditoria. A marcação não tem colunas de correção (`original_*`/`corrected_at`): um erro é corrigido excluindo e lançando de novo. |
+| `replaces_id` | integer | N | | UK, FK → `animal_branding` | Registro que este corrige. Nulo = lançamento original. Ver 2.7. |
 | `management_id` | uuid | N | | FK → `brand_management` | Nulo = avulsa. |
 | `animal_id` | uuid | | | FK → `animal` | Animal. |
 | `created_at` | timestamp | | now | | Auditoria. |
@@ -774,6 +749,8 @@ Um procedimento (vacina, vermífugo, tratamento, exame…) aplicado a um grupo d
 | `notes` | text | N | | | Observação desse animal (reação adversa, aplicação incompleta…). |
 | `dose_ml` | numeric(10,2) | N | | | Dose aplicada (ml). **Obrigatória** quando o procedimento tem dose (`FIXED`/`PER_WEIGHT`) e sempre nula em `NONE`. Na etapa da sessão já vem sugerida pela regra do procedimento (`FIXED` = `dose_ml`; `PER_WEIGHT` = `dose_ml` × peso ÷ `dose_weight_kg`, com 1 casa, usando o peso da sessão ou o atual) e pode ser corrigida; sem peso, o operador informa a dose aplicada. Não é calculada depois, na consolidação. |
 | `applied_at` | timestamp | | | | Data e hora da aplicação neste animal. Em sessão, a hora do registro no animal; avulso, a informada no registro, a mesma para todos os animais do procedimento. |
+| `cancelled_at` | timestamp | N | | | Preenchido = a aplicação saiu de uso, por exclusão ou por correção. Ver 2.7. |
+| `replaces_id` | integer | N | | UK, FK → `health_management_item` | Registro que este corrige. Nulo = lançamento original. Ver 2.7. |
 | `management_id` | uuid | | | FK → `health_management` | Procedimento. |
 | `animal_id` | uuid | | | FK → `animal` | Animal. |
 | `created_at` | timestamp | | now | | Auditoria. |
@@ -798,7 +775,7 @@ Um procedimento (vacina, vermífugo, tratamento, exame…) aplicado a um grupo d
 | `deactivated_at` | timestamp | N | | | Desativação reversível. Técnica desativada não aparece para novos registros, mas continua nos já lançados. |
 | `created_at`, `updated_at` | timestamp | | now | | Auditoria. |
 
-**Regras:** técnica já usada em alguma castração (inclusive como `original_technique_id`) não pode ser excluída, só desativada.
+**Regras:** técnica já usada em alguma castração (inclusive numa versão anterior) não pode ser excluída, só desativada.
 
 ---
 

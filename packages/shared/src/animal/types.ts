@@ -54,7 +54,13 @@ export type AnimalWeighing = {
   notes: string | null;
   fromSession: boolean;
   correctedAt: string | null;
-  originalWeightKg: number | null;
+  /** Versões anteriores, da mais recente para a original. */
+  previousVersions: {
+    recordedAt: string;
+    date: string;
+    weightKg: number;
+    notes: string | null;
+  }[];
 };
 
 export type AnimalIdentifierHistory = {
@@ -75,9 +81,14 @@ export type AnimalNeutering = {
 export type AnimalNeuteringRecord = AnimalNeutering & {
   fromSession: boolean;
   techniqueId: string | null;
-  originalDate: string | null;
-  originalTechniqueId: string | null;
-  originalTechniqueName: string | null;
+  /** Versões anteriores, da mais recente para a original. */
+  previousVersions: {
+    recordedAt: string;
+    date: string;
+    techniqueId: string | null;
+    techniqueName: string | null;
+    notes: string | null;
+  }[];
 };
 
 export type AnimalHealthRecord = {
@@ -162,5 +173,11 @@ export type AnimalIdentifierRecord = {
   notes: string | null;
   fromSession: boolean;
   correctedAt: string | null;
-  originalValue: string | null;
+  /** Versões anteriores, da mais recente para a original. */
+  previousVersions: {
+    recordedAt: string;
+    date: string;
+    value: string | null;
+    notes: string | null;
+  }[];
 };

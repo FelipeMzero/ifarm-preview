@@ -16,7 +16,8 @@ export async function cancelIdentifier(
     );
     if (!record) throw identifierNotFound(kind);
 
-    await ADAPTERS[kind].update(tx, record.id, { cancelledAt: new Date() });
+    const cancelled = await ADAPTERS[kind].cancel(tx, record.id);
+    if (cancelled.count !== 1) throw identifierNotFound(kind);
     await recomputeCurrent(tx, kind, animalId);
   });
 }

@@ -5,7 +5,7 @@ import {
 } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
 import { animalStays, timeZoneAt } from "../../../property/time-zone.public";
-import { keepsOriginal, sessionDateLock } from "../../rules";
+import { sessionDateLock } from "../../rules";
 import {
   ADAPTERS,
   IdentifierError,
@@ -13,7 +13,8 @@ import {
   recomputeCurrent,
 } from "../shared";
 
-// Corrige valor, data (só registros avulsos) e observação de um brinco/RFID.
+// Corrige valor, data (só registros avulsos) e observação de um brinco/RFID: o registro não é
+// alterado; é cancelado e substituído por outro, que aponta para ele.
 export async function correctIdentifier(
   kind: IdentifierKind,
   animalId: string,
@@ -42,16 +43,17 @@ export async function correctIdentifier(
       }
     }
 
-    const valueChanged = data.value !== record.value;
-    await adapter.update(tx, record.id, {
+    // Condicional para uma correção concorrente não substituir o mesmo registro.
+    const cancelled = await adapter.cancel(tx, record.id);
+    if (cancelled.count !== 1) throw identifierNotFound(kind);
+
+    await adapter.create(tx, {
+      animalId,
+      managementId: record.managementId,
+      replacesId: record.id,
       value: data.value,
       notes: data.notes,
-      ...(identifiedAt ? { identifiedAt } : {}),
-      // Guarda o valor lançado originalmente só na primeira correção do valor.
-      ...(keepsOriginal(valueChanged, record.original)
-        ? { original: record.value }
-        : {}),
-      correctedAt: new Date(),
+      identifiedAt: identifiedAt ?? record.identifiedAt,
     });
 
     await recomputeCurrent(tx, kind, animalId);

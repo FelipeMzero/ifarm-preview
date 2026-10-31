@@ -4,8 +4,8 @@ import {
   birthDateBounds,
   blockingConflicts,
   isStandalonePurchase,
-  keepsOriginal,
   laterRecordsBlocker,
+  previousVersions,
   sessionDateLock,
   updateCommitmentIntents,
 } from "./rules";
@@ -15,7 +15,7 @@ describe("sessionDateLock", () => {
     expect(
       sessionDateLock({ managementId: "s1" }, "2026-01-01T10:00", "pesagem"),
     ).toBe(
-      "A data de uma pesagem feita em sessão de manejo segue a data da sessão.",
+      "A data de uma pesagem feita em sessão de manejo não pode ser corrigida.",
     );
   });
 
@@ -29,11 +29,24 @@ describe("sessionDateLock", () => {
   });
 });
 
-describe("keepsOriginal", () => {
-  it("guarda o original só na primeira correção que muda o valor", () => {
-    expect(keepsOriginal(true, null)).toBe(true);
-    expect(keepsOriginal(true, "A1")).toBe(false);
-    expect(keepsOriginal(false, null)).toBe(false);
+describe("previousVersions", () => {
+  const original = { id: 1, replacesId: null };
+  const first = { id: 2, replacesId: 1 };
+  const second = { id: 3, replacesId: 2 };
+  const other = { id: 4, replacesId: null };
+  const all = [original, first, second, other];
+
+  it("devolve a cadeia de correções, da mais recente para a original", () => {
+    expect(previousVersions(second, all)).toEqual([first, original]);
+  });
+
+  it("registro nunca corrigido não tem versões anteriores", () => {
+    expect(previousVersions(original, all)).toEqual([]);
+    expect(previousVersions(other, all)).toEqual([]);
+  });
+
+  it("sem os registros anteriores carregados, para na cadeia", () => {
+    expect(previousVersions(second, [second])).toEqual([]);
   });
 });
 

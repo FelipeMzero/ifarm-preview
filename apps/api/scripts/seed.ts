@@ -1603,7 +1603,8 @@ async function seedSpecialCases(ctx: Ctx, animals: SeededAnimal[]) {
   const recria = activeIn("SR:Recria");
   const reproducao = activeIn("SR:Reprodução");
 
-  // Pesagem corrigida (guarda o valor original) e pesagem cancelada (duplicada).
+  // Pesagem corrigida (a errada fica cancelada, e a correção aponta para ela) e pesagem
+  // cancelada (duplicada).
   const toCorrect = await prisma.animalWeighing.findFirst({
     where: { animalId: engorda[0].id, managementId: { not: null } },
     orderBy: { id: "desc" },
@@ -1613,9 +1614,20 @@ async function seedSpecialCases(ctx: Ctx, animals: SeededAnimal[]) {
     await prisma.animalWeighing.update({
       where: { id: toCorrect.id },
       data: {
-        originalWeight: toCorrect.weight.toNumber() + 50,
-        correctedAt: ago(40),
+        weight: toCorrect.weight.toNumber() + 50,
+        cancelledAt: ago(40),
+        createdAt: toCorrect.weighedAt,
+      },
+    });
+    await prisma.animalWeighing.create({
+      data: {
+        animalId: toCorrect.animalId,
+        managementId: toCorrect.managementId,
+        replacesId: toCorrect.id,
+        weight: toCorrect.weight,
+        weighedAt: toCorrect.weighedAt,
         notes: "Correção: valor digitado errado na balança",
+        createdAt: ago(40),
       },
     });
   }

@@ -3,6 +3,7 @@ import {
   type NeuteringCorrectionData,
 } from "@ifarm/shared";
 import { prisma } from "@ifarm/db";
+import { NotFoundError } from "../../../../lib/errors";
 import { animalStays, timeZoneAt } from "../../../property/time-zone.public";
 import { resolveEventDateIn } from "../../event-date";
 import { sessionDateLock } from "../../rules";
@@ -13,7 +14,8 @@ import {
   isValidNeuteringTechnique,
 } from "../technique.public";
 
-// Corrige técnica, data (só castrações avulsas) e observação; guarda os valores originais.
+// Corrige técnica, data (só castrações avulsas) e observação: a castração não é alterada; é
+// cancelada e substituída por outra, que aponta para ela.
 export async function correctNeutering(
   animalId: string,
   neuteringId: string,
@@ -43,24 +45,25 @@ export async function correctNeutering(
     neuteredAt = await resolveEventDateIn(animalId, data.date, timeZone);
   }
 
-  // Dois valores originais (data e técnica, que pode ser nula): a marca da primeira
-  // correção é correctedAt, não o original vazio (ver keepsOriginal).
-  const firstCorrection = neutering.correctedAt === null;
+  await prisma.$transaction(async (tx) => {
+    // Condicional para uma correção concorrente não substituir a mesma castração.
+    const cancelled = await tx.animalNeutering.updateMany({
+      where: { id: neutering.id, cancelledAt: null },
+      data: { cancelledAt: new Date() },
+    });
+    if (cancelled.count !== 1) {
+      throw new NotFoundError("Castração não encontrada.");
+    }
 
-  await prisma.animalNeutering.update({
-    where: { id: neutering.id },
-    data: {
-      techniqueId: data.techniqueId,
-      notes: data.notes,
-      ...(neuteredAt ? { neuteredAt } : {}),
-      // Guarda os valores lançados originalmente só na primeira correção.
-      ...(firstCorrection
-        ? {
-            originalNeuteredAt: neutering.neuteredAt,
-            originalTechniqueId: neutering.techniqueId,
-          }
-        : {}),
-      correctedAt: new Date(),
-    },
+    await tx.animalNeutering.create({
+      data: {
+        animalId,
+        managementId: neutering.managementId,
+        replacesId: neutering.id,
+        techniqueId: data.techniqueId,
+        notes: data.notes,
+        neuteredAt: neuteredAt ?? neutering.neuteredAt,
+      },
+    });
   });
 }

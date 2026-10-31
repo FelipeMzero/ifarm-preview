@@ -11,12 +11,13 @@ import {
   effectiveTagging,
 } from "../../management-session/effective.public";
 import { toZonedIso } from "../../property/time-zone.public";
+import { previousVersions } from "../rules";
 
 type Tx = Prisma.TransactionClient;
 
 // Brinco e RFID têm a mesma regra de histórico: cada troca é um registro, o valor
-// atual do animal (currentTag/currentRfid) é o do registro válido mais recente, e as
-// correções preservam o rastro (valor original na primeira correção, exclusão lógica).
+// atual do animal (currentTag/currentRfid) é o do registro válido mais recente, e os
+// registros não são alterados: corrigir cancela o registro e insere outro, que aponta para ele.
 // Usado pelas operações de identificador (listar, trocar, corrigir e excluir).
 export const isIdentifierKind = (kind: string): kind is IdentifierKind =>
   kind === "tag" || kind === "rfid";
@@ -24,34 +25,26 @@ export const isIdentifierKind = (kind: string): kind is IdentifierKind =>
 type IdentifierRecord = {
   id: number;
   value: string | null;
-  original: string | null;
   notes: string | null;
   identifiedAt: Date;
   managementId: string | null;
-  correctedAt: Date | null;
+  replacesId: number | null;
+  cancelledAt: Date | null;
+  createdAt: Date;
 };
 
 type IdentifierAdapter = {
   label: string;
   animalField: "currentTag" | "currentRfid";
-  list(tx: Tx, animalId: string): Promise<IdentifierRecord[]>;
+  /** Registros efetivos do animal, inclusive cancelados, do mais recente para o mais antigo. */
+  history(tx: Tx, animalId: string): Promise<IdentifierRecord[]>;
   find(
     tx: Tx,
     animalId: string,
     recordId: number,
   ): Promise<IdentifierRecord | null>;
-  update(
-    tx: Tx,
-    recordId: number,
-    data: {
-      value?: string | null;
-      original?: string | null;
-      notes?: string | null;
-      identifiedAt?: Date;
-      correctedAt?: Date;
-      cancelledAt?: Date;
-    },
-  ): Promise<unknown>;
+  /** Cancela o registro; devolve quantos cancelou (0 = já estava cancelado). */
+  cancel(tx: Tx, recordId: number): Promise<{ count: number }>;
   create(
     tx: Tx,
     data: {
@@ -59,6 +52,8 @@ type IdentifierAdapter = {
       value: string | null;
       notes: string | null;
       identifiedAt: Date;
+      managementId?: string | null;
+      replacesId?: number;
     },
   ): Promise<unknown>;
 };
@@ -69,28 +64,24 @@ export const ADAPTERS: Record<IdentifierKind, IdentifierAdapter> = {
   tag: {
     label: "Brinco",
     animalField: "currentTag",
-    list: async (tx, animalId) =>
+    history: async (tx, animalId) =>
       (
         await tx.animalTagging.findMany({
-          where: { animalId, cancelledAt: null, ...effectiveTagging },
+          where: { animalId, ...effectiveTagging },
           orderBy,
         })
-      ).map((r) => ({ ...r, value: r.tag, original: r.originalTag })),
+      ).map((r) => ({ ...r, value: r.tag })),
     find: async (tx, animalId, id) => {
       if (!Number.isInteger(id)) return null;
       const r = await tx.animalTagging.findFirst({
         where: { id, animalId, cancelledAt: null, ...effectiveTagging },
       });
-      return r ? { ...r, value: r.tag, original: r.originalTag } : null;
+      return r ? { ...r, value: r.tag } : null;
     },
-    update: (tx, id, { value, original, ...data }) =>
-      tx.animalTagging.update({
-        where: { id },
-        data: {
-          ...data,
-          ...(value !== undefined ? { tag: value } : {}),
-          ...(original !== undefined ? { originalTag: original } : {}),
-        },
+    cancel: (tx, id) =>
+      tx.animalTagging.updateMany({
+        where: { id, cancelledAt: null },
+        data: { cancelledAt: new Date() },
       }),
     create: (tx, { value, ...data }) =>
       tx.animalTagging.create({ data: { ...data, tag: value } }),
@@ -98,38 +89,46 @@ export const ADAPTERS: Record<IdentifierKind, IdentifierAdapter> = {
   rfid: {
     label: "RFID",
     animalField: "currentRfid",
-    list: async (tx, animalId) =>
+    history: async (tx, animalId) =>
       (
         await tx.animalRfidTagging.findMany({
-          where: { animalId, cancelledAt: null, ...effectiveRfidTagging },
+          where: { animalId, ...effectiveRfidTagging },
           orderBy,
         })
-      ).map((r) => ({ ...r, value: r.rfid, original: r.originalRfid })),
+      ).map((r) => ({ ...r, value: r.rfid })),
     find: async (tx, animalId, id) => {
       if (!Number.isInteger(id)) return null;
       const r = await tx.animalRfidTagging.findFirst({
         where: { id, animalId, cancelledAt: null, ...effectiveRfidTagging },
       });
-      return r ? { ...r, value: r.rfid, original: r.originalRfid } : null;
+      return r ? { ...r, value: r.rfid } : null;
     },
-    update: (tx, id, { value, original, ...data }) =>
-      tx.animalRfidTagging.update({
-        where: { id },
-        data: {
-          ...data,
-          ...(value !== undefined ? { rfid: value } : {}),
-          ...(original !== undefined ? { originalRfid: original } : {}),
-        },
+    cancel: (tx, id) =>
+      tx.animalRfidTagging.updateMany({
+        where: { id, cancelledAt: null },
+        data: { cancelledAt: new Date() },
       }),
     create: (tx, { value, ...data }) =>
       tx.animalRfidTagging.create({ data: { ...data, rfid: value } }),
   },
 };
 
-// A data vai no fuso da propriedade onde a identificação aconteceu (`zoneOf`).
+// Registros válidos do animal, do mais recente para o mais antigo.
+export async function validRecords(
+  tx: Tx,
+  kind: IdentifierKind,
+  animalId: string,
+) {
+  const all = await ADAPTERS[kind].history(tx, animalId);
+  return all.filter((r) => !r.cancelledAt);
+}
+
+// A data vai no fuso da propriedade onde a identificação aconteceu (`zoneOf`). `all` são os
+// registros do animal, inclusive cancelados, de onde saem as versões anteriores do corrigido.
 export function toIdentifierDto(
   r: IdentifierRecord,
   zoneOf: ZoneOf,
+  all: IdentifierRecord[],
 ): AnimalIdentifierRecord {
   return {
     id: r.id,
@@ -137,10 +136,17 @@ export function toIdentifierDto(
     value: r.value,
     notes: r.notes,
     fromSession: r.managementId != null,
-    correctedAt: r.correctedAt
-      ? toZonedIso(r.correctedAt, zoneOf(r.correctedAt))
-      : null,
-    originalValue: r.original,
+    // Uma correção é um registro novo: foi corrigido quando ele foi criado.
+    correctedAt:
+      r.replacesId != null
+        ? toZonedIso(r.createdAt, zoneOf(r.createdAt))
+        : null,
+    previousVersions: previousVersions(r, all).map((v) => ({
+      recordedAt: instantToZonedIso(v.createdAt, zoneOf(v.createdAt)),
+      date: instantToZonedIso(v.identifiedAt, zoneOf(v.identifiedAt)),
+      value: v.value,
+      notes: v.notes,
+    })),
   };
 }
 
@@ -153,7 +159,7 @@ export async function recomputeCurrent(
   animalId: string,
 ) {
   const adapter = ADAPTERS[kind];
-  const [latest] = await adapter.list(tx, animalId);
+  const [latest] = await validRecords(tx, kind, animalId);
   const value = latest?.value ?? null;
 
   const animal = await tx.animal.findUniqueOrThrow({

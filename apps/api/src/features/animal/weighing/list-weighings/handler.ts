@@ -8,10 +8,12 @@ import { sortWeighings, toWeighingDto } from "../history.public";
 export async function listWeighings(
   animalId: string,
 ): Promise<AnimalWeighing[]> {
-  const items = await prisma.animalWeighing.findMany({
-    where: { animalId, cancelledAt: null, ...effectiveWeighing },
+  // As canceladas vêm junto: são as versões anteriores das corrigidas.
+  const all = await prisma.animalWeighing.findMany({
+    where: { animalId, ...effectiveWeighing },
   });
+  const items = all.filter((w) => !w.cancelledAt);
   if (!items.length) return [];
   const { zoneOf } = await animalStays(animalId);
-  return sortWeighings(items.map((w) => toWeighingDto(w, zoneOf)));
+  return sortWeighings(items.map((w) => toWeighingDto(w, zoneOf, all)));
 }
