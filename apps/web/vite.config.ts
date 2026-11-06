@@ -29,6 +29,7 @@ const proxy = {
 
 export default defineConfig(() => {
   return {
+    base: process.env.VITE_BASE_PATH || "/",
     plugins: [geomanCss(), react(), tailwindcss()],
     resolve: {
       alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) },

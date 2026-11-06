@@ -6,6 +6,7 @@ import {
   createBatchTransferClient,
   createBreedClient,
   createCurrentPropertyClient,
+  createDashboardClient,
   createHealthManagementTypeClient,
   createManagementSessionClient,
   createNeuteringTechniqueClient,
@@ -29,6 +30,7 @@ export const healthManagementTypeClient =
 export const neuteringTechniqueClient = createNeuteringTechniqueClient(request);
 export const stockingClient = createStockingClient(request);
 export const currentPropertyClient = createCurrentPropertyClient(request);
+export const dashboardClient = createDashboardClient(request);
 export const propertyClient = createPropertyClient(request);
 export const areaClient = createAreaClient(request);
 export const purchaseClient = createPurchaseClient(request);

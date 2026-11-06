@@ -17,6 +17,7 @@ import { propertyRoutes } from "./features/property/routes";
 import { purchaseRoutes } from "./features/purchase/routes";
 import { receptionRoutes } from "./features/reception/routes";
 import { currentPropertyRoutes } from "./features/current-property/routes";
+import { dashboardRoutes } from "./features/dashboard/routes";
 
 const app = new Hono();
 
@@ -86,6 +87,7 @@ app.route("/api/purchase", purchaseRoutes);
 app.route("/api/reception", receptionRoutes);
 app.route("/api/stocking-preview", stockingPreviewRoutes);
 app.route("/api/user", currentPropertyRoutes);
+app.route("/api/dashboard", dashboardRoutes);
 
 // Nenhuma rota casou (caminho inexistente ou id em formato inválido): 404 no mesmo formato JSON
 // dos outros erros, que é o que os clientes leem.

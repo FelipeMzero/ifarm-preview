@@ -191,3 +191,10 @@ export async function areasLastExit(
       .map((r) => [r.areaId, instantToZonedIso(r._max.exitedAt!, timeZone)]),
   );
 }
+
+export {
+  sumUnits,
+  capacityCheck,
+  animalUnits,
+  type UaAnimal,
+} from "./stocking-rules";
