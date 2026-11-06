@@ -31,5 +31,12 @@ export const auth = betterAuth({
     "https://*.github.io",
     "https://felipemzero.github.io",
   ],
+  advanced: {
+    useSecureCookies: true,
+    defaultCookieAttributes: {
+      sameSite: "none",
+      secure: true,
+    },
+  },
   plugins: [admin({ roles, defaultRole: "worker" }), expo()],
 });

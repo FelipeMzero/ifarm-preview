@@ -89,6 +89,16 @@ app.route("/api/stocking-preview", stockingPreviewRoutes);
 app.route("/api/user", currentPropertyRoutes);
 app.route("/api/dashboard", dashboardRoutes);
 
+// Rota raiz para conferência e healthcheck do serviço
+app.get("/", (c) =>
+  c.json({
+    ok: true,
+    service: "iFarm API",
+    status: "online",
+    time: new Date().toISOString(),
+  }),
+);
+
 // Nenhuma rota casou (caminho inexistente ou id em formato inválido): 404 no mesmo formato JSON
 // dos outros erros, que é o que os clientes leem.
 app.notFound((c) =>
