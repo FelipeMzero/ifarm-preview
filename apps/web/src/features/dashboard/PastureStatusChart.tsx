@@ -35,18 +35,23 @@ const chartConfig = {
 } satisfies ChartConfig;
 
 export function PastureStatusChart({ data }: PastureStatusChartProps) {
+  const available = data?.available ?? 0;
+  const occupied = data?.occupied ?? 0;
+  const resting = data?.resting ?? 0;
+  const total = data?.total ?? 0;
+
   const chartData = [
     {
       name: "Disponível",
       key: "available",
-      value: data.available,
+      value: available,
       fill: "#10b981",
     },
-    { name: "Ocupada", key: "occupied", value: data.occupied, fill: "#f59e0b" },
+    { name: "Ocupada", key: "occupied", value: occupied, fill: "#f59e0b" },
     {
       name: "Em Descanso",
       key: "resting",
-      value: data.resting,
+      value: resting,
       fill: "#0284c7",
     },
   ].filter((item) => item.value > 0);
@@ -59,11 +64,11 @@ export function PastureStatusChart({ data }: PastureStatusChartProps) {
           Status das Pastagens
         </CardTitle>
         <CardDescription>
-          Distribuição das áreas por situação de manejo ({data.total} áreas)
+          Distribuição das áreas por situação de manejo ({total} áreas)
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-1 flex-col items-center justify-center p-4">
-        {data.total === 0 ? (
+        {total === 0 ? (
           <div className="py-12 text-center text-sm text-muted-foreground">
             Nenhuma pastagem cadastrada.
           </div>
@@ -99,17 +104,17 @@ export function PastureStatusChart({ data }: PastureStatusChartProps) {
               <div className="flex items-center gap-1.5">
                 <span className="size-2.5 rounded-full bg-emerald-500" />
                 <span className="text-muted-foreground">Disponível:</span>
-                <span className="font-semibold">{data.available}</span>
+                <span className="font-semibold">{available}</span>
               </div>
               <div className="flex items-center gap-1.5">
                 <span className="size-2.5 rounded-full bg-amber-500" />
                 <span className="text-muted-foreground">Ocupada:</span>
-                <span className="font-semibold">{data.occupied}</span>
+                <span className="font-semibold">{occupied}</span>
               </div>
               <div className="flex items-center gap-1.5">
                 <span className="size-2.5 rounded-full bg-sky-600" />
                 <span className="text-muted-foreground">Descanso:</span>
-                <span className="font-semibold">{data.resting}</span>
+                <span className="font-semibold">{resting}</span>
               </div>
             </div>
           </div>

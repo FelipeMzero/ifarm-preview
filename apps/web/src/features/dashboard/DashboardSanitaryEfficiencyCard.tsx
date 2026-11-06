@@ -18,6 +18,12 @@ export function DashboardSanitaryEfficiencyCard({
   sanitary,
   efficiency,
 }: DashboardSanitaryEfficiencyCardProps) {
+  const activeWithdrawalAnimals = sanitary?.activeWithdrawalAnimals ?? [];
+  const procedures30d = sanitary?.procedures30d ?? 0;
+  const procedures90d = sanitary?.procedures90d ?? 0;
+  const kgPerHaPerDay = efficiency?.kgPerHaPerDay ?? null;
+  const totalGainKg = efficiency?.totalGainKg ?? 0;
+  const occupiedHectares = efficiency?.occupiedHectares ?? 0;
   return (
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
       {/* Indicadores Sanitários */}
@@ -38,7 +44,7 @@ export function DashboardSanitaryEfficiencyCard({
                 Procedimentos (30 dias)
               </span>
               <div className="mt-1 text-2xl font-bold text-foreground">
-                {sanitary.procedures30d}
+                {procedures30d}
               </div>
               <span className="text-[11px] text-muted-foreground">
                 Aplicações recentes
@@ -50,7 +56,7 @@ export function DashboardSanitaryEfficiencyCard({
                 Procedimentos (90 dias)
               </span>
               <div className="mt-1 text-2xl font-bold text-foreground">
-                {sanitary.procedures90d}
+                {procedures90d}
               </div>
               <span className="text-[11px] text-muted-foreground">
                 Último trimestre
@@ -59,15 +65,15 @@ export function DashboardSanitaryEfficiencyCard({
           </div>
 
           {/* Animais em carência se houver */}
-          {sanitary.activeWithdrawalAnimals.length > 0 ? (
+          {activeWithdrawalAnimals.length > 0 ? (
             <div className="space-y-2 rounded-lg border border-rose-200 bg-rose-50/30 p-3 dark:border-rose-900/50 dark:bg-rose-950/10">
               <div className="flex items-center gap-1.5 text-xs font-semibold text-rose-900 dark:text-rose-200">
                 <ShieldAlert className="size-3.5" />
-                Animais em período de carência (
-                {sanitary.activeWithdrawalAnimals.length}):
+                Animais em período de carência ({activeWithdrawalAnimals.length}
+                ):
               </div>
               <div className="max-h-32 space-y-1.5 overflow-y-auto pr-1">
-                {sanitary.activeWithdrawalAnimals.map((item) => (
+                {activeWithdrawalAnimals.map((item) => (
                   <div
                     key={`${item.animalId}-${item.withdrawalEndDate}`}
                     className="flex items-center justify-between text-xs"
@@ -111,9 +117,7 @@ export function DashboardSanitaryEfficiencyCard({
                 Ganho Médio Diário por Hectare
               </span>
               <div className="text-3xl font-extrabold text-amber-600 dark:text-amber-400">
-                {efficiency.kgPerHaPerDay != null
-                  ? `${efficiency.kgPerHaPerDay} kg/ha/dia`
-                  : "—"}
+                {kgPerHaPerDay != null ? `${kgPerHaPerDay} kg/ha/dia` : "—"}
               </div>
             </div>
             <Zap className="size-8 text-amber-500/20" />
@@ -124,13 +128,13 @@ export function DashboardSanitaryEfficiencyCard({
               <span className="text-muted-foreground">
                 Ganho Total Estimado (30d):
               </span>
-              <p className="font-semibold">{efficiency.totalGainKg} kg</p>
+              <p className="font-semibold">{totalGainKg} kg</p>
             </div>
             <div className="space-y-1">
               <span className="text-muted-foreground">
                 Área em Pastejo Ativo:
               </span>
-              <p className="font-semibold">{efficiency.occupiedHectares} ha</p>
+              <p className="font-semibold">{occupiedHectares} ha</p>
             </div>
           </div>
 

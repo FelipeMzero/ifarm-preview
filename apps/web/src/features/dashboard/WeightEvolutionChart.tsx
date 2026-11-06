@@ -27,8 +27,9 @@ const chartConfig = {
 } satisfies ChartConfig;
 
 export function WeightEvolutionChart({ data }: WeightEvolutionChartProps) {
-  const hasData = data.some((d) => d.averageWeightKg > 0);
-  const weights = data
+  const safeData = data ?? [];
+  const hasData = safeData.some((d) => d.averageWeightKg > 0);
+  const weights = safeData
     .filter((d) => d.averageWeightKg > 0)
     .map((d) => d.averageWeightKg);
   const minWeight = weights.length ? Math.min(...weights) : 0;
@@ -58,7 +59,7 @@ export function WeightEvolutionChart({ data }: WeightEvolutionChartProps) {
             className="aspect-auto h-[220px] w-full"
           >
             <AreaChart
-              data={data}
+              data={safeData}
               margin={{ top: 12, right: 16, left: 0, bottom: 4 }}
             >
               <defs>

@@ -24,6 +24,8 @@ type SlaughterProjectionsTableProps = {
 export function SlaughterProjectionsTable({
   data,
 }: SlaughterProjectionsTableProps) {
+  const safeData = data ?? [];
+
   return (
     <Card className="w-full">
       <CardHeader className="pb-2">
@@ -37,7 +39,7 @@ export function SlaughterProjectionsTable({
         </CardDescription>
       </CardHeader>
       <CardContent className="p-0">
-        {data.length === 0 ? (
+        {safeData.length === 0 ? (
           <div className="py-8 text-center text-sm text-muted-foreground">
             Nenhum animal com histórico de pesagens suficiente para projeção de
             abate.
@@ -60,7 +62,7 @@ export function SlaughterProjectionsTable({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {data.map((item) => {
+                {safeData.map((item) => {
                   const formattedDate = item.projectedSlaughterDate
                     ? new Date(
                         `${item.projectedSlaughterDate}T00:00:00`,

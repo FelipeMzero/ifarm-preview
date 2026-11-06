@@ -22,19 +22,21 @@ type ReadyPasturesTableProps = {
 };
 
 export function ReadyPasturesTable({ data }: ReadyPasturesTableProps) {
+  const safeData = data ?? [];
+
   return (
     <Card className="w-full">
       <CardHeader className="pb-2">
         <CardTitle className="flex items-center gap-2 text-base font-semibold">
           <CheckCircle2 className="size-4 text-emerald-600 dark:text-emerald-400" />
-          Pastos Prontos para Uso ({data.length})
+          Pastos Prontos para Uso ({safeData.length})
         </CardTitle>
         <CardDescription>
           Áreas com período de descanso cumprido ou liberadas para ocupação
         </CardDescription>
       </CardHeader>
       <CardContent className="p-0">
-        {data.length === 0 ? (
+        {safeData.length === 0 ? (
           <div className="py-8 text-center text-sm text-muted-foreground">
             Nenhuma pastagem pronta para uso no momento.
           </div>
@@ -54,7 +56,7 @@ export function ReadyPasturesTable({ data }: ReadyPasturesTableProps) {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {data.map((pasture) => (
+                {safeData.map((pasture) => (
                   <TableRow key={pasture.id}>
                     <TableCell className="font-medium text-foreground">
                       {pasture.name}

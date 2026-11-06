@@ -29,6 +29,8 @@ const chartConfig = {
 export function CategoryDistributionChart({
   data,
 }: CategoryDistributionChartProps) {
+  const safeData = data ?? [];
+
   return (
     <Card className="flex flex-col">
       <CardHeader className="pb-2">
@@ -41,7 +43,7 @@ export function CategoryDistributionChart({
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-1 flex-col justify-center p-4">
-        {data.length === 0 ? (
+        {safeData.length === 0 ? (
           <div className="py-12 text-center text-sm text-muted-foreground">
             Sem dados de categoria disponíveis.
           </div>
@@ -52,7 +54,7 @@ export function CategoryDistributionChart({
               className="mx-auto max-h-[220px] w-full"
             >
               <BarChart
-                data={data}
+                data={safeData}
                 layout="vertical"
                 margin={{ top: 8, right: 24, left: 16, bottom: 8 }}
               >

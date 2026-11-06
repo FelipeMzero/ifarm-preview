@@ -107,7 +107,7 @@ export function Dashboard() {
 
       {/* Ações Rápidas e Filtro por Lote */}
       <DashboardQuickActions
-        batches={dashboardData.batches}
+        batches={dashboardData.batches ?? []}
         selectedBatchId={selectedBatchId}
         onSelectBatch={setSelectedBatchId}
       />

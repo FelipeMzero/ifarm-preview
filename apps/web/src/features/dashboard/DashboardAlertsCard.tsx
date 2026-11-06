@@ -20,11 +20,16 @@ type DashboardAlertsCardProps = {
 };
 
 export function DashboardAlertsCard({ alerts }: DashboardAlertsCardProps) {
+  const rotationAlerts = alerts?.rotationAlerts ?? [];
+  const unweighedAnimalsCount = alerts?.unweighedAnimalsCount ?? 0;
+  const activeWithdrawalCount = alerts?.activeWithdrawalCount ?? 0;
+  const pendingPurchasesCount = alerts?.pendingPurchasesCount ?? 0;
+
   const hasCriticalAlerts =
-    alerts.rotationAlerts.length > 0 ||
-    alerts.unweighedAnimalsCount > 0 ||
-    alerts.activeWithdrawalCount > 0 ||
-    alerts.pendingPurchasesCount > 0;
+    rotationAlerts.length > 0 ||
+    unweighedAnimalsCount > 0 ||
+    activeWithdrawalCount > 0 ||
+    pendingPurchasesCount > 0;
 
   return (
     <Card className="w-full">
@@ -74,10 +79,9 @@ export function DashboardAlertsCard({ alerts }: DashboardAlertsCardProps) {
               <div className="space-y-1">
                 <p className="text-xs font-semibold">Rotação de Pasto</p>
                 <p className="text-xs text-muted-foreground">
-                  {alerts.rotationAlerts.length > 0 ? (
+                  {rotationAlerts.length > 0 ? (
                     <span className="font-medium text-amber-600 dark:text-amber-400">
-                      {alerts.rotationAlerts.length} pasto(s) com prazo
-                      estourado
+                      {rotationAlerts.length} pasto(s) com prazo estourado
                     </span>
                   ) : (
                     "Dentro do prazo"
@@ -92,10 +96,10 @@ export function DashboardAlertsCard({ alerts }: DashboardAlertsCardProps) {
               <div className="space-y-1">
                 <p className="text-xs font-semibold">Pesagens Pendentes</p>
                 <p className="text-xs text-muted-foreground">
-                  {alerts.unweighedAnimalsCount > 0 ? (
+                  {unweighedAnimalsCount > 0 ? (
                     <span className="font-medium text-sky-600 dark:text-sky-400">
-                      {alerts.unweighedAnimalsCount} animais sem pesagem há &gt;
-                      60 dias
+                      {unweighedAnimalsCount} animais sem pesagem há &gt; 60
+                      dias
                     </span>
                   ) : (
                     "Rebanho atualizado"
@@ -110,9 +114,9 @@ export function DashboardAlertsCard({ alerts }: DashboardAlertsCardProps) {
               <div className="space-y-1">
                 <p className="text-xs font-semibold">Carência Sanitária</p>
                 <p className="text-xs text-muted-foreground">
-                  {alerts.activeWithdrawalCount > 0 ? (
+                  {activeWithdrawalCount > 0 ? (
                     <span className="font-medium text-rose-600 dark:text-rose-400">
-                      {alerts.activeWithdrawalCount} animais em retenção médica
+                      {activeWithdrawalCount} animais em retenção médica
                     </span>
                   ) : (
                     "Nenhum animal retido"
@@ -127,10 +131,9 @@ export function DashboardAlertsCard({ alerts }: DashboardAlertsCardProps) {
               <div className="space-y-1">
                 <p className="text-xs font-semibold">Entregas de Compras</p>
                 <p className="text-xs text-muted-foreground">
-                  {alerts.pendingPurchasesCount > 0 ? (
+                  {pendingPurchasesCount > 0 ? (
                     <span className="font-medium text-purple-600 dark:text-purple-400">
-                      {alerts.pendingPurchasesCount} compra(s) aguardando
-                      recepção
+                      {pendingPurchasesCount} compra(s) aguardando recepção
                     </span>
                   ) : (
                     "Nenhuma pendente"
@@ -142,13 +145,13 @@ export function DashboardAlertsCard({ alerts }: DashboardAlertsCardProps) {
         )}
 
         {/* Tabela de Lotes com ocupação excedida se houver */}
-        {alerts.rotationAlerts.length > 0 && (
+        {rotationAlerts.length > 0 && (
           <div className="rounded-lg border border-amber-200 bg-amber-50/30 p-3 dark:border-amber-900/50 dark:bg-amber-950/10">
             <p className="mb-2 text-xs font-semibold text-amber-900 dark:text-amber-200">
               Lotes que ultrapassaram o período máximo recomendado no pasto:
             </p>
             <div className="space-y-1.5">
-              {alerts.rotationAlerts.map((rot) => (
+              {rotationAlerts.map((rot) => (
                 <div
                   key={`${rot.batchId}-${rot.areaId}`}
                   className="flex items-center justify-between text-xs"

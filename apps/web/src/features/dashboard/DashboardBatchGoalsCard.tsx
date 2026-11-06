@@ -24,14 +24,15 @@ type DashboardBatchGoalsCardProps = {
 export function DashboardBatchGoalsCard({
   goals,
 }: DashboardBatchGoalsCardProps) {
-  if (goals.length === 0) return null;
+  const safeGoals = goals ?? [];
+  if (safeGoals.length === 0) return null;
 
   return (
     <Card className="w-full">
       <CardHeader className="pb-2">
         <CardTitle className="flex items-center gap-2 text-base font-semibold">
           <Target className="size-4 text-sky-600 dark:text-sky-400" />
-          Metas de Venda dos Lotes ({goals.length})
+          Metas de Venda dos Lotes ({safeGoals.length})
         </CardTitle>
         <CardDescription>
           Acompanhamento do peso médio em direção à meta de comercialização
@@ -54,7 +55,7 @@ export function DashboardBatchGoalsCard({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {goals.map((g) => {
+              {safeGoals.map((g) => {
                 const formattedDate = new Date(
                   `${g.targetDate}T00:00:00`,
                 ).toLocaleDateString("pt-BR");

@@ -47,7 +47,7 @@ export function DashboardQuickActions({
             <SelectItem value="all">
               Todos os Lotes (Fazenda Inteira)
             </SelectItem>
-            {batches.map((b) => (
+            {(batches ?? []).map((b) => (
               <SelectItem key={b.id} value={b.id}>
                 Lote: {b.name}
               </SelectItem>
