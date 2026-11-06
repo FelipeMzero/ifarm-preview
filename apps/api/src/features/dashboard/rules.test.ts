@@ -3,7 +3,10 @@ import { DAY_MS } from "@ifarm/shared";
 import {
   calculateLinearRegression,
   categorizeAnimal,
+  computeBatchGoals,
   computePastureStatus,
+  computeProductiveEfficiency,
+  computeRotationAlerts,
   projectSlaughterDate,
 } from "./rules";
 
@@ -183,5 +186,84 @@ describe("categorizeAnimal", () => {
         now,
       ),
     ).toBe("Touros Inteiros (> 2 anos)");
+  });
+});
+
+describe("computeRotationAlerts", () => {
+  const refDate = new Date("2026-06-01T00:00:00Z");
+
+  it("identifica lotes que excederam o prazo máximo no pasto", () => {
+    const items = [
+      {
+        batchId: "b1",
+        batchName: "Lote 1",
+        areaId: "a1",
+        areaName: "Pasto 1",
+        enteredAt: new Date(refDate.getTime() - 45 * DAY_MS),
+        defaultOccupationDays: 30, // 45 > 30 -> excedeu em 15 dias
+      },
+      {
+        batchId: "b2",
+        batchName: "Lote 2",
+        areaId: "a2",
+        areaName: "Pasto 2",
+        enteredAt: new Date(refDate.getTime() - 20 * DAY_MS),
+        defaultOccupationDays: 30, // 20 <= 30 -> normal
+      },
+    ];
+
+    const alerts = computeRotationAlerts(items, refDate);
+    expect(alerts).toHaveLength(1);
+    expect(alerts[0].batchName).toBe("Lote 1");
+    expect(alerts[0].daysExceeded).toBe(15);
+  });
+});
+
+describe("computeBatchGoals", () => {
+  const refDate = new Date("2026-06-01T00:00:00Z");
+
+  it("classifica metas de venda em REACHED, ON_TRACK ou BEHIND", () => {
+    const items = [
+      {
+        batchId: "b1",
+        batchName: "Lote Meta Atingida",
+        currentAnimalCount: 20,
+        currentAvgWeightKg: 460,
+        targetWeightKg: 450,
+        targetDate: new Date(refDate.getTime() + 30 * DAY_MS),
+        batchAdg: 1.0,
+      },
+      {
+        batchId: "b2",
+        batchName: "Lote No Caminho",
+        currentAnimalCount: 20,
+        currentAvgWeightKg: 420,
+        targetWeightKg: 450,
+        targetDate: new Date(refDate.getTime() + 30 * DAY_MS),
+        batchAdg: 1.2, // precisa de 1.0 kg/dia ((450 - 420) / 30) -> 1.2 >= 0.9 -> ON_TRACK
+      },
+      {
+        batchId: "b3",
+        batchName: "Lote Atrasado",
+        currentAnimalCount: 20,
+        currentAvgWeightKg: 380,
+        targetWeightKg: 450,
+        targetDate: new Date(refDate.getTime() + 30 * DAY_MS),
+        batchAdg: 0.5, // precisa de 2.33 kg/dia -> 0.5 < 2.1 -> BEHIND
+      },
+    ];
+
+    const results = computeBatchGoals(items, refDate);
+    expect(results[0].status).toBe("REACHED");
+    expect(results[1].status).toBe("ON_TRACK");
+    expect(results[2].status).toBe("BEHIND");
+  });
+});
+
+describe("computeProductiveEfficiency", () => {
+  it("calcula ganho em kg/ha/dia", () => {
+    const res = computeProductiveEfficiency(1500, 50, 30);
+    // 1500 / (50 * 30) = 1.0 kg/ha/dia
+    expect(res.kgPerHaPerDay).toBe(1);
   });
 });

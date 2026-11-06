@@ -56,6 +56,61 @@ export type DashboardSlaughterProjection = {
   percentageOfTarget: number;
 };
 
+export type DashboardRotationAlert = {
+  batchId: string;
+  batchName: string;
+  areaId: string;
+  areaName: string;
+  daysOccupied: number;
+  maxDays: number;
+  daysExceeded: number;
+};
+
+export type DashboardAlerts = {
+  rotationAlerts: DashboardRotationAlert[];
+  unweighedAnimalsCount: number;
+  activeWithdrawalCount: number;
+  pendingPurchasesCount: number;
+};
+
+export type DashboardBatchGoal = {
+  batchId: string;
+  batchName: string;
+  currentAnimalCount: number;
+  currentAvgWeightKg: number | null;
+  targetWeightKg: number;
+  targetDate: string;
+  daysRemaining: number;
+  status: "REACHED" | "ON_TRACK" | "BEHIND";
+  requiredAdg: number | null;
+};
+
+export type DashboardWithdrawalAnimal = {
+  animalId: string;
+  identifier: string;
+  title: string;
+  withdrawalEndDate: string;
+  daysRemaining: number;
+};
+
+export type DashboardSanitary = {
+  procedures30d: number;
+  procedures90d: number;
+  activeWithdrawalAnimals: DashboardWithdrawalAnimal[];
+};
+
+export type DashboardEfficiency = {
+  kgPerHaPerDay: number | null;
+  totalGainKg: number;
+  occupiedHectares: number;
+  evaluatedDays: number;
+};
+
+export type DashboardBatchOption = {
+  id: string;
+  name: string;
+};
+
 export type DashboardData = {
   summary: DashboardSummary;
   pastureStatus: DashboardPastureStatus;
@@ -63,4 +118,9 @@ export type DashboardData = {
   weightEvolution: DashboardWeightEvolutionItem[];
   readyPastures: DashboardReadyPasture[];
   slaughterProjections: DashboardSlaughterProjection[];
+  alerts: DashboardAlerts;
+  batchGoals: DashboardBatchGoal[];
+  sanitary: DashboardSanitary;
+  efficiency: DashboardEfficiency;
+  batches: DashboardBatchOption[];
 };

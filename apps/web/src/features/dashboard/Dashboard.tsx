@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Fence, LandPlot, MapPin, User } from "lucide-react";
 
@@ -9,10 +10,14 @@ import { useCurrentProperty } from "@/features/shell/useCurrentProperty";
 import { currentPropertyDetailsQuery } from "@/features/shell/queries";
 import { NoPropertySelected } from "@/features/shell/NoPropertySelected";
 import { dashboardQuery } from "./queries";
+import { DashboardQuickActions } from "./DashboardQuickActions";
+import { DashboardAlertsCard } from "./DashboardAlertsCard";
 import { DashboardKpis } from "./DashboardKpis";
 import { PastureStatusChart } from "./PastureStatusChart";
 import { CategoryDistributionChart } from "./CategoryDistributionChart";
 import { WeightEvolutionChart } from "./WeightEvolutionChart";
+import { DashboardBatchGoalsCard } from "./DashboardBatchGoalsCard";
+import { DashboardSanitaryEfficiencyCard } from "./DashboardSanitaryEfficiencyCard";
 import { ReadyPasturesTable } from "./ReadyPasturesTable";
 import { SlaughterProjectionsTable } from "./SlaughterProjectionsTable";
 
@@ -41,6 +46,8 @@ function DashboardSkeleton() {
 }
 
 export function Dashboard() {
+  const [selectedBatchId, setSelectedBatchId] = useState<string>("");
+
   const { property: currentProperty, isLoading: isCurrentPropertyLoading } =
     useCurrentProperty();
 
@@ -60,7 +67,7 @@ export function Dashboard() {
     isError: isDashboardError,
     refetch: refetchDashboard,
   } = useQuery({
-    ...dashboardQuery(currentProperty?.id),
+    ...dashboardQuery(currentProperty?.id, selectedBatchId),
     enabled: !isCurrentPropertyLoading && !!currentProperty?.id,
   });
 
@@ -97,6 +104,13 @@ export function Dashboard() {
           </p>
         </div>
       </div>
+
+      {/* Ações Rápidas e Filtro por Lote */}
+      <DashboardQuickActions
+        batches={dashboardData.batches}
+        selectedBatchId={selectedBatchId}
+        onSelectBatch={setSelectedBatchId}
+      />
 
       {/* Identificação da Propriedade */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
@@ -147,11 +161,17 @@ export function Dashboard() {
         </Card>
       </div>
 
+      {/* Alertas Operacionais e Sanitários */}
+      <DashboardAlertsCard alerts={dashboardData.alerts} />
+
       {/* KPIs Principais */}
       <DashboardKpis
         summary={dashboardData.summary}
         pastureStatus={dashboardData.pastureStatus}
       />
+
+      {/* Metas de Venda dos Lotes */}
+      <DashboardBatchGoalsCard goals={dashboardData.batchGoals} />
 
       {/* Gráficos de Pastagens e Categorias */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
@@ -161,6 +181,12 @@ export function Dashboard() {
 
       {/* Evolução de Peso Médio */}
       <WeightEvolutionChart data={dashboardData.weightEvolution} />
+
+      {/* Indicadores Sanitários e Eficiência Produtiva por Hectare */}
+      <DashboardSanitaryEfficiencyCard
+        sanitary={dashboardData.sanitary}
+        efficiency={dashboardData.efficiency}
+      />
 
       {/* Tabela de Pastos Prontos para Uso */}
       <ReadyPasturesTable data={dashboardData.readyPastures} />

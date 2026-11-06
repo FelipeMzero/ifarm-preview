@@ -2,7 +2,7 @@
 
 ## 1. Visão Geral
 
-Implementação do módulo de **Dashboard / Painel Gerencial** do iFarm, integrando indicadores zootécnicos, monitoramento de pastagens e algoritmos preditivos lineares para abate, inspirados no modelo de pecuária de precisão.
+Implementação do módulo de **Dashboard / Painel Gerencial** do iFarm, integrando indicadores zootécnicos, monitoramento de pastagens, metas de vendas, indicadores sanitários, alertas operacionais e algoritmos preditivos lineares para abate, inspirados no modelo de pecuária de precisão.
 
 A funcionalidade foi construída seguindo a arquitetura de fatias verticais, com regras de negócio puras testadas no servidor, tipagem estrita no `@ifarm/shared` e interface responsiva com Recharts e Tailwind CSS no `@ifarm/web`.
 
@@ -10,7 +10,24 @@ A funcionalidade foi construída seguindo a arquitetura de fatias verticais, com
 
 ## 2. Indicadores e Funcionalidades Implementadas
 
-### 2.1 KPIs Principais (`DashboardKpis`)
+### 2.1 Ações Rápidas e Filtro Interativo (`DashboardQuickActions`)
+
+- **Filtro por Lote**: Dropdown no topo do painel permitindo alternar entre a visão global da fazenda e a visão filtrada por um lote específico.
+- **Atalhos Operacionais**:
+  - ⚖️ _Novo Manejo_ (`/manejos/novo`)
+  - 🔄 _Mover Lote_ (`/lotes/transferencias/nova`)
+  - 🐂 _Novo Animal_ (`/animais/novo`)
+  - 🛒 _Nova Compra_ (`/compras/novo`)
+  - 🖨️ _Imprimir Relatório_: Disparo de impressão otimizado com `@media print` ocultando elementos de navegação e filtros.
+
+### 2.2 Alertas Operacionais e Sanitários (`DashboardAlertsCard`)
+
+- **Rotação de Pastagem**: Detecta quando um lote em pastejo ultrapassou o período máximo de permanência (`defaultOccupationDays`), exibindo o excesso em dias.
+- **Pesagens Pendentes**: Alerta sobre animais ativos que estão sem pesagem há mais de 60 dias.
+- **Carência Sanitária Ativa**: Alerta de animais sob retenção médica/sanitária decorrente de medicamentos com prazo de carência em vigor.
+- **Entregas de Compras**: Contagem de compras com negociação confirmada aguardando recepção de animais.
+
+### 2.3 KPIs Principais (`DashboardKpis`)
 
 - **Total de Animais**: Contagem dos animais ativos da propriedade, detalhando machos e fêmeas.
 - **Lotes Ativos**: Contagem dos lotes vigentes de manejo.
@@ -19,14 +36,22 @@ A funcionalidade foi construída seguindo a arquitetura de fatias verticais, com
 - **Taxa de Lotação (UA/ha)**: Relação entre a Unidade Animal total ($1\text{ UA} = 450\text{ kg}$) e a área em hectares das pastagens.
 - **Pastos Prontos**: Contagem das áreas livres cujo tempo de descanso decorrido atingiu ou superou o período mínimo exigido.
 
-### 2.2 Status das Pastagens (`PastureStatusChart`)
+### 2.4 Metas de Venda dos Lotes (`DashboardBatchGoalsCard`)
+
+- Acompanhamento dos lotes que possuem metas cadastradas (`BatchSaleGoal`):
+  - Peso médio atual vs. peso alvo.
+  - Data alvo e cálculo de dias restantes.
+  - GMD necessário (kg/dia) a partir da data atual para alcançar o peso alvo no prazo.
+  - Status automatizado: **Atingida**, **No Caminho** ou **Atrasada**.
+
+### 2.5 Status das Pastagens (`PastureStatusChart`)
 
 - Gráfico Donut (Recharts) indicando:
   - **Disponível**: Áreas sem lote com período de descanso cumprido.
   - **Ocupada**: Áreas com lote vigente atualmente.
   - **Em Descanso**: Áreas liberadas recentemente ainda cumprindo período mínimo de recuperação.
 
-### 2.3 Distribuição por Categoria (`CategoryDistributionChart`)
+### 2.6 Distribuição por Categoria (`CategoryDistributionChart`)
 
 - Gráfico de barras horizontais categorizando os animais conforme parâmetros zootécnicos usuais:
   - Bezerros / Bezerras ($< 1$ ano)
@@ -35,11 +60,18 @@ A funcionalidade foi construída seguindo a arquitetura de fatias verticais, com
   - Touros Inteiros ($> 2$ anos)
   - Vacas ($> 2$ anos)
 
-### 2.4 Evolução do Peso Médio — Últimos 6 Meses (`WeightEvolutionChart`)
+### 2.7 Evolução do Peso Médio — Últimos 6 Meses (`WeightEvolutionChart`)
 
 - Gráfico de área temporal com preenchimento em gradiente exibindo a progressão mensal da média dos pesos aferidos nas pesagens válidas.
 
-### 2.5 Pastos Prontos para Uso (`ReadyPasturesTable`)
+### 2.8 Indicadores Sanitários e Eficiência por Hectare (`DashboardSanitaryEfficiencyCard`)
+
+- **Procedimentos Sanitários**: Total de procedimentos aplicados nos últimos 30 e 90 dias e lista detalhada de animais em carência.
+- **Eficiência Produtiva por Hectare**:
+  $$\text{Eficiência} = \frac{\text{Ganho Total (kg)}}{\text{Área Ocupada (ha)} \times \text{Dias}}$$
+  Métrica chave da pecuária intensiva para avaliar a conversão do pasto em arrobas produzidas por hectare por dia.
+
+### 2.9 Pastos Prontos para Uso (`ReadyPasturesTable`)
 
 - Tabela detalhando as áreas aptas para receber animais:
   - Nome da pastagem
@@ -48,7 +80,7 @@ A funcionalidade foi construída seguindo a arquitetura de fatias verticais, com
   - Capacidade total (UA)
   - Dias em descanso decorridos vs. mínimo recomendado
 
-### 2.6 Projeção de Abate por Predição Linear (`SlaughterProjectionsTable`)
+### 2.10 Projeção de Abate por Predição Linear (`SlaughterProjectionsTable`)
 
 - Algoritmo de Regressão Linear Simples por Mínimos Quadrados ($y = mx + b$):
   - Projeta a data em que os animais mais pesados atingirão o peso alvo de abate ($450\text{ kg}$).
@@ -62,8 +94,8 @@ A funcionalidade foi construída seguindo a arquitetura de fatias verticais, com
 
 ### 3.1 Contrato da API (`packages/shared/src/dashboard/`)
 
-- `schema.ts`: Validação de parâmetros de query com Zod (`propertyId` UUID obrigatório).
-- `types.ts`: Tipos TypeScript das respostas da API.
+- `schema.ts`: Validação de parâmetros de query com Zod (`propertyId` UUID obrigatório e `batchId` opcional).
+- `types.ts`: Tipos TypeScript das respostas da API (`DashboardData`, `DashboardAlerts`, `DashboardBatchGoal`, `DashboardSanitary`, `DashboardEfficiency`).
 - `client.ts`: Cliente HTTP `createDashboardClient`, integrado em `apps/web/src/lib/clients.ts`.
 
 ### 3.2 Backend e Regras de Negócio (`apps/api/src/features/dashboard/`)
@@ -73,7 +105,10 @@ A funcionalidade foi construída seguindo a arquitetura de fatias verticais, com
   - `projectSlaughterDate`: Resolução linear da data estimada de abate.
   - `computePastureStatus`: Classificação de situação das pastagens e cálculo de carência.
   - `categorizeAnimal`: Classificação zootécnica com base na data de nascimento, sexo e castração.
-- `rules.test.ts`: Cobertura completa de testes unitários com Vitest.
+  - `computeRotationAlerts`: Detecção de sobrepastejo e prazos de ocupação excedidos.
+  - `computeBatchGoals`: Análise situacional de metas de peso vs. dias restantes e GMD necessário.
+  - `computeProductiveEfficiency`: Cálculo de ganho diário por hectare ($kg/ha/dia$).
+- `rules.test.ts`: Cobertura completa de testes unitários com Vitest (9 testes no domínio).
 - `get-dashboard/handler.ts`: Transaction script que lê dados consolidados do Prisma, invoca as regras puras e devolve os dados estruturados.
 - `get-dashboard/route.ts`: Endpoint Hono validado com Zod e protegido por sessão.
 - `routes.ts`: Roteador montado em `/api/dashboard`.
@@ -81,15 +116,19 @@ A funcionalidade foi construída seguindo a arquitetura de fatias verticais, com
 ### 3.3 Frontend (`apps/web/src/features/dashboard/`)
 
 - Componentização modular e responsiva:
+  - `DashboardQuickActions.tsx`
+  - `DashboardAlertsCard.tsx`
   - `DashboardKpis.tsx`
+  - `DashboardBatchGoalsCard.tsx`
   - `PastureStatusChart.tsx`
   - `CategoryDistributionChart.tsx`
   - `WeightEvolutionChart.tsx`
+  - `DashboardSanitaryEfficiencyCard.tsx`
   - `ReadyPasturesTable.tsx`
   - `SlaughterProjectionsTable.tsx`
   - `Dashboard.tsx`
   - `queries.ts` (TanStack Query)
-- Compatibilidade total com layout responsivo (mobile, tablet e desktop).
+- Compatibilidade total com layout responsivo (mobile, tablet e desktop) e suporte a impressão via CSS print.
 
 ### 3.4 CI/CD e GitHub Pages (`.github/workflows/deploy-pages.yml`)
 
@@ -101,7 +140,7 @@ A funcionalidade foi construída seguindo a arquitetura de fatias verticais, com
 
 ## 4. Testes e Qualidade
 
-- **Testes Unitários**: `pnpm test` executado com 100% de aprovação (101 testes no shared + 104 testes na API).
+- **Testes Unitários**: `pnpm test` executado com 100% de aprovação (101 testes no shared + 107 testes na API).
 - **Typecheck**: `tsc --noEmit` verificado com 0 erros na API, no Shared e no Web.
 - **Lint**: ESLint executado em todos os arquivos modificados sem nenhum erro ou aviso.
 - **Formatação**: Código 100% alinhado com o Prettier do monorepo.

@@ -1,16 +1,22 @@
 import { prisma } from "@ifarm/db";
-import type {
-  DashboardData,
-  DashboardQuery,
-  DashboardWeightEvolutionItem,
-  Sex,
+import {
+  DAY_MS,
+  type DashboardBatchGoal,
+  type DashboardData,
+  type DashboardQuery,
+  type DashboardWeightEvolutionItem,
+  type DashboardWithdrawalAnimal,
+  type Sex,
 } from "@ifarm/shared";
 import { sumUnits, type UaAnimal } from "../../area/stocking.public";
 import { NotFoundError } from "../../../lib/errors";
 import {
   calculateLinearRegression,
   categorizeAnimal,
+  computeBatchGoals,
   computePastureStatus,
+  computeProductiveEfficiency,
+  computeRotationAlerts,
   projectSlaughterDate,
 } from "../rules";
 
@@ -45,6 +51,7 @@ function toUaAnimal(a: {
 
 export async function getDashboard({
   propertyId,
+  batchId,
 }: DashboardQuery): Promise<DashboardData> {
   const property = await prisma.property.findUnique({
     where: { id: propertyId },
@@ -57,9 +64,29 @@ export async function getDashboard({
 
   const now = new Date();
 
-  // Animais ativos na propriedade
+  // Todos os lotes vigentes da propriedade (usados para o seletor de filtro)
+  const propertyBatches = await prisma.batch.findMany({
+    where: { propertyId, closedAt: null },
+    select: {
+      id: true,
+      name: true,
+      saleGoal: {
+        select: {
+          targetDate: true,
+          targetWeight: true,
+        },
+      },
+    },
+    orderBy: { name: "asc" },
+  });
+
+  // Animais ativos na propriedade (filtrados por lote se batchId informado)
   const animals = await prisma.animal.findMany({
-    where: { currentPropertyId: propertyId, status: "ACTIVE" },
+    where: {
+      currentPropertyId: propertyId,
+      status: "ACTIVE",
+      ...(batchId ? { currentBatchId: batchId } : {}),
+    },
     select: {
       id: true,
       code: true,
@@ -70,16 +97,14 @@ export async function getDashboard({
       sex: true,
       neutered: true,
       birthDate: true,
+      currentBatchId: true,
       currentBatch: { select: { id: true, name: true } },
     },
   });
 
-  // Lotes vigentes
-  const activeBatches = await prisma.batch.count({
-    where: { propertyId, closedAt: null },
-  });
+  const activeBatchesCount = propertyBatches.length;
 
-  // Pastagens / áreas ativas
+  // Pastagens / áreas ativas da propriedade
   const areas = await prisma.area.findMany({
     where: { propertyId, closedAt: null },
     select: {
@@ -88,6 +113,7 @@ export async function getDashboard({
       hectares: true,
       stockingRate: true,
       defaultRestDays: true,
+      defaultOccupationDays: true,
     },
   });
 
@@ -98,7 +124,13 @@ export async function getDashboard({
       exitedAt: null,
       batch: { closedAt: null },
     },
-    select: { areaId: true },
+    select: {
+      areaId: true,
+      enteredAt: true,
+      batchId: true,
+      batch: { select: { name: true } },
+      area: { select: { name: true, defaultOccupationDays: true } },
+    },
   });
   const occupiedAreaIds = new Set(occupiedHistories.map((h) => h.areaId));
 
@@ -193,30 +225,29 @@ export async function getDashboard({
   sixMonthsAgo.setDate(1);
   sixMonthsAgo.setHours(0, 0, 0, 0);
 
-  const weighingsLast6Months = await prisma.animalWeighing.findMany({
-    where: {
-      cancelledAt: null,
-      animal: {
-        currentPropertyId: propertyId,
-        status: "ACTIVE",
-      },
-      weighedAt: { gte: sixMonthsAgo },
-    },
-    select: {
-      animalId: true,
-      weight: true,
-      weighedAt: true,
-    },
-    orderBy: { weighedAt: "asc" },
-  });
+  const animalIds = animals.map((a) => a.id);
 
-  // Agrupar pesagens por mês
+  const weighingsLast6Months = animalIds.length
+    ? await prisma.animalWeighing.findMany({
+        where: {
+          cancelledAt: null,
+          animalId: { in: animalIds },
+          weighedAt: { gte: sixMonthsAgo },
+        },
+        select: {
+          animalId: true,
+          weight: true,
+          weighedAt: true,
+        },
+        orderBy: { weighedAt: "asc" },
+      })
+    : [];
+
   const monthlyMap = new Map<
     string,
     { key: string; label: string; totalKg: number; count: number }
   >();
 
-  // Pré-popular os 6 meses para garantir continuidade no gráfico
   for (let i = 0; i < 6; i++) {
     const d = new Date(sixMonthsAgo);
     d.setMonth(d.getMonth() + i);
@@ -244,7 +275,7 @@ export async function getDashboard({
     animalCount: item.count,
   }));
 
-  // 5. Projeção de Abate para os animais mais próximos do alvo (alvo padrão: 450 kg)
+  // 5. Projeção de Abate (Predição Linear)
   const targetWeightKg = 450;
   const weightedAnimals = animals
     .filter((a) => a.currentWeight != null)
@@ -333,12 +364,186 @@ export async function getDashboard({
       ? Math.round((totalRegressionGmd / regressionGmdCount) * 1000) / 1000
       : null;
 
+  // 6. Alertas Críticos e Rotação
+  const rotationAlerts = computeRotationAlerts(
+    occupiedHistories.map((h) => ({
+      batchId: h.batchId,
+      batchName: h.batch.name,
+      areaId: h.areaId,
+      areaName: h.area.name,
+      enteredAt: h.enteredAt,
+      defaultOccupationDays: h.area.defaultOccupationDays,
+    })),
+    now,
+  );
+
+  // Animais sem pesagem há mais de 60 dias
+  const sixtyDaysAgo = new Date(now.getTime() - 60 * DAY_MS);
+  const recentWeighedRows = await prisma.animalWeighing.groupBy({
+    by: ["animalId"],
+    where: {
+      animalId: { in: animalIds },
+      cancelledAt: null,
+      weighedAt: { gte: sixtyDaysAgo },
+    },
+  });
+  const recentWeighedIds = new Set(recentWeighedRows.map((r) => r.animalId));
+  const unweighedAnimalsCount = animalIds.filter(
+    (id) => !recentWeighedIds.has(id),
+  ).length;
+
+  // Carência sanitária ativa
+  const activeWithdrawalItems = await prisma.healthManagementItem.findMany({
+    where: {
+      cancelledAt: null,
+      animal: { currentPropertyId: propertyId, status: "ACTIVE" },
+      management: { withdrawalEndDate: { gte: now } },
+    },
+    select: {
+      animalId: true,
+      animal: {
+        select: {
+          currentTag: true,
+          currentRfid: true,
+          name: true,
+          code: true,
+        },
+      },
+      management: {
+        select: {
+          title: true,
+          withdrawalEndDate: true,
+          type: { select: { name: true } },
+        },
+      },
+    },
+  });
+
+  const activeWithdrawalAnimals: DashboardWithdrawalAnimal[] =
+    activeWithdrawalItems.map((item) => {
+      const end = item.management.withdrawalEndDate!;
+      const days = Math.max(
+        0,
+        Math.ceil((end.getTime() - now.getTime()) / DAY_MS),
+      );
+      const identifier =
+        item.animal.currentTag ||
+        item.animal.currentRfid ||
+        item.animal.name ||
+        `#${item.animal.code}`;
+      const title =
+        item.management.title ||
+        item.management.type.name ||
+        "Tratamento Sanitário";
+
+      return {
+        animalId: item.animalId,
+        identifier,
+        title,
+        withdrawalEndDate: end.toISOString().slice(0, 10),
+        daysRemaining: days,
+      };
+    });
+
+  // Compras ativas aguardando entrega / consolidação
+  const pendingPurchasesCount = await prisma.purchaseEvent.count({
+    where: {
+      destinationPropertyId: propertyId,
+      confirmedAt: null,
+      cancelledAt: null,
+    },
+  });
+
+  const alerts = {
+    rotationAlerts,
+    unweighedAnimalsCount,
+    activeWithdrawalCount: activeWithdrawalAnimals.length,
+    pendingPurchasesCount,
+  };
+
+  // 7. Metas de Venda dos Lotes
+  const batchesWithGoals = propertyBatches.filter(
+    (b) =>
+      b.saleGoal &&
+      b.saleGoal.targetDate != null &&
+      b.saleGoal.targetWeight != null,
+  );
+
+  const batchGoalInputs = batchesWithGoals.map((b) => {
+    const batchAnimals = animals.filter((a) => a.currentBatchId === b.id);
+    const weighed = batchAnimals
+      .filter((a) => a.currentWeight != null)
+      .map((a) => a.currentWeight!.toNumber());
+    const currentAvgWeightKg = weighed.length
+      ? Math.round((weighed.reduce((s, w) => s + w, 0) / weighed.length) * 10) /
+        10
+      : null;
+
+    return {
+      batchId: b.id,
+      batchName: b.name,
+      currentAnimalCount: batchAnimals.length,
+      currentAvgWeightKg,
+      targetWeightKg: b.saleGoal!.targetWeight!.toNumber(),
+      targetDate: b.saleGoal!.targetDate!,
+      batchAdg: averageAdg,
+    };
+  });
+
+  const batchGoals: DashboardBatchGoal[] = computeBatchGoals(
+    batchGoalInputs,
+    now,
+  );
+
+  // 8. Indicadores Sanitários (30 e 90 dias)
+  const thirtyDaysAgo = new Date(now.getTime() - 30 * DAY_MS);
+  const ninetyDaysAgo = new Date(now.getTime() - 90 * DAY_MS);
+
+  const [procedures30d, procedures90d] = await Promise.all([
+    prisma.healthManagementItem.count({
+      where: {
+        cancelledAt: null,
+        animal: { currentPropertyId: propertyId, status: "ACTIVE" },
+        appliedAt: { gte: thirtyDaysAgo },
+      },
+    }),
+    prisma.healthManagementItem.count({
+      where: {
+        cancelledAt: null,
+        animal: { currentPropertyId: propertyId, status: "ACTIVE" },
+        appliedAt: { gte: ninetyDaysAgo },
+      },
+    }),
+  ]);
+
+  const sanitary = {
+    procedures30d,
+    procedures90d,
+    activeWithdrawalAnimals,
+  };
+
+  // 9. Eficiência Produtiva por Hectare
+  const occupiedHectares = pastureAreas
+    .filter((a) => occupiedAreaIds.has(a.id))
+    .reduce((s, a) => s + a.hectares, 0);
+
+  // Estimativa do ganho total do rebanho avaliado nos últimos 30 dias
+  const evaluatedDays = 30;
+  const activeAdg = averageAdg ?? 0.75; // fallback zootécnico médio
+  const totalGainKg = totalAnimals * activeAdg * evaluatedDays;
+
+  const efficiency = computeProductiveEfficiency(
+    totalGainKg,
+    occupiedHectares,
+    evaluatedDays,
+  );
+
   return {
     summary: {
       totalAnimals,
       males,
       females,
-      activeBatches,
+      activeBatches: activeBatchesCount,
       averageWeightKg,
       averageAdg,
       stockingRate: {
@@ -352,5 +557,10 @@ export async function getDashboard({
     weightEvolution,
     readyPastures: pastureComputation.readyPastures,
     slaughterProjections,
+    alerts,
+    batchGoals,
+    sanitary,
+    efficiency,
+    batches: propertyBatches.map((b) => ({ id: b.id, name: b.name })),
   };
 }

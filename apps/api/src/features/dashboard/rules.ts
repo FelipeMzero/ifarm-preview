@@ -261,3 +261,140 @@ export function categorizeAnimal(
     ? "Bois Castrados (> 2 anos)"
     : "Touros Inteiros (> 2 anos)";
 }
+
+export type RotationAreaInput = {
+  batchId: string;
+  batchName: string;
+  areaId: string;
+  areaName: string;
+  enteredAt: Date;
+  defaultOccupationDays: number | null;
+};
+
+export function computeRotationAlerts(
+  items: RotationAreaInput[],
+  referenceDate = new Date(),
+) {
+  const alerts: {
+    batchId: string;
+    batchName: string;
+    areaId: string;
+    areaName: string;
+    daysOccupied: number;
+    maxDays: number;
+    daysExceeded: number;
+  }[] = [];
+
+  for (const item of items) {
+    if (!item.defaultOccupationDays || item.defaultOccupationDays <= 0)
+      continue;
+    const daysOccupied = Math.max(
+      0,
+      Math.floor((referenceDate.getTime() - item.enteredAt.getTime()) / DAY_MS),
+    );
+    if (daysOccupied > item.defaultOccupationDays) {
+      alerts.push({
+        batchId: item.batchId,
+        batchName: item.batchName,
+        areaId: item.areaId,
+        areaName: item.areaName,
+        daysOccupied,
+        maxDays: item.defaultOccupationDays,
+        daysExceeded: daysOccupied - item.defaultOccupationDays,
+      });
+    }
+  }
+
+  return alerts.sort((a, b) => b.daysExceeded - a.daysExceeded);
+}
+
+export type BatchGoalInput = {
+  batchId: string;
+  batchName: string;
+  currentAnimalCount: number;
+  currentAvgWeightKg: number | null;
+  targetWeightKg: number;
+  targetDate: Date;
+  batchAdg: number | null;
+};
+
+export function computeBatchGoals(
+  items: BatchGoalInput[],
+  referenceDate = new Date(),
+) {
+  return items.map((item) => {
+    const daysRemaining = Math.ceil(
+      (item.targetDate.getTime() - referenceDate.getTime()) / DAY_MS,
+    );
+    const avg = item.currentAvgWeightKg ?? 0;
+    const target = item.targetWeightKg;
+
+    if (avg >= target) {
+      return {
+        batchId: item.batchId,
+        batchName: item.batchName,
+        currentAnimalCount: item.currentAnimalCount,
+        currentAvgWeightKg: item.currentAvgWeightKg,
+        targetWeightKg: target,
+        targetDate: item.targetDate.toISOString().slice(0, 10),
+        daysRemaining: Math.max(0, daysRemaining),
+        status: "REACHED" as const,
+        requiredAdg: null,
+      };
+    }
+
+    if (daysRemaining <= 0) {
+      return {
+        batchId: item.batchId,
+        batchName: item.batchName,
+        currentAnimalCount: item.currentAnimalCount,
+        currentAvgWeightKg: item.currentAvgWeightKg,
+        targetWeightKg: target,
+        targetDate: item.targetDate.toISOString().slice(0, 10),
+        daysRemaining: 0,
+        status: "BEHIND" as const,
+        requiredAdg: null,
+      };
+    }
+
+    const requiredAdg =
+      Math.round(((target - avg) / daysRemaining) * 1000) / 1000;
+    const currentAdg = item.batchAdg ?? 0;
+    const onTrack = currentAdg >= requiredAdg * 0.9;
+
+    return {
+      batchId: item.batchId,
+      batchName: item.batchName,
+      currentAnimalCount: item.currentAnimalCount,
+      currentAvgWeightKg: item.currentAvgWeightKg,
+      targetWeightKg: target,
+      targetDate: item.targetDate.toISOString().slice(0, 10),
+      daysRemaining,
+      status: onTrack ? ("ON_TRACK" as const) : ("BEHIND" as const),
+      requiredAdg,
+    };
+  });
+}
+
+export function computeProductiveEfficiency(
+  gainKg: number,
+  occupiedHectares: number,
+  days: number,
+) {
+  if (occupiedHectares <= 0 || days <= 0) {
+    return {
+      kgPerHaPerDay: null,
+      totalGainKg: Math.round(gainKg * 10) / 10,
+      occupiedHectares: Math.round(occupiedHectares * 10) / 10,
+      evaluatedDays: days,
+    };
+  }
+
+  const rate = gainKg / (occupiedHectares * days);
+  return {
+    kgPerHaPerDay: Math.round(rate * 1000) / 1000,
+    totalGainKg: Math.round(gainKg * 10) / 10,
+    occupiedHectares: Math.round(occupiedHectares * 10) / 10,
+    evaluatedDays: days,
+  };
+}
