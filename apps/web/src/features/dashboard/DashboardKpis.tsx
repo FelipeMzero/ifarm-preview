@@ -9,6 +9,43 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import type { DashboardSummary, DashboardPastureStatus } from "@ifarm/shared";
 
+function MarsIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      {...props}
+    >
+      <circle cx="10" cy="14" r="5" />
+      <path d="M19 5l-5.4 5.4" />
+      <path d="M19 5h-5" />
+      <path d="M19 5v5" />
+    </svg>
+  );
+}
+
+function VenusIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      {...props}
+    >
+      <circle cx="12" cy="9" r="5" />
+      <path d="M12 14v7" />
+      <path d="M9 18h6" />
+    </svg>
+  );
+}
+
 type DashboardKpisProps = {
   summary?: DashboardSummary;
   pastureStatus?: DashboardPastureStatus;
@@ -40,8 +77,16 @@ export function DashboardKpis({ summary, pastureStatus }: DashboardKpisProps) {
           <div className="text-2xl font-bold tracking-tight text-emerald-600 dark:text-emerald-400">
             {totalAnimals}
           </div>
-          <div className="text-xs text-muted-foreground">
-            {males} ♂ · {females} ♀
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <span className="flex items-center gap-1">
+              <MarsIcon className="size-3 text-sky-500" />
+              <span>{males} machos</span>
+            </span>
+            <span>·</span>
+            <span className="flex items-center gap-1">
+              <VenusIcon className="size-3 text-rose-500" />
+              <span>{females} fêmeas</span>
+            </span>
           </div>
         </CardContent>
       </Card>
