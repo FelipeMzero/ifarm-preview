@@ -45,7 +45,7 @@ jobs:
 
       - name: Build web application
         env:
-          VITE_BASE_PATH: "/ifarm/"
+          VITE_BASE_PATH: "/${{ github.event.repository.name }}/"
         run: pnpm build
 
       - name: Copy index.html to 404.html for SPA routing
