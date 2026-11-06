@@ -20,7 +20,12 @@ import {
 
 // Clientes da API usados pelo web. Aqui a API está na mesma origem da página e o navegador envia
 // o cookie de sessão sozinho; o mobile configura os mesmos clientes com a URL e o cookie dele.
-const request: ApiRequest = (path, init) => fetch(path, init);
+const API_BASE_URL = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "");
+
+const request: ApiRequest = (path, init) => {
+  const url = API_BASE_URL ? `${API_BASE_URL}${path}` : path;
+  return fetch(url, { ...init, credentials: "include" });
+};
 
 export const addressClient = createAddressClient(request);
 export const personClient = createPersonClient(request);

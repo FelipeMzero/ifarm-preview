@@ -28,6 +28,8 @@ export const auth = betterAuth({
     "192.168.*.*:*",
     "10.*.*.*:*",
     "172.16.*.*:*",
+    "https://*.github.io",
+    "https://felipemzero.github.io",
   ],
   plugins: [admin({ roles, defaultRole: "worker" }), expo()],
 });

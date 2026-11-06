@@ -27,12 +27,14 @@ app.use(contextStorage());
 // Só em desenvolvimento: libera CORS com credenciais para o app mobile rodando no navegador
 // (outra origem: Metro bundler / navegador do celular) chamar a API pela rede local. Em
 // produção o web e a API ficam na mesma origem (o proxy reverso repassa /api/*).
-function isLocalDevOrigin(origin: string) {
+function isAllowedOrigin(origin: string) {
   try {
     const { hostname } = new URL(origin);
     return (
       hostname === "localhost" ||
       hostname === "127.0.0.1" ||
+      hostname.endsWith(".github.io") ||
+      hostname.endsWith(".onrender.com") ||
       /^192\.168\.\d{1,3}\.\d{1,3}$/.test(hostname) ||
       /^10\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(hostname) ||
       /^172\.(1[6-9]|2\d|3[01])\.\d{1,3}\.\d{1,3}$/.test(hostname)
@@ -42,17 +44,15 @@ function isLocalDevOrigin(origin: string) {
   }
 }
 
-if (process.env.NODE_ENV !== "production") {
-  app.use(
-    "/api/*",
-    cors({
-      origin: (origin) => (isLocalDevOrigin(origin) ? origin : null),
-      allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-      allowHeaders: ["Content-Type", "Authorization"],
-      credentials: true,
-    }),
-  );
-}
+app.use(
+  "/api/*",
+  cors({
+    origin: (origin) => (isAllowedOrigin(origin) ? origin : null),
+    allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowHeaders: ["Content-Type", "Authorization", "Cookie"],
+    credentials: true,
+  }),
+);
 
 // Só em desenvolvimento: atrasa as respostas da API (menos a autenticação) para ver os estados
 // de carregamento das telas. Ex.: API_DELAY_MS=2000 pnpm dev
