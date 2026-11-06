@@ -105,7 +105,7 @@ export function Dashboard() {
         </div>
       </div>
 
-      {/* Ações Rápidas e Filtro por Lote */}
+      {/* Filtro por Lote */}
       <DashboardQuickActions
         batches={dashboardData.batches ?? []}
         selectedBatchId={selectedBatchId}
