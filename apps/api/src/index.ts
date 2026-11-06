@@ -18,6 +18,7 @@ import { purchaseRoutes } from "./features/purchase/routes";
 import { receptionRoutes } from "./features/reception/routes";
 import { currentPropertyRoutes } from "./features/current-property/routes";
 import { dashboardRoutes } from "./features/dashboard/routes";
+import { prisma } from "@ifarm/db";
 
 const app = new Hono();
 
@@ -98,6 +99,30 @@ app.get("/", (c) =>
     time: new Date().toISOString(),
   }),
 );
+
+// Rota de diagnóstico para verificar a conexão direta com o Supabase
+app.get("/api/db-check", async (c) => {
+  try {
+    const users = await prisma.user.count();
+    const properties = await prisma.property.count();
+    const animals = await prisma.animal.count();
+    return c.json({
+      ok: true,
+      database: "Supabase Conectado com Sucesso",
+      counts: { users, properties, animals },
+      time: new Date().toISOString(),
+    });
+  } catch (error: any) {
+    return c.json(
+      {
+        ok: false,
+        database: "Erro ao conectar ao Supabase",
+        error: error.message || String(error),
+      },
+      500,
+    );
+  }
+});
 
 // Nenhuma rota casou (caminho inexistente ou id em formato inválido): 404 no mesmo formato JSON
 // dos outros erros, que é o que os clientes leem.
