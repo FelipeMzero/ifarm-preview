@@ -3,7 +3,7 @@ import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient, Prisma } from "./generated/prisma/client";
 
 const DEFAULT_SUPABASE_URL =
-  "postgresql://postgres:felipemzeroSleep1990@db.zdhsgkzywzffxvmrtppp.supabase.co:5432/postgres?sslmode=require";
+  "postgresql://postgres.zdhsgkzywzffxvmrtppp:felipemzeroSleep1990@aws-1-us-west-2.pooler.supabase.com:5432/postgres?sslmode=require";
 
 const rawConnectionString =
   process.env.DATABASE_URL && process.env.DATABASE_URL !== "undefined"
