@@ -2,7 +2,13 @@ import { Pool } from "pg";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient, Prisma } from "./generated/prisma/client";
 
-const rawConnectionString = `${process.env.DATABASE_URL}`;
+const DEFAULT_SUPABASE_URL =
+  "postgresql://postgres:felipemzeroSleep1990@db.zdhsgkzywzffxvmrtppp.supabase.co:5432/postgres?sslmode=require";
+
+const rawConnectionString =
+  process.env.DATABASE_URL && process.env.DATABASE_URL !== "undefined"
+    ? process.env.DATABASE_URL
+    : DEFAULT_SUPABASE_URL;
 
 // Toda conexão abre a sessão em UTC, qualquer que seja o fuso do servidor do banco. O CLI e as
 // ferramentas (psql, Studio) usam o padrão do banco: ALTER DATABASE ... SET timezone TO 'UTC'.

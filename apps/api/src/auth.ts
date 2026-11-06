@@ -11,8 +11,10 @@ export const auth = betterAuth({
     enabled: true,
     disableSignUp: true,
   },
-  secret: process.env.BETTER_AUTH_SECRET,
-  baseURL: process.env.BETTER_AUTH_URL,
+  secret:
+    process.env.BETTER_AUTH_SECRET || "dev-secret-ifarm-local-32chars-min-key-ok",
+  baseURL:
+    process.env.BETTER_AUTH_URL || "https://ifarm-api-0976.onrender.com",
   session: {
     cookieCache: {
       enabled: true,

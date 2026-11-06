@@ -44,7 +44,11 @@ export function LoginForm() {
     setIsSubmitting(false);
 
     if (error) {
-      toast.error("E-mail ou senha inválidos.");
+      if (error.status === 401 || error.status === 400) {
+        toast.error("E-mail ou senha inválidos.");
+      } else {
+        toast.error(error.message || "Erro de conexão com o servidor.");
+      }
       return;
     }
 
