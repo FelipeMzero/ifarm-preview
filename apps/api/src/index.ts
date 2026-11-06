@@ -110,6 +110,7 @@ app.get("/api/db-check", async (c) => {
       ok: true,
       database: "Supabase Conectado com Sucesso",
       counts: { users, properties, animals },
+      version: "v4-auto-pooler-ipv4",
       time: new Date().toISOString(),
     });
   } catch (error: any) {
@@ -117,6 +118,7 @@ app.get("/api/db-check", async (c) => {
       {
         ok: false,
         database: "Erro ao conectar ao Supabase",
+        version: "v4-auto-pooler-ipv4",
         error: error.message || String(error),
       },
       500,
